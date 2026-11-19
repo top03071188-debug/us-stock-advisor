@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-11-19T17:30:00+09:00",
+  "params_version": "params_v001",
+  "snapshot_id": "sha256:sample",
+  "status": "sample",
+  "regime": "neutral",
+  "data_cutoff_at": "2026-11-18T22:00:00Z",
+  "debate_status": "none"
+}

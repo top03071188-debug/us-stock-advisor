@@ -1,0 +1,39 @@
+# ── 인증 정보: 절대 커밋 금지 ─────────────────────────────
+.env
+*.env
+.env.*
+!.env.example
+
+# ── Python ───────────────────────────────────────────────
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# ── 데이터 (2.2.3 저장소 안에서 어디까지가 데이터인가) ─────────
+data/raw/
+data/debate/
+data/snapshots/
+data/corpus/
+data/cache/
+data/ledger/executions/*.full.jsonl
+*.parquet
+*.tgz
+
+# 개인 보유 정보·로컬 전용
+local/
+holdings.json
+~/.codex/auth.json
+
+# 빌드 산출물
+web/data/
+web/dist/
+out/
+dist_archive/
+
+# OS
+.DS_Store

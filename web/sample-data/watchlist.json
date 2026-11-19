@@ -1,0 +1,21 @@
+{
+  "as_of": "2026-11-19",
+  "watchlist": [
+    {
+      "ticker": "SAMPLE",
+      "sector": "Information Technology",
+      "q": 82,
+      "v": 71,
+      "g": 60,
+      "rank_score": 72.9
+    },
+    {
+      "ticker": "DEMO",
+      "sector": "Industrials",
+      "q": 76,
+      "v": 68,
+      "g": 65,
+      "rank_score": 70.6
+    }
+  ]
+}

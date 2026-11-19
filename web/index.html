@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>미국 주식 어드바이저 · Phase 1</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <h1>투자 어드바이저</h1>
+  <span id="status-badge" class="badge">데이터 불러오는 중…</span>
+</header>
+
+<main id="app">
+  <section class="card">
+    <h2>시장 상태</h2>
+    <div id="regime" class="muted">—</div>
+    <div id="meta" class="tiny"></div>
+  </section>
+
+  <section class="card">
+    <h2>폴드 요약 <span class="tiny">(거래일 기준 · 홀드아웃 잠금)</span></h2>
+    <div id="folds"></div>
+  </section>
+
+  <section class="card">
+    <h2>오늘의 신호</h2>
+    <div id="signals" class="empty">신호 없음</div>
+  </section>
+
+  <section class="card">
+    <h2>워치리스트</h2>
+    <div id="watchlist" class="empty">워치리스트 없음</div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>이 앱은 정보 제공용이며 투자 권유가 아닙니다. 투자 판단과 손실의 책임은 본인에게 있습니다.</p>
+  <p class="tiny" id="build"></p>
+</footer>
+
+<script src="./app.js"></script>
+</body>
+</html>

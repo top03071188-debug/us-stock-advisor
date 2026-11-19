@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "us-stock-advisor"
+version = "0.1.0"
+description = "미국 주식 하이브리드 투자 조언 앱 — Phase 1 엔진 (시점 고정·3종 가격·주당 내재가치)"
+requires-python = ">=3.11"
+dependencies = [
+  "yfinance>=0.2",
+  "pandas>=2.1",
+  "numpy>=1.26",
+  "requests>=2.31",
+  "pydantic>=2.6",
+  "PyYAML>=6.0",
+  "pyarrow>=15.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools]
+packages = ["engine", "engine.utils", "engine.data", "engine.metrics", "engine.backtest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+  "network: 실제 외부 API 호출 스모크 테스트 (기본 실행에서는 제외)",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"

@@ -1,0 +1,15 @@
+{
+  "as_of": "2026-11-19",
+  "signals": [
+    {
+      "ticker": "SAMPLE",
+      "type": "BUY",
+      "entry_score": 69.4,
+      "thesis_ko": "Phase 1 샘플 — 실제 신호가 아닙니다"
+    }
+  ],
+  "blocked": [],
+  "watchlist": 2,
+  "regime": "neutral",
+  "notes": null
+}

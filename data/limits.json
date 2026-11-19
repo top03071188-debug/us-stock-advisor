@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-11-19T08:29:17.523795+00:00",
+  "series": {
+    "DFF": {
+      "start": "2018-01-01",
+      "end": "2026-11-17",
+      "vintage_start": "2026-11-19",
+      "rows": 3243
+    },
+    "CPIAUCSL": {
+      "start": "2018-01-01",
+      "end": "2026-10-01",
+      "vintage_start": "2026-11-19",
+      "rows": 106
+    },
+    "T10Y2Y": {
+      "start": "2018-01-01",
+      "end": "2026-11-18",
+      "vintage_start": "2026-11-19",
+      "rows": 2318
+    },
+    "BAMLH0A0HYM2": {
+      "start": "2023-11-20",
+      "end": "2026-11-17",
+      "vintage_start": "2026-11-19",
+      "rows": 793
+    },
+    "VIXCLS": {
+      "start": "2018-01-01",
+      "end": "2026-11-17",
+      "vintage_start": "2026-11-19",
+      "rows": 2317
+    },
+    "DTWEXBGS": {
+      "start": "2018-01-01",
+      "end": "2026-11-13",
+      "vintage_start": "2026-11-19",
+      "rows": 2315
+    }
+  },
+  "notes": [
+    "BAMLH0A0HYM2 실제 API 제공 시작 2023-11-20 — 이전 구간은 4신호 레짐으로만 판정하고 '미검증'으로 표시"
+  ],
+  "hy_oas_available_from": "2023-11-20",
+  "missing_series": [
+    "CPILFESL",
+    "DGS10",
+    "DGS2",
+    "UNRATE",
+    "WALCL"
+  ]
+}

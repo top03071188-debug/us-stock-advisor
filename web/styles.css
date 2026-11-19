@@ -1,0 +1,39 @@
+:root {
+  --bg: #0b0f14; --card: #141a22; --line: #232c38; --text: #e7edf5; --muted: #8fa0b5;
+  --buy: #2ecc71; --sell: #e74c3c; --warn: #f1c40f; --neutral: #7f8c8d;
+  color-scheme: dark light;
+}
+@media (prefers-color-scheme: light) {
+  :root { --bg: #f7f9fc; --card: #ffffff; --line: #dde5ee; --text: #14202e; --muted: #5b6b7d; }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--line);
+}
+.topbar h1 { font-size: 17px; margin: 0; }
+main { padding: 12px; display: grid; gap: 12px; max-width: 720px; margin: 0 auto; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.card h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); font-weight: 600; }
+.badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); }
+.badge.ok { color: var(--buy); border-color: var(--buy); }
+.badge.warn { color: var(--warn); border-color: var(--warn); }
+.muted { color: var(--muted); }
+.tiny { font-size: 12px; color: var(--muted); }
+.row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.row:last-child { border-bottom: 0; }
+.ticker { font-weight: 700; letter-spacing: .02em; }
+.num { font-variant-numeric: tabular-nums; }
+.tag { font-size: 11px; padding: 2px 7px; border-radius: 6px; border: 1px solid var(--line); }
+.tag.buy { color: var(--buy); border-color: var(--buy); }
+.tag.watch { color: var(--warn); border-color: var(--warn); }
+.tag.sell { color: var(--sell); border-color: var(--sell); }
+.empty { color: var(--muted); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; }
+.foot { max-width: 720px; margin: 8px auto 32px; padding: 0 16px; color: var(--muted); font-size: 12px; }

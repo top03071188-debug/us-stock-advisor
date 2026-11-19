@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.1-sample",
+  "generated_at": "2026-11-19T07:02:11+09:00",
+  "data_cutoff_at": "2026-11-18T22:00:00Z",
+  "signal_published_at": "2026-11-18T22:02:11Z",
+  "order_cutoff_at": "2026-11-19T14:25:00Z",
+  "as_of": "2026-11-19",
+  "params_version": "params_v001",
+  "snapshot_id": "sha256:sample0000000000000000000000000000000000000000000000000000",
+  "code_commit": "sample",
+  "status": "sample",
+  "regime": {"label": "neutral", "multiplier": 0.7, "inputs_missing": ["BAMLH0A0HYM2"]},
+  "signals": [
+    {
+      "signal_id": "2026-11-19-SAMPLE-BUY-001",
+      "ticker": "SAMPLE",
+      "type": "BUY",
+      "grade": "B",
+      "entry_score": 69.4,
+      "components": {"quality": 82, "valuation": 71, "timing": 64, "macro": 55, "growth": 60},
+      "valuation": {"iv_low": 455.0, "iv_median": 522.0, "iv_high": 610.0, "price": 412.35, "margin": 0.21},
+      "entry_plan": [
+        {"tranche": 1, "weight": 0.40, "price_ref": 412.35, "provisional": true},
+        {"tranche": 2, "weight": 0.30, "price_ref": 383.5, "provisional": true},
+        {"tranche": 3, "weight": 0.30, "price_ref": 354.6, "provisional": true, "active": false}
+      ],
+      "quant_intent": "pending_buy",
+      "thesis_ko": "Phase 1 샘플 데이터입니다 — 실제 신호가 아닙니다."
+    }
+  ],
+  "blocked": [],
+  "watchlist": [
+    {"ticker": "SAMPLE", "sector": "Information Technology", "q": 82, "v": 71, "g": 60, "rank_score": 72.9}
+  ],
+  "watchlist_count": 1,
+  "ledger_summary": {"agreement": null, "win_rate": null, "note": "Phase 1: 표본 없음"}
+}

@@ -1,0 +1,207 @@
+# config/params_v001.yaml — 활성 파라미터 (기획서 부록 A, v1.3.1 기준)
+# [보정] = 워크포워드 보정 대상 / [고정] = 안전 장치, 자동 보정 금지
+version: params_v001
+created_at: "2026-11-19"
+
+universe:
+  index: SP500
+  min_market_cap_usd: 10_000_000_000
+  min_adv20_usd: 30_000_000
+  min_price_usd: 5
+  min_history_years: 5
+  sectors_max_count: 6
+  watchlist_min: null            # 최소 개수 강제 없음. 0개도 정상
+  watchlist_max: 40
+
+quality:                         # Q (1층)
+  roic_spread_full: 0.10
+  roe_stdev_full: 0.03
+  fcf_margin_full: 0.20
+  fcf_to_ni_full: 1.00
+  max_net_debt_ebitda: 2.5
+  min_interest_cover: 6.0
+  max_dilution_3y: 0.05
+
+valuation:
+  discount_rate_min: 0.08
+  discount_rate_max: 0.15
+  terminal_growth: 0.025         # [고정]
+  growth_cap: 0.15
+  margin_full_score: 0.30
+  margin_zero_score: -0.20
+  historical_percentile_penalty: 0.10
+  per_share_output: true         # 모든 IV를 USD/share 로 반환 [고정]
+  net_debt_adjust: true          # EV → 순부채·비지배지분 조정 [고정]
+  suspended_sectors: [Financials, banks, insurance, reits]   # 가치평가 신호 보류 [고정]
+  suspend_reason: SECTOR_FORMULA_PENDING
+
+entry_weights:                   # [보정]
+  quality: 0.30
+  valuation: 0.25
+  timing: 0.20
+  macro: 0.15
+  growth: 0.10
+
+entry_gates:
+  margin_of_safety:              # [보정]
+    risk_on: 0.15
+    neutral: 0.20
+    risk_off: 0.25
+  rsi_buy: 35                    # [보정]
+  dma50_deviation: -0.08         # [보정]
+  dma200_mult: 0.97              # B2·3차 200일선 −3% 조건 [고정]
+  timing_min: 55
+  dip_conditions_required: 2
+  structural_risk_block: 55      # [보정]
+
+grades:
+  strong_buy: 80
+  buy: 68
+  watch: 55
+
+exit:
+  margin_overheat: -0.15
+  rsi_overheat: 72
+  pe_percentile: 0.90
+  structural_exit: 70
+  exit_score: 75
+  trim_score: 60
+  hard_stop: -0.20
+  atr_trailing: 3.0
+
+scaling:
+  entry: [0.40, 0.30, 0.30]
+  entry_drops: [0.00, -0.07, -0.14]
+  exit: [0.3333, 0.3333, 0.3334]
+
+risk:                            # [고정]
+  risk_per_trade: 0.0075         # 갭 하락 전 계획 손실 상한
+  stop_atr_mult: 3.0             # 사이징 = 실제 청산과 같은 식
+  stop_max: 0.20
+  max_position: 0.05
+  max_sector: 0.25
+  max_open_risk: 0.045           # 0.75% × 6 동시 포지션
+  cash_min: 0.10
+  cash_min_risk_off: 0.30
+
+macro:
+  risk_on_multiplier: 1.0
+  neutral_multiplier: 0.7
+  risk_off_multiplier: 0.4       # [보정]
+  vix_extreme: 35
+  hy_oas_extreme_bp: 700
+  series: [DFF, CPIAUCSL, CPILFESL, DGS10, DGS2, T10Y2Y, BAMLH0A0HYM2, VIXCLS, DTWEXBGS, UNRATE, WALCL]
+  stale_business_days: 5
+
+calibration:
+  step_weights: 0.05
+  step_threshold_rel: 0.20
+  min_signals_per_fold: 25
+  min_folds: 3
+  holdout_cutoff: "maturity_date < holdout_start"   # [고정]
+  truncate_grading_at_holdout: true
+  accept_gain: 2.0
+  accept_folds: 2
+  l2_lambda: 0.50
+  freeze_cycles: 4
+  holdout_rollback_points: 5
+  horizons_td: {1m: 21, 3m: 63, 6m: 126}            # 거래일 기준 [고정]
+  fold_start_dom: 19
+  maturity_before_holdout: true                     # [고정]
+  truncated_excluded_from_objective: true           # [고정]
+  min_window_months: 12
+  preferred_window_months: 15                       # 6M 3폴드 확보용(확보 전 6M 보정 보류)
+
+data:                            # v1.3 / v1.3.1
+  available_at_filter: true                       # [고정]
+  price_kinds: [total_return_adj, split_adj_ohlc, raw_as_traded]   # 3종 분리 [고정]
+  raw_price_source: reconstructed_from_splits
+  split_reconstruction_tolerance: 0.001           # 0.1%
+  macro_available_at_order: [release_at, first_ingested_at, date_plus_one]
+  macro_vintage_date_field: realtime_start        # D = 공개 빈티지 날짜 [고정]
+  macro_unknown_requires_after_et_day_end: true   # D 23:59:59 ET 이후 첫 의사결정 [고정]
+  macro_release_tz: America/New_York
+  universe_history_required: true
+  delisted_dataset_required: true
+  hy_oas_available_from: "2023-11-20"             # FRED API 확인값(data/limits.json 으로 갱신)
+  snapshot_archive: "private_repo:${PRIVATE_ARCHIVE_REPO}"   # 공개 Release 금지 [고정]
+  snapshot_filename: "snapshot_{T}_{snapshot_id_short}.tgz"
+  snapshot_overwrite: false                       # append-only: 기존 asset은 sha256 대조 후 스킵 [고정]
+  archive_hash_algorithm: sha256
+  public_commit_allowlist: config/public_allowlist.yaml
+  atr_pct_basis: split_adj_ohlc                   # atr_pct = atr14_sadj / close_sadj [고정]
+  stop_price_kind: raw_as_traded                  # 손절가·트레일링·분할가 [고정]
+  dma_compare_basis: split_adj_ohlc               # B2·3차·S4 200일선 비교 기준 [고정]
+
+execution:                       # v1.3.1 — 개장 경매 체결 순서 [고정]
+  order_commit_before_open: true
+  limit_max: iv_median_x_required_margin          # B3 안전마진 상한
+  stop_min: max(b2_dma200_x_0_97, provisional_stop)
+  fill: opening_auction_within_range
+  reject_reason_outside_range: outside_order_range
+  order_cutoff_et: "09:25"
+
+ledger:                          # v1.3.1 — 발행 기록 불변 · 토론 이벤트 분리
+  publish_record_immutable: true                  # [고정]
+  debate_event_path: "data/ledger/debate_events/{signal_id}.json"
+  debate_event_link: [signal_id, snapshot_id]     # [고정]
+  record_action_source: execution_event_only      # action은 발행 레코드에 없다 [고정]
+
+portfolio:                       # 모의 포트폴리오 시뮬레이터 (4.12)
+  tranches: [0.40, 0.30, 0.30]
+  tranche_drops: [0.00, -0.07, -0.14]
+  tranche_anchor: first_fill
+  tranche2_rsi: 25
+  tranche3_dma_mult: 0.97
+  tranche3_requires_inside_stop: true
+  profit_take: [0.3333, 0.3333, 0.3334]
+  intrabar_priority: ["stop", "limit"]
+  cancel_pending_on_exit: true
+  block_tranche_on_structural: true
+  recheck_planned_loss_each_tranche: true
+  corporate_actions: {split: adjust_shares_cost_stop_orders, dividend: add_to_cash}
+  gap_fill: opening_auction_fill
+  slippage_bps: 10
+  commission_bps: 0
+  benchmark_cash_mix: true
+
+pilot:
+  min_signals: 20
+  min_effective_n: 15
+  reference_win_rate: 0.52        # 참고치(게이트 아님)
+  reference_score: 55             # 참고치(게이트 아님)
+  max_tail_loss: -0.08
+  require_all_criteria: true
+
+backtest:
+  slippage_bps: 10
+  commission_bps: 0
+  fill: opening_auction_within_order_range
+  benchmark: SPY
+  cost_sensitivity_bps: [0, 5, 10, 20]
+
+costs_llm:
+  max_monthly_usd: 5.0
+  max_calls_per_day: 40
+  cache_ttl_hours: 168
+
+debate:
+  enabled: true
+  executor: codex_cli
+  skills: [buffett, lynch, druckenmiller, gates_13f, risk_guard, committee_chair]
+  rounds: [round1, round2, round3]
+  max_tickers_per_run: 6
+  max_calls_per_run: 80
+  max_calls_per_day: 120
+  timeout_sec: 180
+  retries: 2
+  min_valid_skills: 3
+  grade_promote_from_debate: false     # [고정]
+  auto_downgrade_enabled: false        # 검증 전 자동 하향 금지 [고정]
+  entry_rule: "signal_published_at <= completed_at < order_cutoff_at"   # [고정]
+  order_cutoff_et: "09:25"
+  veto_override_allowed: false         # [고정]
+  paths:
+    context: data/debate/context/{TICKER}.json
+    report: data/debate_reports.json
+    out_dir: out/debate
