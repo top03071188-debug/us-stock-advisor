@@ -168,3 +168,17 @@ def test_allowlist_declares_required_denials():
         assert key in rules["deny_keys"]
     assert "data/raw/" in rules["deny_paths"]
     assert ".env" in rules["deny_paths"]
+
+
+def test_package_is_deterministic(tmp_path):
+    """같은 스냅샷을 다시 패키징해도 sha256 이 같아야 '해시 일치 → 스킵'이 성립한다."""
+    src = tmp_path / "snap_2026-11-19_abc123"
+    src.mkdir()
+    (src / "manifest.json").write_text('{"snapshot_id":"sha256:x"}', encoding="utf-8")
+    (src / "prices.csv").write_text("date,raw_close\n2026-11-18,101\n", encoding="utf-8")
+    a = arch.package(src, tmp_path / "d1", "snap")
+    b = arch.package(src, tmp_path / "d2", "snap")
+    assert a["sha256"] == b["sha256"]
+    # 같은 이름·같은 해시면 check-asset 은 0(스킵)을 돌려준다
+    payload = {"assets": [{"name": "snap.tgz", "digest": "sha256:" + a["sha256"]}]}
+    assert arch.check_asset(payload, a["file"]).code == 0

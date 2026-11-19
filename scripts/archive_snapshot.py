@@ -21,7 +21,9 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
+import io
 import json
 import os
 import subprocess
@@ -55,8 +57,10 @@ def package(source: str | Path, out_dir: str | Path, name: str) -> dict:
     if not source.exists():
         raise FileNotFoundError(source)
     tgz = out_dir / f"{name}.tgz"
-    # 결정론적 tar: 정렬된 경로, 고정 mtime/소유자
-    with tarfile.open(tgz, "w:gz") as tar:
+    # 결정론적 tar+gzip: 정렬된 경로, 고정 mtime/소유자, gzip 헤더 mtime=0.
+    # 그래야 같은 스냅샷을 다시 패키징해도 sha256 이 같아 “해시 일치 → 스킵”이 성립한다.
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
         for p in sorted(source.rglob("*")):
             if p.is_file():
                 info = tar.gettarinfo(str(p), arcname=str(p.relative_to(source.parent)))
@@ -65,6 +69,8 @@ def package(source: str | Path, out_dir: str | Path, name: str) -> dict:
                 info.uname = info.gname = ""
                 with open(p, "rb") as fh:
                     tar.addfile(info, fh)
+    with open(tgz, "wb") as raw, gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as gz:
+        gz.write(buf.getvalue())
     digest = sha256_file(tgz)
     (out_dir / f"{name}.sha256").write_text(f"{digest}  {tgz.name}\n", encoding="utf-8")
     return {"file": str(tgz), "sha256": digest, "size": tgz.stat().st_size}
