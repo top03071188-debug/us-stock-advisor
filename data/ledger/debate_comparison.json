@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "as_of": "2026-11-20",
-  "generated_at": "2026-11-20T10:09:22.099136Z",
+  "as_of": "2026-11-21",
+  "generated_at": "2026-11-20T23:47:41.830646Z",
   "horizon_td": 63,
   "auto_downgrade_enabled": false,
   "divergent_pairs": 0,
-  "same_action_pairs": 0,
+  "same_action_pairs": 1,
   "n_graded_pairs": 0,
   "n_eff": 0,
   "avoided_loss": 0,
@@ -86,10 +86,11 @@
   "verdict_ko": "표본 부족 — 판단 보류",
   "note_ko": "토론 비교 표본 없음 — 행동이 갈린 페어가 아직 없다(토론 0건이면 정상).",
   "counts": {
-    "reports": 0,
-    "eligible": 0,
+    "reports": 1,
+    "eligible": 1,
     "late": 0,
     "invalid": 0,
+    "superseded": 0,
     "retroactive_dropped": 0
   },
   "retroactive_dropped": 0

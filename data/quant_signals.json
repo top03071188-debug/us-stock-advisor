@@ -1,44 +1,75 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-20T10:09:21.125556Z",
-  "data_cutoff_at": "2026-11-19T22:00:00Z",
-  "signal_published_at": "2026-11-20T10:09:17Z",
-  "order_cutoff_at": "2026-11-20T14:25:00Z",
-  "as_of": "2026-11-20",
+  "generated_at": "2026-11-20T23:47:40.837007Z",
+  "data_cutoff_at": "2026-11-20T22:00:00Z",
+  "signal_published_at": "2026-11-20T23:47:37Z",
+  "order_cutoff_at": "2026-11-23T14:25:00Z",
+  "as_of": "2026-11-21",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-  "code_commit": "400e206",
+  "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+  "code_commit": "0e591a6",
   "status": "normal",
   "mode": "postclose",
   "source": "live",
   "regime": {
-    "regime": "risk_on",
+    "regime": "neutral",
     "votes": {
       "real_rate": "risk_on",
       "t10y2y": "risk_on",
-      "credit": "risk_on",
-      "volatility": "neutral",
+      "credit": "neutral",
+      "volatility": "risk_off",
       "dollar": "neutral"
     },
-    "votes_risk_on": 3,
-    "votes_risk_off": 0,
+    "votes_risk_on": 2,
+    "votes_risk_off": 1,
     "inputs_missing": [],
     "verified": true,
     "extreme": false,
-    "multiplier": 1.0,
-    "margin_of_safety": 0.15,
-    "max_new_positions": null,
-    "score": 80.0
+    "multiplier": 0.7,
+    "margin_of_safety": 0.2,
+    "max_new_positions": 20,
+    "score": 50.0
+  },
+  "regime_sample": {
+    "regime": "neutral",
+    "n": 0,
+    "min_n": 30,
+    "matured_as_of": "2026-11-21",
+    "horizon": "3m",
+    "source": "ledger_records",
+    "reason": null,
+    "by_regime": {
+      "risk_on": {
+        "n": 0,
+        "min_n": 30
+      },
+      "neutral": {
+        "n": 0,
+        "min_n": 30
+      },
+      "risk_off": {
+        "n": 0,
+        "min_n": 30
+      }
+    },
+    "counts": {
+      "records": 28,
+      "matured": 0,
+      "duplicate": 0,
+      "no_regime": 28,
+      "not_matured": 0,
+      "no_price": 0
+    }
   },
   "ingest": {
     "policy": "cutoff_vintage_point_query",
     "mode": "live",
-    "data_cutoff_at": "2026-11-19T22:00:00Z",
-    "inputs_ingested_at": "2026-11-20T10:08:46.667893Z",
-    "lag_seconds": 43726.7,
+    "data_cutoff_at": "2026-11-20T22:00:00Z",
+    "inputs_ingested_at": "2026-11-20T23:47:08.469709Z",
+    "lag_seconds": 6428.5,
     "after_cutoff": true,
     "available_at_source": "vintage_point_query",
-    "vintage": "2026-11-18",
+    "vintage": "2026-11-19",
     "cutoff_filter": "available_at <= data_cutoff_at",
     "series_dropped": [],
     "replay": false
@@ -46,59 +77,59 @@
   "signals": [
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-MSFT-WATCH-004",
+      "signal_id": "2026-11-21-MSFT-WATCH-001",
       "ticker": "MSFT",
       "type": "WATCH",
       "grade": "B",
-      "entry_score": 58.24,
-      "as_of": "2026-11-20",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T10:09:17Z",
-      "signal_published_planned_at": "2026-11-19T22:02:11Z",
-      "order_cutoff_at": "2026-11-20T14:25:00Z",
-      "target_session": "2026-11-20",
-      "generated_price": 498.29998779296875,
+      "entry_score": 55.42,
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "signal_published_planned_at": "2026-11-20T22:02:11Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "target_session": "2026-11-23",
+      "generated_price": 484.5199890136719,
       "quant_intent": "no_action",
       "entry_plan": [
         {
           "tranche": 1,
           "weight": 0.4,
-          "price_ref": 498.3,
+          "price_ref": 484.52,
           "provisional": true
         },
         {
           "tranche": 2,
           "weight": 0.3,
-          "price_ref": 463.42,
+          "price_ref": 450.6,
           "provisional": true
         },
         {
           "tranche": 3,
           "weight": 0.3,
-          "price_ref": 428.54,
+          "price_ref": 416.69,
           "provisional": true,
           "active": false,
           "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
         }
       ],
       "target_band": {
-        "lo": 368.6984,
-        "hi": 433.4992,
+        "lo": 360.1293,
+        "hi": 422.3246,
         "horizon_td": 63,
         "basis": "base_price",
-        "base_price": 498.29998779296875,
-        "r_lo": -0.260087,
-        "r_hi": -0.130044,
+        "base_price": 484.5199890136719,
+        "r_lo": -0.25673,
+        "r_hi": -0.128365,
         "defensive": true,
         "return_base": "base_price",
-        "base_bar_date": "2026-11-19"
+        "base_bar_date": "2026-11-20"
       },
-      "expected_mdd": -0.1698,
+      "expected_mdd": -0.1718,
       "invalidation": {
-        "price": 429.88,
+        "price": 430.32,
         "reason": "200일선 −3% 이탈 + ROIC<WACC"
       },
-      "thesis_ko": "IV 대비 289% 프리미엄(안전마진 -289%) · RSI 39",
+      "thesis_ko": "IV 대비 275% 프리미엄(안전마진 -275%) · RSI 35",
       "evidence": [
         {
           "type": "fundamental",
@@ -138,8 +169,8 @@
       "investor_scores": {
         "buffett": -35.5,
         "graham": -30.5,
-        "lynch": 31.7,
-        "druckenmiller": 60.0
+        "lynch": 35.6,
+        "druckenmiller": 0.0
       },
       "conflict": true,
       "position": {
@@ -155,18 +186,18 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "code_commit": "400e206",
-      "revision": 4,
-      "supersedes": "2026-11-20-MSFT-WATCH-003",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "code_commit": "0e591a6",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:816f1285524f82e696a7edc1ccf241baa025cdbeafb36530915bb0523e0148b1",
       "trade_grade": "WATCH",
       "components": {
         "quality": 82.43,
         "valuation": 0.0,
-        "timing": 74.63,
-        "macro": 80.0,
-        "growth": 65.86
+        "timing": 82.04,
+        "macro": 50.0,
+        "growth": 67.81
       },
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
@@ -180,53 +211,60 @@
         "articles": 4,
         "news_state": "not_read",
         "alt_8k": true,
-        "reason": "regime_sample_missing"
+        "reason": "regime_sample_lt_30",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-21",
+        "regime_sample_source": "ledger_records"
       },
+      "regime": "neutral",
+      "regime_verified": true,
       "debate_advice": null,
       "valuation": {
-        "iv_low": 108.8083,
-        "iv_median": 128.0098,
-        "iv_high": 147.2113,
-        "price": 498.3,
-        "margin": -2.8927,
+        "iv_low": 109.7503,
+        "iv_median": 129.1181,
+        "iv_high": 148.4858,
+        "price": 484.52,
+        "margin": -2.7525,
         "iv_band_basis": "bear_bull",
         "median_method": "epv",
         "methods": {
-          "dcf_base": 103.22,
-          "epv": 128.0098,
+          "dcf_base": 104.3953,
+          "epv": 129.1181,
           "graham": 154.8127
         },
-        "iv_dcf_bear": 103.22,
-        "iv_dcf_bull": 103.22,
+        "iv_dcf_bear": 104.3953,
+        "iv_dcf_bull": 104.3953,
         "fcff_normalized": 58139.4877,
         "growth": 0.0,
         "growth_basis": "fcff_cagr",
         "net_debt": -36549.0,
-        "wacc_valuation": 0.098,
+        "wacc_valuation": 0.0972,
         "v_confidence": "B",
         "v_confidence_reason": null,
         "v_penalties": 10.0,
         "v_penalty_dcf": 0.0,
         "v_penalty_hist": 10.0,
         "dcf_sensitivity": 0.0,
-        "ev_ebit_percentile": 21.49,
+        "ev_ebit_percentile": 16.53,
         "ev_ebit_median_10y": 27.8702,
         "iv_hist_ev_ebit": 414.1243,
-        "hist_divergence": 0.6909,
+        "hist_divergence": 0.6882,
         "dcf_dropped": null,
         "v_raw": 0.0,
         "growth_raw_cagr": -0.1319,
         "growth_clipped_to_zero": true,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.1311,
-        "terminal_g_sensitivity": 0.049,
-        "rate_sensitivity": 0.1311,
-        "hist_divergence_signed": -0.6909,
-        "ev_ebit_current": 23.6882,
+        "wacc_sensitivity": 0.1328,
+        "terminal_g_sensitivity": 0.0498,
+        "rate_sensitivity": 0.1328,
+        "hist_divergence_signed": -0.6882,
+        "ev_ebit_current": 23.0266,
         "ev_ebit_samples": 121,
         "ev_ebit_years": 11,
-        "ev_ebit_window": "2016-11-21~2026-11-19",
+        "ev_ebit_window": "2016-11-21~2026-11-20",
         "ev_ebit_reason": null,
         "minority_interest": 0.0,
         "debt_reporting": "reported"
@@ -234,46 +272,46 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "Intuit Stock Tumbles After Earnings Beat. It’s Selling Mailchimp.",
+          "headline": "Salesforce vs. ServiceNow: Which Technology Stock Is a Better Buy for 2027?",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:54:00Z",
-          "url": "https://finnhub.io/api/news?id=37ba5922a099995f39e17d7f9b5dec87195afcc3c65077c8c79b6015feadf48f",
+          "published_at": "2026-11-20T21:47:17Z",
+          "url": "https://finnhub.io/api/news?id=9e72c9827b130344ad5727844d60aeaeb26fdd16c97401afefcf81254bdadc53",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Bridgewater Warns of AI Security Risk as Anthropic Shares Rise in Debut",
+          "headline": "Atalanta CEO Anjana Rajan Addresses Software Understanding Gap at The National Academies Cyber Resilience Forum",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:16:00Z",
-          "url": "https://finnhub.io/api/news?id=86f0f70b3dbbb031578c60d23282f67ec43d96a75a29fe7bcd2b4d1b99d5d3d3",
+          "published_at": "2026-11-20T21:26:00Z",
+          "url": "https://finnhub.io/api/news?id=321883b10bae1d5418ed2fa69efb902815d1a3b96325c3f19d7b0867f7f3f4bd",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Anthropic has a 17-fold revenue growth hurdle to tackle: A closer look",
+          "headline": "Is Apple Stock Increasing Your Market Risk?",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:13:40Z",
-          "url": "https://finnhub.io/api/news?id=ca982ca003caf78ae6c117f89c4276531cf9e98070ad945b6c2b69782b95d0d3",
+          "published_at": "2026-11-20T20:53:45Z",
+          "url": "https://finnhub.io/api/news?id=935619fe4cc137e8cc74cd82a39ce88ddcdf01e17375cd86c0a01b675f1b35a4",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Claude Users Excited to Invest in Anthropic, Says Ann Berry",
+          "headline": "“Pretty Bizarre”: Microsoft Is Worth More Than Alphabet. Which Makes No Sense",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:06:15Z",
-          "url": "https://finnhub.io/api/news?id=e874eadc3981d83fa268150bc9da6dbeb23fac6e76a4e9f1840e9256ecc4fb5f",
+          "published_at": "2026-11-20T20:38:43Z",
+          "url": "https://finnhub.io/api/news?id=f3917d843f41b893d16faa82ff8b5ffdf12bc7684c3ffc75c7066654b6aa0860",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Meta trades at 21x P/E, yet shareholders face a massive new bill",
+          "headline": "Intuit: 3 Key Takeaways for Long-Term Investors",
           "source": "Yahoo",
-          "published_at": "2026-11-19T20:24:40Z",
-          "url": "https://finnhub.io/api/news?id=4c978823529e3b521d8c43c053a30b1781bb985fe7c725f99fd83765d83191d9",
+          "published_at": "2026-11-20T20:18:32Z",
+          "url": "https://finnhub.io/api/news?id=ef5c3002e68ccecd2dda335166b677db77415d8ffbf4cbec046656b2d9bc1cdd",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -321,20 +359,18 @@
         "note_ko": null
       },
       "indicators": {
-        "rsi14": 39.2094,
-        "pct_b": -0.0043,
-        "dma50": 520.0588,
-        "dma200": 443.1782,
-        "atr_pct": 0.0319
+        "rsi14": 34.7635,
+        "pct_b": -0.1049,
+        "dma50": 519.8366,
+        "dma200": 443.6324,
+        "atr_pct": 0.0339
       },
       "gate_summary": {
         "failed": [
-          "B3",
-          "B4"
+          "B3"
         ],
         "reasons": {
-          "B3": "안전마진 -289.3% < 임계 15%",
-          "B4": "눌림 조건 1/4 · T 74.63"
+          "B3": "안전마진 -275.3% < 임계 20%"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
@@ -344,59 +380,59 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-NVDA-WATCH-004",
+      "signal_id": "2026-11-21-NVDA-WATCH-001",
       "ticker": "NVDA",
       "type": "WATCH",
       "grade": "B",
-      "entry_score": 62.76,
-      "as_of": "2026-11-20",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T10:09:17Z",
-      "signal_published_planned_at": "2026-11-19T22:02:11Z",
-      "order_cutoff_at": "2026-11-20T14:25:00Z",
-      "target_session": "2026-11-20",
-      "generated_price": 145.97999572753906,
+      "entry_score": 58.26,
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "signal_published_planned_at": "2026-11-20T22:02:11Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "target_session": "2026-11-23",
+      "generated_price": 125.52999877929688,
       "quant_intent": "no_action",
       "entry_plan": [
         {
           "tranche": 1,
           "weight": 0.4,
-          "price_ref": 145.98,
+          "price_ref": 125.53,
           "provisional": true
         },
         {
           "tranche": 2,
           "weight": 0.3,
-          "price_ref": 135.76,
+          "price_ref": 116.74,
           "provisional": true
         },
         {
           "tranche": 3,
           "weight": 0.3,
-          "price_ref": 125.54,
+          "price_ref": 107.96,
           "provisional": true,
           "active": false,
           "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
         }
       ],
       "target_band": {
-        "lo": 100.6227,
-        "hi": 123.3014,
+        "lo": 87.0164,
+        "hi": 106.2732,
         "horizon_td": 63,
         "basis": "base_price",
-        "base_price": 145.97999572753906,
-        "r_lo": -0.310709,
-        "r_hi": -0.155354,
+        "base_price": 125.52999877929688,
+        "r_lo": -0.306808,
+        "r_hi": -0.153404,
         "defensive": true,
         "return_base": "base_price",
-        "base_bar_date": "2026-11-19"
+        "base_bar_date": "2026-11-20"
       },
       "expected_mdd": -0.2,
       "invalidation": {
-        "price": 197.47,
+        "price": 197.25,
         "reason": "200일선 −3% 이탈 + ROIC<WACC"
       },
-      "thesis_ko": "IV 대비 791% 프리미엄(안전마진 -791%) · RSI 20",
+      "thesis_ko": "IV 대비 710% 프리미엄(안전마진 -710%) · RSI 15",
       "evidence": [
         {
           "type": "fundamental",
@@ -437,7 +473,7 @@
         "buffett": -38.5,
         "graham": -33.5,
         "lynch": 100.0,
-        "druckenmiller": 60.0
+        "druckenmiller": 0.0
       },
       "conflict": true,
       "position": {
@@ -453,17 +489,17 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "code_commit": "400e206",
-      "revision": 4,
-      "supersedes": "2026-11-20-NVDA-WATCH-003",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "code_commit": "0e591a6",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:816f1285524f82e696a7edc1ccf241baa025cdbeafb36530915bb0523e0148b1",
       "trade_grade": "WATCH",
       "components": {
         "quality": 77.54,
         "valuation": 0.0,
         "timing": 87.5,
-        "macro": 80.0,
+        "macro": 50.0,
         "growth": 100.0
       },
       "debate_structural_risk": null,
@@ -478,53 +514,60 @@
         "articles": 4,
         "news_state": "not_read",
         "alt_8k": true,
-        "reason": "regime_sample_missing"
+        "reason": "regime_sample_lt_30",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-21",
+        "regime_sample_source": "ledger_records"
       },
+      "regime": "neutral",
+      "regime_verified": true,
       "debate_advice": null,
       "valuation": {
-        "iv_low": 10.4582,
-        "iv_median": 16.3878,
-        "iv_high": 24.8192,
-        "price": 145.98,
-        "margin": -7.9078,
+        "iv_low": 9.9092,
+        "iv_median": 15.4912,
+        "iv_high": 23.4154,
+        "price": 125.53,
+        "margin": -7.1033,
         "iv_band_basis": "bear_bull",
         "median_method": "dcf_base",
         "methods": {
-          "dcf_base": 16.3878,
-          "epv": 8.8225,
+          "dcf_base": 15.4912,
+          "epv": 8.4554,
           "graham": 26.5915
         },
-        "iv_dcf_bear": 12.3037,
-        "iv_dcf_bull": 21.5819,
+        "iv_dcf_bear": 11.6579,
+        "iv_dcf_bull": 20.3612,
         "fcff_normalized": 25953.2464,
         "growth": 0.15,
         "growth_basis": "fcff_cagr",
         "net_debt": -2137.0,
-        "wacc_valuation": 0.1334,
+        "wacc_valuation": 0.1392,
         "v_confidence": "B",
         "v_confidence_reason": null,
         "v_penalties": 10.0,
         "v_penalty_dcf": 0.0,
         "v_penalty_hist": 10.0,
-        "dcf_sensitivity": 0.2831,
-        "ev_ebit_percentile": 6.61,
+        "dcf_sensitivity": 0.2809,
+        "ev_ebit_percentile": 2.48,
         "ev_ebit_median_10y": 56.3662,
         "iv_hist_ev_ebit": 75.9013,
-        "hist_divergence": 0.7841,
+        "hist_divergence": 0.7959,
         "dcf_dropped": null,
         "v_raw": 0.0,
         "growth_raw_cagr": 0.9027,
         "growth_clipped_to_zero": false,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.0995,
-        "terminal_g_sensitivity": 0.0336,
-        "rate_sensitivity": 0.0995,
-        "hist_divergence_signed": -0.7841,
-        "ev_ebit_current": 27.4292,
+        "wacc_sensitivity": 0.0945,
+        "terminal_g_sensitivity": 0.0313,
+        "rate_sensitivity": 0.0945,
+        "hist_divergence_signed": -0.7959,
+        "ev_ebit_current": 23.5844,
         "ev_ebit_samples": 121,
         "ev_ebit_years": 11,
-        "ev_ebit_window": "2016-11-21~2026-11-19",
+        "ev_ebit_window": "2016-11-21~2026-11-20",
         "ev_ebit_reason": null,
         "minority_interest": 0.0,
         "debt_reporting": "reported"
@@ -532,46 +575,46 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "The Crypto Bear Market Could Be Back. Here’s What I’m Doing About It.",
+          "headline": "Navitas Sinks 15%, Western Down 12%, Everpure Down 13% as AI Chip Rout Deepens",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:53:02Z",
-          "url": "https://finnhub.io/api/news?id=b4ca2b67322a7d8ca50e0b0fb52548804c1f2ab7402487d53f5fc46f1a436dcf",
+          "published_at": "2026-11-20T21:50:51Z",
+          "url": "https://finnhub.io/api/news?id=e575b463a0d8fb52d476dd9c255620fe722e05485e954bffcec001fc61d4ea5d",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Dow Jones Futures Fall After Ugly Market Reversal To New Lows; Anthropic IPO Debuts, AMD Dives",
+          "headline": "Frontline Ltd. Q3 2026 Earnings Call Summary",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:52:20Z",
-          "url": "https://finnhub.io/api/news?id=69bbf58b91dbdb01dff38a7d669d331425154da8f5881991f205ab376c7c0be3",
+          "published_at": "2026-11-20T21:50:21Z",
+          "url": "https://finnhub.io/api/news?id=f1327a792cf3c52ed8e8450d3dfdab81a85939c95376f241f5eace7b5d081ee6",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Is a Bloom Energy Stock Crash Coming? 1 Warning Sign Investors Shouldn’t Ignore.",
+          "headline": "Dow Jones Futures: Market Has Worst Week Since Covid Amid Nvidia, Anthropic. Does Fear Gauge Offer Hope?",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:50:02Z",
-          "url": "https://finnhub.io/api/news?id=a82fe4732c9d5f1880ec5f5e0698cd5b9ee475dd4db153b0f27ee14970858830",
+          "published_at": "2026-11-20T21:49:14Z",
+          "url": "https://finnhub.io/api/news?id=a461bf9206b72f4ed5bbda580ba12f32748c5dc1fc3ce52df1fae999182f1a09",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "\"The Big Short's\" Michael Burry Issued a Blunt Warning about Anthropic",
+          "headline": "Anthropic’s IPO Is Triggering a Selloff. How to Play It Now.",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:48:02Z",
-          "url": "https://finnhub.io/api/news?id=4869dc00f2ee14ff17ef591cabf575c28d1460ed714f01e9277446cd81d57c44",
+          "published_at": "2026-11-20T21:46:00Z",
+          "url": "https://finnhub.io/api/news?id=6cb91186b6284f7b92f5bf0ae4c391a4b58178c86bd260599a8e1a877233594a",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Update: Wall Street Tumbles Despite Anthropic's Blockbuster Market Debut",
+          "headline": "Marvell Reports Dec. 1. History Says What Its Stock Usually Does Next.",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:35:55Z",
-          "url": "https://finnhub.io/api/news?id=969f610c9ce566f817b43e7266a3b9db57457079e74c89802c2d70960b056030",
+          "published_at": "2026-11-20T21:43:02Z",
+          "url": "https://finnhub.io/api/news?id=a5a81bd49609165bce32d1a17bfd8065edc25157c928f66ee22e242aafaa6d58",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -625,11 +668,11 @@
         "note_ko": null
       },
       "indicators": {
-        "rsi14": 19.6438,
-        "pct_b": 0.0856,
-        "dma50": 208.8556,
-        "dma200": 203.5772,
-        "atr_pct": 0.0677
+        "rsi14": 15.0462,
+        "pct_b": -0.0261,
+        "dma50": 207.0004,
+        "dma200": 203.3454,
+        "atr_pct": 0.0853
       },
       "gate_summary": {
         "failed": [
@@ -638,7 +681,7 @@
         ],
         "reasons": {
           "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -790.8% < 임계 15%"
+          "B3": "안전마진 -710.3% < 임계 20%"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
@@ -648,59 +691,59 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-ADBE-WATCH-004",
+      "signal_id": "2026-11-21-ADBE-WATCH-001",
       "ticker": "ADBE",
       "type": "WATCH",
       "grade": "B",
-      "entry_score": 65.4,
-      "as_of": "2026-11-20",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T10:09:17Z",
-      "signal_published_planned_at": "2026-11-19T22:02:11Z",
-      "order_cutoff_at": "2026-11-20T14:25:00Z",
-      "target_session": "2026-11-20",
-      "generated_price": 221.67999267578125,
+      "entry_score": 61.26,
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "signal_published_planned_at": "2026-11-20T22:02:11Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "target_session": "2026-11-23",
+      "generated_price": 217.7100067138672,
       "quant_intent": "no_action",
       "entry_plan": [
         {
           "tranche": 1,
           "weight": 0.4,
-          "price_ref": 221.68,
+          "price_ref": 217.71,
           "provisional": true
         },
         {
           "tranche": 2,
           "weight": 0.3,
-          "price_ref": 206.16,
+          "price_ref": 202.47,
           "provisional": true
         },
         {
           "tranche": 3,
           "weight": 0.3,
-          "price_ref": 190.64,
+          "price_ref": 187.23,
           "provisional": true,
           "active": false,
           "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
         }
       ],
       "target_band": {
-        "lo": 199.6244,
-        "hi": 210.6522,
+        "lo": 197.0439,
+        "hi": 207.3769,
         "horizon_td": 63,
         "basis": "base_price",
-        "base_price": 221.67999267578125,
-        "r_lo": -0.099493,
-        "r_hi": -0.049746,
+        "base_price": 217.7100067138672,
+        "r_lo": -0.094925,
+        "r_hi": -0.047463,
         "defensive": true,
         "return_base": "base_price",
-        "base_bar_date": "2026-11-19"
+        "base_bar_date": "2026-11-20"
       },
       "expected_mdd": -0.2,
       "invalidation": {
-        "price": 239.22,
+        "price": 238.97,
         "reason": "200일선 −3% 이탈 + ROIC<WACC"
       },
-      "thesis_ko": "IV 대비 40% 프리미엄(안전마진 -40%) · RSI 33",
+      "thesis_ko": "IV 대비 37% 프리미엄(안전마진 -37%) · RSI 31",
       "evidence": [
         {
           "type": "fundamental",
@@ -738,10 +781,10 @@
         }
       ],
       "investor_scores": {
-        "buffett": -30.3,
-        "graham": -25.6,
+        "buffett": -30.1,
+        "graham": -25.4,
         "lynch": 100.0,
-        "druckenmiller": 60.0
+        "druckenmiller": 0.0
       },
       "conflict": true,
       "position": {
@@ -757,17 +800,17 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "code_commit": "400e206",
-      "revision": 4,
-      "supersedes": "2026-11-20-ADBE-WATCH-003",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "code_commit": "0e591a6",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:816f1285524f82e696a7edc1ccf241baa025cdbeafb36530915bb0523e0148b1",
       "trade_grade": "WATCH",
       "components": {
         "quality": 85.0,
-        "valuation": 3.36,
-        "timing": 85.29,
-        "macro": 80.0,
+        "valuation": 3.57,
+        "timing": 86.83,
+        "macro": 50.0,
         "growth": 100.0
       },
       "debate_structural_risk": null,
@@ -782,15 +825,22 @@
         "articles": 4,
         "news_state": "not_read",
         "alt_8k": true,
-        "reason": "regime_sample_missing"
+        "reason": "regime_sample_lt_30",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-21",
+        "regime_sample_source": "ledger_records"
       },
+      "regime": "neutral",
+      "regime_verified": true,
       "debate_advice": null,
       "valuation": {
         "iv_low": 134.8643,
         "iv_median": 158.6639,
         "iv_high": 182.4635,
-        "price": 221.68,
-        "margin": -0.3972,
+        "price": 217.71,
+        "margin": -0.3721,
         "iv_band_basis": "bear_bull",
         "median_method": "epv",
         "methods": {
@@ -811,24 +861,24 @@
         "v_penalty_dcf": 0.0,
         "v_penalty_hist": 10.0,
         "dcf_sensitivity": 0.2151,
-        "ev_ebit_percentile": 1.65,
+        "ev_ebit_percentile": 0.83,
         "ev_ebit_median_10y": 43.1572,
         "iv_hist_ev_ebit": 673.022,
         "hist_divergence": 0.7643,
         "dcf_dropped": null,
-        "v_raw": 13.36,
+        "v_raw": 13.57,
         "growth_raw_cagr": 0.103,
         "growth_clipped_to_zero": false,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.3816,
-        "terminal_g_sensitivity": 0.1556,
-        "rate_sensitivity": 0.3816,
+        "wacc_sensitivity": 0.3847,
+        "terminal_g_sensitivity": 0.1567,
+        "rate_sensitivity": 0.3847,
         "hist_divergence_signed": -0.7643,
-        "ev_ebit_current": 10.8284,
+        "ev_ebit_current": 10.6337,
         "ev_ebit_samples": 121,
         "ev_ebit_years": 11,
-        "ev_ebit_window": "2016-11-21~2026-11-19",
+        "ev_ebit_window": "2016-11-21~2026-11-20",
         "ev_ebit_reason": null,
         "minority_interest": 0.0,
         "debt_reporting": "reported"
@@ -836,46 +886,46 @@
       "news_state": "not_read",
       "news": [
         {
+          "headline": "Adobe (ADBE) Joins 40 Plus Groups Launching The AI Transparency Initiative",
+          "source": "Yahoo",
+          "published_at": "2026-11-20T20:13:24Z",
+          "url": "https://finnhub.io/api/news?id=b8f5022d021b8433fbdef28b7eafff415efe2a5b9f139f654c9d4edd163b3cf4",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "New Klaviyo Holiday Email Marketing Guide for Ecommerce Stores Released Ahead of Black Friday",
+          "source": "Yahoo",
+          "published_at": "2026-11-20T17:30:00Z",
+          "url": "https://finnhub.io/api/news?id=ae5ffb1e3e53c19638ed806b6bea82b2819ce11e7422161f958fc33aef729e21",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Snowflake vs. Adobe: Which Enterprise AI Stock Is a Better Buy?",
+          "source": "Yahoo",
+          "published_at": "2026-11-20T15:58:00Z",
+          "url": "https://finnhub.io/api/news?id=2a1dbf0f09c0d7c8596b6fd4faac3bd1a3e6f2cd706a476528ac90393f2bf41c",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Global Through-Channel Marketing Software Market 2026 | Capitalize on AI and Cloud Growth to $6.14B by 2030 as Microsoft, Salesforce, Adobe and StructuredWeb Accelerate Automation",
+          "source": "Yahoo",
+          "published_at": "2026-11-20T14:38:00Z",
+          "url": "https://finnhub.io/api/news?id=ee0928f6dd3a6a3634b5139145583c726b4a2498eb35caa31480c9ace5621f43",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
           "headline": "Adobe Systems (ADBE) Stock Moves -2.00%: What You Should Know",
           "source": "Yahoo",
           "published_at": "2026-11-19T21:45:02Z",
           "url": "https://finnhub.io/api/news?id=a7e128ece3ee934c45d15a92b46da5cd0b56ef70119c0191f20be28e525f59ec",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Michael Burry Adds To Tesla Rival BYD At Five-Year Lows",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T21:06:31Z",
-          "url": "https://finnhub.io/api/news?id=d966caca80fd1f875e7b3f4892cc1860d993e47a984b893ef22b0b23d8850c6d",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Adobe vs. Synopsys: Which Technology Stock Is a Better Buy for 2027?",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T18:17:02Z",
-          "url": "https://finnhub.io/api/news?id=c6d5e403dc3c39423f19a5f49376b01d15afcbca1989f57a21a2571f34aa1522",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Software as a Service (SaaS) Market to Reach USD 1,367.68 Billion by 2035 as AI Agents Reshape Pricing and Salesforce, Adobe, ServiceNow and Workday Build New AI Revenue Lines",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T16:00:00Z",
-          "url": "https://finnhub.io/api/news?id=863e362fd92258e0638b4f3793dbfac8601aac633cd2a3d96ff9f3444242e843",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Anthropic’s IPO Tests Waters for the AI Trade. Adobe Stock Investors Should Keep an Eye Out Too.",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T15:51:10Z",
-          "url": "https://finnhub.io/api/news?id=b578a474c05f52af4cab4976872fb340c131ae3a01a8122003ba6158f5930501",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -923,11 +973,11 @@
         "note_ko": null
       },
       "indicators": {
-        "rsi14": 32.9445,
-        "pct_b": -0.0669,
-        "dma50": 244.4288,
-        "dma200": 246.622,
-        "atr_pct": 0.039
+        "rsi14": 30.8894,
+        "pct_b": -0.0852,
+        "dma50": 243.7384,
+        "dma200": 246.3636,
+        "atr_pct": 0.0411
       },
       "gate_summary": {
         "failed": [
@@ -936,7 +986,7 @@
         ],
         "reasons": {
           "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -39.7% < 임계 15%"
+          "B3": "안전마진 -37.2% < 임계 20%"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
@@ -946,361 +996,59 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-CSCO-WATCH-004",
-      "ticker": "CSCO",
-      "type": "WATCH",
-      "grade": "B",
-      "entry_score": 57.11,
-      "as_of": "2026-11-20",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T10:09:17Z",
-      "signal_published_planned_at": "2026-11-19T22:02:11Z",
-      "order_cutoff_at": "2026-11-20T14:25:00Z",
-      "target_session": "2026-11-20",
-      "generated_price": 94.69999694824219,
-      "quant_intent": "no_action",
-      "entry_plan": [
-        {
-          "tranche": 1,
-          "weight": 0.4,
-          "price_ref": 94.7,
-          "provisional": true
-        },
-        {
-          "tranche": 2,
-          "weight": 0.3,
-          "price_ref": 88.07,
-          "provisional": true
-        },
-        {
-          "tranche": 3,
-          "weight": 0.3,
-          "price_ref": 81.44,
-          "provisional": true,
-          "active": false,
-          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
-        }
-      ],
-      "target_band": {
-        "lo": 72.3102,
-        "hi": 83.5051,
-        "horizon_td": 63,
-        "basis": "base_price",
-        "base_price": 94.69999694824219,
-        "r_lo": -0.236429,
-        "r_hi": -0.118214,
-        "defensive": true,
-        "return_base": "base_price",
-        "base_bar_date": "2026-11-19"
-      },
-      "expected_mdd": -0.2,
-      "invalidation": {
-        "price": 99.56,
-        "reason": "200일선 −3% 이탈 + ROIC<WACC"
-      },
-      "thesis_ko": "IV 대비 208% 프리미엄(안전마진 -208%) · RSI 38 · 성장률 0 이하 → 등급 상한 WATCH",
-      "evidence": [
-        {
-          "type": "fundamental",
-          "period_end": "2026-07-25",
-          "form": "10-K",
-          "accession": "0000858877-26-000132",
-          "filed_date": "2026-09-02",
-          "available_at": "2026-09-02T20:36:56Z",
-          "metric": "quality_composite",
-          "value_kind": "score_0_100"
-        },
-        {
-          "type": "fundamental",
-          "period_end": "2026-07-25",
-          "form": "10-K",
-          "accession": "0000858877-26-000132",
-          "filed_date": "2026-09-02",
-          "available_at": "2026-09-02T20:36:56Z",
-          "metric": "fcf_margin_5y",
-          "value_kind": "ratio"
-        },
-        {
-          "type": "sec_filing",
-          "form": "10-Q",
-          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000185/csco-20261024.htm",
-          "filed_date": "2026-11-17",
-          "available_at": "2026-11-17T21:36:56+00:00",
-          "accession": "0000858877-26-000185",
-          "role": "reference"
-        },
-        {
-          "type": "market",
-          "metric": "atr_pct",
-          "value_kind": "ratio"
-        }
-      ],
-      "investor_scores": {
-        "buffett": -27.3,
-        "graham": -22.3,
-        "lynch": -100.0,
-        "druckenmiller": 60.0
-      },
-      "conflict": true,
-      "position": {
-        "plan_weight_target": 0.0,
-        "tranche": 0,
-        "tranche_weight": 0.0,
-        "stop_distance": 0.0,
-        "stop_price": null,
-        "planned_loss_after_fill_pct": null
-      },
-      "debate_ref": null,
-      "execution_event": null,
-      "track": "quant_only",
-      "veto": [],
-      "params_version": "params_v001",
-      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "code_commit": "400e206",
-      "revision": 4,
-      "supersedes": "2026-11-20-CSCO-WATCH-003",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
-      "trade_grade": "WATCH",
-      "components": {
-        "quality": 96.13,
-        "valuation": 0.0,
-        "timing": 81.33,
-        "macro": 80.0,
-        "growth": 0.0
-      },
-      "debate_structural_risk": null,
-      "debate_risk_gate_applied": false,
-      "confidence_cap": null,
-      "confidence_detail": {
-        "grade": "B",
-        "data_fresh": true,
-        "regime_sample_ok": false,
-        "verified_quotes": 0,
-        "independent_sources": 0,
-        "articles": 4,
-        "news_state": "not_read",
-        "alt_8k": true,
-        "reason": "regime_sample_missing"
-      },
-      "debate_advice": null,
-      "valuation": {
-        "iv_low": 26.1198,
-        "iv_median": 30.7292,
-        "iv_high": 35.3385,
-        "price": 94.7,
-        "margin": -2.0818,
-        "iv_band_basis": "bear_bull",
-        "median_method": "graham",
-        "methods": {
-          "dcf_base": 33.0783,
-          "epv": 30.0029,
-          "graham": 30.7292
-        },
-        "iv_dcf_bear": 33.0783,
-        "iv_dcf_bull": 33.0783,
-        "fcff_normalized": 10016.7073,
-        "growth": 0.0,
-        "growth_basis": "fcff_cagr",
-        "net_debt": 13615.0,
-        "wacc_valuation": 0.0882,
-        "v_confidence": "B",
-        "v_confidence_reason": null,
-        "v_penalties": 10.0,
-        "v_penalty_dcf": 0.0,
-        "v_penalty_hist": 10.0,
-        "dcf_sensitivity": 0.0,
-        "ev_ebit_percentile": 89.26,
-        "ev_ebit_median_10y": 15.0911,
-        "iv_hist_ev_ebit": 49.4589,
-        "hist_divergence": 0.3787,
-        "dcf_dropped": null,
-        "v_raw": 0.0,
-        "growth_raw_cagr": -0.0033,
-        "growth_clipped_to_zero": true,
-        "effective_fcff_years": 5,
-        "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.1767,
-        "terminal_g_sensitivity": 0.0681,
-        "rate_sensitivity": 0.1767,
-        "hist_divergence_signed": -0.3787,
-        "ev_ebit_current": 25.4544,
-        "ev_ebit_samples": 121,
-        "ev_ebit_years": 11,
-        "ev_ebit_window": "2016-11-21~2026-11-19",
-        "ev_ebit_reason": null,
-        "minority_interest": 0.0,
-        "debt_reporting": "reported"
-      },
-      "news_state": "not_read",
-      "news": [
-        {
-          "headline": "Cisco’s CEO Just Sold $27 Million of Stock in 3 Days",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T18:02:27Z",
-          "url": "https://finnhub.io/api/news?id=9bdf5e90b546e392313cd58aab4997a39fb8142acfb9de1b5103ff2002eeb9b7",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Top AI Stocks to Add to Your Portfolio for Healthy Returns",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T17:33:00Z",
-          "url": "https://finnhub.io/api/news?id=183fbc7a733c6ac9ee34d4d0eb00a177c3499d14ce2bc245d75c9cf936578cfe",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Ken Fisher and 14 Other Big Funds Sold Lumentum Last Quarter, While 18 Bought. Who’s Right?",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T15:43:19Z",
-          "url": "https://finnhub.io/api/news?id=5b3a5265e9b170bd160d1e09514ccf4d9849fc9291d68b8bb3693610d4ad1bb7",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Connecting People to Humanitarian Assistance With Responsible AI",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T15:30:00Z",
-          "url": "https://finnhub.io/api/news?id=7b6fa3b5c7b2c448f76cd064e7be58c62eefbf5b48720dde10815ceeb02d4f77",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "4 Tech Dividend Stocks Yielding Over 2% That Retirees Can Own for Growth and Income",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T15:20:52Z",
-          "url": "https://finnhub.io/api/news?id=0dc51ffb9239cc093b35a0a662aabde40317709b82625651f2f42a58df821bfb",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        }
-      ],
-      "filings": [
-        {
-          "form": "144",
-          "filed_date": "2026-11-19",
-          "url": "https://www.sec.gov/Archives/edgar/data/858877/000195004726011347/xsl144X01/primary_doc.xml",
-          "accession": "0001950047-26-011347",
-          "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-18",
-          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000197/xslF345X06/wk-form4_1795041975.xml",
-          "accession": "0000858877-26-000197",
-          "items": []
-        },
-        {
-          "form": "144",
-          "filed_date": "2026-11-18",
-          "url": "https://www.sec.gov/Archives/edgar/data/858877/000195004726011302/xsl144X01/primary_doc.xml",
-          "accession": "0001950047-26-011302",
-          "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-17",
-          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000195/xslF345X06/wk-form4_1794953642.xml",
-          "accession": "0000858877-26-000195",
-          "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-17",
-          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000194/xslF345X06/wk-form4_1794953636.xml",
-          "accession": "0000858877-26-000194",
-          "items": []
-        }
-      ],
-      "risk": {
-        "veto": [],
-        "note_ko": null
-      },
-      "indicators": {
-        "rsi14": 37.9298,
-        "pct_b": 0.2089,
-        "dma50": 106.6818,
-        "dma200": 102.6419,
-        "atr_pct": 0.0402
-      },
-      "gate_summary": {
-        "failed": [
-          "B0",
-          "B2",
-          "B3",
-          "B4"
-        ],
-        "reasons": {
-          "B0": "대가 쿼럼 미달(가치·성장 점수 +20 이상 필요)",
-          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -208.2% < 임계 15%",
-          "B4": "눌림 조건 1/4 · T 81.33"
-        }
-      },
-      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
-      "decision": "WATCH",
-      "sector": "Information Technology",
-      "entry_band": null
-    },
-    {
-      "schema_version": 1,
-      "signal_id": "2026-11-20-GOOGL-WATCH-004",
+      "signal_id": "2026-11-21-GOOGL-WATCH-001",
       "ticker": "GOOGL",
       "type": "WATCH",
       "grade": "B",
-      "entry_score": 65.78,
-      "as_of": "2026-11-20",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T10:09:17Z",
-      "signal_published_planned_at": "2026-11-19T22:02:11Z",
-      "order_cutoff_at": "2026-11-20T14:25:00Z",
-      "target_session": "2026-11-20",
-      "generated_price": 272.6600036621094,
+      "entry_score": 61.51,
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "signal_published_planned_at": "2026-11-20T22:02:11Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "target_session": "2026-11-23",
+      "generated_price": 265.2900085449219,
       "quant_intent": "no_action",
       "entry_plan": [
         {
           "tranche": 1,
           "weight": 0.4,
-          "price_ref": 272.66,
+          "price_ref": 265.29,
           "provisional": true
         },
         {
           "tranche": 2,
           "weight": 0.3,
-          "price_ref": 253.57,
+          "price_ref": 246.72,
           "provisional": true
         },
         {
           "tranche": 3,
           "weight": 0.3,
-          "price_ref": 234.49,
+          "price_ref": 228.15,
           "provisional": true,
           "active": false,
           "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
         }
       ],
       "target_band": {
-        "lo": 198.4619,
-        "hi": 235.561,
+        "lo": 194.0706,
+        "hi": 229.6803,
         "horizon_td": 63,
         "basis": "base_price",
-        "base_price": 272.6600036621094,
-        "r_lo": -0.272127,
-        "r_hi": -0.136063,
+        "base_price": 265.2900085449219,
+        "r_lo": -0.268459,
+        "r_hi": -0.134229,
         "defensive": true,
         "return_base": "base_price",
-        "base_bar_date": "2026-11-19"
+        "base_bar_date": "2026-11-20"
       },
       "expected_mdd": -0.2,
       "invalidation": {
-        "price": 327.18,
+        "price": 326.86,
         "reason": "200일선 −3% 이탈 + ROIC<WACC"
       },
-      "thesis_ko": "IV 대비 349% 프리미엄(안전마진 -349%) · RSI 31",
+      "thesis_ko": "IV 대비 329% 프리미엄(안전마진 -329%) · RSI 28",
       "evidence": [
         {
           "type": "fundamental",
@@ -1340,8 +1088,8 @@
       "investor_scores": {
         "buffett": -30.7,
         "graham": -25.7,
-        "lynch": 83.9,
-        "druckenmiller": 60.0
+        "lynch": 86.9,
+        "druckenmiller": 0.0
       },
       "conflict": true,
       "position": {
@@ -1357,18 +1105,18 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "code_commit": "400e206",
-      "revision": 4,
-      "supersedes": "2026-11-20-GOOGL-WATCH-003",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "code_commit": "0e591a6",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:816f1285524f82e696a7edc1ccf241baa025cdbeafb36530915bb0523e0148b1",
       "trade_grade": "WATCH",
       "components": {
         "quality": 90.55,
         "valuation": 0.0,
-        "timing": 87.07,
-        "macro": 80.0,
-        "growth": 91.97
+        "timing": 87.5,
+        "macro": 50.0,
+        "growth": 93.44
       },
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
@@ -1382,53 +1130,60 @@
         "articles": 4,
         "news_state": "not_read",
         "alt_8k": true,
-        "reason": "regime_sample_missing"
+        "reason": "regime_sample_lt_30",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-21",
+        "regime_sample_source": "ledger_records"
       },
+      "regime": "neutral",
+      "regime_verified": true,
       "debate_advice": null,
       "valuation": {
-        "iv_low": 51.5657,
-        "iv_median": 60.6655,
-        "iv_high": 69.7653,
-        "price": 272.66,
-        "margin": -3.4945,
+        "iv_low": 52.5352,
+        "iv_median": 61.8061,
+        "iv_high": 71.077,
+        "price": 265.29,
+        "margin": -3.2923,
         "iv_band_basis": "bear_bull",
         "median_method": "epv",
         "methods": {
-          "dcf_base": 51.8759,
-          "epv": 60.6655,
+          "dcf_base": 53.1142,
+          "epv": 61.8061,
           "graham": 90.8644
         },
-        "iv_dcf_bear": 51.8759,
-        "iv_dcf_bull": 51.8759,
+        "iv_dcf_bear": 53.1142,
+        "iv_dcf_bull": 53.1142,
         "fcff_normalized": 49264.0172,
         "growth": 0.0,
         "growth_basis": "fcff_cagr",
         "net_debt": -77758.0,
-        "wacc_valuation": 0.1066,
+        "wacc_valuation": 0.1044,
         "v_confidence": "B",
         "v_confidence_reason": null,
         "v_penalties": 10.0,
         "v_penalty_dcf": 0.0,
         "v_penalty_hist": 10.0,
         "dcf_sensitivity": 0.0,
-        "ev_ebit_percentile": 35.54,
+        "ev_ebit_percentile": 33.06,
         "ev_ebit_median_10y": 29.18,
         "iv_hist_ev_ebit": 207.4757,
-        "hist_divergence": 0.7076,
+        "hist_divergence": 0.7021,
         "dcf_dropped": null,
         "v_raw": 0.0,
         "growth_raw_cagr": -0.0535,
         "growth_clipped_to_zero": true,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.1076,
-        "terminal_g_sensitivity": 0.0391,
-        "rate_sensitivity": 0.1076,
-        "hist_divergence_signed": -0.7076,
-        "ev_ebit_current": 25.2395,
+        "wacc_sensitivity": 0.111,
+        "terminal_g_sensitivity": 0.0406,
+        "rate_sensitivity": 0.111,
+        "hist_divergence_signed": -0.7021,
+        "ev_ebit_current": 24.5409,
         "ev_ebit_samples": 121,
         "ev_ebit_years": 9,
-        "ev_ebit_window": "2016-11-21~2026-11-19",
+        "ev_ebit_window": "2016-11-21~2026-11-20",
         "ev_ebit_reason": null,
         "minority_interest": 0.0,
         "debt_reporting": "reported"
@@ -1436,52 +1191,66 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "Trump’s Latest Media Lawsuit Can Proceed, Judge Rules. What Could Happen If He Prevails.",
+          "headline": "Nvidia’s Stock Slide Deepens After Report of SEC Accounting Probe",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:56:00Z",
-          "url": "https://finnhub.io/api/news?id=5c95b8fb484dd1220d366b600005bd2165d72c4bd5cc50e3ed4eea209ed78952",
+          "published_at": "2026-11-20T21:43:00Z",
+          "url": "https://finnhub.io/api/news?id=8ea45aa89b25bf662ec532ef89c9c04f096153d6e9dc711db4f16a9cd9d560e8",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Anthropic, AMD, Alphabet, Palo Alto, Take-Two, Walmart, and More Stocks That Explain Today’s Market",
+          "headline": "Alphabet Raises $4.19 Billion in Debt as Free Cash Flow Turns Negative",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:47:00Z",
-          "url": "https://finnhub.io/api/news?id=95b7d457c2f06088bbba42d7f818bf650bbf4afb8c98db8ab1e3103814fb6d5e",
+          "published_at": "2026-11-20T21:41:09Z",
+          "url": "https://finnhub.io/api/news?id=fcdf2e7cef07f2d1cc7ec4af08bba571f7f29b3c313c8e1286341af0d72f5f15",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Google’s SpaceX Stake Lost More Than $10 Billion in Value Last Quarter While Its Share Count Edged Up",
+          "headline": "Nasdaq turns negative: Why Anthropic & other tech stocks are getting crushed",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:28:18Z",
-          "url": "https://finnhub.io/api/news?id=17465fe88f66f99ed48f9c5ee7afd564448d171d38996a1f044063ff93b0e4fe",
+          "published_at": "2026-11-20T21:38:46Z",
+          "url": "https://finnhub.io/api/news?id=3727581ad505816946886143beae7cc306984789dc03346171bca34594c5a843",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Anthropic IPO raises record $81.3 billion as stock opens 34% above offering price",
+          "headline": "Atalanta CEO Anjana Rajan Addresses Software Understanding Gap at The National Academies Cyber Resilience Forum",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:18:28Z",
-          "url": "https://finnhub.io/api/news?id=575ed17c58174b0bf77a2651a92979eed604fa8430ac40a38b3ece2239c90803",
+          "published_at": "2026-11-20T21:26:00Z",
+          "url": "https://finnhub.io/api/news?id=321883b10bae1d5418ed2fa69efb902815d1a3b96325c3f19d7b0867f7f3f4bd",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Dow Drops 1,100 Points as Anthropic Pops 17%: Stock Market Today",
+          "headline": "Funds With Anthropic Exposure Got Off To a Rough Start. More Trouble May Be on The Way",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:14:22Z",
-          "url": "https://finnhub.io/api/news?id=7ccf24b1a7b8f904b4044d9cccf3900e2cc43c3d2e3c98f2474c0b3cc325defd",
+          "published_at": "2026-11-20T21:21:00Z",
+          "url": "https://finnhub.io/api/news?id=06ab81f0065a1b9c4360251846e244fbdde7fd0b2f723c4fafd3a7c76849a1cb",
           "impact": null,
           "durability": null,
           "quote_verified": null
         }
       ],
       "filings": [
+        {
+          "form": "8-A12B",
+          "filed_date": "2026-11-20",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526470391/d142213d8a12b.htm",
+          "accession": "0001193125-26-470391",
+          "items": []
+        },
+        {
+          "form": "FWP",
+          "filed_date": "2026-11-20",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526469213/d21316dfwp.htm",
+          "accession": "0001193125-26-469213",
+          "items": []
+        },
         {
           "form": "424B5",
           "filed_date": "2026-11-19",
@@ -1502,20 +1271,6 @@
           "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526463983/xslF345X06/ownership.xml",
           "accession": "0001193125-26-463983",
           "items": []
-        },
-        {
-          "form": "144",
-          "filed_date": "2026-11-12",
-          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000196858226001139/xsl144X01/primary_doc.xml",
-          "accession": "0001968582-26-001139",
-          "items": []
-        },
-        {
-          "form": "144",
-          "filed_date": "2026-11-12",
-          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000196858226001138/xsl144X01/primary_doc.xml",
-          "accession": "0001968582-26-001138",
-          "items": []
         }
       ],
       "risk": {
@@ -1523,11 +1278,11 @@
         "note_ko": null
       },
       "indicators": {
-        "rsi14": 30.5796,
-        "pct_b": 0.1833,
-        "dma50": 323.7648,
-        "dma200": 337.3032,
-        "atr_pct": 0.0393
+        "rsi14": 27.781,
+        "pct_b": 0.0994,
+        "dma50": 322.3006,
+        "dma200": 336.9734,
+        "atr_pct": 0.0426
       },
       "gate_summary": {
         "failed": [
@@ -1536,7 +1291,7 @@
         ],
         "reasons": {
           "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -349.4% < 임계 15%"
+          "B3": "안전마진 -329.2% < 임계 20%"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
@@ -1546,59 +1301,59 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-META-WATCH-004",
+      "signal_id": "2026-11-21-META-WATCH-001",
       "ticker": "META",
       "type": "WATCH",
       "grade": "C",
-      "entry_score": 63.57,
-      "as_of": "2026-11-20",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T10:09:17Z",
-      "signal_published_planned_at": "2026-11-19T22:02:11Z",
-      "order_cutoff_at": "2026-11-20T14:25:00Z",
-      "target_session": "2026-11-20",
-      "generated_price": 596.219970703125,
+      "entry_score": 60.42,
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "signal_published_planned_at": "2026-11-20T22:02:11Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "target_session": "2026-11-23",
+      "generated_price": 560.8400268554688,
       "quant_intent": "no_action",
       "entry_plan": [
         {
           "tranche": 1,
           "weight": 0.4,
-          "price_ref": 596.22,
+          "price_ref": 560.84,
           "provisional": true
         },
         {
           "tranche": 2,
           "weight": 0.3,
-          "price_ref": 554.48,
+          "price_ref": 521.58,
           "provisional": true
         },
         {
           "tranche": 3,
           "weight": 0.3,
-          "price_ref": 512.75,
+          "price_ref": 482.32,
           "provisional": true,
           "active": false,
           "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
         }
       ],
       "target_band": {
-        "lo": 442.7075,
-        "hi": 519.4638,
+        "lo": 419.4381,
+        "hi": 490.1391,
         "horizon_td": 63,
         "basis": "base_price",
-        "base_price": 596.219970703125,
-        "r_lo": -0.257476,
-        "r_hi": -0.128738,
+        "base_price": 560.8400268554688,
+        "r_lo": -0.252125,
+        "r_hi": -0.126063,
         "defensive": true,
         "return_base": "base_price",
-        "base_bar_date": "2026-11-19"
+        "base_bar_date": "2026-11-20"
       },
       "expected_mdd": -0.2,
       "invalidation": {
-        "price": 610.26,
+        "price": 609.73,
         "reason": "200일선 −3% 이탈 + ROIC<WACC"
       },
-      "thesis_ko": "IV 대비 278% 프리미엄(안전마진 -278%) · RSI 37",
+      "thesis_ko": "IV 대비 258% 프리미엄(안전마진 -258%) · RSI 30",
       "evidence": [
         {
           "type": "fundamental",
@@ -1624,8 +1379,8 @@
       "investor_scores": {
         "buffett": -31.1,
         "graham": -26.1,
-        "lynch": 62.9,
-        "druckenmiller": 60.0
+        "lynch": 70.6,
+        "druckenmiller": 0.0
       },
       "conflict": true,
       "position": {
@@ -1641,18 +1396,18 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "code_commit": "400e206",
-      "revision": 4,
-      "supersedes": "2026-11-20-META-WATCH-003",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "code_commit": "0e591a6",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:816f1285524f82e696a7edc1ccf241baa025cdbeafb36530915bb0523e0148b1",
       "trade_grade": "WATCH",
       "components": {
         "quality": 89.77,
         "valuation": 0.0,
-        "timing": 82.45,
-        "macro": 80.0,
-        "growth": 81.45
+        "timing": 87.3,
+        "macro": 50.0,
+        "growth": 85.3
       },
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
@@ -1665,53 +1420,60 @@
         "independent_sources": 0,
         "articles": 2,
         "news_state": "not_read",
-        "reason": "core_evidence_missing"
+        "reason": "core_evidence_missing",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-21",
+        "regime_sample_source": "ledger_records"
       },
+      "regime": "neutral",
+      "regime_verified": true,
       "debate_advice": null,
       "valuation": {
-        "iv_low": 133.9711,
-        "iv_median": 157.613,
-        "iv_high": 181.255,
-        "price": 596.22,
-        "margin": -2.7828,
+        "iv_low": 133.3094,
+        "iv_median": 156.8345,
+        "iv_high": 180.3597,
+        "price": 560.84,
+        "margin": -2.576,
         "iv_band_basis": "bear_bull",
         "median_method": "epv",
         "methods": {
-          "dcf_base": 133.4327,
-          "epv": 157.613,
+          "dcf_base": 132.5707,
+          "epv": 156.8345,
           "graham": 211.1944
         },
-        "iv_dcf_bear": 133.4327,
-        "iv_dcf_bull": 133.4327,
+        "iv_dcf_bear": 132.5707,
+        "iv_dcf_bull": 132.5707,
         "fcff_normalized": 25382.2514,
         "growth": 0.0,
         "growth_basis": "fcff_cagr",
         "net_debt": -22848.0,
-        "wacc_valuation": 0.0979,
+        "wacc_valuation": 0.0984,
         "v_confidence": "B",
         "v_confidence_reason": null,
         "v_penalties": 10.0,
         "v_penalty_dcf": 0.0,
         "v_penalty_hist": 10.0,
         "dcf_sensitivity": 0.0,
-        "ev_ebit_percentile": 19.01,
+        "ev_ebit_percentile": 12.4,
         "ev_ebit_median_10y": 24.6359,
         "iv_hist_ev_ebit": 456.3521,
-        "hist_divergence": 0.6546,
+        "hist_divergence": 0.6563,
         "dcf_dropped": null,
         "v_raw": 0.0,
         "growth_raw_cagr": -0.0919,
         "growth_clipped_to_zero": true,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.1288,
-        "terminal_g_sensitivity": 0.0481,
-        "rate_sensitivity": 0.1288,
-        "hist_divergence_signed": -0.6546,
-        "ev_ebit_current": 18.1544,
+        "wacc_sensitivity": 0.1278,
+        "terminal_g_sensitivity": 0.0477,
+        "rate_sensitivity": 0.1278,
+        "hist_divergence_signed": -0.6563,
+        "ev_ebit_current": 17.0608,
         "ev_ebit_samples": 121,
         "ev_ebit_years": 11,
-        "ev_ebit_window": "2016-11-21~2026-11-19",
+        "ev_ebit_window": "2016-11-21~2026-11-20",
         "ev_ebit_reason": null,
         "minority_interest": 0.0,
         "debt_reporting": "reported"
@@ -1719,52 +1481,73 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "The 25 Biggest U.S. IPOs of All Time",
+          "headline": "Funds With Anthropic Exposure Got Off To a Rough Start. More Trouble May Be on The Way",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:38:58Z",
-          "url": "https://finnhub.io/api/news?id=7c050ac71aa344e37d9bd3a13713c3b456e199879e13685595bd2d3a37381fa1",
+          "published_at": "2026-11-20T21:21:00Z",
+          "url": "https://finnhub.io/api/news?id=06ab81f0065a1b9c4360251846e244fbdde7fd0b2f723c4fafd3a7c76849a1cb",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Intuit Beats Fiscal Q1 Goals, Gives Soft Outlook, Sells Mailchimp",
+          "headline": "YouTube nears $3B settlement with school districts over addiction claims: report",
           "source": "Yahoo",
-          "published_at": "2026-11-19T21:21:37Z",
-          "url": "https://finnhub.io/api/news?id=0d6864adb4124b36ab69caef8f0f680eaf3771227e064104784ab4d6266e8792",
+          "published_at": "2026-11-20T21:17:59Z",
+          "url": "https://finnhub.io/api/news?id=eaec2b0d00c8e28a5daa83530e30e835c7341a5aea927010219a91aea187a71e",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Meta trades at 21x P/E, yet shareholders face a massive new bill",
+          "headline": "Anthropic Stock Came Within 5 Cents of Its $83 IPO Price on Day 2, Then Bounced 6% to Close at $88.30. Facebook Closed Its Day 2 10% Below Its IPO Price",
           "source": "Yahoo",
-          "published_at": "2026-11-19T20:24:40Z",
-          "url": "https://finnhub.io/api/news?id=4c978823529e3b521d8c43c053a30b1781bb985fe7c725f99fd83765d83191d9",
+          "published_at": "2026-11-20T21:17:10Z",
+          "url": "https://finnhub.io/api/news?id=656aa700767e15c9c48e52fd9dcf70d23697de73137b37f35398ea52150a3f91",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Turkey’s monopolies watchdog takes on all comers",
+          "headline": "$1,000 in Anthropic or Bitcoin: Which Could Be Worth More by 2030?",
           "source": "Yahoo",
-          "published_at": "2026-11-19T20:21:26Z",
-          "url": "https://finnhub.io/api/news?id=7b75d239b5f09e0f235e7cfa6f7888408264298c1447651feb118e4c8cc02a27",
+          "published_at": "2026-11-20T21:12:00Z",
+          "url": "https://finnhub.io/api/news?id=5ef879f5b021b5831305f2a25e044ee9a7d520a82f3354e79f80765b16f96703",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Oklo Just Dropped 22% in a Month. What Would It Take to Get OKLO Stock to $25?",
+          "headline": "“Pretty Bizarre”: Microsoft Is Worth More Than Alphabet. Which Makes No Sense",
           "source": "Yahoo",
-          "published_at": "2026-11-19T20:05:32Z",
-          "url": "https://finnhub.io/api/news?id=034a240bbd5ec0a9ba1aa9a87eb0d0e74c802b85eb7452919ea2d43847c4f4c0",
+          "published_at": "2026-11-20T20:38:43Z",
+          "url": "https://finnhub.io/api/news?id=f3917d843f41b893d16faa82ff8b5ffdf12bc7684c3ffc75c7066654b6aa0860",
           "impact": null,
           "durability": null,
           "quote_verified": null
         }
       ],
       "filings": [
+        {
+          "form": "4",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017904/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017904",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017902/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017902",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017900/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017900",
+          "items": []
+        },
         {
           "form": "4",
           "filed_date": "2026-11-17",
@@ -1778,27 +1561,6 @@
           "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017706/xslF345X06/ownership.xml",
           "accession": "0000950103-26-017706",
           "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-17",
-          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017705/xslF345X06/ownership.xml",
-          "accession": "0000950103-26-017705",
-          "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-17",
-          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017704/xslF345X06/ownership.xml",
-          "accession": "0000950103-26-017704",
-          "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-17",
-          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017703/xslF345X06/ownership.xml",
-          "accession": "0000950103-26-017703",
-          "items": []
         }
       ],
       "risk": {
@@ -1806,11 +1568,11 @@
         "note_ko": null
       },
       "indicators": {
-        "rsi14": 36.7368,
-        "pct_b": -0.0163,
-        "dma50": 678.3974,
-        "dma200": 629.1388,
-        "atr_pct": 0.0372
+        "rsi14": 30.263,
+        "pct_b": -0.309,
+        "dma50": 676.6536,
+        "dma200": 628.5919,
+        "atr_pct": 0.0415
       },
       "gate_summary": {
         "failed": [
@@ -1819,316 +1581,12 @@
         ],
         "reasons": {
           "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -278.3% < 임계 15%"
+          "B3": "안전마진 -257.6% < 임계 20%"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
       "decision": "WATCH",
       "sector": "Communication Services",
-      "entry_band": null
-    },
-    {
-      "schema_version": 1,
-      "signal_id": "2026-11-20-CAT-WATCH-004",
-      "ticker": "CAT",
-      "type": "WATCH",
-      "grade": "B",
-      "entry_score": 55.45,
-      "as_of": "2026-11-20",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T10:09:17Z",
-      "signal_published_planned_at": "2026-11-19T22:02:11Z",
-      "order_cutoff_at": "2026-11-20T14:25:00Z",
-      "target_session": "2026-11-20",
-      "generated_price": 537.3699951171875,
-      "quant_intent": "no_action",
-      "entry_plan": [
-        {
-          "tranche": 1,
-          "weight": 0.4,
-          "price_ref": 537.37,
-          "provisional": true
-        },
-        {
-          "tranche": 2,
-          "weight": 0.3,
-          "price_ref": 499.75,
-          "provisional": true
-        },
-        {
-          "tranche": 3,
-          "weight": 0.3,
-          "price_ref": 462.14,
-          "provisional": true,
-          "active": false,
-          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
-        }
-      ],
-      "target_band": {
-        "lo": 410.5973,
-        "hi": 473.9837,
-        "horizon_td": 63,
-        "basis": "base_price",
-        "base_price": 537.3699951171875,
-        "r_lo": -0.235913,
-        "r_hi": -0.117957,
-        "defensive": true,
-        "return_base": "base_price",
-        "base_bar_date": "2026-11-19"
-      },
-      "expected_mdd": -0.2,
-      "invalidation": {
-        "price": 780.76,
-        "reason": "200일선 −3% 이탈 + ROIC<WACC"
-      },
-      "thesis_ko": "IV 대비 207% 프리미엄(안전마진 -207%) · RSI 27",
-      "evidence": [
-        {
-          "type": "fundamental",
-          "period_end": "2025-12-31",
-          "form": "10-K",
-          "accession": "0000018230-26-000008",
-          "filed_date": "2026-02-13",
-          "available_at": "2026-02-13T15:18:27Z",
-          "metric": "quality_composite",
-          "value_kind": "score_0_100"
-        },
-        {
-          "type": "fundamental",
-          "period_end": "2025-12-31",
-          "form": "10-K",
-          "accession": "0000018230-26-000008",
-          "filed_date": "2026-02-13",
-          "available_at": "2026-02-13T15:18:27Z",
-          "metric": "fcf_margin_5y",
-          "value_kind": "ratio"
-        },
-        {
-          "type": "sec_filing",
-          "form": "10-Q",
-          "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000057/cat-20260930.htm",
-          "filed_date": "2026-11-04",
-          "available_at": "2026-11-04T15:49:09+00:00",
-          "accession": "0000018230-26-000057",
-          "role": "reference"
-        },
-        {
-          "type": "market",
-          "metric": "atr_pct",
-          "value_kind": "ratio"
-        }
-      ],
-      "investor_scores": {
-        "buffett": -39.2,
-        "graham": -34.2,
-        "lynch": -39.0,
-        "druckenmiller": 60.0
-      },
-      "conflict": true,
-      "position": {
-        "plan_weight_target": 0.0,
-        "tranche": 0,
-        "tranche_weight": 0.0,
-        "stop_distance": 0.0,
-        "stop_price": null,
-        "planned_loss_after_fill_pct": null
-      },
-      "debate_ref": null,
-      "execution_event": null,
-      "track": "quant_only",
-      "veto": [],
-      "params_version": "params_v001",
-      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "code_commit": "400e206",
-      "revision": 4,
-      "supersedes": "2026-11-20-CAT-WATCH-003",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
-      "trade_grade": "WATCH",
-      "components": {
-        "quality": 76.35,
-        "valuation": 0.0,
-        "timing": 87.5,
-        "macro": 80.0,
-        "growth": 30.49
-      },
-      "debate_structural_risk": null,
-      "debate_risk_gate_applied": false,
-      "confidence_cap": null,
-      "confidence_detail": {
-        "grade": "B",
-        "data_fresh": true,
-        "regime_sample_ok": false,
-        "verified_quotes": 0,
-        "independent_sources": 0,
-        "articles": 4,
-        "news_state": "not_read",
-        "alt_8k": true,
-        "reason": "regime_sample_missing"
-      },
-      "debate_advice": null,
-      "valuation": {
-        "iv_low": 148.8881,
-        "iv_median": 175.1624,
-        "iv_high": 201.4368,
-        "price": 537.37,
-        "margin": -2.0678,
-        "iv_band_basis": "bear_bull",
-        "median_method": "epv",
-        "methods": {
-          "dcf_base": 453.2155,
-          "epv": 175.1624,
-          "graham": 138.1981
-        },
-        "iv_dcf_bear": 317.3446,
-        "iv_dcf_bull": 627.7214,
-        "fcff_normalized": 7610.7367,
-        "growth": 0.15,
-        "growth_basis": "fcff_cagr",
-        "net_debt": 26230.0,
-        "wacc_valuation": 0.08,
-        "v_confidence": "B",
-        "v_confidence_reason": null,
-        "v_penalties": 10.0,
-        "v_penalty_dcf": 0.0,
-        "v_penalty_hist": 10.0,
-        "dcf_sensitivity": 0.3424,
-        "ev_ebit_percentile": 67.77,
-        "ev_ebit_median_10y": 20.597,
-        "iv_hist_ev_ebit": 430.7583,
-        "hist_divergence": 0.5934,
-        "dcf_dropped": null,
-        "v_raw": 0.0,
-        "growth_raw_cagr": 0.1682,
-        "growth_clipped_to_zero": false,
-        "effective_fcff_years": 5,
-        "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.3163,
-        "terminal_g_sensitivity": 0.1298,
-        "rate_sensitivity": 0.3163,
-        "hist_divergence_signed": -0.5934,
-        "ev_ebit_current": 25.1125,
-        "ev_ebit_samples": 121,
-        "ev_ebit_years": 11,
-        "ev_ebit_window": "2016-11-21~2026-11-19",
-        "ev_ebit_reason": null,
-        "minority_interest": 0.0,
-        "debt_reporting": "reported"
-      },
-      "news_state": "not_read",
-      "news": [
-        {
-          "headline": "5 Energy Stocks to Benefit from Anthropic’s $1.5 Trillion Debut",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T22:00:00Z",
-          "url": "https://finnhub.io/api/news?id=f869e49e42d161714c45a2e6b7a96d2f74133c4db8c3507a49d3da09db426678",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Dow Jones Losers Today: NIKE and UnitedHealth Lead Declines",
-          "source": "ChartMill",
-          "published_at": "2026-11-19T20:10:56Z",
-          "url": "https://finnhub.io/api/news?id=764a49d7747e3d89111c720cc2e3ed6b4fcd0e72e6268381837376f4b640bb41",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Caterpillar CEO Joe Creed joins Walmart board of directors",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T18:26:59Z",
-          "url": "https://finnhub.io/api/news?id=cd4235135a36b7af8f833058a202ffc4dd5aea77213d17746825c2179c438902",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Caterpillar (CAT) Isn’t Just a Bulldozer Stock Anymore, and Ken Fisher Knows Why",
-          "source": "Yahoo",
-          "published_at": "2026-11-19T18:14:00Z",
-          "url": "https://finnhub.io/api/news?id=c1ff1385ec65d1db9e085fc61d6a551d25bbc9ab806aff794b35faec8940b46f",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Dow Jones Decliners: UNH, NKE, CAT Lead Today's Session",
-          "source": "ChartMill",
-          "published_at": "2026-11-19T17:41:08Z",
-          "url": "https://finnhub.io/api/news?id=b6162d886ac583e3fa73417f71ed6a81fb35f3b2fc24e5365a930308760a2b6d",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        }
-      ],
-      "filings": [
-        {
-          "form": "4",
-          "filed_date": "2026-11-13",
-          "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465926127088/xslF345X06/tm2629746-1_4seq1.xml",
-          "accession": "0001104659-26-127088",
-          "items": []
-        },
-        {
-          "form": "10-Q",
-          "filed_date": "2026-11-04",
-          "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000057/cat-20260930.htm",
-          "accession": "0000018230-26-000057",
-          "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-03",
-          "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465926121809/xslF345X06/tm2628874-1_4seq1.xml",
-          "accession": "0001104659-26-121809",
-          "items": []
-        },
-        {
-          "form": "3",
-          "filed_date": "2026-11-02",
-          "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465926121054/xslF345X06/tm2628200-1_3seq1.xml",
-          "accession": "0001104659-26-121054",
-          "items": []
-        },
-        {
-          "form": "8-K",
-          "filed_date": "2026-10-29",
-          "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000052/cat-20261029.htm",
-          "accession": "0000018230-26-000052",
-          "items": [
-            "2.02",
-            "7.01",
-            "9.01"
-          ]
-        }
-      ],
-      "risk": {
-        "veto": [],
-        "note_ko": null
-      },
-      "indicators": {
-        "rsi14": 27.0181,
-        "pct_b": 0.1391,
-        "dma50": 720.3766,
-        "dma200": 804.9044,
-        "atr_pct": 0.0535
-      },
-      "gate_summary": {
-        "failed": [
-          "B0",
-          "B2",
-          "B3"
-        ],
-        "reasons": {
-          "B0": "대가 쿼럼 미달(가치·성장 점수 +20 이상 필요)",
-          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -206.8% < 임계 15%"
-        }
-      },
-      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
-      "decision": "WATCH",
-      "sector": "Industrials",
       "entry_band": null
     }
   ],
@@ -2141,16 +1599,16 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.1158,
+      "margin": -3.0374,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 84.3,
+      "ev_ebit_percentile": 80.17,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5941,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.267,
+      "wacc_sensitivity": 0.2693,
       "rank_score": 42.5,
       "valuation_suspended": false,
       "wacc_qc": 0.0712,
@@ -2162,22 +1620,22 @@
       "sector": "Information Technology",
       "q": 82.43,
       "v": 0.0,
-      "g": 65.86,
+      "g": 67.81,
       "v_raw": 0.0,
-      "margin": -2.8927,
+      "margin": -2.7525,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 21.49,
+      "ev_ebit_percentile": 16.53,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6909,
+      "hist_divergence_signed": -0.6882,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1311,
-      "rank_score": 54.387,
+      "wacc_sensitivity": 0.1328,
+      "rank_score": 54.777,
       "valuation_suspended": false,
       "wacc_qc": 0.0878,
-      "wacc_valuation": 0.098,
+      "wacc_valuation": 0.0972,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -2187,40 +1645,40 @@
       "v": 0.0,
       "g": 100.0,
       "v_raw": 0.0,
-      "margin": -7.9078,
+      "margin": -7.1033,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 6.61,
+      "ev_ebit_percentile": 2.48,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.7841,
+      "hist_divergence_signed": -0.7959,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.0995,
+      "wacc_sensitivity": 0.0945,
       "rank_score": 58.77,
       "valuation_suspended": false,
       "wacc_qc": 0.0895,
-      "wacc_valuation": 0.1334,
+      "wacc_valuation": 0.1392,
       "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "ADBE",
       "sector": "Information Technology",
       "q": 85.0,
-      "v": 3.36,
+      "v": 3.57,
       "g": 100.0,
-      "v_raw": 13.36,
-      "margin": -0.3972,
+      "v_raw": 13.57,
+      "margin": -0.3721,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 1.65,
+      "ev_ebit_percentile": 0.83,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.7643,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3816,
-      "rank_score": 63.508,
+      "wacc_sensitivity": 0.3847,
+      "rank_score": 63.571,
       "valuation_suspended": false,
       "wacc_qc": 0.0741,
       "wacc_valuation": 0.08,
@@ -2232,21 +1690,21 @@
       "q": 96.13,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 0.0,
-      "margin": -2.0818,
+      "v_raw": 0.42,
+      "margin": -1.9496,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 89.26,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3787,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1767,
+      "wacc_sensitivity": 0.1778,
       "rank_score": 48.065,
       "valuation_suspended": false,
       "wacc_qc": 0.0735,
-      "wacc_valuation": 0.0882,
+      "wacc_valuation": 0.0878,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -2254,22 +1712,22 @@
       "sector": "Communication Services",
       "q": 90.55,
       "v": 0.0,
-      "g": 91.97,
+      "g": 93.44,
       "v_raw": 0.0,
-      "margin": -3.4945,
+      "margin": -3.2923,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 35.54,
+      "ev_ebit_percentile": 33.06,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 9,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.7076,
+      "hist_divergence_signed": -0.7021,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1076,
-      "rank_score": 63.669,
+      "wacc_sensitivity": 0.111,
+      "rank_score": 63.963,
       "valuation_suspended": false,
       "wacc_qc": 0.0867,
-      "wacc_valuation": 0.1066,
+      "wacc_valuation": 0.1044,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -2277,42 +1735,42 @@
       "sector": "Communication Services",
       "q": 89.77,
       "v": 0.0,
-      "g": 81.45,
+      "g": 85.3,
       "v_raw": 0.0,
-      "margin": -2.7828,
+      "margin": -2.576,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 19.01,
+      "ev_ebit_percentile": 12.4,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6546,
+      "hist_divergence_signed": -0.6563,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1288,
-      "rank_score": 61.175,
+      "wacc_sensitivity": 0.1278,
+      "rank_score": 61.945,
       "valuation_suspended": false,
       "wacc_qc": 0.0809,
-      "wacc_valuation": 0.0979,
+      "wacc_valuation": 0.0984,
       "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "DIS",
       "sector": "Communication Services",
       "q": 58.6,
-      "v": 3.82,
+      "v": 4.03,
       "g": 100.0,
-      "v_raw": 13.82,
-      "margin": -0.3416,
+      "v_raw": 14.03,
+      "margin": -0.3163,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 8.24,
+      "ev_ebit_percentile": 5.88,
       "ev_ebit_samples": 85,
       "ev_ebit_years": 8,
-      "ev_ebit_window": "2019-11-22~2026-11-19",
+      "ev_ebit_window": "2019-11-22~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.2787,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3482,
-      "rank_score": 50.446,
+      "wacc_sensitivity": 0.3494,
+      "rank_score": 50.509,
       "valuation_suspended": false,
       "wacc_qc": 0.0777,
       "wacc_valuation": 0.08,
@@ -2325,20 +1783,20 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -14.7749,
+      "margin": -13.5703,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 74.29,
+      "ev_ebit_percentile": 70.0,
       "ev_ebit_samples": 70,
       "ev_ebit_years": 6,
-      "ev_ebit_window": "2021-02-25~2026-11-19",
+      "ev_ebit_window": "2021-02-25~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.9225,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.0304,
+      "wacc_sensitivity": 0.0305,
       "rank_score": 28.935,
       "valuation_suspended": false,
       "wacc_qc": 0.0882,
-      "wacc_valuation": 0.1438,
+      "wacc_valuation": 0.1436,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -2347,17 +1805,17 @@
       "q": 64.61,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 7.34,
-      "margin": -1.1194,
+      "v_raw": 7.21,
+      "margin": -1.1342,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 57.02,
+      "ev_ebit_percentile": 57.85,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5269,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.6158,
+      "wacc_sensitivity": 0.6429,
       "rank_score": 32.305,
       "valuation_suspended": false,
       "wacc_qc": 0.0491,
@@ -2371,16 +1829,16 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.821,
+      "margin": -3.8941,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 96.69,
+      "ev_ebit_percentile": 98.35,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5631,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.3844,
+      "wacc_sensitivity": 0.387,
       "rank_score": 33.145,
       "valuation_suspended": false,
       "wacc_qc": 0.075,
@@ -2393,17 +1851,17 @@
       "q": 95.22,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 4.02,
-      "margin": -1.5179,
+      "v_raw": 3.83,
+      "margin": -1.5407,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 42.98,
+      "ev_ebit_percentile": 46.28,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5834,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.5408,
+      "wacc_sensitivity": 0.5469,
       "rank_score": 47.61,
       "valuation_suspended": false,
       "wacc_qc": 0.072,
@@ -2417,16 +1875,16 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.255,
+      "margin": -3.2948,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 90.08,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.6462,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.6292,
+      "wacc_sensitivity": 0.6348,
       "rank_score": 39.375,
       "valuation_suspended": false,
       "wacc_qc": 0.0629,
@@ -2440,16 +1898,16 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.7519,
+      "margin": -3.788,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 82.64,
+      "ev_ebit_percentile": 83.47,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 10,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.6532,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3159,
+      "wacc_sensitivity": 0.3188,
       "rank_score": 39.065,
       "valuation_suspended": false,
       "wacc_qc": 0.084,
@@ -2462,17 +1920,17 @@
       "q": 80.69,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 0.61,
-      "margin": -1.9265,
+      "v_raw": 0.31,
+      "margin": -1.963,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 40.5,
+      "ev_ebit_percentile": 43.8,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.4062,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.5567,
+      "wacc_sensitivity": 0.5633,
       "rank_score": 40.345,
       "valuation_suspended": false,
       "wacc_qc": 0.0738,
@@ -2485,17 +1943,17 @@
       "q": 83.54,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 6.67,
-      "margin": -1.1996,
+      "v_raw": 6.54,
+      "margin": -1.2147,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 19.01,
+      "ev_ebit_percentile": 20.66,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5832,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.6756,
+      "wacc_sensitivity": 0.6838,
       "rank_score": 41.77,
       "valuation_suspended": false,
       "wacc_qc": 0.0682,
@@ -2506,20 +1964,20 @@
       "ticker": "CVX",
       "sector": "Energy",
       "q": 66.9,
-      "v": 0.94,
+      "v": 0.81,
       "g": 0.0,
-      "v_raw": 10.94,
-      "margin": -0.6873,
+      "v_raw": 10.81,
+      "margin": -0.7026,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 68.37,
+      "ev_ebit_percentile": 69.39,
       "ev_ebit_samples": 98,
       "ev_ebit_years": 9,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.2888,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.3868,
-      "rank_score": 33.732,
+      "wacc_sensitivity": 0.3903,
+      "rank_score": 33.693,
       "valuation_suspended": false,
       "wacc_qc": 0.0802,
       "wacc_valuation": 0.08,
@@ -2530,19 +1988,19 @@
       "sector": "Industrials",
       "q": 76.35,
       "v": 0.0,
-      "g": 30.49,
-      "v_raw": 0.0,
-      "margin": -2.0678,
+      "g": 35.79,
+      "v_raw": 0.72,
+      "margin": -1.9142,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 67.77,
+      "ev_ebit_percentile": 64.46,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5934,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3163,
-      "rank_score": 44.273,
+      "wacc_sensitivity": 0.3225,
+      "rank_score": 45.333,
       "valuation_suspended": false,
       "wacc_qc": 0.0587,
       "wacc_valuation": 0.08,
@@ -2552,20 +2010,20 @@
       "ticker": "HON",
       "sector": "Industrials",
       "q": 81.9,
-      "v": 0.0,
+      "v": 0.5,
       "g": 0.0,
-      "v_raw": 0.0,
-      "margin": -2.0117,
+      "v_raw": 0.5,
+      "margin": -1.9398,
       "v_penalties": 0.0,
       "ev_ebit_percentile": null,
       "ev_ebit_samples": 22,
       "ev_ebit_years": 2,
-      "ev_ebit_window": "2025-03-03~2026-11-19",
+      "ev_ebit_window": "2025-03-03~2026-11-20",
       "ev_ebit_reason": "insufficient_history",
       "hist_divergence_signed": null,
       "growth_clipped_to_zero": false,
       "wacc_sensitivity": null,
-      "rank_score": 40.95,
+      "rank_score": 41.1,
       "valuation_suspended": false,
       "wacc_qc": 0.0545,
       "wacc_valuation": 0.08,
@@ -2575,20 +2033,20 @@
       "ticker": "UPS",
       "sector": "Industrials",
       "q": 60.02,
-      "v": 4.05,
+      "v": 4.34,
       "g": 0.0,
-      "v_raw": 14.05,
-      "margin": -0.3135,
+      "v_raw": 14.34,
+      "margin": -0.2787,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 39.67,
+      "ev_ebit_percentile": 34.71,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-19",
+      "ev_ebit_window": "2016-11-21~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3984,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.4093,
-      "rank_score": 31.225,
+      "wacc_sensitivity": 0.4109,
+      "rank_score": 31.312,
       "valuation_suspended": false,
       "wacc_qc": 0.0602,
       "wacc_valuation": 0.08,
@@ -2599,19 +2057,19 @@
       "sector": "Materials",
       "q": 69.84,
       "v": 0.0,
-      "g": 53.28,
+      "g": 54.48,
       "v_raw": 0.0,
-      "margin": -2.852,
+      "margin": -2.7963,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 39.78,
+      "ev_ebit_percentile": 36.56,
       "ev_ebit_samples": 93,
       "ev_ebit_years": 8,
-      "ev_ebit_window": "2019-03-27~2026-11-19",
+      "ev_ebit_window": "2019-03-27~2026-11-20",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.7267,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.7376,
-      "rank_score": 45.576,
+      "wacc_sensitivity": 0.7478,
+      "rank_score": 45.816,
       "valuation_suspended": false,
       "wacc_qc": 0.0698,
       "wacc_valuation": 0.08,
@@ -2666,12 +2124,12 @@
     "macro_ingest": {
       "policy": "cutoff_vintage_point_query",
       "mode": "live",
-      "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "inputs_ingested_at": "2026-11-20T10:08:46.667893Z",
-      "lag_seconds": 43726.7,
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "inputs_ingested_at": "2026-11-20T23:47:08.469709Z",
+      "lag_seconds": 6428.5,
       "after_cutoff": true,
       "available_at_source": "vintage_point_query",
-      "vintage": "2026-11-18",
+      "vintage": "2026-11-19",
       "cutoff_filter": "available_at <= data_cutoff_at",
       "series_dropped": [],
       "replay": false
@@ -2679,7 +2137,7 @@
     "meta_missing": [],
     "wacc_risk_free": {
       "source": "FRED:DGS10",
-      "value": 0.051,
+      "value": 0.0507,
       "fallback": false,
       "note_ko": null
     },
@@ -6851,12 +6309,28 @@
       }
     },
     "market_cap_basis": "fast_info_market_cap",
-    "snapshot": {
-      "id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
-      "state": "created",
-      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c"
+    "regime_sample": {
+      "source": "ledger_matured_signals",
+      "regime": "neutral",
+      "n": 0,
+      "min_n": 30,
+      "matured_as_of": "2026-11-21",
+      "horizon": "3m",
+      "reason": null,
+      "counts": {
+        "records": 28,
+        "matured": 0,
+        "duplicate": 0,
+        "no_regime": 28,
+        "not_matured": 0,
+        "no_price": 0
+      }
     },
-    "supersession_cancellations": 0
+    "snapshot": {
+      "id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "state": "created",
+      "inputs_hash": "sha256:816f1285524f82e696a7edc1ccf241baa025cdbeafb36530915bb0523e0148b1"
+    }
   },
   "charts": {
     "AAPL": {
@@ -6967,7 +6441,7 @@
         123.59,
         122.779,
         127.764,
-        125.232
+        122.847
       ],
       "dma50": [
         94.187,
@@ -7021,7 +6495,7 @@
         119.434,
         120.5,
         121.584,
-        122.504
+        122.577
       ],
       "dma200": [
         81.475,
@@ -7075,7 +6549,7 @@
         106.35,
         107.156,
         108.034,
-        108.627
+        108.747
       ]
     },
     "MSFT": {
@@ -7186,7 +6660,7 @@
         106.077,
         107.845,
         106.478,
-        101.278
+        98.478
       ],
       "dma50": [
         103.777,
@@ -7240,7 +6714,7 @@
         104.248,
         105.007,
         105.485,
-        105.701
+        105.656
       ],
       "dma200": [
         95.12,
@@ -7294,7 +6768,7 @@
         89.008,
         89.398,
         89.718,
-        90.075
+        90.167
       ]
     },
     "NVDA": {
@@ -7405,7 +6879,7 @@
         115.616,
         105.446,
         92.006,
-        82.475
+        70.921
       ],
       "dma50": [
         105.554,
@@ -7459,7 +6933,7 @@
         125.282,
         124.188,
         121.27,
-        117.998
+        116.949
       ],
       "dma200": [
         86.818,
@@ -7513,7 +6987,7 @@
         115.471,
         115.634,
         115.362,
-        115.015
+        114.884
       ]
     },
     "ADBE": {
@@ -7624,7 +7098,7 @@
         78.165,
         74.751,
         75.932,
-        69.247
+        68.007
       ],
       "dma50": [
         106.324,
@@ -7678,7 +7152,7 @@
         79.458,
         78.482,
         76.965,
-        76.353
+        76.137
       ],
       "dma200": [
         116.469,
@@ -7732,7 +7206,7 @@
         78.229,
         77.835,
         77.364,
-        77.038
+        76.957
       ]
     },
     "CSCO": {
@@ -7843,7 +7317,7 @@
         135.833,
         121.978,
         124.305,
-        123.083
+        117.806
       ],
       "dma50": [
         92.983,
@@ -7897,7 +7371,7 @@
         142.968,
         141.431,
         140.053,
-        138.656
+        138.097
       ],
       "dma200": [
         85.823,
@@ -7951,7 +7425,7 @@
         131.509,
         132.328,
         133.026,
-        133.405
+        133.459
       ]
     },
     "GOOGL": {
@@ -8062,7 +7536,7 @@
         87.401,
         88.944,
         92.376,
-        85.158
+        82.857
       ],
       "dma50": [
         83.685,
@@ -8116,7 +7590,7 @@
         105.9,
         103.982,
         102.5,
-        101.12
+        100.662
       ],
       "dma200": [
         63.104,
@@ -8170,7 +7644,7 @@
         106.395,
         106.038,
         105.716,
-        105.348
+        105.245
       ]
     },
     "META": {
@@ -8281,7 +7755,7 @@
         94.913,
         94.166,
         99.034,
-        92.016
+        86.556
       ],
       "dma50": [
         105.917,
@@ -8335,7 +7809,7 @@
         103.4,
         104.162,
         104.916,
-        104.699
+        104.43
       ],
       "dma200": [
         103.874,
@@ -8389,7 +7863,7 @@
         97.554,
         97.529,
         97.348,
-        97.097
+        97.012
       ]
     },
     "DIS": {
@@ -8500,7 +7974,7 @@
         106.193,
         111.755,
         113.88,
-        115.105
+        112.932
       ],
       "dma50": [
         105.852,
@@ -8554,7 +8028,7 @@
         102.761,
         103.414,
         104.528,
-        105.636
+        105.855
       ],
       "dma200": [
         105.074,
@@ -8608,7 +8082,7 @@
         99.029,
         99.12,
         99.316,
-        99.554
+        99.617
       ]
     },
     "TSLA": {
@@ -8719,7 +8193,7 @@
         92.942,
         83.274,
         90.713,
-        87.038
+        80.391
       ],
       "dma50": [
         100.879,
@@ -8773,7 +8247,7 @@
         85.92,
         86.509,
         87.115,
-        87.414
+        87.323
       ],
       "dma200": [
         79.135,
@@ -8827,7 +8301,7 @@
         89.569,
         89.236,
         88.972,
-        88.783
+        88.724
       ]
     },
     "HD": {
@@ -8938,7 +8412,7 @@
         92.234,
         96.232,
         97.694,
-        94.329
+        94.99
       ],
       "dma50": [
         106.4,
@@ -8992,7 +8466,7 @@
         86.407,
         86.683,
         87.458,
-        88.074
+        88.244
       ],
       "dma200": [
         105.521,
@@ -9046,7 +8520,7 @@
         93.663,
         93.415,
         93.212,
-        92.988
+        92.927
       ]
     },
     "WMT": {
@@ -9157,7 +8631,7 @@
         111.764,
         113.582,
         115.908,
-        114.053
+        115.781
       ],
       "dma50": [
         93.972,
@@ -9211,7 +8685,7 @@
         99.75,
         101.785,
         103.645,
-        105.175
+        105.552
       ],
       "dma200": [
         88.644,
@@ -9265,7 +8739,7 @@
         107.238,
         107.42,
         107.623,
-        107.67
+        107.675
       ]
     },
     "PG": {
@@ -9376,7 +8850,7 @@
         109.051,
         111.636,
         114.606,
-        113.29
+        114.316
       ],
       "dma50": [
         101.204,
@@ -9430,7 +8904,7 @@
         101.235,
         102.593,
         104.116,
-        105.536
+        105.862
       ],
       "dma200": [
         107.388,
@@ -9484,7 +8958,7 @@
         100.515,
         100.83,
         101.159,
-        101.38
+        101.417
       ]
     },
     "KO": {
@@ -9595,7 +9069,7 @@
         128.665,
         130.84,
         135.736,
-        131.414
+        132.645
       ],
       "dma50": [
         94.222,
@@ -9649,7 +9123,7 @@
         122.353,
         123.008,
         124.207,
-        125.318
+        125.556
       ],
       "dma200": [
         95.621,
@@ -9703,7 +9177,7 @@
         112.331,
         113.16,
         113.992,
-        114.595
+        114.721
       ]
     },
     "COST": {
@@ -9814,7 +9288,7 @@
         110.802,
         115.321,
         121.084,
-        119.729
+        120.639
       ],
       "dma50": [
         101.078,
@@ -9868,7 +9342,7 @@
         103.252,
         104.25,
         105.859,
-        107.574
+        108.006
       ],
       "dma200": [
         105.638,
@@ -9922,7 +9396,7 @@
         106.274,
         106.483,
         106.797,
-        107.097
+        107.159
       ]
     },
     "JNJ": {
@@ -10033,7 +9507,7 @@
         132.032,
         133.491,
         138.097,
-        129.103
+        130.712
       ],
       "dma50": [
         92.166,
@@ -10087,7 +9561,7 @@
         128.358,
         128.449,
         128.97,
-        129.195
+        129.242
       ],
       "dma200": [
         81.723,
@@ -10141,7 +9615,7 @@
         119.363,
         120.012,
         120.716,
-        121.141
+        121.22
       ]
     },
     "MRK": {
@@ -10252,7 +9726,7 @@
         142.631,
         139.969,
         140.952,
-        126.691
+        127.559
       ],
       "dma50": [
         84.118,
@@ -10306,7 +9780,7 @@
         140.096,
         139.615,
         139.4,
-        138.778
+        138.583
       ],
       "dma200": [
         80.527,
@@ -10360,7 +9834,7 @@
         120.87,
         121.764,
         122.718,
-        123.198
+        123.264
       ]
     },
     "CVX": {
@@ -10471,7 +9945,7 @@
         155.839,
         140.68,
         145.497,
-        136.637
+        137.875
       ],
       "dma50": [
         101.96,
@@ -10525,7 +9999,7 @@
         141.036,
         142.191,
         142.58,
-        142.589
+        142.514
       ],
       "dma200": [
         99.824,
@@ -10579,7 +10053,7 @@
         127.928,
         128.803,
         129.554,
-        130.002
+        130.099
       ]
     },
     "CAT": {
@@ -10690,7 +10164,7 @@
         108.161,
         97.025,
         104.245,
-        93.332
+        88.657
       ],
       "dma50": [
         91.745,
@@ -10744,7 +10218,7 @@
         136.047,
         132.059,
         128.659,
-        125.118
+        124.047
       ],
       "dma200": [
         70.82,
@@ -10798,7 +10272,7 @@
         140.668,
         140.428,
         140.238,
-        139.799
+        139.653
       ]
     },
     "HON": {
@@ -10909,7 +10383,7 @@
         108.319,
         109.172,
         110.368,
-        108.076
+        105.496
       ],
       "dma50": [
         102.043,
@@ -10963,7 +10437,7 @@
         104.996,
         105.241,
         105.997,
-        106.517
+        106.619
       ],
       "dma200": [
         105.351,
@@ -11017,7 +10491,7 @@
         114.476,
         114.396,
         114.32,
-        114.099
+        114.018
       ]
     },
     "UPS": {
@@ -11128,7 +10602,7 @@
         113.008,
         113.06,
         117.34,
-        113.905
+        110.888
       ],
       "dma50": [
         93.524,
@@ -11182,7 +10656,7 @@
         103.563,
         104.217,
         105.021,
-        105.863
+        105.987
       ],
       "dma200": [
         101.384,
@@ -11236,7 +10710,7 @@
         109.181,
         109.247,
         109.38,
-        109.365
+        109.311
       ]
     },
     "LIN": {
@@ -11347,7 +10821,7 @@
         125.327,
         125.573,
         128.207,
-        124.344
+        122.546
       ],
       "dma50": [
         107.835,
@@ -11401,7 +10875,7 @@
         117.841,
         118.582,
         119.468,
-        120.378
+        120.556
       ],
       "dma200": [
         111.693,
@@ -11455,18 +10929,18 @@
         120.136,
         120.617,
         121.045,
-        121.297
+        121.35
       ]
     }
   },
   "next_trading_day": "2026-11-23",
   "watchlist_source": "data/watchlist/current.json",
-  "run_started_at": "2026-11-20T10:08:17Z",
-  "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
+  "run_started_at": "2026-11-20T23:46:40Z",
+  "inputs_hash": "sha256:816f1285524f82e696a7edc1ccf241baa025cdbeafb36530915bb0523e0148b1",
   "ledger_summary": {
     "schema_version": 1,
-    "as_of": "2026-11-20",
-    "n_signals": 7,
+    "as_of": "2026-11-21",
+    "n_signals": 12,
     "n_graded_3m": 0,
     "accuracy": {
       "label_ko": "신호 정확도",
@@ -11676,7 +11150,7 @@
       "verdict": "보류",
       "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
       "n_eff": 0,
-      "n_records": 28,
+      "n_records": 33,
       "n_eligible": 0,
       "metrics": [
         {
@@ -11685,7 +11159,7 @@
           "value": 0,
           "threshold": "≥ 15",
           "pass": false,
-          "note_ko": "체결·3개월 만기 0개(발행 신호 28건 중 유효 0건)"
+          "note_ko": "체결·3개월 만기 0개(발행 신호 33건 중 유효 0건)"
         },
         {
           "key": "net_after_cost",
@@ -11728,14 +11202,14 @@
     ],
     "signal_history": [],
     "benchmark_trailing": {
-      "1w": -0.05448277718991601,
-      "1m": -0.07401470689128253,
-      "3m": -0.06278055500508206,
-      "6m": -0.031268175882663396
+      "1w": -0.08558134334142586,
+      "1m": -0.09706008466594407,
+      "3m": -0.09423686579593515,
+      "6m": -0.07018878088844327
     },
     "holdout": {
-      "holdout_start": "2026-08-20",
-      "holdout_end": "2026-11-19",
+      "holdout_start": "2026-08-21",
+      "holdout_end": "2026-11-20",
       "months": 3,
       "locked": true,
       "evaluations": 0,
@@ -11744,8 +11218,8 @@
       "note_ko": "홀드아웃은 분기 1회만 열립니다 — 다음 개봉 2027-01-01"
     },
     "calibration_window": {
-      "holdout_start": "2026-08-20",
-      "holdout_end": "2026-11-19",
+      "holdout_start": "2026-08-21",
+      "holdout_end": "2026-11-20",
       "months": 3,
       "note_ko": "Paper 채점은 홀드아웃을 보지 않는다 — 이 창은 보정 코퍼스 적격에만 쓴다."
     },
@@ -12295,6 +11769,396 @@
         "entry_score": 55.45,
         "sector": "Industrials",
         "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-21-MSFT-WATCH-001",
+        "ticker": "MSFT",
+        "as_of": "2026-11-21",
+        "grade": "B",
+        "confidence": "B",
+        "mode": "paper",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-21",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          }
+        },
+        "entry_score": 55.42,
+        "sector": "Information Technology",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-21-NVDA-WATCH-001",
+        "ticker": "NVDA",
+        "as_of": "2026-11-21",
+        "grade": "B",
+        "confidence": "B",
+        "mode": "paper",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-21",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          }
+        },
+        "entry_score": 58.26,
+        "sector": "Information Technology",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-21-ADBE-WATCH-001",
+        "ticker": "ADBE",
+        "as_of": "2026-11-21",
+        "grade": "B",
+        "confidence": "B",
+        "mode": "paper",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-21",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          }
+        },
+        "entry_score": 61.26,
+        "sector": "Information Technology",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-21-GOOGL-WATCH-001",
+        "ticker": "GOOGL",
+        "as_of": "2026-11-21",
+        "grade": "B",
+        "confidence": "B",
+        "mode": "paper",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-21",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          }
+        },
+        "entry_score": 61.51,
+        "sector": "Communication Services",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-21-META-WATCH-001",
+        "ticker": "META",
+        "as_of": "2026-11-21",
+        "grade": "C",
+        "confidence": "C",
+        "mode": "paper",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-21",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": true,
+            "truncated": false,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "status": "not_matured",
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "만기 봉 미관측 — 채점 보류"
+          }
+        },
+        "entry_score": 60.42,
+        "sector": "Communication Services",
+        "params_version": "params_v001"
       }
     ],
     "settlement": {
@@ -12304,8 +12168,8 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-20-ADBE-WATCH-002",
-          "frozen_at": "2026-11-19T22:02:11Z",
-          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+          "frozen_at": "2026-11-20T23:47:37Z",
+          "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
           "signal_id": "2026-11-20-ADBE-WATCH-002",
@@ -12376,8 +12240,8 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-20-GOOGL-WATCH-002",
-          "frozen_at": "2026-11-19T22:02:11Z",
-          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+          "frozen_at": "2026-11-20T23:47:37Z",
+          "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
           "signal_id": "2026-11-20-GOOGL-WATCH-002",
@@ -12474,7 +12338,7 @@
     "debate_effect": {
       "pairs": 0,
       "divergent_pairs": 0,
-      "same_action_pairs": 0,
+      "same_action_pairs": 1,
       "n_eff": 0,
       "avoided_loss_pp": 0.0,
       "missed_gain_pp": 0.0,
@@ -12506,13 +12370,14 @@
       "label_ko": "표본 0건 — 판정 보류"
     },
     "debate": {
-      "status": "none",
-      "generated_at": "2026-11-20T10:08:17Z",
+      "status": "ok",
+      "generated_at": "2026-11-20T23:47:37Z",
       "counts": {
-        "reports": 0,
-        "eligible": 0,
+        "reports": 1,
+        "eligible": 1,
         "late": 0,
         "invalid": 0,
+        "superseded": 0,
         "retroactive_dropped": 0
       },
       "auto_downgrade": {
@@ -12547,72 +12412,59 @@
       }
     },
     "notifications": {
-      "n_new": 7,
+      "n_new": 5,
       "n_suppressed": 0,
+      "n_retried": 0,
+      "n_retry_suppressed": 0,
+      "retry_pending": [],
       "events": [
         {
-          "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-004",
+          "event_key": "debate_recommended:2026-11-21-MSFT-WATCH-001",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "MSFT",
-          "signal_id": "2026-11-20-MSFT-WATCH-004"
+          "signal_id": "2026-11-21-MSFT-WATCH-001"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-004",
+          "event_key": "debate_recommended:2026-11-21-NVDA-WATCH-001",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "NVDA",
-          "signal_id": "2026-11-20-NVDA-WATCH-004"
+          "signal_id": "2026-11-21-NVDA-WATCH-001"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-004",
+          "event_key": "debate_recommended:2026-11-21-ADBE-WATCH-001",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "ADBE",
-          "signal_id": "2026-11-20-ADBE-WATCH-004"
+          "signal_id": "2026-11-21-ADBE-WATCH-001"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-004",
-          "type": "debate_recommended",
-          "severity": "info",
-          "message_ko": "CSCO 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
-          "ticker": "CSCO",
-          "signal_id": "2026-11-20-CSCO-WATCH-004"
-        },
-        {
-          "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-004",
+          "event_key": "debate_recommended:2026-11-21-GOOGL-WATCH-001",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "GOOGL",
-          "signal_id": "2026-11-20-GOOGL-WATCH-004"
+          "signal_id": "2026-11-21-GOOGL-WATCH-001"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-META-WATCH-004",
+          "event_key": "debate_recommended:2026-11-21-META-WATCH-001",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "META",
-          "signal_id": "2026-11-20-META-WATCH-004"
-        },
-        {
-          "event_key": "debate_recommended:2026-11-20-CAT-WATCH-004",
-          "type": "debate_recommended",
-          "severity": "info",
-          "message_ko": "CAT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
-          "ticker": "CAT",
-          "signal_id": "2026-11-20-CAT-WATCH-004"
+          "signal_id": "2026-11-21-META-WATCH-001"
         }
       ]
     }
   },
-  "target_session": "2026-11-20",
-  "signal_published_planned_at": "2026-11-19T22:02:11Z",
+  "target_session": "2026-11-23",
+  "signal_published_planned_at": "2026-11-20T22:02:11Z",
   "portfolio": {
-    "as_of": "2026-11-20",
+    "as_of": "2026-11-21",
     "cash_pct": 1.0,
     "invested_pct": 0.0,
     "avg_exposure": 0.0,
@@ -12620,13 +12472,14 @@
     "positions": []
   },
   "debate": {
-    "status": "none",
-    "generated_at": "2026-11-20T10:08:17Z",
+    "status": "ok",
+    "generated_at": "2026-11-20T23:47:37Z",
     "counts": {
-      "reports": 0,
-      "eligible": 0,
+      "reports": 1,
+      "eligible": 1,
       "late": 0,
       "invalid": 0,
+      "superseded": 0,
       "retroactive_dropped": 0
     },
     "divergent_pairs": 0,
@@ -12638,17 +12491,17 @@
     "positions_open": 0,
     "tranches_pending": 0,
     "data_status": "ok",
-    "last_attempt_at": "2026-11-20T10:09:22Z",
-    "last_success_at": "2026-11-20T10:09:22Z",
-    "data_cutoff_at": "2026-11-19T22:00:00Z",
-    "target_session": "2026-11-20",
+    "last_attempt_at": "2026-11-20T23:47:41Z",
+    "last_success_at": "2026-11-20T23:47:41Z",
+    "data_cutoff_at": "2026-11-20T22:00:00Z",
+    "target_session": "2026-11-23",
     "outage_id": null
   },
   "pilot_eval": {
     "verdict": "보류",
     "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
     "n_eff": 0,
-    "n_records": 28,
+    "n_records": 33,
     "n_eligible": 0,
     "metrics": [
       {
@@ -12657,7 +12510,7 @@
         "value": 0,
         "threshold": "≥ 15",
         "pass": false,
-        "note_ko": "체결·3개월 만기 0개(발행 신호 28건 중 유효 0건)"
+        "note_ko": "체결·3개월 만기 0개(발행 신호 33건 중 유효 0건)"
       },
       {
         "key": "net_after_cost",
@@ -12685,68 +12538,55 @@
       }
     ]
   },
-  "prices_as_of": "2026-11-19",
-  "publish_lag_seconds": 5.1,
+  "prices_as_of": "2026-11-20",
+  "publish_lag_seconds": 4.8,
   "published_after_order_cutoff": false,
   "notifications": {
-    "n_new": 7,
+    "n_new": 5,
     "n_suppressed": 0,
+    "n_retried": 0,
+    "n_retry_suppressed": 0,
+    "retry_pending": [],
     "events": [
       {
-        "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-004",
+        "event_key": "debate_recommended:2026-11-21-MSFT-WATCH-001",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "MSFT",
-        "signal_id": "2026-11-20-MSFT-WATCH-004"
+        "signal_id": "2026-11-21-MSFT-WATCH-001"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-004",
+        "event_key": "debate_recommended:2026-11-21-NVDA-WATCH-001",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "NVDA",
-        "signal_id": "2026-11-20-NVDA-WATCH-004"
+        "signal_id": "2026-11-21-NVDA-WATCH-001"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-004",
+        "event_key": "debate_recommended:2026-11-21-ADBE-WATCH-001",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "ADBE",
-        "signal_id": "2026-11-20-ADBE-WATCH-004"
+        "signal_id": "2026-11-21-ADBE-WATCH-001"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-004",
-        "type": "debate_recommended",
-        "severity": "info",
-        "message_ko": "CSCO 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
-        "ticker": "CSCO",
-        "signal_id": "2026-11-20-CSCO-WATCH-004"
-      },
-      {
-        "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-004",
+        "event_key": "debate_recommended:2026-11-21-GOOGL-WATCH-001",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "GOOGL",
-        "signal_id": "2026-11-20-GOOGL-WATCH-004"
+        "signal_id": "2026-11-21-GOOGL-WATCH-001"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-META-WATCH-004",
+        "event_key": "debate_recommended:2026-11-21-META-WATCH-001",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "META",
-        "signal_id": "2026-11-20-META-WATCH-004"
-      },
-      {
-        "event_key": "debate_recommended:2026-11-20-CAT-WATCH-004",
-        "type": "debate_recommended",
-        "severity": "info",
-        "message_ko": "CAT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
-        "ticker": "CAT",
-        "signal_id": "2026-11-20-CAT-WATCH-004"
+        "signal_id": "2026-11-21-META-WATCH-001"
       }
     ]
   }

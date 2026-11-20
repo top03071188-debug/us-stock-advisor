@@ -1,13 +1,205 @@
 {
   "schema_version": 1,
-  "as_of": "2026-11-20",
-  "generated_at": "2026-11-20T10:08:17Z",
+  "as_of": "2026-11-21",
+  "generated_at": "2026-11-20T23:47:37Z",
+  "received_at": "2026-11-20T23:47:37Z",
+  "freeze_buffer_seconds": 300,
   "auto_downgrade_enabled": false,
-  "n_reports": 0,
-  "n_eligible": 0,
+  "n_reports": 1,
+  "n_eligible": 1,
   "n_late": 0,
   "n_invalid": 0,
-  "by_signal": {},
+  "n_superseded": 0,
+  "adopted": {
+    "2026-11-20-GOOGL-WATCH-004": "2026-11-20-GOOGL-debate-01"
+  },
+  "superseded": [],
+  "by_signal": {
+    "2026-11-20-GOOGL-WATCH-004": {
+      "report_id": "2026-11-20-GOOGL-debate-01",
+      "ticker": "GOOGL",
+      "signal_id": "2026-11-20-GOOGL-WATCH-004",
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-20T13:56:10.533245+00:00",
+      "signal_published_at": "2026-11-20T10:09:17Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "report_validated_at": "2026-11-20T13:56:11Z",
+      "freeze_deadline_at": "2026-11-20T14:20:00Z",
+      "frozen_at": "2026-11-20T14:20:00Z",
+      "received_at": "2026-11-20T23:47:37Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "현재가 272.66은 허용 가격 목록의 내재가치 상단 69.77을 웃돌아 안전마진 기준을 충족하지 못한다.",
+            "품질 점수 q는 90.55지만 ROIC 스프레드와 잉여현금흐름 전환율이 비어 있어 자본수익과 현금창출의 지속성에는 가점을 주기 어렵다.",
+            "내재가치 중앙값의 평가 방식은 EPV이며 제공된 DCF 시나리오 값이 모두 같아 시나리오별 민감도를 확인하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 2
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "stance": "hold",
+          "confidence": 0.35,
+          "reasons": [
+            "성장 점수 91.97은 긍정적이지만 매출과 EPS의 장기 성장률이 비어 있어 성장 지속성 가점을 확인하기 어렵다.",
+            "성장 점수 91.97은 성장 검토의 출발점이며 PEG와 PEGY가 비어 있어 성장 대비 가격이 합리적인지 판정하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 2
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 40.0,
+          "stance": "buy",
+          "confidence": 0.35,
+          "reasons": [
+            "검증된 risk_on 레짐과 레짐 점수 80.0은 위험선호에 우호적인 근거다.",
+            "현재가 272.66은 입력의 단기와 장기 이동평균을 모두 밑돌고 RSI 30.5796이 낮아 추세 확인 가점은 보류한다.",
+            "레짐 점수 80.0은 국면이 우호적임을 뒷받침하지만 상대강도와 금리 및 신용스프레드 공백으로 종목과 시장의 동행 신뢰도는 낮다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 2
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "13F는 45일 시차가 있는 분기말 관측이며 제공된 보유 목록이 비어 있어 보유 수량 변화와 섹터 동행 여부를 확인할 수 없다."
+          ],
+          "quote_verified": false,
+          "quote_sha256_count": 0
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수로 성장 후보를 선별할 수 있지만 현금흐름 전환 정보가 비어 있고 현재가가 내재가치 상단을 웃돌아 안전마진을 뒷받침하기 어렵다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "위험선호 국면은 진입 환경을 설명하지만 자본수익 자료의 공백을 채우거나 내재가치 대비 가격 부담을 줄이지는 못한다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "현재가와 내재가치의 간극은 가격 부담을 보여주지만 시나리오별 DCF가 같고 성장률 입력이 비어 있어 성장 프리미엄의 크기까지 판정하기 어렵다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "우호적 국면은 진입 여건에 참고할 수 있으나 성장 대비 가격을 판단할 PEG와 PEGY의 공백을 해소하지 못한다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 30.0,
+          "changed": true,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 상단 대비 가격 부담은 진입 주의의 근거지만 그것만으로 검증된 위험선호 국면의 방향을 판단하기는 어렵다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수는 종목 검토에 참고할 수 있지만 현재가가 두 이동평균을 하회해 가격 추세의 확인 신호로 삼기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "레짐 점수로 시장 위험선호를 해석할 수 있지만 분기말 보유 자료가 비어 있어 기관 보유 확대나 섹터 동행으로 확인할 수 없다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "실질 본문과 Alphabet에 대한 영향 확인 필요",
+            "거래대금 및 보유 비중 자료 확인 필요"
+          ],
+          "structural_risk": 0.0,
+          "reasoning": "제공된 공시 목록과 검증 가능한 뉴스에서 구조적 훼손이 확인되지 않았으며, SpaceX 지분 가치 하락과 Anthropic 공모는 개별 사건으로 판독됐다. 다른 발췌는 실질 본문이 없어 뉴스 근거가 부족하고, 거래대금과 보유 비중도 입력에서 확인되지 않아 주의 의견을 남긴다."
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 내재가치 대비 가격 부담을 인정했고 현금창출과 성장 대비 가격을 확인할 입력이 부족하다고 봤다.",
+            "린치와 드러켄밀러는 위험선호 국면을 인정하면서도 각각 성장 대비 가격과 종목 추세의 확인이 필요하다고 봤다.",
+            "판독 가능한 발췌는 분기 지분 가치 변동과 개별 공모를 다루며, 나머지 발췌의 본문이 부족해 뉴스 근거 상한을 적용한다."
+          ],
+          "dissent": [
+            "버핏은 내재가치 대비 가격 부담을 중시해 부정적이었고, 린치는 높은 성장 점수에 검토 여지를 남겼다.",
+            "드러켄밀러는 위험선호 국면에 가장 긍정적이었으나 추세 확인 부족을 반영해 점수를 낮췄다.",
+            "게이츠는 분기말 보유 자료가 없어 기관 수급 판단을 유보했다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            198.46,
+            235.56,
+            327.18
+          ],
+          "conflict": true,
+          "one_line_ko": "위험선호 국면에도 내재가치 대비 가격 부담과 뉴스 본문 근거 부족을 감안해 WATCH를 유지한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 6,
+        "quotes_dropped": 0,
+        "numbers_checked": 13,
+        "numbers_rejected": 0
+      },
+      "news_state": "insufficient_evidence",
+      "structural_risk": 0.0,
+      "quote_verified": false,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-20-GOOGL-debate-01",
+      "adopted_report_sha256": "sha256:a3c9b25289e698f265346c6a30cb462cc64ad2bb84790706f34e588058c9e05a",
+      "adopted_snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889"
+    }
+  },
   "auto_downgrade": {
     "current": false,
     "recommend_enable": false,
