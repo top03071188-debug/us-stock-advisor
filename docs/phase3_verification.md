@@ -443,3 +443,29 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
   없어 `HG-05`·`HG-11` 로 탈락한다. ③ 시총은 yfinance 현재값이라 **라이브 일일 실행 전용**이며 과거 재생에는
   쓰지 않는다. ④ 대부분 종목의 `v=0` 은 결측이 아니라 **모델 IV 가 현재가보다 낮다는 판정**이다(안전마진
   음수) — 규칙을 완화하지 않았고, 그래서 이번 배치의 BUY 신호는 자연히 0건이다.
+
+### 12.4 재실행 결과 (`daily-postclose` run [44661625253](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44661625253))
+
+- 커밋 `47dbda6` 푸시 → `ci` [44661477715](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44661477715) **success**(Lint·281 테스트·scope 가드·공개 빌드 가드 전 스텝 success).
+- `gh workflow run daily-postclose.yml` → 전 스텝 success(파이프라인·스키마 검증·아카이브·redact·계약 커밋·공개 빌드·Pages 배포).
+  파이프라인 출력: `status: normal`, `snapshot_id: sha256:e6fa8470…`, 신호 2건, `blocked: []`, `degraded: []`.
+
+| 항목 | 값 |
+|---|---|
+| `status` | **`normal`** (이전 `degraded`) |
+| 레짐 | `neutral` · **`verified: true`** · 투표 `real_rate neutral / t10y2y risk_on / credit risk_on / volatility neutral / dollar neutral` · `inputs_missing: []` |
+| 소스 4+2 | `yfinance ok · fred ok · sec ok · finnhub ok · yfinance_meta ok · sec_xbrl ok` |
+| `watchlist_count` | **19** (이전 0) |
+| 신호 / 차단 | **2 / 0** — `ADBE` WATCH 66.41(IV $204.71 vs 현재가 $221.68, 안전마진 −8.3%), `GOOGL` WATCH 56.02(IV $81.81 vs $272.66, −233%) |
+| 모의 계좌 | `cash_pct 1.0` · 보유 0 (BUY 신호 0건 → 주문 없음, 정상) |
+| 파일럿 | `보류` — `N_eff 2` (<15) · 나머지 3지표 계산 불가(표본 부족) |
+| 아카이브 | 비공개 저장소 `top03071188-debug/us-stock-advisor-archive` Release `snapshots-2026` 에 `snapshot_2026-11-20_e6fa84704bc4.tgz` 업로드(공개 저장소 Release **0건**) |
+
+실사이트 `https://top03071188-debug.github.io/us-stock-advisor/` 브라우저 실측(2026-11-20 11:36 KST):
+
+- `오늘`: `데이터 정상` · `발행 11. 20. 07:02 · 마감 11. 20. 07:00` · `데이터 출처: live` · `시장 레짐: 중립(Neutral) 포지션 배수 0.70 · 검증됨`,
+  신호 카드 2장(ADBE·GOOGL 관찰), `차단된 종목 없음`, 현재 규칙 요약 정상.
+- `종목`: 종목 선택 목록에 **실제 워치리스트 19종목**(ADBE 선택 → 7블록 전부 렌더 — 대가별 점수, IV 밴드 $174.01~$235.42,
+  주 1회 정규화 차트, Finnhub 뉴스 5건, SEC 공시 표 5행, invalidation, 토론 빈 카드). 콘솔 예외 없음.
+- 스크린샷: `downloads/phase3-screenshots/live-second-run-today.png`(오늘),
+  `downloads/phase3-screenshots/live-second-run.png`(종목·ADBE).
