@@ -175,11 +175,12 @@ def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | No
                  f"평균 초과 {None if not excess else round(sum(excess) / len(excess), 6)} − 비용 {cost}")),
         _metric("cash_equivalent", "유사 현금비중 벤치마크 대비", cash_excess, "> 0",
                 None if cash_excess is None else bool(cash_excess > 0),
-                ("유효 표본 0건 — 계산 불가" if no_sample else
+                # 값이 있으면 계산된 것이다 — 표본이 없다는 문구를 값 옆에 붙이지 않는다.
+                ("계산 불가(노출도·수익률 없음)" if cash_excess is None else
                  (None if exposure is None else f"평균 노출 {round(float(exposure), 4)} 혼합 대비"))),
         _metric("tail_loss", "손실 구간(하위 20%) 평균", tail["bottom_mean"], f"≥ {TAIL_FLOOR}",
                 tail["pass"],
-                ("유효 표본 0건 — 계산 불가" if no_sample else
+                ("계산 불가(손실 표본 없음)" if tail["bottom_mean"] is None else
                  (None if not mdds else f"구간 MDD 최악 {round(min(mdds), 6)}"))),
     ]
     computable = [m for m in metrics if m["value"] is not None]

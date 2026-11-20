@@ -50,6 +50,23 @@ def test_watch_only_does_not_increase_n_eff():
     assert metrics["tail_loss"]["value"] is None
 
 
+def test_metric_note_never_contradicts_its_value():
+    """값이 있는 지표 옆에 "계산 불가"를 붙이지 않는다(성적표 문구 모순방지).
+
+    실데이터 2026-11-20: 체결 0건·노출 0 이라 `cash_equivalent` 은 **0.0(현금과 동일)** 로 계산되는데,
+    표본 부족 문구를 그대로 붙이면 "0.0 · 계산 불가"라는 모순된 줄이 화면에 나갔다.
+    """
+    ev = evaluate_pilot([], [], portfolio={"total_return": 0.0, "avg_exposure": 0.0},
+                        benchmark_return=-0.02)
+    metrics = {m["key"]: m for m in ev["metrics"]}
+    assert metrics["cash_equivalent"]["value"] == pytest.approx(0.0)
+    assert metrics["cash_equivalent"]["pass"] is False
+    assert "계산 불가" not in (metrics["cash_equivalent"]["note_ko"] or "")
+    for m in ev["metrics"]:
+        if m["value"] is not None:
+            assert "계산 불가" not in (m["note_ko"] or ""), m
+
+
 def test_untraded_records_without_executions_are_not_samples():
     """체결 정보가 없으면 표본 0건 — 레코드가 있다고 통과시키지 않는다."""
     records = [record(f"s{i}", f"T{i}") for i in range(15)]
