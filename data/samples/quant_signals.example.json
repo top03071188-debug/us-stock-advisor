@@ -1,37 +1,165 @@
 {
-  "schema_version": "0.1-sample",
+  "schema_version": 1,
   "generated_at": "2026-11-19T07:02:11+09:00",
   "data_cutoff_at": "2026-11-18T22:00:00Z",
   "signal_published_at": "2026-11-18T22:02:11Z",
   "order_cutoff_at": "2026-11-19T14:25:00Z",
   "as_of": "2026-11-19",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:sample0000000000000000000000000000000000000000000000000000",
+  "snapshot_id": "sha256:sample0000000000000000000000000000000000000000000000000000000000",
   "code_commit": "sample",
   "status": "sample",
-  "regime": {"label": "neutral", "multiplier": 0.7, "inputs_missing": ["BAMLH0A0HYM2"]},
+  "regime": {
+    "regime": "neutral",
+    "votes": {
+      "real_rate": "risk_on",
+      "t10y2y": "risk_on",
+      "credit": "neutral",
+      "volatility": "neutral",
+      "dollar": "neutral"
+    },
+    "votes_risk_on": 2,
+    "votes_risk_off": 0,
+    "inputs_missing": [],
+    "verified": true,
+    "extreme": false,
+    "multiplier": 0.7,
+    "margin_of_safety": 0.2,
+    "max_new_positions": 20,
+    "score": 50.0
+  },
   "signals": [
     {
+      "schema_version": 1,
       "signal_id": "2026-11-19-SAMPLE-BUY-001",
       "ticker": "SAMPLE",
       "type": "BUY",
       "grade": "B",
       "entry_score": 69.4,
-      "components": {"quality": 82, "valuation": 71, "timing": 64, "macro": 55, "growth": 60},
-      "valuation": {"iv_low": 455.0, "iv_median": 522.0, "iv_high": 610.0, "price": 412.35, "margin": 0.21},
-      "entry_plan": [
-        {"tranche": 1, "weight": 0.40, "price_ref": 412.35, "provisional": true},
-        {"tranche": 2, "weight": 0.30, "price_ref": 383.5, "provisional": true},
-        {"tranche": 3, "weight": 0.30, "price_ref": 354.6, "provisional": true, "active": false}
-      ],
+      "as_of": "2026-11-19",
+      "data_cutoff_at": "2026-11-18T22:00:00Z",
+      "signal_published_at": "2026-11-18T22:02:11Z",
+      "order_cutoff_at": "2026-11-19T14:25:00Z",
+      "generated_price": 412.35,
       "quant_intent": "pending_buy",
-      "thesis_ko": "Phase 1 샘플 데이터입니다 — 실제 신호가 아닙니다."
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 412.35,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 383.49,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 354.62,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "target_band": {
+        "lo": 431.5388,
+        "hi": 450.7275,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 412.35,
+        "r_lo": 0.046535,
+        "r_hi": 0.09307
+      },
+      "expected_mdd": -0.1048,
+      "invalidation": null,
+      "thesis_ko": "예시 데이터입니다 — 실제 신호가 아닙니다.",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "metric": "FCF_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/"
+        }
+      ],
+      "investor_scores": {
+        "buffett": 62,
+        "graham": 55,
+        "lynch": -18,
+        "druckenmiller": 35
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.05,
+        "tranche": 1,
+        "tranche_weight": 0.02,
+        "stop_distance": 0.09,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:sample0000000000000000000000000000000000000000000000000000000000",
+      "code_commit": "sample",
+      "trade_grade": "BUY",
+      "components": {
+        "quality": 82,
+        "valuation": 71,
+        "timing": 64,
+        "macro": 55,
+        "growth": 60
+      },
+      "valuation": {
+        "iv_low": 455.0,
+        "iv_median": 522.0,
+        "iv_high": 610.0,
+        "price": 412.35,
+        "margin": 0.21
+      },
+      "news_state": "read_done"
     }
   ],
-  "blocked": [],
+  "blocked": [
+    {
+      "ticker": "OTHER",
+      "reason": "V01",
+      "codes": [
+        "V01"
+      ],
+      "message_ko": "실적 발표 임박 — 신규 매수 보류"
+    }
+  ],
   "watchlist": [
-    {"ticker": "SAMPLE", "sector": "Information Technology", "q": 82, "v": 71, "g": 60, "rank_score": 72.9}
+    {
+      "ticker": "SAMPLE",
+      "sector": "Information Technology",
+      "q": 82,
+      "v": 71,
+      "g": 60,
+      "rank_score": 72.9,
+      "valuation_suspended": false
+    }
   ],
   "watchlist_count": 1,
-  "ledger_summary": {"agreement": null, "win_rate": null, "note": "Phase 1: 표본 없음"}
+  "ledger_summary": {
+    "agreement": null,
+    "win_rate": null,
+    "n_graded": 0,
+    "note": "예시 데이터 — 채점 표본 없음"
+  },
+  "portfolio": {
+    "as_of": "2026-11-19",
+    "cash_pct": 1.0,
+    "invested_pct": 0.0,
+    "positions": []
+  }
 }

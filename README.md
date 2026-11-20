@@ -1,7 +1,9 @@
-# us-stock-advisor — Phase 1 엔진
+# us-stock-advisor — Phase 1·2 엔진
 
-미국 주식 하이브리드 투자 조언 앱의 **Phase 1 기반**: 시점 고정(`available_at ≤ decision_at`),
-3종 `PriceKind`, 주당 달러(`USD/share`) 내재가치, NYSE 거래일 폴드, 그리고 공개 범위 가드.
+미국 주식 하이브리드 투자 조언 앱의 **Phase 1 기반**(시점 고정 `available_at ≤ decision_at`,
+3종 `PriceKind`, 주당 달러 내재가치, NYSE 거래일 폴드, 공개 범위 가드)과
+**Phase 2 매매 규칙**(매수/매도 트리거·Veto 12종·거시 레짐·사이징, 모의 포트폴리오,
+Paper Ledger 기록·채점, 폴드 전략 리포트).
 
 > 이 저장소는 **판단 보조** 도구이며 투자 권유가 아니다. 자동 주문·계좌 연동은 범위 밖이다.
 > 기획서: `미국주식_투자조언앱_개발기획서.md` **v1.3.1** (supersedes v1.3).
@@ -24,6 +26,20 @@
 | 공개 범위 | `scripts/{build_public_data,redact_quotes,check_commit_scope}.py` | 금지 키·이메일·원시가 경로 0건 |
 | 대시보드 초안 | `web/` | 의존성 없는 정적 HTML/JS, JSON 로더(워치리스트·폴드) |
 
+## Phase 2 에서 실제로 도는 것
+
+| 영역 | 모듈 | 확인 |
+|---|---|---|
+| 매수 트리거 B0~B6·등급·40/30/30 | `engine/decide/signals.py` | 3차가 손절선 밖이면 무효(실효 70%), WATCH는 주문 없음 |
+| 매도 S1~S5·보유 추적 | `engine/decide/signals.py` | 편출된 보유 종목도 S1~S5 계속 계산, 신규 매수만 차단 |
+| Veto 12종 | `engine/decide/veto.py`, `config/veto_rules.yaml` | V01~V12 발동 사유를 `veto[]` 에 보존 |
+| 거시 레짐 | `engine/decide/macro.py` | 5신호 3개 일치 규칙, 배수 1.0/0.7/0.4, 안전마진 15/20/25% |
+| 사이징·재검증 | `engine/decide/sizing.py` | `min(3×atr_pct, 20%)`, 계획 손실 ≤ 0.75%, 2·3차 축소·거절 |
+| 모의 계좌 | `engine/ledger/portfolio.py` | 40/30/30·분할익절·손절·갭·슬리피지, 손절 봉 잔여 주문 즉시 취소, 분할·배당 |
+| 기록·채점 | `engine/ledger/record.py`, `grade.py` | 발행 레코드 체결가 비움(불변), 1주/1/3/6개월, 홀드아웃 절단 |
+| 폴드 리포트 | `engine/backtest/report.py`, `runner.py` | CAGR·MDD·Sharpe·Sortino·Calmar·노출도·회전율, 슬리피지 0/5/10/20bp |
+| 데이터 계약 | `schemas/quant_signals.schema.json`, `engine/models.py` | 스키마 + 세 시각 + 금지 필드 검증 |
+
 ## 설치·실행
 
 ```bash
@@ -35,6 +51,8 @@ cp .env.example .env      # 실제 키는 .env 에만 (gitignore)
 RUN_NETWORK=1 .venv/bin/python -m pytest tests/test_network_smoke.py -q   # 실제 API 1회
 .venv/bin/python scripts/smoke_network.py              # 상세 리포트 → out/smoke_report.json
 .venv/bin/python scripts/run_walkforward.py --today 2026-11-19 --plan-only
+.venv/bin/python scripts/run_walkforward.py --portfolio-demo        # 신호→주문→모의계좌→리포트 재현
+.venv/bin/python scripts/build_sample_signals.py                    # 데이터 계약 예시 재생성
 .venv/bin/python scripts/build_public_data.py --signals data/samples/quant_signals.example.json \
     --folds data/walkforward/folds/summary.json --out web/data
 python3 -m http.server 8000 -d web                     # 대시보드 초안 확인
@@ -61,7 +79,13 @@ python3 -m http.server 8000 -d web                     # 대시보드 초안 확
 - Variable `PRIVATE_ARCHIVE_REPO` = `top03071188-debug/us-stock-advisor-archive`
 - Pages: Source = GitHub Actions
 
-## Phase 1 밖(다음 단계)
+## Phase 2 의 한계 (요약)
 
-`scripts/run_daily.py`(수집→신호), 실시간 Paper Ledger, 13F, Codex 토론, 알림은 Phase 2~4 다.
+실데이터 폴드 성과는 아직 없다 — Phase 2 코드는 합성 시나리오로 경로를 검증했고, 수집 파이프라인 연결은 Phase 3다.
+`universe_history`·`delisted_securities` 가 없어 2022/2020/2018Q4 스트레스와 5년 확장은 미검증이고,
+6개월 보정은 적격 폴드 2개로 **보류**다. 자세한 목록은 `docs/phase2_verification.md` §6.
+
+## Phase 3 이후(다음 단계)
+
+`scripts/run_daily.py`(수집→신호), 실시간 Paper Ledger 운영, 13F, Codex 토론, 알림은 Phase 3~4 다.
 `daily-postclose.yml` 은 그 형태를 미리 담아 두었고 **schedule 은 꺼 두었다**(수동 실행만).

@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "quant_signals",
+  "description": "데이터 계약 — 정량 신호 발행 파일 (기획서 v1.3.1 §2.2.2, §4.7.1). 발행 레코드에는 체결가가 없다.",
+  "type": "object",
+  "required": [
+    "schema_version", "generated_at", "data_cutoff_at", "signal_published_at", "order_cutoff_at",
+    "as_of", "params_version", "snapshot_id", "code_commit", "regime", "signals", "blocked",
+    "watchlist", "ledger_summary", "portfolio"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "minimum": 1},
+    "generated_at": {"type": "string"},
+    "data_cutoff_at": {"type": "string"},
+    "signal_published_at": {"type": "string"},
+    "order_cutoff_at": {"type": "string"},
+    "as_of": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "params_version": {"type": "string"},
+    "snapshot_id": {"type": "string"},
+    "code_commit": {"type": "string"},
+    "status": {"type": "string"},
+    "regime": {"$ref": "#/$defs/regime"},
+    "signals": {"type": "array", "items": {"$ref": "#/$defs/signal"}},
+    "blocked": {"type": "array", "items": {"$ref": "#/$defs/blocked"}},
+    "watchlist": {"type": "array", "items": {"$ref": "#/$defs/watchlist_row"}},
+    "watchlist_count": {"type": "integer", "minimum": 0},
+    "ledger_summary": {"type": "object"},
+    "portfolio": {"$ref": "#/$defs/portfolio"},
+    "veto_summary": {"type": "object"}
+  },
+  "$defs": {
+    "regime": {
+      "type": "object",
+      "required": ["regime"],
+      "properties": {
+        "regime": {"enum": ["risk_on", "neutral", "risk_off"]},
+        "votes": {"type": "object"},
+        "inputs_missing": {"type": "array", "items": {"type": "string"}},
+        "verified": {"type": "boolean"},
+        "extreme": {"type": "boolean"},
+        "multiplier": {"type": "number", "minimum": 0, "maximum": 1},
+        "margin_of_safety": {"type": "number", "minimum": 0, "maximum": 1},
+        "max_new_positions": {"type": ["integer", "null"], "minimum": 0},
+        "score": {"type": "number", "minimum": 0, "maximum": 100}
+      }
+    },
+    "signal": {
+      "type": "object",
+      "required": [
+        "signal_id", "ticker", "type", "grade", "entry_score", "as_of", "data_cutoff_at",
+        "signal_published_at", "order_cutoff_at", "generated_price", "quant_intent",
+        "entry_plan", "target_band", "position", "execution_event", "track", "evidence", "veto"
+      ],
+      "properties": {
+        "signal_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$"},
+        "ticker": {"type": "string", "pattern": "^[A-Z][A-Z0-9.-]{0,9}$"},
+        "type": {"enum": ["BUY", "SELL", "WATCH"]},
+        "grade": {"enum": ["A", "B", "C"]},
+        "trade_grade": {"enum": ["STRONG_BUY", "BUY", "WATCH", "NONE"]},
+        "entry_score": {"type": "number", "minimum": 0, "maximum": 100},
+        "as_of": {"type": "string"},
+        "data_cutoff_at": {"type": "string"},
+        "signal_published_at": {"type": "string"},
+        "order_cutoff_at": {"type": "string"},
+        "generated_price": {"type": "number", "minimum": 0},
+        "quant_intent": {"enum": ["pending_buy", "pending_hold_cash", "no_action", "pending_exit"]},
+        "entry_plan": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"$ref": "#/$defs/tranche"}
+        },
+        "target_band": {"$ref": "#/$defs/target_band"},
+        "expected_mdd": {"type": ["number", "null"], "minimum": -1, "maximum": 0},
+        "invalidation": {"type": ["object", "null"]},
+        "thesis_ko": {"type": "string"},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+        "investor_scores": {"type": "object"},
+        "conflict": {"type": "boolean"},
+        "position": {"$ref": "#/$defs/position"},
+        "debate_ref": {"type": ["string", "null"]},
+        "execution_event": {"type": "null"},
+        "track": {"enum": ["quant_only", "codex_debated"]},
+        "veto": {"type": "array", "items": {"$ref": "#/$defs/veto"}},
+        "params_version": {"type": "string"},
+        "snapshot_id": {"type": "string"},
+        "code_commit": {"type": "string"},
+        "news_state": {"enum": ["not_read", "insufficient_evidence", "read_done"]}
+      }
+    },
+    "tranche": {
+      "type": "object",
+      "required": ["tranche", "weight", "price_ref", "provisional"],
+      "properties": {
+        "tranche": {"type": "integer", "minimum": 1, "maximum": 3},
+        "weight": {"type": "number", "minimum": 0, "maximum": 1},
+        "price_ref": {"type": "number", "minimum": 0},
+        "provisional": {"type": "boolean"},
+        "active": {"type": "boolean"},
+        "note": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "target_band": {
+      "type": "object",
+      "required": ["lo", "hi", "horizon_td", "basis", "base_price", "r_lo", "r_hi"],
+      "properties": {
+        "lo": {"type": "number"},
+        "hi": {"type": "number"},
+        "horizon_td": {"type": "integer", "minimum": 1},
+        "basis": {"enum": ["base_price"]},
+        "base_price": {"type": "number", "minimum": 0},
+        "r_lo": {"type": "number"},
+        "r_hi": {"type": "number"},
+        "defensive": {"type": "boolean"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {"enum": ["fundamental", "sec_filing", "news", "market"]},
+        "metric": {"type": "string"},
+        "form": {"type": "string"},
+        "url": {"type": "string"},
+        "filed_date": {"type": "string"},
+        "available_at": {"type": "string"},
+        "quote_sha256": {"type": "string"},
+        "quote_verified": {"type": "boolean"},
+        "value_kind": {"type": "string"}
+      }
+    },
+    "position": {
+      "type": "object",
+      "required": ["plan_weight_target", "tranche", "tranche_weight", "stop_distance",
+                   "stop_price", "planned_loss_after_fill_pct"],
+      "properties": {
+        "plan_weight_target": {"type": "number", "minimum": 0, "maximum": 0.05},
+        "tranche": {"type": "integer", "minimum": 0, "maximum": 3},
+        "tranche_weight": {"type": "number", "minimum": 0, "maximum": 0.05},
+        "stop_distance": {"type": "number", "minimum": 0, "maximum": 0.2},
+        "stop_price": {"type": "null"},
+        "planned_loss_after_fill_pct": {"type": "null"}
+      }
+    },
+    "veto": {
+      "type": "object",
+      "required": ["code", "name", "message_ko"],
+      "properties": {
+        "code": {"enum": ["V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09", "V10", "V11", "V12"]},
+        "name": {"type": "string"},
+        "group": {"type": "string"},
+        "message_ko": {"type": "string"},
+        "release_ko": {"type": "string"},
+        "detail": {"type": "string"},
+        "blocking": {"type": "boolean"}
+      }
+    },
+    "blocked": {
+      "type": "object",
+      "required": ["ticker", "reason"],
+      "properties": {
+        "ticker": {"type": "string"},
+        "reason": {"type": "string"},
+        "codes": {"type": "array", "items": {"type": "string"}},
+        "message_ko": {"type": "string"}
+      }
+    },
+    "watchlist_row": {
+      "type": "object",
+      "required": ["ticker"],
+      "properties": {
+        "ticker": {"type": "string"},
+        "sector": {"type": "string"},
+        "q": {"type": "number"},
+        "v": {"type": ["number", "null"]},
+        "g": {"type": ["number", "null"]},
+        "rank_score": {"type": ["number", "null"]},
+        "valuation_suspended": {"type": "boolean"}
+      }
+    },
+    "portfolio": {
+      "type": "object",
+      "description": "모의 계좌 요약 — 공개 가능한 **비중(%)**만 담는다(수량·평단·금액은 커밋 금지).",
+      "required": ["as_of", "cash_pct", "invested_pct"],
+      "properties": {
+        "as_of": {"type": "string"},
+        "cash_pct": {"type": "number", "minimum": 0, "maximum": 1},
+        "invested_pct": {"type": "number", "minimum": 0, "maximum": 1},
+        "equity_index": {"type": "number", "minimum": 0},
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ticker", "weight"],
+            "properties": {
+              "ticker": {"type": "string"},
+              "weight": {"type": "number", "minimum": 0, "maximum": 0.05},
+              "sector": {"type": "string"},
+              "opened_at": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  }
+}

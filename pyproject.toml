@@ -21,7 +21,10 @@ dependencies = [
 dev = ["pytest>=8.0"]
 
 [tool.setuptools]
-packages = ["engine", "engine.utils", "engine.data", "engine.metrics", "engine.backtest"]
+packages = [
+  "engine", "engine.utils", "engine.data", "engine.metrics", "engine.backtest",
+  "engine.decide", "engine.ledger",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
