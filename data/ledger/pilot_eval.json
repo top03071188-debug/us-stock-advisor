@@ -29,7 +29,7 @@
       "value": 0.0,
       "threshold": "> 0",
       "pass": false,
-      "note_ko": "유효 표본 0건 — 계산 불가"
+      "note_ko": "평균 노출 0.0 혼합 대비"
     },
     {
       "key": "tail_loss",
@@ -37,7 +37,7 @@
       "value": null,
       "threshold": "≥ -0.08",
       "pass": null,
-      "note_ko": "유효 표본 0건 — 계산 불가"
+      "note_ko": "계산 불가(손실 표본 없음)"
     }
   ],
   "verdict": "보류",

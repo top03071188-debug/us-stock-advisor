@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-20T04:05:37.232575Z",
+  "generated_at": "2026-11-20T04:09:22.254269Z",
   "data_cutoff_at": "2026-11-19T22:00:00Z",
-  "signal_published_at": "2026-11-20T04:04:29Z",
+  "signal_published_at": "2026-11-20T04:08:24Z",
   "order_cutoff_at": "2026-11-20T14:25:00Z",
   "as_of": "2026-11-20",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-  "code_commit": "44da6ca",
+  "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+  "code_commit": "666ed4a",
   "status": "normal",
   "mode": "postclose",
   "source": "live",
@@ -32,8 +32,8 @@
   },
   "ingest": {
     "data_cutoff_at": "2026-11-19T22:00:00Z",
-    "inputs_ingested_at": "2026-11-20T04:05:01.440880Z",
-    "lag_seconds": 21901.4,
+    "inputs_ingested_at": "2026-11-20T04:08:51.427374Z",
+    "lag_seconds": 22131.4,
     "after_cutoff": true,
     "available_at_source": "first_ingested_at"
   },
@@ -47,7 +47,7 @@
       "entry_score": 58.24,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_at": "2026-11-20T04:08:24Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -147,8 +147,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-      "code_commit": "44da6ca",
+      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+      "code_commit": "666ed4a",
       "trade_grade": "WATCH",
       "components": {
         "quality": 82.43,
@@ -300,7 +300,7 @@
       "entry_score": 62.76,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_at": "2026-11-20T04:08:24Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -400,8 +400,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-      "code_commit": "44da6ca",
+      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+      "code_commit": "666ed4a",
       "trade_grade": "WATCH",
       "components": {
         "quality": 77.54,
@@ -559,7 +559,7 @@
       "entry_score": 64.56,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_at": "2026-11-20T04:08:24Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -659,8 +659,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-      "code_commit": "44da6ca",
+      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+      "code_commit": "666ed4a",
       "trade_grade": "WATCH",
       "components": {
         "quality": 85.0,
@@ -812,7 +812,7 @@
       "entry_score": 57.57,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_at": "2026-11-20T04:08:24Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -912,8 +912,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-      "code_commit": "44da6ca",
+      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+      "code_commit": "666ed4a",
       "trade_grade": "WATCH",
       "components": {
         "quality": 97.68,
@@ -1069,7 +1069,7 @@
       "entry_score": 65.78,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_at": "2026-11-20T04:08:24Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1169,8 +1169,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-      "code_commit": "44da6ca",
+      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+      "code_commit": "666ed4a",
       "trade_grade": "WATCH",
       "components": {
         "quality": 90.55,
@@ -1322,7 +1322,7 @@
       "entry_score": 62.03,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_at": "2026-11-20T04:08:24Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1408,8 +1408,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-      "code_commit": "44da6ca",
+      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+      "code_commit": "666ed4a",
       "trade_grade": "WATCH",
       "components": {
         "quality": 89.77,
@@ -1561,7 +1561,7 @@
       "entry_score": 55.45,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_at": "2026-11-20T04:08:24Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1661,8 +1661,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
-      "code_commit": "44da6ca",
+      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
+      "code_commit": "666ed4a",
       "trade_grade": "WATCH",
       "components": {
         "quality": 76.35,
@@ -2126,8 +2126,8 @@
     "macro_missing_series": [],
     "macro_ingest": {
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "inputs_ingested_at": "2026-11-20T04:05:01.440880Z",
-      "lag_seconds": 21901.4,
+      "inputs_ingested_at": "2026-11-20T04:08:51.427374Z",
+      "lag_seconds": 22131.4,
       "after_cutoff": true,
       "available_at_source": "first_ingested_at"
     },
@@ -4789,12 +4789,32 @@
     },
     "record_skips": [
       {
+        "signal_id": "2026-11-20-MSFT-WATCH-001",
+        "reason": "signal_id=2026-11-20-MSFT-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
+      },
+      {
+        "signal_id": "2026-11-20-NVDA-WATCH-001",
+        "reason": "signal_id=2026-11-20-NVDA-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
+      },
+      {
         "signal_id": "2026-11-20-ADBE-WATCH-001",
         "reason": "signal_id=2026-11-20-ADBE-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
       },
       {
+        "signal_id": "2026-11-20-CSCO-WATCH-001",
+        "reason": "signal_id=2026-11-20-CSCO-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
+      },
+      {
         "signal_id": "2026-11-20-GOOGL-WATCH-001",
         "reason": "signal_id=2026-11-20-GOOGL-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
+      },
+      {
+        "signal_id": "2026-11-20-META-WATCH-001",
+        "reason": "signal_id=2026-11-20-META-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
+      },
+      {
+        "signal_id": "2026-11-20-CAT-WATCH-001",
+        "reason": "signal_id=2026-11-20-CAT-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
       }
     ]
   },
@@ -9860,7 +9880,7 @@
           "value": 0.0,
           "threshold": "> 0",
           "pass": false,
-          "note_ko": "유효 표본 0건 — 계산 불가"
+          "note_ko": "평균 노출 0.0 혼합 대비"
         },
         {
           "key": "tail_loss",
@@ -9868,7 +9888,7 @@
           "value": null,
           "threshold": "≥ -0.08",
           "pass": null,
-          "note_ko": "유효 표본 0건 — 계산 불가"
+          "note_ko": "계산 불가(손실 표본 없음)"
         }
       ]
     },
@@ -10459,7 +10479,7 @@
         "value": 0.0,
         "threshold": "> 0",
         "pass": false,
-        "note_ko": "유효 표본 0건 — 계산 불가"
+        "note_ko": "평균 노출 0.0 혼합 대비"
       },
       {
         "key": "tail_loss",
@@ -10467,7 +10487,7 @@
         "value": null,
         "threshold": "≥ -0.08",
         "pass": null,
-        "note_ko": "유효 표본 0건 — 계산 불가"
+        "note_ko": "계산 불가(손실 표본 없음)"
       }
     ]
   },
