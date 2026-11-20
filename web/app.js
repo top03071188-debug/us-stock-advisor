@@ -799,7 +799,7 @@ function renderHistory(summary, records) {
     el("td", { class: "num", text: String(r.as_of || (r.signal_id || "").slice(0, 10)) }),
     el("td", { text: r.ticker || "—" }),
     el("td", { text: isNum(r.revision) && r.revision > 1
-      ? `재발행 ${r.revision}회차${r.supersedes ? ` (${String(r.supersedes).slice(0, 10)}… 대체)` : ""}` : "1회차" }),
+      ? `재발행 ${r.revision}회차${r.supersedes ? ` (${String(r.supersedes).slice(-14)} 대체)` : ""}` : "1회차" }),
     el("td", { text: r.action || (r.quant_intent === "pending_buy" ? "체결 대기" : r.quant_intent === "no_action" ? "관찰" : (r.action || "—")) }),
     el("td", { class: "num", text: isNum(r.excess) ? fmtSignedPct(r.excess) : "—" }),
   ]));
