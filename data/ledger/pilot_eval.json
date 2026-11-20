@@ -2,17 +2,17 @@
   "schema_version": 1,
   "as_of": "2026-11-20",
   "horizon": "3m",
-  "n_records": 0,
+  "n_records": 2,
   "n_graded": 0,
-  "n_eff": 0,
+  "n_eff": 2,
   "metrics": [
     {
       "key": "n_eff",
       "label_ko": "유효 표본 N_eff",
-      "value": 0,
+      "value": 2,
       "threshold": "≥ 15",
       "pass": false,
-      "note_ko": "63거래일 클러스터 0개(신호 0건)"
+      "note_ko": "63거래일 클러스터 2개(신호 2건)"
     },
     {
       "key": "net_after_cost",
@@ -41,7 +41,7 @@
   ],
   "verdict": "보류",
   "verdict_reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
-  "benchmark_return": NaN,
+  "benchmark_return": -0.06278055500508206,
   "risk_free": 0.0,
   "costs": {
     "slippage": 10.0,
