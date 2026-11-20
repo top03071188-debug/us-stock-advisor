@@ -27,6 +27,19 @@ def test_hard_gate_failures_are_recorded():
     assert all(code in GATE_LABELS for code in result["excluded"][0]["gates"])
 
 
+def test_unverified_dilution_is_excluded_with_korean_reason():
+    """주식수 기준을 모르는 종목은 `HG-09_UNVERIFIED` 로 탈락하고, 사유에는 코드가 아니라 문장이 찍힌다(R05)."""
+    from dataclasses import replace
+
+    f = replace(annual_fundamentals(), shares_basis=["unverified"] * 5)
+    c = replace(make(), fundamentals=f)
+    assert "HG-09_UNVERIFIED" in hard_gates(c)
+    result = screen([c])
+    reasons = result["excluded"][0]["reasons"]
+    assert reasons == ["3년 희석 판정 불가(주식수 기준 미확인)"]
+    assert all(code not in reasons for code in GATE_LABELS)     # 코드가 그대로 새지 않는다
+
+
 def test_zero_survivors_is_normal():
     result = screen([make(cap=1e9)])
     assert result["count"] == 0

@@ -69,20 +69,30 @@ def test_truncated_results_are_reference_only():
     assert truncated_excluded_from_objective([good, cut]) == [good]
 
 
+def _constant_evaluator(bonus: float = 0.0):
+    """후보와 무관하게 같은 폴드를 돌려주는 러너(개선이 없다 → 수락되면 안 된다)."""
+    obs = [FoldObservation(f"F{i}", 60.0 + i + bonus, 0.04, -0.10) for i in range(1, 4)]
+
+    def _run(_params: dict) -> list[FoldObservation]:
+        return obs
+
+    return _run
+
+
 def test_calibration_skips_when_folds_insufficient():
+    # 폴드가 3개 미만이면 보류 — 고정 관측을 직접 넘기는 구 호출도 같은 규칙이다
     rec = calibrate([FoldObservation("F1", 60.0, 0.05, -0.10)], {}, min_folds=3)
     assert rec["accepted"] is False
     assert rec["reason"] == "INSUFFICIENT_FOLDS"
 
 
 def test_calibration_returns_rejection_reason():
-    obs = [FoldObservation(f"F{i}", 60.0 + i, 0.04, -0.10) for i in range(1, 4)]
-    rec = calibrate(obs, {}, min_folds=3, accept_gain=99.0)
+    rec = calibrate(_constant_evaluator(), {}, min_folds=3, accept_gain=99.0)
     assert rec["accepted"] is False
     assert rec["reason"].startswith("GAIN_TOO_SMALL")
-    rec2 = calibrate(obs, {}, min_folds=3, accept_gain=-99.0)
-    assert rec2["accepted"] is True
-    assert rec2["params"] != {}
+    rec2 = calibrate(_constant_evaluator(), {}, min_folds=3, accept_gain=-99.0)
+    assert rec2["accepted"] is False
+    assert rec2["reason"].startswith("TOO_FEW_IMPROVED_FOLDS")   # 개선 폴드 0 < 2 (4.2.6)
 
 
 def test_calibration_module_does_not_touch_holdout():

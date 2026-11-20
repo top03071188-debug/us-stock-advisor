@@ -4,6 +4,9 @@
 - 네 지표를 **함께** 본다. 하나만 골라 통과시키지 않는다 — 기록에 4개가 모두 있어야 판정이 난다.
 - 표본이 기준 미만이거나 지표를 계산할 수 없으면 **"보류"** 다. 작은 표본의 숫자를 자신 있게
   보여 주는 것이 가장 위험하다(4.8.2 와 같은 원칙).
+- **유효 표본 `N_eff` 는 체결(`buy_filled`) + 3개월 만기 채점 완료(`complete`)만 센다.**
+  관찰(WATCH·`no_action`) 카드는 표본이 아니다 — 4.7.3 의 "진입일 기준"·"진입 후 3개월 경과"
+  문언과 지표 ②③(계좌 성과·노출도)이 모두 체결 기준이기 때문이다. 발행 신호 수는 따로 남긴다.
 - `55점·승률 52%` 는 참고치이지 게이트가 아니다. 판정은 아래 4개로만 한다.
 
 | # | 지표 | 통과 기준(참고) |
@@ -65,6 +68,31 @@ def n_eff(records: list[dict], horizon_td: int = CLUSTER_TD) -> dict:
     }
 
 
+def eligible_samples(records: list[dict], graded: list[dict],
+                     executions: dict[str, dict] | None = None,
+                     horizon: str = "3m") -> list[dict]:
+    """유효 표본 = **체결(`buy_filled`) + 3개월 만기 채점 완료(`complete`)**.
+
+    `executions` 가 없으면 레코드의 `execution_event` 필드로 판정하고, 그것도 없으면 표본 0건이다
+    — WATCH·`no_action` 카드를 표본으로 세지 않는다(조용한 통과 금지).
+    """
+    gmap = {str(g.get("signal_id")): g for g in graded or []}
+    out: list[dict] = []
+    for record in records or []:
+        sid = str(record.get("signal_id"))
+        event = (executions or {}).get(sid) or {}
+        action = (event.get("quant_track") or {}).get("execution_event")
+        if action is None:
+            action = record.get("execution_event")
+        if action != "buy_filled":
+            continue
+        horizon_row = ((gmap.get(sid) or {}).get("horizons") or {}).get(horizon) or {}
+        if not horizon_row.get("complete"):
+            continue
+        out.append(record)
+    return out
+
+
 def total_cost(*, slippage_bps: float = 10.0, commission_bps: float = 2.0, fx_bps: float = 5.0,
                round_trips: float = 2.0) -> float:
     """비용 후 순수익에서 빼는 값(비율). 기본 왕복 2회 가정."""
@@ -106,13 +134,18 @@ def _metric(name: str, label_ko: str, value, threshold, passed: bool | None, not
 
 def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | None = None,
                    benchmark_return: float | None = None, risk_free: float | None = 0.0,
-                   horizon: str = "3m", costs: dict | None = None) -> dict:
+                   horizon: str = "3m", costs: dict | None = None,
+                   executions: dict[str, dict] | None = None) -> dict:
     """4지표 + 판정. 계산할 수 없는 지표는 `None` 으로 남기고 판정은 "보류"."""
     costs = costs or DEFAULT_COST_BPS
+    eligible = eligible_samples(records, graded, executions, horizon=horizon)
+    eligible_ids = {str(r.get("signal_id")) for r in eligible}
     returns: list[float] = []
     excess: list[float] = []
     mdds: list[float] = []
     for row in graded or []:
+        if str(row.get("signal_id")) not in eligible_ids:
+            continue
         h = ((row.get("horizons") or {}).get(horizon) or {})
         if h.get("return") is not None:
             returns.append(float(h["return"]))
@@ -121,7 +154,7 @@ def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | No
         if h.get("mdd") is not None:
             mdds.append(float(h["mdd"]))
 
-    ne = n_eff(records)
+    ne = n_eff(eligible)
     cost = total_cost(slippage_bps=costs.get("slippage", 10.0),
                       commission_bps=costs.get("commission", 2.0),
                       fx_bps=costs.get("fx", 5.0))
@@ -130,20 +163,24 @@ def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | No
     strat_total = None if not portfolio else portfolio.get("total_return")
     cash_excess = cash_equivalent_excess(strat_total, benchmark_return, exposure, risk_free)
     tail = tail_loss(returns)
+    no_sample = not eligible
 
     metrics = [
         _metric("n_eff", "유효 표본 N_eff", ne["n_eff"], f"≥ {MIN_N_EFF}",
                 bool(ne["n_eff"] >= MIN_N_EFF),
-                f"63거래일 클러스터 {ne['n_eff']}개(신호 {ne['n_records']}건)"),
+                f"체결·3개월 만기 {ne['n_eff']}개(발행 신호 {len(records or [])}건 중 유효 {len(eligible)}건)"),
         _metric("net_after_cost", "비용 후 순수익(SPY 대비)", net, "> 0",
                 None if net is None else bool(net > 0),
-                f"평균 초과 {None if not excess else round(sum(excess) / len(excess), 6)} − 비용 {cost}"),
+                ("유효 표본 0건 — 계산 불가" if no_sample else
+                 f"평균 초과 {None if not excess else round(sum(excess) / len(excess), 6)} − 비용 {cost}")),
         _metric("cash_equivalent", "유사 현금비중 벤치마크 대비", cash_excess, "> 0",
                 None if cash_excess is None else bool(cash_excess > 0),
-                None if exposure is None else f"평균 노출 {round(float(exposure), 4)} 혼합 대비"),
+                ("유효 표본 0건 — 계산 불가" if no_sample else
+                 (None if exposure is None else f"평균 노출 {round(float(exposure), 4)} 혼합 대비"))),
         _metric("tail_loss", "손실 구간(하위 20%) 평균", tail["bottom_mean"], f"≥ {TAIL_FLOOR}",
                 tail["pass"],
-                None if not mdds else f"구간 MDD 최악 {round(min(mdds), 6)}"),
+                ("유효 표본 0건 — 계산 불가" if no_sample else
+                 (None if not mdds else f"구간 MDD 최악 {round(min(mdds), 6)}"))),
     ]
     computable = [m for m in metrics if m["value"] is not None]
     all_pass = len(computable) == 4 and all(bool(m["pass"]) for m in metrics)
@@ -163,6 +200,7 @@ def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | No
         "as_of": date.today().isoformat(),
         "horizon": horizon,
         "n_records": len(records or []),
+        "n_eligible": len(eligible),
         "n_graded": len(returns),
         "n_eff": ne["n_eff"],
         "metrics": metrics,
@@ -181,9 +219,11 @@ def pilot_summary(ev: dict) -> dict:
         "verdict": ev.get("verdict"),
         "reason_ko": ev.get("verdict_reason_ko"),
         "n_eff": ev.get("n_eff"),
+        "n_records": ev.get("n_records"),
+        "n_eligible": ev.get("n_eligible"),
         "metrics": [
             {"key": m["key"], "label_ko": m["label_ko"], "value": m["value"],
-             "threshold": m["threshold"], "pass": m["pass"]}
+             "threshold": m["threshold"], "pass": m["pass"], "note_ko": m.get("note_ko")}
             for m in ev.get("metrics", [])
         ],
     }

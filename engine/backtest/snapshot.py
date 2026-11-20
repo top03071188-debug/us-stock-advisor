@@ -3,24 +3,116 @@
 [고정]
 - 모든 조회는 `available_at ≤ decision_at`. 이 조건이 없는 프레임은 스냅샷에 넣지 않는다.
 - `manifest.json` 에 파일 목록·sha256·decision_at 을 기록하고, `snapshot_id` 는 manifest 내용의 해시다.
+- **판단 입력 전체**를 스냅샷에 넣는다(R10a). 가격만 해시하면(market/economy/fundamentals/news 가
+  바뀌어도) 같은 `snapshot_id` 가 나와 재현 단위가 무너진다. `inputs` 는 `panels` 를 뺀 데이터셋
+  전체를 **제네릭 직렬화**한 것이다 — 특정 키를 나열하지 않으므로 데이터 계층이 필드를 늘려도
+  자동으로 해시에 들어간다(경계 계약 §4.2-3).
 - 같은 입력이면 같은 `snapshot_id` (재현의 단위, 4.9).
 """
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
+import importlib
 import json
+import math
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+
+from engine.data.prices import PricePanel
+
+INPUTS_FILE = "inputs.json"
+DATACLASS_TAG = "__dataclass__"
 
 
 class SnapshotError(ValueError):
     pass
 
 
+# ────────────────────────────── 직렬화 유틸 (경계 계약) ──────────────────────────────
+def _jsonable(value):  # noqa: PLR0911 — 타입별 분기 그 자체가 목적이다
+    """임의의 판단 입력 → JSON 가능한 값. NaN/Inf → None, 날짜 → ISO8601 UTC."""
+    if value is None or isinstance(value, (str, bool)):
+        return value
+    if isinstance(value, (np.bool_,)):
+        return bool(value)
+    if isinstance(value, (int, np.integer)) and not isinstance(value, bool):
+        return int(value)
+    if isinstance(value, (float, np.floating)):
+        out = float(value)
+        return out if math.isfinite(out) else None
+    if isinstance(value, (datetime, pd.Timestamp)):
+        ts = pd.Timestamp(value)
+        if ts is pd.NaT or pd.isna(ts):
+            return None
+        if ts.tzinfo is None:
+            ts = ts.tz_localize("UTC")
+        return ts.tz_convert("UTC").isoformat().replace("+00:00", "Z")
+    if isinstance(value, date):
+        return value.isoformat()
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        payload = {DATACLASS_TAG: f"{type(value).__module__}.{type(value).__qualname__}"}
+        for field in dataclasses.fields(value):
+            payload[field.name] = _jsonable(getattr(value, field.name))
+        return payload
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted(_jsonable(v) for v in value)
+    if isinstance(value, pd.Series):
+        return {str(_jsonable(k)): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, np.ndarray):
+        return [_jsonable(v) for v in value.tolist()]
+    if hasattr(value, "isoformat"):
+        return _jsonable(value.isoformat())
+    return str(value)
+
+
+def canonical_json_bytes(obj) -> bytes:
+    """정렬된 키·고정 구분자의 canonical JSON — 같은 입력이면 같은 바이트."""
+    return json.dumps(_jsonable(obj), ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":")).encode("utf-8")
+
+
+def _restore(value):
+    """`_jsonable` 의 역방향 — dataclass 태그만 되살린다(없으면 그대로)."""
+    if isinstance(value, dict):
+        tag = value.get(DATACLASS_TAG)
+        if tag:
+            rest = {k: _restore(v) for k, v in value.items() if k != DATACLASS_TAG}
+            cls = _resolve_class(tag)
+            if cls is not None:
+                try:
+                    return cls(**rest)
+                except TypeError:
+                    return rest
+            return rest
+        return {k: _restore(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_restore(v) for v in value]
+    return value
+
+
+def _resolve_class(tag: str):
+    module_name, _, cls_name = tag.rpartition(".")
+    if not module_name.startswith("engine."):
+        return None
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError:
+        return None
+    cls = getattr(module, cls_name, None)
+    return cls if isinstance(cls, type) and dataclasses.is_dataclass(cls) else None
+
+
+# ────────────────────────────── CSV·스냅샷 ──────────────────────────────
 def _canonical_csv(df: pd.DataFrame) -> bytes:
     out = df.copy()
     out = out.sort_index()
@@ -66,8 +158,9 @@ class Snapshot:
 
 
 def make_snapshot(root: str | Path, decision_at: datetime, frames: dict[str, pd.DataFrame],
-                  as_of: str | None = None, extra: dict | None = None) -> Snapshot:
-    """프레임을 canonical CSV 로 저장하고 manifest·snapshot_id 를 만든다."""
+                  as_of: str | None = None, extra: dict | None = None,
+                  inputs: dict | None = None) -> Snapshot:
+    """프레임(CSV) + 판단 입력(canonical JSON) 을 저장하고 manifest·snapshot_id 를 만든다."""
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
     as_of = as_of or decision_at.date().isoformat()
@@ -77,6 +170,10 @@ def make_snapshot(root: str | Path, decision_at: datetime, frames: dict[str, pd.
         data = _canonical_csv(sliced)
         (root / f"{name}.csv").write_bytes(data)
         files[f"{name}.csv"] = sha256_bytes(data)
+    if inputs is not None:
+        payload = canonical_json_bytes(inputs)
+        (root / INPUTS_FILE).write_bytes(payload)
+        files[INPUTS_FILE] = sha256_bytes(payload)
 
     manifest = {
         "decision_at": decision_at.isoformat(),
@@ -108,6 +205,37 @@ def load_snapshot(root: str | Path) -> Snapshot:
         files=manifest["files"],
         manifest=manifest,
     )
+
+
+def _panel_from_csv(ticker: str, path: Path) -> PricePanel:
+    df = pd.read_csv(path)
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.set_index("date")
+    if "available_at" in df.columns:
+        df["available_at"] = pd.to_datetime(df["available_at"], utc=True)
+    return PricePanel(ticker=ticker, frame=df)
+
+
+def load_snapshot_dataset(root: str | Path, snapshot: Snapshot | None = None) -> dict:
+    """스냅샷 → 데이터셋(`panels` + `inputs.json` 복원). 재생이 `build_payload` 에 그대로 넣는다."""
+    root = Path(root)
+    snap = snapshot or load_snapshot(root)
+    panels: dict[str, PricePanel] = {}
+    for name in snap.files:
+        if not name.startswith("prices_") or not name.endswith(".csv"):
+            continue
+        ticker = name[len("prices_"):-len(".csv")]
+        panels[ticker] = _panel_from_csv(ticker, root / name)
+    data: dict = {}
+    inputs_path = root / INPUTS_FILE
+    if inputs_path.exists():
+        data = _restore(json.loads(inputs_path.read_text(encoding="utf-8")))
+        if not isinstance(data, dict):
+            data = {}
+    data["panels"] = panels
+    data.setdefault("as_of", snap.as_of)
+    return data
 
 
 def verify_snapshot(root: str | Path) -> dict:

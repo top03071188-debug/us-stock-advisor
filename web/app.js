@@ -171,6 +171,25 @@ function sampleToggle(label, onClick) {
   });
 }
 
+function plannedHint(planned, actual) {
+  // 계획 시각과 실제 발행 시각이 1분 이상 다르면 함께 보여 준다(2.2.2 세 시각의 분리).
+  if (!planned || !actual) return "";
+  const diff = Math.abs(new Date(planned).getTime() - new Date(actual).getTime());
+  return diff >= 60000 ? ` · 예정 ${fmtKo(planned)}` : "";
+}
+
+function ingestHint(ingest) {
+  // R07: 마감 이후에 실제로 받은 데이터라면 그 지연을 숨기지 않는다.
+  // `after_cutoff` 가 참이거나 지연이 1분 이상이면 "수집 지연 N분" 한 줄을 붙인다.
+  if (!ingest || typeof ingest !== "object") return null;
+  const lag = isNum(ingest.lag_seconds) ? Number(ingest.lag_seconds) : null;
+  const late = ingest.after_cutoff === true || (lag !== null && lag >= 60);
+  if (!late) return null;
+  const minutes = lag === null ? null : Math.max(1, Math.round(lag / 60));
+  const at = ingest.inputs_ingested_at ? ` · 수집 ${fmtKo(ingest.inputs_ingested_at)}` : "";
+  return `수집 지연 ${minutes === null ? "확인 불가" : `${minutes}분`}(마감 후 수집)${at}`;
+}
+
 function renderFreshness(meta) {
   const host = clear($("freshness"));
   const status = (meta && meta.status) || "awaiting_first_run";
@@ -179,10 +198,14 @@ function renderFreshness(meta) {
   const rows = [
     el("div", { class: "banner " + cls }, [
       el("strong", { text: info.text }),
-      el("span", { class: "tiny", text: `발행 ${fmtKo(meta && meta.signal_published_at)} · 마감 ${fmtKo(meta && meta.data_cutoff_at)}` }),
+      el("span", { class: "tiny", text: `발행 ${fmtKo(meta && meta.signal_published_at)}`
+        + plannedHint(meta && meta.signal_published_planned_at, meta && meta.signal_published_at)
+        + ` · 마감 ${fmtKo(meta && meta.data_cutoff_at)}` }),
     ]),
   ];
   if (meta && meta.note_ko) rows.push(el("p", { class: "tiny", text: meta.note_ko }));
+  const ingest = ingestHint(meta && meta.ingest);
+  if (ingest) rows.push(el("p", { class: "tiny", text: ingest }));
   if (meta && meta.source && meta.source !== "none") {
     rows.push(el("p", { class: "tiny", text: `데이터 출처: ${meta.source === "fixtures" ? "픽스처(합성)" : meta.source}` }));
   }
@@ -251,7 +274,10 @@ function signalCard(sig) {
   }
   if (sig.sizing_note_ko) foot.push(el("span", { class: "tiny", text: sig.sizing_note_ko }));
   foot.push(el("span", { class: "tiny", text: `근거 ${(sig.evidence || []).length}건` }));
-  foot.push(el("span", { class: "tiny", text: `발행 ${fmtKo(sig.signal_published_at)} · ${sig.params_version || ""}` }));
+  foot.push(el("span", { class: "tiny", text: `발행 ${fmtKo(sig.signal_published_at)}`
+    + plannedHint(sig.signal_published_planned_at, sig.signal_published_at)
+    + (sig.target_session ? ` · 주문 ${fmtKo(sig.target_session)}` : "")
+    + ` · ${sig.params_version || ""}` }));
 
   return el("button", {
     class: "sig", type: "button", "data-ticker": sig.ticker,
@@ -639,6 +665,14 @@ function renderPilot(summary, pilotEval) {
     el("span", { class: verdict === "소액 파일럿 후보" ? "good" : "deferred", text: `판정: ${verdict}` }),
   ]));
   if (pilot.reason_ko) host.append(el("p", { class: "tiny", text: pilot.reason_ko }));
+  if (isNum(pilot.n_eff) || isNum(pilot.n_records)) {
+    // N_eff 는 체결·만기 표본, 발행 신호 수는 관찰 카드까지 포함한다 — 둘을 함께 보여 준다(4.7.3).
+    host.append(el("p", { class: "mos" }, [
+      el("span", { text: `유효 표본 ${isNum(pilot.n_eff) ? pilot.n_eff : "—"}` }),
+      el("span", { class: "tiny", text: ` · 발행 신호 ${isNum(pilot.n_records) ? pilot.n_records : "—"}건`
+        + (isNum(pilot.n_eligible) ? ` (체결·만기 ${pilot.n_eligible}건)` : "") }),
+    ]));
+  }
   const metrics = pilot.metrics || (pilotEval && pilotEval.metrics) || [];
   if (!metrics.length) {
     host.append(emptyState("파일럿 지표 없음"));
@@ -649,7 +683,8 @@ function renderPilot(summary, pilotEval) {
     el("thead", {}, [el("tr", {}, [el("th", { text: "지표" }), el("th", { class: "num", text: "값" }),
       el("th", { text: "기준" }), el("th", { text: "판정" })])]),
     el("tbody", {}, metrics.map((m) => el("tr", {}, [
-      el("td", { class: "wrap", text: m.label_ko || m.key }),
+      el("td", { class: "wrap" }, [el("span", { text: m.label_ko || m.key }),
+        m.note_ko ? el("p", { class: "tiny", text: m.note_ko }) : null]),
       el("td", { class: "num", text: metricValue(m) }),
       el("td", { class: "tiny", text: m.threshold || "—" }),
       el("td", {}, [passMark(m.pass)]),

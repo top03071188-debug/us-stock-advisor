@@ -141,6 +141,24 @@ def _norm_dt(value: str | None) -> str | None:
     return ts.tz_convert("UTC").isoformat()
 
 
+def acceptance_index(submissions: dict) -> dict[str, datetime]:
+    """submissions → `{accn: 접수 시각(UTC)}` — XBRL 재무 행의 `accn` 과 조인한다(R06).
+
+    `filings.recent` 는 최근 1,000건을 담으므로 6년 창은 추가 요청 없이 덮는다
+    (`filings.files` 는 별도 파일이라 열지 않는다 — 그 구간은 `filed` 날짜 폴백이 맡는다).
+    """
+    recent = (submissions.get("filings") or {}).get("recent") or {}
+    accns = recent.get("accessionNumber") or []
+    stamps = recent.get("acceptanceDateTime") or []
+    out: dict[str, datetime] = {}
+    for acc, stamp in zip(accns, stamps, strict=False):
+        norm = _norm_dt(stamp)
+        if not acc or not norm:
+            continue
+        out[str(acc)] = pd.Timestamp(norm).to_pydatetime()
+    return out
+
+
 def parse_submissions(ticker: str, cik: int, payload: dict, max_rows: int = 40) -> list[dict]:
     """최근 공시를 정규화한다. 결정에 쓰는 시각은 `acceptance_datetime`(= available_at)."""
     recent = (payload.get("filings") or {}).get("recent") or {}

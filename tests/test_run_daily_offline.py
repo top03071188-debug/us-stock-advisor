@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from engine.ledger import live
+from engine.ledger.record import check_target_session
 from engine.models import FORBIDDEN_KEYS, validate_quant_signals
 from scripts import archive_snapshot, run_daily, validate_outputs
 
@@ -84,6 +86,9 @@ def test_publish_record_has_no_fill_and_no_share_count(workdir, monkeypatch):
             assert row["provisional"] is True
         assert "shares" not in set(_keys(record)), "발행 레코드에 실수량이 들어갔다"
         assert not (set(_keys(record)) & FORBIDDEN_KEYS)
+        # 대상 거래일이 실제 발행 시각 기준으로 붙고, 그 세션의 주문 마감이 아직 오지 않았다(R08)
+        assert record.get("target_session"), "target_session 이 없다"
+        check_target_session(record)
 
 
 def test_blocked_list_keeps_reason(workdir, monkeypatch):
@@ -109,6 +114,11 @@ def test_settlement_is_a_separate_event_next_day(workdir, monkeypatch):
         if "quant_track" in payload:          # `.reanchor.json` 은 체결 이벤트가 아니다
             events[path.stem] = payload
     assert events, "시가가 확정된 신호의 체결 이벤트가 없다"
+    # 로더가 `.reanchor.json` 을 체결로 착각하지 않는다(R01) — 리로드 결과가 위 필터와 같아야 한다
+    loaded = live.load_executions(Path("data/ledger/executions"))
+    assert set(loaded) == set(events)
+    assert all(v["quant_track"]["execution_event"] in ("buy_filled", "no_action", "hold_cash", "exit_filled")
+               for v in loaded.values())
     for signal_id, event in events.items():
         track = event["quant_track"]
         assert track["execution_event"] in ("buy_filled", "no_action")

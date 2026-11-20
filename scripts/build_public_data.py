@@ -103,8 +103,11 @@ def build_meta(signals: dict | None, debate: dict | None) -> dict:
         "regime_verified": regime.get("verified"),
         "regime_multiplier": regime.get("multiplier"),
         "data_cutoff_at": signals.get("data_cutoff_at"),
+        "ingest": signals.get("ingest"),
         "signal_published_at": signals.get("signal_published_at"),
+        "signal_published_planned_at": signals.get("signal_published_planned_at"),
         "order_cutoff_at": signals.get("order_cutoff_at"),
+        "target_session": signals.get("target_session"),
         "as_of": signals.get("as_of"),
         "prices_as_of": signals.get("prices_as_of"),
         "debate_generated_at": (debate or {}).get("generated_at"),
@@ -120,7 +123,8 @@ def build_meta(signals: dict | None, debate: dict | None) -> dict:
 
 SIGNAL_PUBLIC_FIELDS = (
     "signal_id", "ticker", "type", "trade_grade", "grade", "entry_score", "decision",
-    "as_of", "data_cutoff_at", "signal_published_at", "order_cutoff_at", "generated_price",
+    "as_of", "data_cutoff_at", "signal_published_at", "signal_published_planned_at",
+    "order_cutoff_at", "target_session", "generated_price",
     "quant_intent", "thesis_ko", "valuation", "indicators", "investor_scores", "components",
     "conflict", "news_state", "position", "target_band", "expected_mdd", "invalidation",
     "gate_summary", "sizing_note_ko", "params_version", "snapshot_id", "track", "veto",

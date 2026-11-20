@@ -2,8 +2,12 @@
 
 [고정]
 - 기간은 **거래일**(5 / 21 / 63 / 126). 달력 개월이 아니다.
-- 초과수익·방향·모의 계좌는 **`fill` 기준**, 목표 밴드는 **`base` 기준** 수익률로 비교한다.
-  두 값을 섞으면 밴드 점수가 의미를 잃는다(`test_band_basis`).
+- **만기 봉이 실제로 관측돼야 채점한다**(`complete`). 63거래일 만기에 하루치 가격만 넣으면
+  `observed_days: 1` 로 조용히 채점되던 결함을 막는다 — 만기 봉이 없으면 `matured: false`.
+- 수익률·벤치마크는 **`total_return_adj`**(분할+배당), 밴드 비교는 **`base_price` 기준 수익률**,
+  타이밍(`P_min`·`P_max`)은 **`raw_as_traded`** 로 계산한다 — 한 계산 안에서 섞지 않는다(4.2.2).
+- 초과수익 = `r_i^fill − r_SPY`. 방향 점수 `D` 도 **초과수익**으로 판정한다(4.2.4).
+  SPY 가 없으면 `D` 는 `None` 이고 가중치를 재정규화한다(0%로 대체하지 않는다).
 - `maturity_date ≥ holdout_start` 인 폴드는 **적격이 아니다** — `truncated: true` + `observed_days` 로
   참고 표시만 하고 보정 목적함수에 넣지 않는다(4.2.1, 4.3).
 - 체결이 없는 결정(`hold_cash`)도 **가상 체결가**로 채점한다(4.7.2).
@@ -20,20 +24,70 @@ from engine.utils.dates import add_trading_days, trading_day_count
 
 HORIZONS_TD = {"1w": 5, "1m": 21, "3m": 63, "6m": 126}
 GRADE_WEIGHTS = {"A": 1.0, "B": 0.7, "C": 0.3}
+NOTE_NOT_MATURED = "만기 봉 미관측 — 채점 보류"
 
 
-def _bars_frame(bars: list[dict]) -> pd.DataFrame:
-    df = pd.DataFrame(bars)
+def _normalize_bars(bars: list[dict]) -> pd.DataFrame:
+    """봉 목록 → 채점용 프레임. 세 기준을 모두 담는다.
+
+    `raw_*`(밴드·타이밍) · `sadj_*`(분할) · `adj_close`(총수익). 예전 형식(`close`/`high`/`low`/
+    `open` 만 있는 목록)은 raw 로 읽고, 총수익 값이 없으면 raw 로 대체한다(배당·분할 없음과 같다).
+    """
+    df = pd.DataFrame(bars or [])
     if df.empty:
         return df
     df["date"] = pd.to_datetime(df["date"]).dt.date
-    return df.sort_values("date").reset_index(drop=True)
+    df = df.sort_values("date").reset_index(drop=True)
+
+    def pick(name: str, *alts: str) -> pd.Series | None:
+        for col in (name, *alts):
+            if col in df.columns:
+                return df[col].astype(float)
+        return None
+
+    raw_close = pick("raw_close", "close")
+    if raw_close is None:
+        raise ValueError("봉에 종가가 없다 — raw_close 또는 close 가 필요하다")
+    raw_open = pick("raw_open", "open")
+    raw_high = pick("raw_high", "high")
+    raw_low = pick("raw_low", "low")
+    adj_close = pick("adj_close")
+    sadj_close = pick("sadj_close")
+    sadj_open = pick("sadj_open")
+    tr_open = pick("tr_open")
+
+    df["raw_close"] = raw_close
+    df["raw_open"] = raw_open if raw_open is not None else raw_close
+    df["raw_high"] = raw_high if raw_high is not None else raw_close
+    df["raw_low"] = raw_low if raw_low is not None else raw_close
+    df["adj_close"] = adj_close if adj_close is not None else raw_close
+    df["sadj_close"] = sadj_close if sadj_close is not None else df["raw_close"]
+    df["sadj_open"] = sadj_open if sadj_open is not None else df["raw_open"]
+    if tr_open is not None:
+        df["tr_open"] = tr_open
+    else:
+        ratio = df["adj_close"] / df["sadj_close"].where(df["sadj_close"] != 0)
+        df["tr_open"] = df["sadj_open"] * ratio.fillna(1.0)
+    df["tr_close"] = df["adj_close"]
+    return df
 
 
 def _window(df: pd.DataFrame, start: date, end: date) -> pd.DataFrame:
     if df.empty or "date" not in df.columns:
         return df.iloc[0:0]
     return df[(df["date"] > start) & (df["date"] <= end)]
+
+
+def _row_on(df: pd.DataFrame, day: date, *, exact: bool = False) -> pd.Series | None:
+    if df.empty:
+        return None
+    hit = df[df["date"] == day]
+    if not hit.empty:
+        return hit.iloc[-1]
+    if exact:
+        return None
+    earlier = df[df["date"] <= day]
+    return None if earlier.empty else earlier.iloc[-1]
 
 
 def realized_mdd(closes: list[float], entry_price: float | None = None) -> float | None:
@@ -50,16 +104,31 @@ def realized_mdd(closes: list[float], entry_price: float | None = None) -> float
     return worst
 
 
+def _benchmark_for(horizon_name: str, h: int, benchmark_returns) -> float | None:
+    """신호별 벤치마크 — dict(기간별) 또는 float(전 기간 공통) 모두 받는다."""
+    if benchmark_returns is None:
+        return None
+    if isinstance(benchmark_returns, (int, float)):
+        return float(benchmark_returns)
+    value = benchmark_returns.get(horizon_name, benchmark_returns.get(h))
+    return None if value is None else float(value)
+
+
 def grade_record(record: dict, execution: dict | None = None, bars: list[dict] | None = None,
-                 benchmark_returns: dict[str, float] | None = None,
+                 benchmark_returns: dict[str, float] | float | None = None,
                  holdout_start: date | str | None = None,
-                 horizons: dict[str, int] | None = None) -> dict:
-    """한 신호의 기간별 채점. 신호가 없거나 데이터가 모자라면 그 기간은 `unavailable` 로 남긴다."""
+                 horizons: dict[str, int] | None = None,
+                 benchmark_return: float | None = None) -> dict:
+    """한 신호의 기간별 채점. 만기 봉이 없으면 그 기간은 `complete: false` 로 남긴다.
+
+    `benchmark_returns` 는 **신호별·기간별 SPY 총수익**이다(dict). `benchmark_return` 은 전 기간에
+    같은 값을 쓰는 편의 인자다.
+    """
     horizons = horizons or HORIZONS_TD
     holdout = None
     if holdout_start is not None:
         holdout = holdout_start if isinstance(holdout_start, date) else date.fromisoformat(str(holdout_start))
-    df = _bars_frame(bars or [])
+    df = _normalize_bars(bars or [])
     as_of = date.fromisoformat(str(record["as_of"])[:10])
     base = float((record.get("target_band") or {}).get("base_price", record.get("generated_price")))
     track = (execution or {}).get("quant_track") or {}
@@ -68,8 +137,19 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
     basis = "fill" if fill is not None else "virtual_fill"
     entry = float(fill) if fill is not None else base
     band = record.get("target_band") or {}
+    band_lo = float(band.get("lo", base))
+    band_hi = float(band.get("hi", base))
+    r_lo = float(band["r_lo"]) if "r_lo" in band else band_lo / base - 1.0
+    r_hi = float(band["r_hi"]) if "r_hi" in band else band_hi / base - 1.0
     direction = -1 if str(record.get("type", "BUY")).upper().startswith("SELL") else 1
-    bench = benchmark_returns or {}
+    entry_session = as_of
+    if fill is not None and execution and execution.get("at"):
+        try:
+            entry_session = date.fromisoformat(str(execution["at"])[:10])
+        except ValueError:
+            entry_session = as_of
+    last_bar = df["date"].max() if not df.empty else None
+    as_of_bar = _row_on(df, as_of)
 
     out: dict[str, dict] = {}
     for name, h in horizons.items():
@@ -81,55 +161,89 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
             observed = trading_day_count(as_of, min(cut, last)) if last is not None and last > as_of else 0
             out[name] = {
                 "horizon_td": h, "maturity": maturity.isoformat(), "eligible": False,
-                "truncated": True, "observed_days": int(observed),
+                "truncated": True, "matured": False, "complete": False, "observed_days": int(observed),
                 "agreement": None, "return": None, "excess_return": None,
                 "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)",
             }
             continue
         win = _window(df, as_of, maturity)
-        if win.empty:
-            out[name] = {"horizon_td": h, "maturity": maturity.isoformat(), "eligible": True,
-                         "truncated": False, "observed_days": 0, "agreement": None,
-                         "return": None, "excess_return": None, "note": "가격 데이터 없음 — 채점 불가"}
+        observed = int(len(win))
+        # 만기 봉이 관측됐고, 그 구간의 봉 수가 거래일 정의와 같아야 채점한다.
+        complete = bool(last_bar is not None and last_bar >= maturity and observed == h)
+        if not complete:
+            out[name] = {
+                "horizon_td": h, "maturity": maturity.isoformat(), "eligible": True,
+                "truncated": False, "matured": False, "complete": False,
+                "observed_days": observed,
+                "agreement": None, "return": None, "excess_return": None,
+                "note": ("가격 데이터 없음 — 채점 불가" if df.empty else NOTE_NOT_MATURED),
+            }
             continue
-        closes = [float(x) for x in win["close"]]
-        end = closes[-1]
-        r_base = end / base - 1.0
-        r_fill = end / entry - 1.0
-        p_min = float(win["low"].min()) if "low" in win else min(closes)
-        p_max = float(win["high"].max()) if "high" in win else max(closes)
-        mdd = realized_mdd(closes, entry)
-        bench_ret = float(bench.get(name, bench.get(h, 0.0)) or 0.0)
+
+        tr_close_end = float(win["tr_close"].iloc[-1])
+        raw_end = float(win["raw_close"].iloc[-1])
+        if fill is not None:
+            entry_bar = _row_on(df, entry_session, exact=True)
+            tr_entry = float(entry_bar["tr_open"]) if entry_bar is not None else None
+            tr_entry_source = "entry_session_tr_open" if tr_entry is not None else "fill_price_raw"
+            if not tr_entry or tr_entry <= 0:
+                tr_entry = entry
+        else:
+            tr_entry = float(as_of_bar["tr_close"]) if as_of_bar is not None else base
+            tr_entry_source = "signal_session_tr_close"
+        r_fill = tr_close_end / tr_entry - 1.0
+        tr_base = float(as_of_bar["tr_close"]) if as_of_bar is not None else base
+        r_base = tr_close_end / tr_base - 1.0 if tr_base > 0 else None
+        p_min = float(win["raw_low"].min())
+        p_max = float(win["raw_high"].max())
+        tr_closes = [float(x) for x in win["tr_close"]]
+        mdd = realized_mdd(tr_closes, tr_entry)
+        bench_ret = _benchmark_for(name, h, benchmark_returns)
+        if bench_ret is None and benchmark_return is not None:
+            bench_ret = float(benchmark_return)
+        # 밴드 점수는 base=1 로 정규화한 뒤 total_return_adj 수익률로 비교한다(기준 혼합 금지).
+        end_norm = 1.0 + (r_base if r_base is not None else 0.0)
+        fill_norm = end_norm / (1.0 + r_fill) if (1.0 + r_fill) != 0 else end_norm
         agreement = agreement_components(
             direction=direction,
-            base_price=base,
-            fill_price=entry,
-            band_lo=float(band.get("lo", base)),
-            band_hi=float(band.get("hi", base)),
-            end_price=end,
+            base_price=1.0,
+            fill_price=fill_norm,
+            band_lo=1.0 + r_lo,
+            band_hi=1.0 + r_hi,
+            end_price=end_norm,
             predicted_mdd=float(record.get("expected_mdd") or 0.0),
             realized_mdd=mdd if mdd is not None else 0.0,
             p_entry=entry,
             p_min=p_min,
             p_max=p_max,
+            benchmark_return=bench_ret,
         )
+        excess = None if bench_ret is None else r_fill - bench_ret
         out[name] = {
             "horizon_td": h,
             "maturity": maturity.isoformat(),
             "eligible": True,
             "truncated": False,
-            "observed_days": int(len(win)),
+            "matured": True,
+            "complete": True,
+            "observed_days": observed,
             "basis": basis,
+            "return_basis": "total_return_adj",
             "entry": round(entry, 4),
-            "end_price": round(end, 4),
+            "entry_tr": round(tr_entry, 6),
+            "entry_tr_source": tr_entry_source,
+            "entry_session": entry_session.isoformat(),
+            "end_price": round(raw_end, 4),
             "return": round(r_fill, 6),
-            "return_base": round(r_base, 6),
-            "benchmark_return": round(bench_ret, 6),
-            "excess_return": round(r_fill - bench_ret, 6),
+            "return_base": None if r_base is None else round(r_base, 6),
+            "benchmark_return": None if bench_ret is None else round(bench_ret, 6),
+            "excess_return": None if excess is None else round(excess, 6),
+            "benchmark_missing": bench_ret is None,
             "mdd": None if mdd is None else round(mdd, 6),
             "agreement": agreement,
             "virtual": fill is None,
         }
+    complete_flags = {k: bool(v.get("complete")) for k, v in out.items()}
     return {
         "signal_id": record.get("signal_id"),
         "ticker": record.get("ticker"),
@@ -138,6 +252,8 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
         "confidence": record.get("grade"),
         "action": action,
         "basis": basis,
+        "entry_session": entry_session.isoformat(),
+        "complete": complete_flags,
         "horizons": out,
     }
 
@@ -165,11 +281,16 @@ def weighted_agreement(grades: list[dict], horizon: str = "3m") -> dict:
 
 
 def summarize_grades(grades: list[dict], horizon: str = "3m") -> dict:
-    """폴드 요약 — 승률·손익비·평균 초과수익·Agreement·IC. 신호 0건도 정상(None)."""
+    """폴드 요약 — 승률·손익비·평균 초과수익·Agreement·IC. 신호 0건도 정상(None).
+
+    SPY 벤치마크가 없어 초과수익을 계산하지 못한 신호는 **넣지 않는다**(0으로 대체하지 않는다).
+    """
     rows = []
     for g in grades:
         h = (g.get("horizons") or {}).get(horizon) or {}
         if (h.get("agreement") or {}).get("total") is None:
+            continue
+        if h.get("excess_return") is None:
             continue
         rows.append({"score": g.get("entry_score", 0.0), "excess": h["excess_return"],
                      "agreement": h["agreement"]["total"]})

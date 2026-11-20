@@ -203,9 +203,17 @@ def _record(signal_id: str, ticker: str, as_of: str) -> dict:
     return {"signal_id": signal_id, "ticker": ticker, "as_of": as_of}
 
 
-def _graded(ticker: str, as_of: str, ret: float, excess: float, mdd: float = -0.03) -> dict:
-    return {"signal_id": f"{as_of}-{ticker}", "ticker": ticker, "as_of": as_of, "action": "buy_filled",
-            "horizons": {"3m": {"return": ret, "excess_return": excess, "mdd": mdd}}}
+def _graded(ticker: str, as_of: str, ret: float, excess: float, mdd: float = -0.03,
+            signal_id: str | None = None, complete: bool = True) -> dict:
+    return {"signal_id": signal_id or f"{as_of}-{ticker}", "ticker": ticker, "as_of": as_of,
+            "action": "buy_filled",
+            "horizons": {"3m": {"return": ret, "excess_return": excess, "mdd": mdd,
+                                "complete": complete}}}
+
+
+def _filled(signal_ids: list[str]) -> dict:
+    return {sid: {"quant_track": {"execution_event": "buy_filled", "fill_price": 100.0}}
+            for sid in signal_ids}
 
 
 def test_n_eff_clusters_overlapping_signals():
@@ -230,18 +238,19 @@ def test_pilot_holds_without_samples():
 
 def test_pilot_holds_when_a_metric_cannot_be_computed():
     records = [_record(f"s{i}", f"T{i}", "2026-01-05") for i in range(20)]
-    graded = [_graded(f"T{i}", "2026-01-05", 0.03, 0.01) for i in range(20)]
-    ev = evaluate_pilot(records, graded, portfolio=None, benchmark_return=None)
+    graded = [_graded(f"T{i}", "2026-01-05", 0.03, 0.01, signal_id=f"s{i}") for i in range(20)]
+    ev = evaluate_pilot(records, graded, executions=_filled([f"s{i}" for i in range(20)]),
+                        portfolio=None, benchmark_return=None)
     assert ev["verdict"] == VERDICT_HOLD          # 계좌 곡선·벤치마크가 없으면 판정하지 않는다
 
 
 def test_pilot_candidate_when_all_four_pass():
     records = [_record(f"s{i}", f"T{i}", "2026-01-05") for i in range(20)]
-    graded = [_graded(f"T{i}", "2026-01-05", 0.05, 0.03) for i in range(20)]
-    ev = evaluate_pilot(records, graded,
+    graded = [_graded(f"T{i}", "2026-01-05", 0.05, 0.03, signal_id=f"s{i}") for i in range(20)]
+    ev = evaluate_pilot(records, graded, executions=_filled([f"s{i}" for i in range(20)]),
                         portfolio={"total_return": 0.10, "avg_exposure": 0.45},
                         benchmark_return=0.06, risk_free=0.01)
-    assert ev["n_eff"] == 20
+    assert ev["n_eff"] == 20 and ev["n_eligible"] == 20 and ev["n_records"] == 20
     assert all(m["pass"] is True for m in ev["metrics"]), ev["metrics"]
     assert ev["verdict"] == VERDICT_CANDIDATE
 

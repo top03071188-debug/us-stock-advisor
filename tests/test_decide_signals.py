@@ -110,10 +110,10 @@ def test_entry_plan_shapes_and_no_same_day_price_input():
     assert plan["placeable"] is True
     assert [t["weight"] for t in plan["tranches"]] == [0.40, 0.30, 0.30]
     assert all(t["provisional"] is True for t in plan["tranches"])
-    assert plan["entry_band"]["stop_min"] < plan["entry_band"]["limit_max"]
+    assert plan["entry_band"]["stop_min_sadj"] < plan["entry_band"]["limit_max_sadj"]
     assert plan["plan_weight"] <= 0.05 + 1e-12
     assert plan["planned_loss_pct"] <= 0.0075 + 1e-12
-    assert plan["entry_band"]["limit_max"] == pytest.approx(120.0 * (1 - 0.20), rel=1e-6)
+    assert plan["entry_band"]["limit_max_sadj"] == pytest.approx(120.0 * (1 - 0.20), rel=1e-6)
 
 
 def test_third_tranche_disabled_outside_stop():

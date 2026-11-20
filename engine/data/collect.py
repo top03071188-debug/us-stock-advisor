@@ -20,18 +20,21 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from engine.data.macro import DEFAULT_SERIES, as_of_macro, FredClient
+from engine.data.macro import DEFAULT_SERIES, FredClient, as_of_macro
 from engine.data.news import FinnhubClient
 from engine.data.prices import PriceQualityError, build_price_frame
-from engine.data.sec_edgar import SecClient, parse_submissions
+from engine.data.sec_edgar import SecClient, acceptance_index, parse_submissions
 from engine.data.xbrl_fundamentals import (
     beta_from_prices,
     build_fundamentals,
+    peg_basis,
+    peg_growth,
     peg_ratio,
     revenue_cagr,
+    split_events_from_panel,
     valuation_multiplier,
 )
-from engine.metrics.fundamentals import AnnualFundamentals
+from engine.metrics.fundamentals import AnnualFundamentals, qc_wacc
 
 DEFAULT_UNIVERSE = Path("config/universe.yaml")
 NEWS_MAX_AGE_HOURS = 48
@@ -97,26 +100,52 @@ def collect_prices(tickers: list[str], as_of: date, decision_at: datetime, diag:
     return out
 
 
-def collect_macro(decision_at: datetime, diag: dict) -> tuple[dict, dict]:
-    """FRED 11시리즈 → 레짐 입력값 + 약 3개월 전 값. 키가 없으면 `({}, {})`."""
-    if not os.environ.get("FRED_API_KEY"):
+def collect_macro(decision_at: datetime, diag: dict, mode: str = "live",
+                  client: FredClient | None = None, now: datetime | None = None
+                  ) -> tuple[dict, dict]:
+    """FRED 11시리즈 → 레짐 입력값 + 약 3개월 전 값. 키가 없으면 `({}, {})`.
+
+    경로를 둘로 나눈다(R07, §2.4.3).
+    - `mode="live"`: 빈티지 파라미터 없이 받은 스냅샷의 모든 행 `available_at = 최초 수집 시각`.
+      실제로 마감 뒤에 받은 값을 "그때 알 수 있었다"고 우기지 않고, `ingest`(lag_seconds·after_cutoff)로
+      드러낸다. 시점 필터는 수집 시각을 기준으로 건다.
+    - `mode="replay"`: `realtime_start = realtime_end = V`(결정일 전날) 점조회만 쓴다. 스냅샷 응답이
+      오면 그 시리즈를 **버리고** `inputs_missing` 에 남긴다 — 관측일로 역산해 앞당기지 않는다.
+    """
+    ingest_at = now or datetime.now(timezone.utc)
+    if not os.environ.get("FRED_API_KEY") and client is None:
         _note(diag, "fred", "missing_key", "FRED_API_KEY 없음 — 레짐 미검증(포지션 배수 0.5)")
         return {}, {}
+    replay = str(mode) == "replay"
+    vintage = None
+    if replay:
+        decision_et = pd.Timestamp(decision_at)
+        decision_et = decision_et.tz_localize("UTC") if decision_et.tzinfo is None else decision_et
+        vintage = (decision_et.tz_convert("America/New_York").date() - timedelta(days=1)).isoformat()
     try:
-        client = FredClient()
-        frames = client.fetch_many(DEFAULT_SERIES)
+        client = client or FredClient()
+        if replay:
+            frames = client.fetch_many(DEFAULT_SERIES, realtime_start=vintage, realtime_end=vintage,
+                                       mode="replay")
+        else:
+            frames = client.fetch_many(DEFAULT_SERIES, mode="live", first_ingested_at=ingest_at)
     except Exception as exc:  # noqa: BLE001
         _note(diag, "fred", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
         return {}, {}
+    # 라이브는 수집 시각, 재생은 결정 시각을 시점 필터로 쓴다(라이브 값은 마감 뒤에 도착했다).
+    ref = ingest_at if not replay else decision_at
     values: dict = {}
     previous: dict = {}
+    excluded: list[str] = []
     try:
         for series, key in MACRO_TO_VALUES.items():
             df = frames.get(series)
             if df is None or df.empty:
+                excluded.append(series)
                 continue
-            usable = as_of_macro(df, decision_at).dropna(subset=["value"])
+            usable = as_of_macro(df, ref).dropna(subset=["value"])
             if usable.empty:
+                excluded.append(series)
                 continue
             last = usable.iloc[-1]
             value = float(last["value"])
@@ -125,11 +154,11 @@ def collect_macro(decision_at: datetime, diag: dict) -> tuple[dict, dict]:
             values[key] = value
         cpi = frames.get("CPIAUCSL")
         if cpi is not None and not cpi.empty:
-            usable = as_of_macro(cpi, decision_at).dropna(subset=["value"])
+            usable = as_of_macro(cpi, ref).dropna(subset=["value"])
             if len(usable) > 12:
-                now, year_ago = float(usable.iloc[-1]["value"]), float(usable.iloc[-13]["value"])
+                now_val, year_ago = float(usable.iloc[-1]["value"]), float(usable.iloc[-13]["value"])
                 if year_ago > 0:
-                    values["cpi_yoy"] = (now / year_ago - 1.0) * 100.0
+                    values["cpi_yoy"] = (now_val / year_ago - 1.0) * 100.0
                 # 3개월 전 CPI YoY — 실질금리 추세(레짐 신호)를 계산하려면 두 시점이 모두 필요하다.
                 cutoff = usable.iloc[-1]["date"] - timedelta(days=90)
                 older = usable[usable["date"] <= cutoff]
@@ -137,12 +166,12 @@ def collect_macro(decision_at: datetime, diag: dict) -> tuple[dict, dict]:
                     prev_now, prev_year = float(older.iloc[-1]["value"]), float(older.iloc[-13]["value"])
                     if prev_year > 0:
                         previous["cpi_yoy"] = (prev_now / prev_year - 1.0) * 100.0
-        # 약 3개월 전 값(추세 계산용)
+        # 약 3개월 전 값(추세 계산용) — 빈티지 필터가 끝난 `usable` 안에서만 계산한다(같은 시점 프레임).
         for series, key in MACRO_TO_VALUES.items():
             df = frames.get(series)
             if df is None or df.empty:
                 continue
-            usable = as_of_macro(df, decision_at).dropna(subset=["value"])
+            usable = as_of_macro(df, ref).dropna(subset=["value"])
             if usable.empty:
                 continue
             cutoff = usable.iloc[-1]["date"] - timedelta(days=90)
@@ -155,13 +184,35 @@ def collect_macro(decision_at: datetime, diag: dict) -> tuple[dict, dict]:
         return {}, {}
     _note(diag, "fred", "ok" if values else "degraded", None if values else "유효 시리즈 없음")
     diag["macro_series"] = sorted(frames)
+    diag["macro_missing_series"] = sorted(excluded)
+    if not replay:
+        lag = (ingest_at - decision_at).total_seconds()
+        diag["macro_ingest"] = {
+            "data_cutoff_at": decision_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "inputs_ingested_at": ingest_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "lag_seconds": round(lag, 1),
+            "after_cutoff": bool(lag > 0),
+            "available_at_source": "first_ingested_at",
+        }
+    else:
+        diag["macro_ingest"] = {
+            "data_cutoff_at": decision_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "inputs_ingested_at": None, "lag_seconds": None, "after_cutoff": False,
+            "available_at_source": "vintage_point_query", "vintage": vintage,
+        }
     return values, previous
 
 
 def collect_filings(tickers: list[str], decision_at: datetime, diag: dict,
                     max_rows: int = 40, client: SecClient | None = None,
-                    cik_by_ticker: dict[str, int] | None = None) -> dict[str, list[dict]]:
-    """SEC submissions → 종목별 공시(접수 시각 포함). User-Agent 가 없으면 건너뛴다."""
+                    cik_by_ticker: dict[str, int] | None = None,
+                    acceptance_out: dict[str, dict[str, datetime]] | None = None
+                    ) -> dict[str, list[dict]]:
+    """SEC submissions → 종목별 공시(접수 시각 포함). User-Agent 가 없으면 건너뛴다.
+
+    `acceptance_out` 을 주면 종목별 `{accn: acceptanceDateTime}` 인덱스를 함께 채운다 — XBRL 재무의
+    시점 필터(R06)가 **추가 요청 없이** 같은 submissions 로 돌 수 있게 하기 위해서다.
+    """
     ua = os.environ.get("SEC_USER_AGENT")
     if not ua:
         _note(diag, "sec", "missing_key", "SEC_USER_AGENT 없음 — 공시·8-K 미수집(뉴스 상태 미판독)")
@@ -182,12 +233,15 @@ def collect_filings(tickers: list[str], decision_at: datetime, diag: dict,
             failed += 1
             continue
         try:
-            rows = parse_submissions(ticker, int(cik), client.submissions(int(cik)), max_rows=max_rows)
+            submissions = client.submissions(int(cik))
+            rows = parse_submissions(ticker, int(cik), submissions, max_rows=max_rows)
         except Exception:  # noqa: BLE001
             failed += 1
             continue
         out[ticker] = [r for r in rows
                        if r.get("available_at") and pd.Timestamp(r["available_at"]) <= decision_at]
+        if acceptance_out is not None:
+            acceptance_out[ticker] = acceptance_index(submissions)
     _note(diag, "sec", "ok" if out else "failed", f"CIK 미확인/실패 {failed}건" if failed else None)
     return out
 
@@ -280,11 +334,15 @@ def collect_meta(tickers: list[str], diag: dict, pause: float = 0.25) -> dict[st
 def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
                          panels: dict, benchmark_panel, risk_free: float | None,
                          sectors: dict[str, str], client: SecClient | None = None,
-                         cik_by_ticker: dict[str, int] | None = None) -> tuple[dict, dict]:
-    """SEC XBRL 연차 재무(5년) + 밸류에이션 배수.
+                         cik_by_ticker: dict[str, int] | None = None,
+                         acceptance: dict[str, dict[str, datetime]] | None = None
+                         ) -> tuple[dict, dict]:
+    """SEC XBRL 연차 재무(6년) + 밸류에이션.
 
-    Returns: (`fundamentals` = ticker→AnnualFundamentals, `valuation_inputs` = ticker→{iv_mult, peg, revenue_cagr, ...})
+    Returns: (`fundamentals` = ticker→AnnualFundamentals, `valuation_inputs` = ticker→{iv_mult, iv_low, iv_high,
+    iv_dcf, iv_epv, iv_graham, methods, median_method, wacc, net_debt, shares_used, fundamental_sources, ...})
     종목 단위 실패는 예외를 전파하지 않고 `detail` 에 남긴다.
+    R04: `value_company` 가 낸 방법별 IV·시나리오 밴드·중앙값 선정 근거를 **버리지 않고** 전부 넘긴다.
     """
     fundamentals: dict[str, AnnualFundamentals] = {}
     valuation: dict[str, dict] = {}
@@ -300,7 +358,6 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
         _note(diag, "sec_xbrl", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
         return fundamentals, valuation
 
-    decision_date = decision_at.date()
     rf = float(risk_free) if risk_free is not None else 0.042
     if rf > 1.0:  # 방어: 퍼센트(5.07)로 들어오면 소수로 바꿔준다
         rf = rf / 100.0
@@ -312,9 +369,12 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
         if cik is None:
             failed.append(f"{ticker}:no_cik")
             continue
+        panel = panels.get(ticker)
+        splits = split_events_from_panel(panel) if panel is not None else None
         try:
             payload = client.company_facts(int(cik))
-            f, fdiag = build_fundamentals(payload, decision_date)
+            f, fdiag = build_fundamentals(payload, decision_at,
+                                          acceptance=(acceptance or {}).get(ticker), splits=splits)
         except Exception as exc:  # noqa: BLE001
             failed.append(f"{ticker}:{type(exc).__name__}")
             continue
@@ -323,7 +383,6 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
             detail[ticker] = {"completeness": 0.0, "reason": "no_annual_facts"}
             continue
         fundamentals[ticker] = f
-        panel = panels.get(ticker)
         price = None
         if panel is not None and not panel.frame.empty:
             sadj = panel.frame["sadj_close"].dropna()
@@ -331,20 +390,26 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
         beta = None
         if panel is not None and bench is not None and not panel.frame.empty and not bench.frame.empty:
             beta = beta_from_prices(panel.frame["sadj_close"], bench.frame["sadj_close"])
-        growth = revenue_cagr(f)
-        mult, mdetail = valuation_multiplier(
-            f, price, sectors.get(ticker), beta, rf,
-            delta_nwc=float(fdiag.get("nwc_series") or 0.0),
-        )
+        growth, growth_basis = peg_growth(f)
+        mult, mdetail = valuation_multiplier(f, price, sectors.get(ticker), beta, rf)
         valuation[ticker] = {
             "iv_mult": mult,
             "peg": peg_ratio(f, price, growth) if price else None,
-            "revenue_cagr": growth,
+            "peg_basis": peg_basis(f),
+            "peg_growth": growth,
+            "peg_growth_basis": growth_basis,
+            "revenue_cagr": revenue_cagr(f),
+            "eps_cagr": f.eps_cagr,
             "xbrl_completeness": fdiag.get("completeness", 0.0),
             "beta": beta,
             "fiscal_years": fdiag.get("fiscal_years"),
-            **{k: v for k, v in mdetail.items() if k == "reason"},
+            "fundamental_sources": fdiag.get("fundamental_sources"),
+            "shares_used": fdiag.get("shares_used"),
+            "xbrl_acceptance_missing": fdiag.get("xbrl_acceptance_missing"),
+            "wacc_qc": qc_wacc(f),
+            **mdetail,
         }
+        valuation[ticker].setdefault("reason", None)
         detail[ticker] = fdiag
 
     ok_ratio = len(fundamentals) / len(tickers) if tickers else 0.0
@@ -353,19 +418,28 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
           f"연차 재무 {len(fundamentals)}/{len(tickers)}" + (f", 실패: {', '.join(failed[:6])}" if failed else ""))
     diag["xbrl_detail"] = {t: {"completeness": v.get("completeness"),
                                "fiscal_years": v.get("fiscal_years"),
-                               "reason": v.get("reason")} for t, v in detail.items()}
+                               "reason": v.get("reason"),
+                               "shares_used": v.get("shares_used"),
+                               "xbrl_acceptance_missing": v.get("xbrl_acceptance_missing")}
+                          for t, v in detail.items()}
     return fundamentals, valuation
 
 
-def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFAULT_UNIVERSE) -> dict:
-    """라이브 데이터셋. `source: live`, 실패 내역은 `diagnostics.degraded` 에 남는다."""
+def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFAULT_UNIVERSE,
+            mode: str = "live", now: datetime | None = None) -> dict:
+    """라이브 데이터셋. `source: live`, 실패 내역은 `diagnostics.degraded` 에 남는다.
+
+    `mode` 는 경계 계약(§4.2)의 키워드다 — `run_daily` 는 기본값(`live`)을 그대로 쓴다.
+    거시만 `mode` 에 따라 경로가 갈린다(R07): 라이브는 최초 수집 시각, 재생은 빈티지 점조회.
+    """
     config = load_universe(universe_path)
     rows = list(config.get("tickers") or [])
     tickers = [r["ticker"] for r in rows]
     benchmark = config.get("benchmark") or "SPY"
-    diag: dict = {"mode": "live", "sources": {}, "degraded": []}
+    diag: dict = {"mode": mode, "sources": {}, "degraded": []}
     panels = collect_prices(tickers + [benchmark], as_of, decision_at, diag)
-    macro, macro_prev = collect_macro(decision_at, diag)
+    # 거시 수집 시각은 `collect_macro` 가 잡는다(가격 수집에 걸린 시간을 지연으로 우기지 않는다).
+    macro, macro_prev = collect_macro(decision_at, diag, mode=mode, now=now)
 
     sec_client: SecClient | None = None
     cik_by_ticker: dict[str, int] = {}
@@ -378,7 +452,9 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
         except Exception as exc:  # noqa: BLE001
             _note(diag, "sec", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
 
-    filings = collect_filings(tickers, decision_at, diag, client=sec_client, cik_by_ticker=cik_by_ticker)
+    acceptance: dict[str, dict[str, datetime]] = {}
+    filings = collect_filings(tickers, decision_at, diag, client=sec_client,
+                              cik_by_ticker=cik_by_ticker, acceptance_out=acceptance)
     news = collect_news(tickers, decision_at, diag)
     meta = collect_meta(tickers, diag)
     sectors = {r["ticker"]: r.get("sector") or "" for r in rows}
@@ -386,7 +462,7 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
     risk_free = (float(dgs10) / 100.0) if dgs10 is not None else None  # FRED 는 %p, WACC 는 소수
     fundamentals, valuation = collect_fundamentals(
         tickers, decision_at, diag, panels, panels.get(benchmark), risk_free,
-        sectors, client=sec_client, cik_by_ticker=cik_by_ticker,
+        sectors, client=sec_client, cik_by_ticker=cik_by_ticker, acceptance=acceptance,
     )
     for source, info in diag["sources"].items():
         if info["status"] not in ("ok",):
@@ -411,6 +487,13 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
             if "volume" in panel.frame else None,
             "market_cap_usd": market_cap,
             "iv_mult": v.get("iv_mult"),
+            "iv_median": v.get("iv_median"),
+            "iv_low": v.get("iv_low"),
+            "iv_high": v.get("iv_high"),
+            "iv_band_basis": v.get("iv_band_basis"),
+            "median_method": v.get("median_method"),
+            "wacc_qc": v.get("wacc_qc"),
+            "wacc_valuation": v.get("wacc"),
             "peg": v.get("peg"),
             "revenue_cagr": v.get("revenue_cagr"),
             "xbrl_completeness": v.get("xbrl_completeness", 0.0),
@@ -422,6 +505,7 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
         "panels": {k: v for k, v in panels.items()},
         "macro": macro,
         "macro_previous": macro_prev,
+        "macro_ingest": diag.get("macro_ingest"),
         "filings": filings,
         "news": news,
         "fundamentals": fundamentals,

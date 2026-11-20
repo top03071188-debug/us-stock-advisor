@@ -10,7 +10,7 @@ from __future__ import annotations
 import random
 from datetime import date, datetime, timedelta, timezone
 
-from engine.backtest.execution import EntryBand
+from engine.backtest.execution import band_from_dict
 from engine.decide.signals import EntryContext, build_entry_plan, evaluate_entry
 from engine.ledger.portfolio import BuyOrder, CorporateAction, TrancheOrder
 from engine.utils.dates import trading_days
@@ -117,9 +117,7 @@ def build_demo_scenario(seed: int = 7, days: int = 300, signal_offset: int = 214
                                    active=bool(t.get("active", True)), note=t.get("note"))
                       for t in plan["tranches"]],
             sector="Technology",
-            band=EntryBand(stop_min=band["stop_min"], limit_max=band["limit_max"],
-                           dma200_floor=band["dma200_floor"], provisional_stop=band["provisional_stop"],
-                           required_margin=band["required_margin"]),
+            band=band_from_dict(band),
             stop_distance=plan["stop_distance"], iv_high=row["iv_high"],
         )
         orders.append({"day": d_fill, "order": order})

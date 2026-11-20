@@ -105,9 +105,43 @@ def diff_watchlist(previous: dict | None, current: list[dict], excluded: list[di
     return {"entered": entered, "exited": exited}
 
 
+def attach_valuation_wacc(result: dict, data: dict) -> None:
+    """워치리스트 행에 평가 경로 WACC(`wacc_valuation`)를 함께 남긴다.
+
+    Q 점수 경로의 `wacc_qc`(metrics)와 다른 값이고, 화면·리포트가 "어느 WACC 로
+    평가했나"를 물을 때 필요하다. 유니버스에 없으면(가치평가 보류 등) 키를 만들지 않는다.
+    """
+    rows = {row.get("ticker"): row for row in data.get("universe") or []}
+    for item in result.get("watchlist") or []:
+        value = (rows.get(item.get("ticker")) or {}).get("wacc_valuation")
+        if value is not None:
+            item.setdefault("metrics", {})["wacc_valuation"] = value
+
+
+def append_history(as_of: date, payload: dict) -> None:
+    """`as_of` 당 1행(멱등). 같은 날 재실행하면 앞선 행을 대체한다 — 중복 행이 레이더 차트를 왜곡하지 않게."""
+    line = json.dumps({"as_of": as_of.isoformat(), "count": payload["count"],
+                       "entered": [r["ticker"] for r in payload["entered"]],
+                       "exited": [r["ticker"] for r in payload["exited"]]}, ensure_ascii=False)
+    kept: list[str] = []
+    if HISTORY.exists():
+        for raw in HISTORY.read_text(encoding="utf-8").splitlines():
+            if not raw.strip():
+                continue
+            try:
+                if json.loads(raw).get("as_of") == as_of.isoformat():
+                    continue
+            except json.JSONDecodeError:
+                pass
+            kept.append(raw)
+    HISTORY.parent.mkdir(parents=True, exist_ok=True)
+    HISTORY.write_text("\n".join(kept + [line]) + "\n", encoding="utf-8")
+
+
 def update(data: dict, as_of: date, decision_at: datetime, params: dict,
            thirteen_f: list[dict] | None = None) -> dict:
     result = screen(build_candidates(data))
+    attach_valuation_wacc(result, data)
     previous = json.loads(WATCHLIST.read_text(encoding="utf-8")) if WATCHLIST.exists() else None
     changes = diff_watchlist(previous, result["watchlist"], result["excluded"])
     payload = {
@@ -126,12 +160,7 @@ def update(data: dict, as_of: date, decision_at: datetime, params: dict,
         "source": data.get("source"),
     }
     _write_json(WATCHLIST, payload)
-    HISTORY.parent.mkdir(parents=True, exist_ok=True)
-    with open(HISTORY, "a", encoding="utf-8") as f:
-        f.write(json.dumps({"as_of": as_of.isoformat(), "count": result["count"],
-                            "entered": [r["ticker"] for r in changes["entered"]],
-                            "exited": [r["ticker"] for r in changes["exited"]]},
-                           ensure_ascii=False) + "\n")
+    append_history(as_of, payload)
 
     watch_tickers = {r["ticker"] for r in result["watchlist"]}
     if thirteen_f is not None:

@@ -44,13 +44,23 @@ def tracked_env() -> list[str]:
 
 
 def _iter_keys(obj, prefix=""):
+    """JSON 의 모든 키와 그 **부모 키**를 돌려준다.
+
+    부모가 필요한 이유: SEC companyfacts 픽스처의 `units: {"shares": [...]}` 는 XBRL **단위 이름**이지
+    보유 주식수가 아니다. 반면 `position: {"shares": 3.2}` 는 계좌 정보다 — 둘을 같은 키 하나로
+    판정하면 공개 가능한 픽스처를 커밋할 수 없고, 그렇다고 `shares` 를 통째로 빼면 계좌가 새어 나간다.
+    """
     if isinstance(obj, dict):
         for k, v in obj.items():
-            yield k
-            yield from _iter_keys(v, f"{prefix}.{k}")
+            yield k, prefix
+            yield from _iter_keys(v, k)
     elif isinstance(obj, list):
         for v in obj:
             yield from _iter_keys(v, prefix)
+
+
+#: 부모가 이 키면 자식 키는 "단위·스키마 이름"이다 — SEC XBRL companyfacts 의 단위(`units.shares`).
+UNIT_CONTAINERS = {"units"}
 
 
 def check_text(path: Path, text: str, rules: dict) -> list[str]:
@@ -68,7 +78,7 @@ def check_text(path: Path, text: str, rules: dict) -> list[str]:
         except json.JSONDecodeError:
             problems.append(f"{path}: JSON 파싱 실패")
     if data is not None:
-        keys = set(_iter_keys(data))
+        keys = {k for k, parent in _iter_keys(data) if parent not in UNIT_CONTAINERS}
         bad = sorted(keys & deny_keys)
         if bad:
             problems.append(f"{path}: forbidden keys {bad}")

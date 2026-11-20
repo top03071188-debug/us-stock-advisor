@@ -469,3 +469,14 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
   주 1회 정규화 차트, Finnhub 뉴스 5건, SEC 공시 표 5행, invalidation, 토론 빈 카드). 콘솔 예외 없음.
 - 스크린샷: `downloads/phase3-screenshots/live-second-run-today.png`(오늘),
   `downloads/phase3-screenshots/live-second-run.png`(종목·ADBE).
+
+## 13. R01~R11 감사 수정 (2026-11-20)
+
+감사 문서(`investment_app_implementation_audit_47dbda6`)의 11개 항목을 두 트랙으로 나눠 수정·검증했다.
+정본 문서는 **`docs/audit_fix_47dbda6.md`** 이고, 이 절은 요점만 남긴다.
+
+- 판정: 11건 **전부 실제 결함**. 감사 서술과 다른 지점 3건은 정정해 구현했다 — R02 `D`는 “SPY 0% 대체”가 아니라 **초과수익 정의 미구현**, R05 **AVGO는 정당 탈락**(NVDA·WMT는 오탈락, NFLX는 HG-08로 별도 탈락), R09는 라이브가 아니라 **백테스트·재생의 상·하한 동시 혼용**.
+- 테스트: `pytest -m "not network"` **373 passed, 4 deselected**, `ruff` 0건, `check_commit_scope`·`validate_outputs` 통과.
+- 재스크린(2026-11-20): 워치리스트 **19 → 22**(NVDA·WMT 복귀, TSLA 신규, AVGO 탈락 유지).
+- 기대 변화(회귀 아님): GOOGL IV $81.81 → **$69.07**(5년 정상화·순현금), G 39.36 → 91.97(TTM PEG), **전 종목 V=0 → BUY 신호 0건**, 기존 폴드 성적은 R09로 비교 불가(재실행 필요).
+- 미포함: `v_penalties`/`v_score` 규칙 변경, 폴드 재실행·`--calibrate` 실제 evaluate 배선, 라이브 Ledger의 2·3차·손절 연결(Phase 4).

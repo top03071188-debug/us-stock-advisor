@@ -77,10 +77,10 @@ def test_stop_distance_cap_at_20pct():
 
 def test_entry_band_and_open_fill():
     """장 전 계산 범위 안에서만 체결된다(시가를 보고 범위를 고치지 않는다)."""
-    band = build_entry_band(iv_median=120.0, required_margin=0.20, dma200_sadj=90.0,
-                            signal_price=95.0, stop_distance=0.06, dma200_mult=0.97)
-    assert band.limit_max == pytest.approx(96.0)
-    assert band.stop_min == pytest.approx(max(87.3, 89.3))
+    band = build_entry_band(iv_median_sadj=120.0, required_margin=0.20, dma200_sadj=90.0,
+                            signal_price_sadj=95.0, stop_distance=0.06, dma200_mult=0.97)
+    assert band.limit_max_sadj == pytest.approx(96.0)
+    assert band.stop_min_sadj == pytest.approx(max(87.3, 89.3))
     filled = opening_fill(band, open_price=95.0)
     assert filled["execution_event"] == "buy_filled"
     assert filled["fill_price"] == pytest.approx(95.0 * 1.001, rel=1e-6)

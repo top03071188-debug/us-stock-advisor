@@ -11,14 +11,19 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 
 
 @dataclass
 class AnnualFundamentals:
-    """연간 재무(백만 달러). 최근 5년 값을 최신순으로 넣는다."""
+    """연간 재무(백만 달러). 최근 회계연도부터 최신순으로 넣는다(6년 수집이면 6개).
+
+    점수·게이트 계산은 **앞 5년**만 쓴다(6번째 해는 ΔNWC 5년 시계열을 만들기 위한 것).
+    `diluted_shares` 는 **결정 시점 기준으로 분할·재작성이 반영된 주식수**이고,
+    공시 그대로의 값은 `diluted_shares_reported`, 연도별 근거는 `shares_basis` 에 남는다(R05).
+    """
 
     ebit: list[float]
     revenue: list[float]
@@ -40,6 +45,14 @@ class AnnualFundamentals:
     equity_risk_premium: float = 0.05
     cost_of_debt: float = 0.05
     minority_interest: float = 0.0
+    # ── R03·R05: 밸류에이션 정상화·주식수 근거(기본값이면 기존 데이터셋 그대로 동작) ──
+    marketable_securities: list[float] = field(default_factory=list)   # 시장성 단기투자(백만 달러)
+    operating_nwc: list[float] = field(default_factory=list)           # (유동자산−현금−시장성)−유동부채
+    delta_nwc: list[float] = field(default_factory=list)               # 연도별 ΔNWC(5% 상한 적용, 백만 달러)
+    diluted_shares_reported: list[float] = field(default_factory=list)  # 공시 그대로의 주식수
+    shares_basis: list[str] = field(default_factory=list)              # as_reported | restated | split_adjusted | unverified
+    ttm_eps: float = float("nan")                                      # 10-Q 누적에서 계산한 TTM EPS(USD)
+    eps_cagr: float | None = None                                      # 5년 EPS CAGR(소수)
 
 
 def _mean(xs: list[float]) -> float:
@@ -58,7 +71,38 @@ def roic(f: AnnualFundamentals, i: int = 0) -> float:
     return (f.ebit[i] * (1 - f.tax_rate)) / ic
 
 
-def wacc(f: AnnualFundamentals) -> float:
+def sanitize_fundamentals(f: AnnualFundamentals | None) -> AnnualFundamentals | None:
+    """`None` 이 섞인 재무 리스트를 `NaN` 으로 되돌린다(수치 함수는 NaN 만 견딘다).
+
+    스냅샷 `inputs.json` 은 NaN 을 `null` 로 직렬화하므로, 복원한 `AnnualFundamentals` 에는
+    `None` 이 들어올 수 있다. 그대로 두면 `np.isfinite(None)` 에서 터진다.
+    """
+    if f is None:
+        return None
+    def _clean(values) -> list[float]:
+        out: list[float] = []
+        for v in values or []:
+            try:
+                out.append(float(v))
+            except (TypeError, ValueError):
+                out.append(float("nan"))
+        return out
+
+    names = ("ebit", "revenue", "net_income", "ocf", "capex", "depreciation", "total_assets",
+             "non_interest_liabilities", "excess_cash", "total_debt", "cash", "equity",
+             "diluted_shares", "interest_expense", "marketable_securities", "operating_nwc",
+             "delta_nwc", "diluted_shares_reported")
+    updates = {name: _clean(getattr(f, name, None)) for name in names}
+    updates["ttm_eps"] = float("nan") if f.ttm_eps is None else f.ttm_eps
+    return replace(f, **updates)
+
+
+def qc_wacc(f: AnnualFundamentals) -> float:
+    """**품질 점수(Q) 경로**의 WACC — β=1.0·rf 고정값을 쓰는 근사식(3.2.2).
+
+    가치평가(V) 경로의 `valuation_wacc`(가격 회귀 베타·DGS10)와 **다른 값**이다(R03).
+    같은 이름으로 두 경로를 부르면 8.68%와 10.64%가 조용히 섞인다.
+    """
     e = max(f.equity[0], 0.0)
     d = max(f.total_debt[0], 0.0)
     v = e + d
@@ -69,9 +113,9 @@ def wacc(f: AnnualFundamentals) -> float:
 
 
 def roic_spread(f: AnnualFundamentals) -> float:
-    """ROIC(5년 평균) − WACC."""
+    """ROIC(5년 평균) − WACC(Q 경로)."""
     r = _mean([roic(f, i) for i in range(min(5, len(f.ebit)))])
-    return r - wacc(f)
+    return r - qc_wacc(f)
 
 
 def roe_series(f: AnnualFundamentals) -> list[float]:
@@ -116,7 +160,16 @@ def interest_cover(f: AnnualFundamentals, i: int = 0) -> float:
 
 
 def dilution_3y(f: AnnualFundamentals) -> float:
+    """3년 주식수 증가율 — `diluted_shares` 는 이미 분할 환산·재작성 반영된 기준이다(R05).
+
+    기준이 확인되지 않은 연도(`unverified`)가 있으면 계산하지 않는다(모르면 0으로 채우지 않는다).
+    """
     if len(f.diluted_shares) < 4 or f.diluted_shares[3] <= 0:
+        return float("nan")
+    basis = list(f.shares_basis or [])
+    if any(basis[i] == "unverified" for i in (0, 3) if i < len(basis)):
+        return float("nan")
+    if not np.isfinite(f.diluted_shares[0]):
         return float("nan")
     return f.diluted_shares[0] / f.diluted_shares[3] - 1.0
 
@@ -175,7 +228,7 @@ def quality_score(f: AnnualFundamentals) -> dict:
         "metrics": {
             "roic_spread": spread, "roe_stdev": roe_sd, "fcf_margin": fcf_m,
             "fcf_to_ni": fcf_ni, "net_debt_ebitda": nd_e, "interest_cover": ic,
-            "dilution_3y": dil, "wacc": wacc(f), "roic": roic(f),
+            "dilution_3y": dil, "wacc_qc": qc_wacc(f), "roic": roic(f),
         },
     }
 
@@ -207,6 +260,9 @@ def hard_gate_checks(f: AnnualFundamentals, market: dict) -> list[str]:
     if np.isfinite(fn) and fn < 0.7:
         fails.append("HG-08")
     dil = dilution_3y(f)
-    if np.isfinite(dil) and dil > 0.05:
+    if not np.isfinite(dil):
+        # 모르면 통과시키지 않는다(§3.2.1 "하나라도 걸리면 제외" — HG-11 취지).
+        fails.append("HG-09_UNVERIFIED")
+    elif dil > 0.05:
         fails.append("HG-09")
     return fails

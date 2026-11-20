@@ -71,8 +71,8 @@ def test_no_same_bar_fill():
     """1차 체결은 **장 전에 커밋한 범위** 안에서만. 시가를 보고 범위를 만들지 않는다."""
     sig = inspect.signature(build_entry_band)
     assert "open_price" not in sig.parameters and "open" not in sig.parameters
-    band = build_entry_band(iv_median=120.0, required_margin=0.20, dma200_sadj=90.0,
-                            signal_price=95.0, stop_distance=0.06)
+    band = build_entry_band(iv_median_sadj=120.0, required_margin=0.20, dma200_sadj=90.0,
+                            signal_price_sadj=95.0, stop_distance=0.06)
     # 같은 날 시가가 범위 밖이면 체결되지 않는다(시가를 보고 통과시키지 않는다)
     assert opening_fill(band, 96.5)["execution_event"] == "no_action"
     fill = opening_fill(band, 95.0)
@@ -82,12 +82,12 @@ def test_no_same_bar_fill():
 
 def test_execution_order_band_uses_prior_day_only():
     """범위 계산 입력은 전일 종가 기반 지표·잠정 손절가뿐 — 당일 시가가 들어가면 미래 참조."""
-    band = build_entry_band(iv_median=120.0, required_margin=0.20, dma200_sadj=90.0,
-                            signal_price=95.0, stop_distance=0.06)
+    band = build_entry_band(iv_median_sadj=120.0, required_margin=0.20, dma200_sadj=90.0,
+                            signal_price_sadj=95.0, stop_distance=0.06)
     assert band.as_dict() == build_entry_band(120.0, 0.20, 90.0, 95.0, 0.06).as_dict()
     with pytest.raises(OrderNotPlaceable):
-        build_entry_band(iv_median=100.0, required_margin=0.20, dma200_sadj=90.0,
-                         signal_price=95.0, stop_distance=0.10)   # stop_min 90*0.97=87.3? limit 80 → 불가
+        build_entry_band(iv_median_sadj=100.0, required_margin=0.20, dma200_sadj=90.0,
+                         signal_price_sadj=95.0, stop_distance=0.10)   # stop_min 90*0.97=87.3? limit 80 → 불가
 
 
 # ── LA-5 ────────────────────────────────────────────────────────────────

@@ -140,6 +140,28 @@ def test_debate_event_appends_separately():
                      eligible=True, late=False)
 
 
+def test_target_band_defensive_flag_survives_serialization():
+    """방어 목표(gap ≤ 0) 표시가 발행 레코드에서 유실되지 않는다(4.7.1).
+
+    `target_band()` 는 `defensive` 를 계산해 두는데 직렬화가 버리면 화면·채점이
+    "방어 목표인데 상승 목표처럼 보이는" 밴드를 읽게 된다.
+    """
+    defensive = target_band(300.0, 412.35)                  # IV < 가격 → gap 음수
+    assert defensive["defensive"] is True
+    r = record(target_band=defensive)
+    assert r["target_band"]["defensive"] is True
+    assert r["target_band"]["r_hi"] < 0                     # 방어 목표는 상승폭이 음수
+    assert r["target_band"]["basis"] == "base_price"
+
+    up = target_band(522.0, 412.35)
+    assert up["defensive"] is False
+    assert record(target_band=up)["target_band"]["defensive"] is False
+
+    # 플래그를 모르는 밴드(구 스냅샷)는 키를 만들지 않는다 — 기본값을 지어내지 않는다.
+    legacy = {k: v for k, v in up.items() if k != "defensive"}
+    assert "defensive" not in record(target_band=legacy)["target_band"]
+
+
 def test_merged_view_action_only_from_execution():
     r = record()
     before = merged_view(r, None)
@@ -196,21 +218,23 @@ def test_grade_uses_virtual_fill_when_no_execution():
 def test_band_basis_is_base_price():
     """밴드는 base, 방향은 fill — 기준을 섞으면 점수가 부풀려진다(4.2.4)."""
     base, fill, end = 412.35, 415.10, 454.57
-    fixed = agreement_components(1, base, fill, 431.5, 450.7, end, -0.09, -0.075, fill, 396.2, 470.0)
+    fixed = agreement_components(1, base, fill, 431.5, 450.7, end, -0.09, -0.075, fill, 396.2, 470.0,
+                                 benchmark_return=0.0)
     assert fixed["band"] == pytest.approx(79.8, abs=0.2)          # 부록 C 검산
     assert fixed["direction"] == 100.0
     # 기준을 fill 로 통일해도(밴드·수익률 모두 같은 달러 기준) 값이 같다 — 비율이 같기 때문
     fill_basis = agreement_components(1, fill, fill, 431.5, 450.7, end, -0.09, -0.075,
-                                      fill, 396.2, 470.0)
+                                      fill, 396.2, 470.0, benchmark_return=0.0)
     assert fill_basis["band"] == pytest.approx(fixed["band"], abs=0.1)
     # 밴드만 fill 달러로 환산하고 수익률은 base 로 두면 95.5 로 부풀려진다 — 금지된 혼합
     half_converted = agreement_components(1, base, fill, 431.5 / base * fill, 450.7 / base * fill,
-                                         end, -0.09, -0.075, fill, 396.2, 470.0)
+                                         end, -0.09, -0.075, fill, 396.2, 470.0, benchmark_return=0.0)
     assert half_converted["band"] == pytest.approx(95.5, abs=0.2)
     assert half_converted["band"] != fixed["band"]
 
 
 def test_grade_record_keeps_band_on_base_price():
+    """밴드는 base(신호일 종가) 기준, 수익률은 total_return_adj 기준 — 두 기준을 섞지 않는다."""
     data = bars(date(2026, 5, 15), 80)
     r = record()
     ex = execution_event(signal_id=r["signal_id"], snapshot_id=r["snapshot_id"],
@@ -218,9 +242,12 @@ def test_grade_record_keeps_band_on_base_price():
                          execution_event="buy_filled", fill_price=415.10, weight=0.02)
     graded = grade_record(r, ex, data, benchmark_returns={"1m": 0.0}, holdout_start="2027-01-01")
     h = graded["horizons"]["1m"]
-    # 채점기는 base 로 밴드를 환산한다 → return_base 와 agreement.band 가 같은 기준
-    assert h["return_base"] == pytest.approx(h["end_price"] / 412.35 - 1, abs=1e-6)
-    assert h["return"] == pytest.approx(h["end_price"] / 415.10 - 1, abs=1e-6)
+    signal_close = float(data[0]["close"])
+    assert h["return_basis"] == "total_return_adj"
+    assert h["entry_tr_source"] == "entry_session_tr_open"
+    assert h["entry"] == pytest.approx(415.10)                       # 표시용 체결가(raw)
+    assert h["return"] == pytest.approx(h["end_price"] / h["entry_tr"] - 1, abs=1e-6)
+    assert h["return_base"] == pytest.approx(h["end_price"] / signal_close - 1, abs=1e-6)
     assert h["return_base"] != h["return"]
 
 

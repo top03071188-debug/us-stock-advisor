@@ -1,21 +1,16 @@
 """engine.data.macro — FRED 거시 수집과 **시점(빈티지) 규칙**.
 
-v1.3.2 [고정]:
-- `D` 는 관측 날짜(`date`)가 아니라 **공개 빈티지 날짜(`realtime_start`)** 다.
-  CPI(관측월 10월 → 11월 중순 발표)를 관측월 기준으로 쓰면 발표 전에 값을 안 것처럼 재생된다.
-- 발표 시각을 모르면 **출처 시간대(US/Eastern) 기준 `D` 의 `23:59:59 ET` 이후 첫 의사결정**부터 쓴다.
-- 라이브는 `release_at` → `first_ingested_at` 순으로 정한다. `available_at_source` 에 남긴다.
-- **스냅샷 응답 예외(v1.3.2)**: FRED `/series/observations` 를 빈티지 파라미터 없이 부르면
-  모든 행의 `realtime_start` 가 **요청 당일**(예: 2026-11-19)로 같게 내려온다. 이 값은 발표일이
-  아니라 "오늘 본 최신 빈티지"이므로 발표일로 쓰면 11시리즈가 전부 마감 뒤로 밀려 탈락한다.
-  그래서 응답의 모든 행에서 `realtime_start` 가 같고 `release_at`·`first_ingested_at` 이 없으면
-  **관측일(`date`) 기준 보수 규칙**으로 계산한다:
-    * 일간·주간 시리즈: `obs_date` 의 `23:59:59 ET` 이후 첫 의사결정(`obs_date_plus_one`)
-    * 월간 시리즈(`CPIAUCSL`·`CPILFESL`·`UNRATE`): 발표 전 누수를 막기 위해 **관측월 다음 달
-      20일** `23:59:59 ET` 이후 첫 의사결정(`obs_month_lag_20d`)
-  행마다 `realtime_start` 가 다르거나 `release_at`/`first_ingested_at` 이 오면(ALFRED 빈티지·테스트)
-  기존 v1.3.1 규칙을 **그대로** 쓴다.
-- `BAMLH0A0HYM2` 제공 시작일은 API 응답에서 실제로 확인해 `data/limits.json` 에 적는다(추정 금지).
+[고정] 시점 규칙의 두 경로(v1.3.2 R07)
+- `D` 는 관측 날짜(`date`)가 아니라 **공개 시점**이다. CPI(관측월 10월 → 11월 중순 발표)를 관측월
+  기준으로 쓰면 발표 전에 값을 안 것처럼 재생된다.
+- **라이브**: 빈티지 파라미터 없이 받은 응답은 "오늘 본 최신 빈티지"다. 그래서 모든 행의
+  `available_at` 을 **최초 수집 시각(`first_ingested_at`)** 으로 둔다 — 그 값이 세상에 나온 시각이 아니라
+  **내가 처음 본 시각**이다. 마감 뒤 수집이면 `ingest.lag_seconds`·`after_cutoff` 로 드러낸다.
+- **재생**: `realtime_start = realtime_end = V`(결정일 전날 ET) 점조회만 쓴다. 응답이 스냅샷
+  (`realtime_start` 가 요청 당일) 이면 `MacroVintageError` 로 그 시리즈를 **버린다** — 관측일로 역산해
+  과거 결정에 앞당기지 않는다(2025-02-27 관측치가 2025-03-01 컷오프에 보이던 결함).
+- 발표 시각을 모르면 **출처 시간대(US/Eastern) 기준 D 의 `23:59:59 ET` 이후 첫 의사결정**부터 쓴다.
+- `classify_regime` 의 3개월 추세·CPI YoY 는 **같은 빈티지 프레임에서 계산**한다(추가 조회 없음).
 """
 
 from __future__ import annotations
@@ -38,6 +33,10 @@ DEFAULT_SERIES = [
 
 REGIME_MULTIPLIERS = {"risk_on": 1.0, "neutral": 0.7, "risk_off": 0.4}
 
+
+class MacroVintageError(RuntimeError):
+    """재생 모드에서 스냅샷 응답(요청 당일 빈티지)이 왔다 — 그 시리즈를 쓸 수 없다."""
+
 #: 월간 주기 시리즈 — 관측일(매월 1일)은 발표일보다 한 달 앞서므로 "다음 달 20일" 보수 규칙을 쓴다.
 MONTHLY_SERIES = frozenset({"CPIAUCSL", "CPILFESL", "UNRATE"})
 #: 월간 시리즈 보수 지연(일) — 관측월 다음 달 20일
@@ -48,6 +47,14 @@ def _as_date(value) -> date:
     if isinstance(value, date) and not isinstance(value, datetime):
         return value
     return pd.Timestamp(value).date()
+
+
+def _as_dt(value) -> datetime | None:
+    if value in (None, ""):
+        return None
+    ts = pd.Timestamp(value)
+    ts = ts.tz_localize(UTC) if ts.tzinfo is None else ts.tz_convert(UTC)
+    return ts.to_pydatetime()
 
 
 def resolve_available_at(
@@ -104,10 +111,26 @@ def conservative_available_at(obs_date: date, series_id: str | None) -> tuple[da
     return first_decision_after(et_day_end(obs_date)), "obs_date_plus_one"
 
 
-def parse_observations(payload: dict, series_id: str | None = None) -> pd.DataFrame:
-    """FRED `/series/observations` 응답 → 정규화 DataFrame."""
+def parse_observations(payload: dict, series_id: str | None = None, *, mode: str = "auto",
+                       first_ingested_at: datetime | str | None = None,
+                       vintage: str | None = None) -> pd.DataFrame:
+    """FRED `/series/observations` 응답 → 정규화 DataFrame.
+
+    `mode`: `auto`(기본) = 응답 모양으로 판단, `live` = 모든 행 `available_at = 최초 수집 시각`,
+    `replay` = 빈티지 점조회 전용(스냅샷 응답이면 `MacroVintageError`).
+    """
     rows = payload.get("observations", []) if isinstance(payload, dict) else list(payload)
-    snapshot = is_snapshot_response(rows)
+    mode = str(mode or "auto")
+    snapshot = is_snapshot_response(rows) if mode == "auto" else False
+    if mode == "replay":
+        # 요청한 빈티지보다 **나중** 빈티지가 오면 그건 스냅샷(=오늘의 최신값)이다.
+        limit = _as_date(vintage) if vintage else None
+        stamps = [_as_date(r.get("realtime_start")) for r in rows if r.get("realtime_start")]
+        if any(limit is not None and s is not None and s > limit for s in stamps):
+            raise MacroVintageError(
+                f"{series_id}: 스냅샷 응답(realtime_start {max(stamps).isoformat()} > {limit.isoformat()}) — 재생에 쓸 수 없다")
+    if mode == "live" and first_ingested_at is None:
+        raise ValueError("live 모드는 first_ingested_at 이 필요하다")
     out = []
     for r in rows:
         raw = r.get("value")
@@ -116,7 +139,11 @@ def parse_observations(payload: dict, series_id: str | None = None) -> pd.DataFr
         except (TypeError, ValueError):
             val = np.nan
         sid = series_id or r.get("series_id")
-        if snapshot:
+        if mode == "live":
+            D = _as_date(r.get("realtime_start") or r.get("date"))
+            available_at, source = resolve_available_at(D, None, first_ingested_at)
+            available_at = _as_dt(first_ingested_at) or available_at
+        elif snapshot:
             D = _as_date(r.get("date"))
             available_at, source = conservative_available_at(D, sid)
         else:
@@ -255,17 +282,46 @@ class FredClient:
         self.timeout = timeout
 
     def observations(self, series_id: str, observation_start: str | None = "2018-01-01",
-                     realtime_start: str | None = None, limit: int = 100000) -> pd.DataFrame:
+                     realtime_start: str | None = None, limit: int = 100000,
+                     realtime_end: str | None = None, mode: str = "auto",
+                     first_ingested_at: datetime | str | None = None) -> pd.DataFrame:
         params = {
             "series_id": series_id, "api_key": self.api_key, "file_type": "json",
             "observation_start": observation_start, "limit": limit, "sort_order": "asc",
         }
         if realtime_start:
             params["realtime_start"] = realtime_start
+        if realtime_end:
+            params["realtime_end"] = realtime_end
         r = self.session.get(f"{FRED_BASE}/series/observations", params=params, timeout=self.timeout)
         r.raise_for_status()
-        # 발표시각은 응답에 없다 — parse_observations 가 스냅샷/빈티지 응답을 구분해 보수 규칙을 정한다.
-        return parse_observations(r.json(), series_id)
+        # 발표시각은 응답에 없다 — 라이브/재생 모드가 시점 기준을 정한다(R07).
+        return parse_observations(r.json(), series_id, mode=mode,
+                                  first_ingested_at=first_ingested_at,
+                                  vintage=realtime_start if mode == "replay" else None)
 
-    def fetch_many(self, series_ids: Iterable[str], observation_start: str | None = "2018-01-01") -> dict[str, pd.DataFrame]:
-        return {sid: self.observations(sid, observation_start=observation_start) for sid in series_ids}
+    def fetch_many(self, series_ids: Iterable[str], observation_start: str | None = "2018-01-01",
+                   realtime_start: str | None = None, realtime_end: str | None = None,
+                   mode: str = "auto", first_ingested_at: datetime | str | None = None
+                   ) -> dict[str, pd.DataFrame]:
+        """여러 시리즈를 받는다. 재생에서는 실패한 시리즈를 **건너뛰고** 사유를 남긴다.
+
+        한 시리즈의 빈티지 응답이 스냅샷이면 그 시리즈만 빼고 나머지를 계속 쓴다(부분 실패 격리).
+        """
+        out: dict[str, pd.DataFrame] = {}
+        errors: dict[str, str] = {}
+        for sid in series_ids:
+            try:
+                out[sid] = self.observations(
+                    sid, observation_start=observation_start, realtime_start=realtime_start,
+                    realtime_end=realtime_end, mode=mode, first_ingested_at=first_ingested_at,
+                )
+            except MacroVintageError as exc:
+                errors[sid] = str(exc)[:160]
+            except Exception as exc:  # noqa: BLE001 — 한 시리즈 실패가 전체를 비우지 않는다
+                errors[sid] = f"{type(exc).__name__}: {str(exc)[:120]}"
+        if errors:
+            self.last_errors = errors
+        else:
+            self.last_errors = {}
+        return out

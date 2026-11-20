@@ -31,9 +31,11 @@ from engine.backtest.snapshot import make_snapshot  # noqa: E402
 from engine.decide.pipeline import build_payload, load_params  # noqa: E402
 from engine.ledger import live  # noqa: E402
 from engine.ledger.pilot import evaluate_pilot, write_pilot_eval  # noqa: E402
-from engine.ledger.record import RecordError, append_immutable, load_records  # noqa: E402
+from engine.ledger.record import (RecordError, append_immutable, attach_target_session,  # noqa: E402
+                                  load_records)
 from engine.models import QuantSignalSchemaError, validate_quant_signals  # noqa: E402
-from engine.utils.dates import KST, data_cutoff_at, order_cutoff_at, signal_published_at  # noqa: E402
+from engine.utils.dates import (KST, data_cutoff_at, order_cutoff_at, signal_published_at,  # noqa: E402
+                                target_session_for)
 
 RECORDS = Path("data/ledger/records.jsonl")
 EXECUTIONS = Path("data/ledger/executions")
@@ -75,15 +77,28 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def three_times(as_of: date, mode: str) -> dict:
-    """`data_cutoff_at ≤ signal_published_at < order_cutoff_at` — 세 시각을 따로 계산한다(2.2.2)."""
+def three_times(as_of: date, mode: str, now: datetime | None = None) -> dict:
+    """`data_cutoff_at ≤ signal_published_at < order_cutoff_at` — 세 시각을 따로 계산한다(2.2.2).
+
+    `signal_published_at` 은 **실제 발행 시각**이고, 주문 대상 세션은 그 시각 이후 주문 마감이
+    아직 오지 않은 가장 이른 NYSE 세션이다(`target_session`). 실행이 늦어 마감을 넘겼으면
+    다음 세션으로 넘긴다 — 계획 시각으로 검사하면 늦은 실행이 "제때 발행된 것처럼" 통과한다.
+    과거 `as_of` 를 다시 돌리는 백필은 계획 시각을 발행 시각으로 쓴다(마감 전 실행 가정).
+    """
     cutoff = data_cutoff_at(as_of, mode)
-    published = signal_published_at(cutoff)
-    order = order_cutoff_at(as_of)
-    if not (cutoff <= published < order):
-        raise SystemExit(f"세 시각 순서 위반: {cutoff} / {published} / {order}")
-    return {"data_cutoff_at": _iso(cutoff), "signal_published_at": _iso(published),
-            "order_cutoff_at": _iso(order),
+    planned = signal_published_at(cutoff)
+    actual = (now if now is not None else datetime.now(timezone.utc)).replace(microsecond=0)
+    if actual < planned:
+        actual = planned
+    session = target_session_for(actual)
+    if session is None:
+        raise SystemExit(f"대상 거래일을 찾을 수 없다: published={_iso(actual)}")
+    order = order_cutoff_at(session)
+    if not (cutoff <= actual < order):
+        raise SystemExit(f"세 시각 순서 위반: {cutoff} / {actual} / {order}")
+    return {"data_cutoff_at": _iso(cutoff), "signal_published_at": _iso(actual),
+            "signal_published_planned_at": planned, "order_cutoff_at": _iso(order),
+            "target_session": session.isoformat(),
             "_cutoff": cutoff}
 
 
@@ -134,9 +149,10 @@ def ensure_folds(as_of: date) -> dict:
     return folds
 
 
-def ledger_view(records: list[dict], executions: dict, panels: dict, as_of: date) -> tuple[dict, dict]:
+def ledger_view(records: list[dict], executions: dict, panels: dict, as_of: date,
+                reanchors: dict | None = None) -> tuple[dict, dict]:
     """체결 재생 → (모의 계좌 공개 상태, 종목별 보유)"""
-    state = live.replay(records, executions)
+    state = live.replay(records, executions, reanchors)
     public = live.mark(state, panels, as_of, executions, records)
     holdings = {t: {"ticker": t, "shares": p["qty"], "avg_cost": p["avg_price"],
                     "stop_price": p["stop_price"], "trailing_high": p["avg_price"],
@@ -176,12 +192,15 @@ def run(args) -> int:
         return 0
 
     # 1) 스냅샷(아카이브 원본) — manifest 해시가 snapshot_id
+    #    가격뿐 아니라 **판단 입력 전체**(`panels` 제외)를 canonical JSON 으로 넣는다(R10a).
     frames = {f"prices_{ticker}": panel.frame for ticker, panel in sorted(panels.items())}
+    inputs = {k: v for k, v in data.items() if k != "panels"}
     try:
         snap = make_snapshot(SNAPSHOTS / as_of.isoformat(), cutoff, frames,
-                             as_of=as_of.isoformat(),
+                             as_of=as_of.isoformat(), inputs=inputs,
                              extra={"mode": args.mode, "source": data.get("source"),
                                     "params_version": params_version, "code_commit": commit,
+                                    "target_session": times["target_session"],
                                     "cutoff_rule": "available_at <= decision_at"})
         snapshot_id = snap.snapshot_id
     except Exception as exc:  # noqa: BLE001 — 스냅샷 실패는 신호 발행을 막지 않는다
@@ -189,9 +208,10 @@ def run(args) -> int:
         diag["snapshot_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
     short = snapshot_id.replace("sha256:", "")[:12]
 
-    # 2) Ledger — 전일 의도 정산(시가 확정분만) + 체결 이벤트 append
+    # 2) Ledger — 대상 세션 의도 정산(시가 확정분만) + 체결 이벤트 append
     records = load_records(RECORDS)
     executions = live.load_executions(EXECUTIONS)
+    reanchors = live.load_reanchors(EXECUTIONS)
     settlement = live.settle(records, executions, panels, as_of, slippage_bps=args.slippage_bps)
     for event in settlement["new_events"]:
         live.write_execution(event, EXECUTIONS)
@@ -199,8 +219,9 @@ def run(args) -> int:
         executions[event["signal_id"]] = event
     for event in settlement["reanchors"]:
         live.write_reanchor(event, EXECUTIONS)
+        reanchors[event["signal_id"]] = event
 
-    portfolio_before, held_before = ledger_view(records, executions, panels, as_of)
+    portfolio_before, held_before = ledger_view(records, executions, panels, as_of, reanchors)
     watch = ({r["ticker"] for r in (watchlist_payload or {}).get("watchlist") or []}
              if watchlist_payload else None)
     if watch is not None:
@@ -223,6 +244,8 @@ def run(args) -> int:
     appended, skipped = [], []
     for record in payload["signals"]:
         try:
+            attach_target_session(record, times["target_session"],
+                                  times.get("signal_published_planned_at"))
             append_immutable(RECORDS, record)
             appended.append(record["signal_id"])
         except RecordError as exc:
@@ -232,30 +255,39 @@ def run(args) -> int:
 
     # 5) 계좌·채점·파일럿 요약
     records = load_records(RECORDS)
-    portfolio_public, held_after = ledger_view(records, executions, panels, as_of)
+    portfolio_public, held_after = ledger_view(records, executions, panels, as_of, reanchors)
+    live.append_portfolio_history(portfolio_public, PORTFOLIO)
+    first_entry = _first_entry_session(executions)
+    portfolio_public["avg_exposure"] = live.avg_exposure_from_history(
+        live.read_portfolio_history(PORTFOLIO), first_entry, as_of)
     window = window_for(as_of)
-    benchmark = live.beta_free_benchmark(panels)
+    benchmark_panel = panels.get("SPY")
+    trailing = live.benchmark_trailing_returns(panels)
     graded = live.grade_all(records, executions, panels, as_of,
                             holdout_start=window.holdout_start.isoformat(),
-                            benchmark_returns=benchmark)
-    pilot = evaluate_pilot(records, graded,
+                            benchmark_panel=benchmark_panel)
+    pilot = evaluate_pilot(records, graded, executions=executions,
                            portfolio={**portfolio_public,
                                       "total_return": (portfolio_public.get("equity_index") or 1.0) - 1.0},
-                           benchmark_return=benchmark.get("3m"),
+                           benchmark_return=live.benchmark_period_return(benchmark_panel, first_entry, as_of),
                            risk_free=args.risk_free)
     write_pilot_eval(pilot, PILOT)
     holdout_status = holdout_status_for(as_of)
     summary = live.summary(graded, portfolio_public, pilot_summary_of(pilot), folds=folds,
-                           params_history=history, benchmark_connected=bool(benchmark))
+                           params_history=history, benchmark_connected=benchmark_panel is not None)
+    summary["benchmark_trailing"] = trailing  # 참고 표시(배치 실행일 기준) — 채점에는 쓰지 않는다
     summary["holdout"] = holdout_status
     summary["graded_sample"] = graded[:20]
     summary["settlement"] = {k: settlement[k] for k in ("settled", "pending")}
 
     payload["ledger_summary"] = summary
+    payload["target_session"] = times["target_session"]
+    payload["signal_published_planned_at"] = _iso(times["signal_published_planned_at"])
     payload["portfolio"] = {
         "as_of": portfolio_public["as_of"],
         "cash_pct": portfolio_public["cash_pct"],
         "invested_pct": portfolio_public["invested_pct"],
+        "avg_exposure": portfolio_public.get("avg_exposure"),
         "equity_index": portfolio_public.get("equity_index"),
         "positions": [{"ticker": p["ticker"], "weight": p["weight"], "sector": p["sector"],
                        "opened_at": p["opened_at"]} for p in portfolio_public["positions"]],
@@ -329,6 +361,19 @@ def stress_payload() -> dict:
 def pilot_summary_of(pilot: dict) -> dict:
     from engine.ledger.pilot import pilot_summary  # noqa: PLC0415
     return pilot_summary(pilot)
+
+
+def _first_entry_session(executions: dict) -> date | None:
+    """체결 이벤트 중 가장 이른 대상 세션 — 파일럿 기간·평균 노출도의 시작점."""
+    days: list[date] = []
+    for event in (executions or {}).values():
+        if (event.get("quant_track") or {}).get("execution_event") != "buy_filled":
+            continue
+        try:
+            days.append(date.fromisoformat(str(event.get("at", ""))[:10]))
+        except ValueError:
+            continue
+    return min(days) if days else None
 
 
 def _price_as_of(panels: dict) -> str | None:

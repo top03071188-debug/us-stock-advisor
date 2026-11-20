@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import copy
 import json
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
+
+from engine.utils.dates import is_trading_day, order_cutoff_at
 
 INTENTS = ("pending_buy", "pending_hold_cash", "no_action", "pending_exit")
 EXECUTION_EVENTS = ("buy_filled", "hold_cash", "no_action", "exit_filled")
@@ -57,8 +59,13 @@ def publish_record(*, signal_id: str, ticker: str, type: str, grade: str, entry_
                    params_version: str = "params_v001", snapshot_id: str = "",
                    code_commit: str = "", invalidation: dict | None = None,
                    quant_intent: str = "pending_buy", tranche_weights=TRANCHE_WEIGHTS,
-                   tranche_drops=TRANCHE_DROPS) -> dict:
-    """발행 시점의 **불변** 레코드. 체결가·손절가는 비어 있다."""
+                   tranche_drops=TRANCHE_DROPS, target_session: str | None = None,
+                   signal_published_planned_at=None) -> dict:
+    """발행 시점의 **불변** 레코드. 체결가·손절가는 비어 있다.
+
+    `target_session` 은 **실제 발행 시각** 기준 주문 대상 거래일(2.2.2, 3.4.4)이다.
+    `signal_published_planned_at` 은 계획 시각(참고용) — 실제 시각과 다르면 화면이 함께 보여 준다.
+    """
     check_three_times(data_cutoff_at, signal_published_at, order_cutoff_at)
     if quant_intent not in INTENTS:
         raise RecordError(f"알 수 없는 intent: {quant_intent!r} (허용: {INTENTS})")
@@ -73,6 +80,18 @@ def publish_record(*, signal_id: str, ticker: str, type: str, grade: str, entry_
                 row["note"] = "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
         plan.append(row)
     base = float(target_band.get("base_price", generated_price))
+    band = {
+        "lo": round(float(target_band["lo"]), 4),
+        "hi": round(float(target_band["hi"]), 4),
+        "horizon_td": int(target_band.get("horizon_td", 63)),
+        "basis": "base_price",
+        "base_price": base,
+        "r_lo": round(float(target_band["lo"]) / base - 1.0, 6),
+        "r_hi": round(float(target_band["hi"]) / base - 1.0, 6),
+    }
+    # 방어 목표(gap ≤ 0) 표시는 채점·화면이 함께 읽는 값이다 — 직렬화에서 조용히 떨어뜨리지 않는다(4.7.1).
+    if target_band.get("defensive") is not None:
+        band["defensive"] = bool(target_band["defensive"])
     record = {
         "schema_version": 1,
         "signal_id": signal_id,
@@ -83,19 +102,14 @@ def publish_record(*, signal_id: str, ticker: str, type: str, grade: str, entry_
         "as_of": as_of,
         "data_cutoff_at": _iso(data_cutoff_at),
         "signal_published_at": _iso(signal_published_at),
+        "signal_published_planned_at": (None if signal_published_planned_at is None
+                                        else _iso(signal_published_planned_at)),
         "order_cutoff_at": _iso(order_cutoff_at),
+        "target_session": target_session,
         "generated_price": float(generated_price),
         "quant_intent": quant_intent,
         "entry_plan": plan,
-        "target_band": {
-            "lo": round(float(target_band["lo"]), 4),
-            "hi": round(float(target_band["hi"]), 4),
-            "horizon_td": int(target_band.get("horizon_td", 63)),
-            "basis": "base_price",
-            "base_price": base,
-            "r_lo": round(float(target_band["lo"]) / base - 1.0, 6),
-            "r_hi": round(float(target_band["hi"]) / base - 1.0, 6),
-        },
+        "target_band": band,
         "expected_mdd": None if expected_mdd is None else round(float(expected_mdd), 4),
         "invalidation": invalidation,
         "thesis_ko": thesis_ko,
@@ -151,8 +165,55 @@ def assert_publish_record(record: dict) -> None:
         check_three_times(record["data_cutoff_at"], record["signal_published_at"], record["order_cutoff_at"])
     except (RecordError, KeyError) as exc:
         problems.append(str(exc))
+    try:
+        check_target_session(record)
+    except (RecordError, KeyError) as exc:
+        problems.append(str(exc))
     if problems:
         raise RecordError("; ".join(problems))
+
+
+def check_target_session(record: dict) -> None:
+    """대상 거래일 불변식(2.2.2·3.4.4).
+
+    - `target_session` 은 NYSE 거래일이어야 한다.
+    - 그 세션의 주문 마감이 **실제 발행 시각**보다 뒤여야 한다(`order_cutoff_at > signal_published_at`).
+      계획 시각으로 검사하면 마감을 넘긴 실행이 "제때 발행된 것처럼" 통과한다.
+    """
+    session = record.get("target_session")
+    if session in (None, ""):
+        return
+    try:
+        d = date.fromisoformat(str(session)[:10])
+    except ValueError as exc:
+        raise RecordError(f"target_session 형식 오류: {session!r}") from exc
+    if not is_trading_day(d):
+        raise RecordError(f"target_session {d.isoformat()} 은 휴장일이다 — 거래일만 쓸 수 있다")
+    published = _ts(record["signal_published_at"])
+    if not order_cutoff_at(d) > published:
+        raise RecordError(
+            f"target_session {d.isoformat()} 의 주문 마감({order_cutoff_at(d).isoformat()})이 "
+            f"발행 시각({published.isoformat()})보다 이르다 — 장 전에 확정할 수 없다(3.4.4)."
+        )
+    cutoff = _ts(record["data_cutoff_at"])
+    if not cutoff <= published:
+        raise RecordError("data_cutoff_at 이 signal_published_at 보다 늦다")
+
+
+def attach_target_session(record: dict, target_session: str | None,
+                         signal_published_planned_at=None) -> dict:
+    """발행 레코드에 대상 거래일(과 계획 시각)을 붙이고 불변식을 다시 검사한다.
+
+    레코드는 `publish_record` 가 만들지만 `build_payload` 는 세 시각만 받는다. 그래서 실행
+    스크립트가 실제 발행 시각으로 정한 `target_session` 을 여기서 붙인다(레코드 수정이 아니라
+    **발행 시점에 함께 기록**하는 값이다 — 이후에는 append-only 로 불변).
+    """
+    if target_session:
+        record["target_session"] = target_session
+    if signal_published_planned_at is not None:
+        record["signal_published_planned_at"] = _iso(signal_published_planned_at)
+    check_target_session(record)
+    return record
 
 
 def execution_event(*, signal_id: str, snapshot_id: str, at, execution_event: str,

@@ -120,6 +120,19 @@ allow:
   - mode
   - source
   - prices_as_of
+  # 세 시각의 분리(2.2.2) — 실제 발행 시각과 계획 시각을 함께 보여 준다(R08)
+  - signal_published_planned_at
+  - target_session
+  # 수집 지연(R07): 마감 이후 수집이면 화면이 "수집 지연 N분"을 띄운다
+  - ingest
+  - lag_seconds
+  - after_cutoff
+  - inputs_ingested_at
+  # 방어 목표(gap ≤ 0) 표시(4.7.1)
+  - defensive
+  # 파일럿: 유효 표본과 발행 신호 수를 함께 표기한다(R11)
+  - n_records
+  - n_eligible
   - debate_generated_at
   - debate_status
   - regime_verified

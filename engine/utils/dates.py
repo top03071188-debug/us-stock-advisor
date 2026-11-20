@@ -202,6 +202,22 @@ def signal_published_at(cutoff: datetime, lag_seconds: int = 131) -> datetime:
     return cutoff + timedelta(seconds=lag_seconds)
 
 
+def target_session_for(published_at: datetime) -> date | None:
+    """`published_at` 이후 **주문 마감이 아직 오지 않은** 가장 이른 NYSE 세션.
+
+    실행이 늦어 주문 마감을 넘겼으면 다음 세션으로 넘긴다(대체 세션을 만들지 않는다).
+    연속 휴장이 10일을 넘으면 `None`(정산 불가 — 호출자가 실패로 처리).
+    """
+    if published_at.tzinfo is None:
+        raise ValueError("timezone-aware datetime 이 필요하다")
+    d = published_at.astimezone(ET).date()
+    for _ in range(10):
+        if is_trading_day(d) and order_cutoff_at(d) > published_at:
+            return d
+        d += timedelta(days=1)
+    return None
+
+
 def decision_cutoff_on(d: date, hour_utc: int) -> datetime:
     if hour_utc not in DECISION_CUTOFF_MINUTES:
         raise ValueError(f"지원하지 않는 결정 시각: {hour_utc} UTC")

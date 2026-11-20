@@ -62,6 +62,25 @@ def test_raw_price_series_blocks_commit(tmp_path):
     assert any("raw_close" in p for p in problems)
 
 
+def test_xbrl_unit_named_shares_is_not_a_position(tmp_path):
+    """SEC companyfacts 의 `units: {"shares": [...]}` 는 **단위 이름**이라 막지 않고,
+    같은 `shares` 라도 계좌 안에 있으면 계속 막는다."""
+    fixture = tmp_path / "companyfacts.json"
+    fixture.write_text(json.dumps({"facts": {"us-gaap": {
+        "WeightedAverageNumberOfDilutedSharesOutstanding": {
+            "units": {"shares": [{"end": "2025-12-31", "val": 12_230_000_000,
+                                   "form": "10-K", "fp": "FY", "filed": "2026-02-05",
+                                   "accn": "0001652044-26-000018"}]}}}}}
+        , ensure_ascii=False), encoding="utf-8")
+    assert check_commit_scope.check_paths([str(fixture)], _rules()) == []
+
+    account = tmp_path / "portfolio2.json"
+    account.write_text(json.dumps({"units": {"USD": 1}, "position": {"ticker": "MSFT", "shares": 3.2}}
+                                  , ensure_ascii=False), encoding="utf-8")
+    problems = check_commit_scope.check_paths([str(account)], _rules())
+    assert any("shares" in p for p in problems), problems
+
+
 def test_holdings_fields_block_commit(tmp_path):
     path = tmp_path / "portfolio.json"
     path.write_text(json.dumps({"positions": [{"ticker": "MSFT", "shares": 3.2,

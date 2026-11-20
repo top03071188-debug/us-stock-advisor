@@ -25,7 +25,7 @@ from engine.decide.signals import (EntryContext, build_entry_plan, evaluate_entr
                                    expected_mdd, margin_of_safety, target_band)
 from engine.decide.veto import VetoInputs, veto_check
 from engine.ledger.record import publish_record
-from engine.metrics.fundamentals import growth_score, quality_score
+from engine.metrics.fundamentals import growth_score, qc_wacc, quality_score, sanitize_fundamentals
 from engine.metrics.technical import dma, snapshot_indicators
 from engine.metrics.valuation import classify_sector, v_score
 from engine.models import PriceKind
@@ -115,21 +115,32 @@ def chart_series(panel, weeks: int = 52) -> dict:
 
 
 def evidence_items(ticker: str, filings: list[dict], news: list[dict], fundamentals: dict | None,
-                   news_state: str, as_of: str) -> list[dict]:
-    """공개 허용 근거 — 종류·지표명·시각·링크·인용 해시만(원문 문자열 금지, 2.2.3)."""
+                   news_state: str, as_of: str,
+                   valuation_detail: dict | None = None) -> list[dict]:
+    """공개 허용 근거 — 종류·지표명·시각·링크·인용 해시만(원문 문자열 금지, 2.2.3).
+
+    R04: 재무 근거는 **실제 계산에 쓴 회계연도 10-K** 의 `accn`·`period_end`·`filed`·접수 시각을 단다.
+    최근 10-Q(참고 공시)는 `role: "reference"` 로 **별도 항목**이고, 날짜를 모르면 `as_of` 로 대신하지 않는다.
+    """
     items: list[dict] = []
+    vdetail = valuation_detail or {}
+    sources = [s for s in (vdetail.get("fundamental_sources") or []) if s.get("accn")]
+    src = sources[0] if sources else {}
     if fundamentals:
-        items.append({"type": "fundamental", "metric": "quality_composite",
-                      "value_kind": "score_0_100", "filed_date": fundamentals.get("filed_date", as_of)})
-        items.append({"type": "fundamental", "metric": "fcf_margin_5y",
-                      "value_kind": "ratio", "filed_date": fundamentals.get("filed_date", as_of)})
-    for f in filings:
-        if f.get("form") not in ("10-K", "10-Q"):
-            continue
-        items.append({"type": "sec_filing", "form": f["form"], "url": f.get("url"),
-                      "filed_date": f.get("filed_date"), "available_at": f.get("acceptance_datetime"),
-                      "accession": f.get("accession")})
-        break
+        base = {"type": "fundamental", "period_end": src.get("fy"), "form": src.get("form"),
+                "accession": src.get("accn"), "filed_date": src.get("filed"),
+                "available_at": src.get("available_at")}
+        # 모르는 날짜는 `as_of` 로 대신하지 않고 **키를 비운다**(스키마는 string 만 받는다).
+        base = {k: v for k, v in base.items() if v is not None}
+        items.append({**base, "metric": "quality_composite", "value_kind": "score_0_100"})
+        items.append({**base, "metric": "fcf_margin_5y", "value_kind": "ratio"})
+    reference = next((f for f in filings if f.get("form") == "10-Q"), None) \
+        or next((f for f in filings if f.get("form") == "10-K"), None)
+    if reference is not None:
+        items.append({"type": "sec_filing", "form": reference["form"], "url": reference.get("url"),
+                      "filed_date": reference.get("filed_date"),
+                      "available_at": reference.get("acceptance_datetime"),
+                      "accession": reference.get("accession"), "role": "reference"})
     if news and news_state != "not_read":
         n = news[0]
         item = {"type": "news", "url": n.get("url"), "headline": n.get("headline"),
@@ -205,6 +216,20 @@ class TickerView:
     valuation_suspended: bool
     suspended_reason: str | None
     structure: dict
+    valuation_detail: dict | None = None
+    iv_band_basis: str | None = None
+    split_factor: float = 1.0
+
+
+def _num(value) -> float | None:
+    """양수 유한값만 숫자로 넘긴다(0·NaN·문자열은 None)."""
+    if value is None:
+        return None
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return None
+    return out if np.isfinite(out) and out > 0 else None
 
 
 def build_views(data: dict, as_of: date) -> list[TickerView]:
@@ -221,14 +246,28 @@ def build_views(data: dict, as_of: date) -> list[TickerView]:
             continue
         sector = row.get("sector") or ""
         sec = classify_sector(sector)
-        fundamentals = (data.get("fundamentals") or {}).get(ticker)
+        fundamentals = sanitize_fundamentals((data.get("fundamentals") or {}).get(ticker))
         q = quality_score(fundamentals)["q"] if fundamentals else 50.0
+        vdetail = (data.get("valuation_inputs") or {}).get(ticker)
+        if not isinstance(vdetail, dict):
+            vdetail = {}   # 픽스처는 ValuationInputs 를 직접 넣는다 — 배관 대상은 dict 뿐이다
         iv_median = iv_low = iv_high = None
-        mult = row.get("iv_mult")
-        if mult is not None and not sec["valuation_suspended"]:
-            iv_median = ind["sadj_close"] * float(mult)
-            iv_low = iv_median * 0.85
-            iv_high = iv_median * 1.15
+        band_basis = None
+        if not sec["valuation_suspended"]:
+            iv_median = _num(vdetail.get("iv_median")) or _num(row.get("iv_median"))
+            if iv_median is None:
+                mult = row.get("iv_mult")
+                if mult is not None:
+                    iv_median = ind["sadj_close"] * float(mult)
+            if iv_median is not None:
+                # R04: `value_company` 가 계산한 bear/base/bull 밴드를 그대로 쓴다.
+                iv_low = _num(vdetail.get("iv_low")) or _num(row.get("iv_low"))
+                iv_high = _num(vdetail.get("iv_high")) or _num(row.get("iv_high"))
+                band_basis = vdetail.get("iv_band_basis") or row.get("iv_band_basis")
+                if iv_low is None or iv_high is None:
+                    iv_low = iv_median * 0.85
+                    iv_high = iv_median * 1.15
+                    band_basis = "fallback_15pct"
         margin = None if (iv_median is None or sec["valuation_suspended"]) else margin_of_safety(
             iv_median, ind["sadj_close"])
         v = None if margin is None else round(v_score(margin), 2)
@@ -241,7 +280,12 @@ def build_views(data: dict, as_of: date) -> list[TickerView]:
         news_state = row.get("news_state") or "not_read"
         filings = (data.get("filings") or {}).get(ticker, [])
         news = (data.get("news") or {}).get(ticker, [])
-        evidence = evidence_items(ticker, filings, news, row, news_state, as_of.isoformat())
+        evidence = evidence_items(ticker, filings, news, row, news_state, as_of.isoformat(), vdetail)
+        split_factor = 1.0
+        if len(panel.frame.index) and "split_factor" in panel.frame.columns:
+            value = panel.frame["split_factor"].iloc[-1]
+            if np.isfinite(value):
+                split_factor = float(value)
         structure = {
             "daily_vol_60d": daily_vol(panel),
             "dma200_slope": dma_slope(panel),
@@ -256,6 +300,7 @@ def build_views(data: dict, as_of: date) -> list[TickerView]:
             news_state=news_state, evidence=evidence, filings=filings, news=news,
             valuation_suspended=bool(sec["valuation_suspended"]),
             suspended_reason=sec["reason"], structure=structure,
+            valuation_detail=vdetail, iv_band_basis=band_basis, split_factor=split_factor,
         ))
     return views
 
@@ -312,6 +357,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             ticker=view.ticker,
             raw_close=ind["raw_close"],
             sadj_close=ind["sadj_close"],
+            split_factor=view.split_factor,
             sector=view.sector,
             dma50=ind.get("dma50"),
             dma200=ind.get("dma200"),
@@ -340,6 +386,11 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             "rank_score": None if (view.v is None or view.g is None) else round(
                 0.5 * view.q + 0.3 * float(view.v) + 0.2 * float(view.g), 3),
             "valuation_suspended": view.valuation_suspended,
+            # R03: Q 점수 경로의 WACC 와 가치평가 경로의 WACC 는 다른 값이다 — 이름을 나눠 내보낸다.
+            "wacc_qc": _f(qc_wacc(data["fundamentals"][view.ticker]))
+            if (data.get("fundamentals") or {}).get(view.ticker) else None,
+            "wacc_valuation": _f((view.valuation_detail or {}).get("wacc")),
+            "iv_band_basis": view.iv_band_basis,
         })
         charts[view.ticker] = view.structure.get("chart") or {}
         diag = {
@@ -416,9 +467,22 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         )
         record["trade_grade"] = evaluation.get("grade")
         record["components"] = evaluation.get("components")
+        detail = view.valuation_detail or {}
+        dcf_detail = detail.get("iv_dcf") or {}
         record["valuation"] = {
             "iv_low": _f(view.iv_low), "iv_median": _f(view.iv_median), "iv_high": _f(view.iv_high),
             "price": _f(ind["raw_close"]), "margin": _f(view.margin),
+            # R04: 방법별 IV·시나리오 밴드·중앙값 선정 근거를 레코드까지 그대로 넘긴다.
+            "iv_band_basis": view.iv_band_basis,
+            "median_method": detail.get("median_method"),
+            "methods": {k: _f(v) for k, v in (detail.get("methods") or {}).items()},
+            "iv_dcf_bear": _f(dcf_detail.get("bear")), "iv_dcf_bull": _f(dcf_detail.get("bull")),
+            "fcff_normalized": _f(detail.get("fcff_normalized")),
+            "growth": _f(detail.get("growth")), "growth_basis": detail.get("growth_basis"),
+            "net_debt": _f(detail.get("net_debt")),
+            "wacc_valuation": _f(detail.get("wacc")),
+            "v_confidence": detail.get("v_confidence"),
+            "dcf_dropped": detail.get("dcf_dropped"),
         }
         record["news_state"] = view.news_state
         record["news"] = [{"headline": n.get("headline"), "source": n.get("source"),
@@ -451,8 +515,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         "generated_at": _iso(datetime.now(timezone.utc)),
         "data_cutoff_at": three_times["data_cutoff_at"],
         "signal_published_at": three_times["signal_published_at"],
-        "order_cutoff_at": three_times["order_cutoff_at"],
-        "as_of": as_of.isoformat(),
+        "order_cutoff_at": three_times["order_cutoff_at"],        "as_of": as_of.isoformat(),
         "params_version": params_version,
         "snapshot_id": snapshot_id,
         "code_commit": code_commit,
@@ -460,6 +523,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         "mode": mode,
         "source": source or data.get("source", "live"),
         "regime": regime.as_dict(),
+        "ingest": data.get("macro_ingest"),
         "signals": signals,
         "blocked": blocked,
         "watchlist": watchlist,
@@ -472,10 +536,17 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
 
 
 def _thesis(view: TickerView, evaluation: dict) -> str:
-    """한 문장 이유 — 수치를 그대로 인용한다(창작 금지)."""
+    """한 문장 이유 — 수치를 그대로 인용한다(창작 금지).
+
+    부호 규칙(R04): `margin = (IV − 가격)/IV` 이다. 양수면 가격이 IV 보다 **낮다(할인)**,
+    음수면 **프리미엄**이고 그 크기는 절대값으로 쓴다(과거 `-233% 프리미엄` 오확).
+    """
     parts: list[str] = []
     if view.margin is not None:
-        parts.append(f"IV 대비 {view.margin:.0%} {'할인' if view.margin >= 0 else '프리미엄'}")
+        if view.margin >= 0:
+            parts.append(f"IV 대비 {view.margin:.0%} 할인")
+        else:
+            parts.append(f"IV 대비 {-view.margin:.0%} 프리미엄(안전마진 {view.margin:.0%})")
     rsi = view.indicators.get("rsi14")
     if rsi is not None:
         parts.append(f"RSI {rsi:.0f}")

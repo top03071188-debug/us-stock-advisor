@@ -135,6 +135,7 @@ class EntryContext:
     ticker: str
     raw_close: float
     sadj_close: float
+    split_factor: float = 1.0                  # 신호일 누적 분할계수(raw = sadj × factor)
     sector: str = ""
     dma50: float | None = None
     dma200: float | None = None
@@ -298,16 +299,17 @@ def build_entry_plan(ctx: EntryContext, evaluation: dict, regime="neutral",
     band_error = None
     try:
         band = build_entry_band(
-            iv_median=ctx.iv_median,
+            iv_median_sadj=ctx.iv_median,
             required_margin=evaluation.get("required_margin", view.margin_of_safety),
             dma200_sadj=ctx.dma200,
-            signal_price=ctx.raw_close,
+            signal_price_sadj=float(ctx.raw_close) / float(ctx.split_factor or 1.0),
             stop_distance=dist,
             dma200_mult=float(entry_cfg.get("dma200_mult", 0.97)),
+            split_factor=float(ctx.split_factor or 1.0),
         ).as_dict()
     except OrderNotPlaceable as exc:
         band_error = str(exc)
-    provisional_stop = round(ctx.raw_close * (1.0 - dist), 4)
+    provisional_stop = round(float(ctx.raw_close) * (1.0 - dist), 4)
     plan = entry_plan(ctx.raw_close, stop_price=provisional_stop)
     for row in plan:
         # 신호 시점의 분할가는 **잠정값**이다 — 1차 실제 체결가로 재고정(plan_reanchor)한다(4.7.1).

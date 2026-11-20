@@ -58,10 +58,13 @@ class FoldResult:
 def agreement_components(direction: int, base_price: float, fill_price: float,
                          band_lo: float, band_hi: float, end_price: float,
                          predicted_mdd: float, realized_mdd: float,
-                         p_entry: float, p_min: float, p_max: float) -> dict:
+                         p_entry: float, p_min: float, p_max: float,
+                         benchmark_return: float | None = None) -> dict:
     """4.2.4 Agreement — 네 항목 전부 0~100.
 
     밴드는 `base_price` 기준 수익률로 환산해 같은 기준끼리 비교한다(달러 vs 수익률 혼합 금지).
+    방향 점수 `D` 는 **초과수익**(`r_fill − r_SPY`)으로 판정한다(4.2.4). 벤치마크가 없으면
+    `D` 는 `None` 이고 나머지 항목 가중치로 재정규화한다(0%로 갈음하지 않는다).
     """
     r_base = end_price / base_price - 1.0
     r_fill = end_price / fill_price - 1.0
@@ -72,7 +75,12 @@ def agreement_components(direction: int, base_price: float, fill_price: float,
     else:
         deviation = max(0.0, r_base - r_hi, r_lo - r_base)
         band_score = 100.0 * max(0.0, min(1.0, 1.0 - deviation / width))
-    d = 100.0 if (r_fill > 0) == (direction > 0) else 0.0
+    if benchmark_return is None:
+        d = None
+        excess = None
+    else:
+        excess = r_fill - float(benchmark_return)
+        d = 100.0 if (excess > 0) == (direction > 0) else 0.0
     if abs(realized_mdd) <= 1e-9:
         dd = None
     else:
@@ -95,6 +103,7 @@ def agreement_components(direction: int, base_price: float, fill_price: float,
         "total": None if total is None else round(total, 1),
         "r_base": round(r_base, 4),
         "r_fill": round(r_fill, 4),
+        "excess_return": None if excess is None else round(excess, 6),
     }
 
 

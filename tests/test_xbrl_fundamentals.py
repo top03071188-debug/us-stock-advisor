@@ -1,9 +1,9 @@
 """test_xbrl_fundamentals — SEC companyfacts → 연차 재무(5년) 계약.
 
 검사 항목:
-- `filed ≤ decision_at.date()` 만 쓴다(look-ahead 차단)
+- `filed ≤ decision_at.date()` 만 쓴다(look-ahead 차단) — 접수 시각 인덱스가 없을 때의 폴백
 - 10-K/FY 만, 분기(10-Q)·비연차 기간은 버린다
-- 같은 회계연도 정정은 **가장 먼저 공개된 값**을 쓴다
+- 같은 회계연도의 정정은 **결정 시점까지 공개된 최신 유효값**을 쓴다(R06 — 사후 정정치만 금지)
 - 태그 우선순위·EBIT 근사(세전이익+이자비용)·총부채 항등식·주식수 단위 보정
 - XBRL 완전성(HG-11 입력)과 밸류에이션 배수(iv_mult) 단위
 """
@@ -105,7 +105,8 @@ def test_annual_series_uses_only_10k_fy_filed_before_decision():
     assert fiscal_years(series)[0] == date(2025, 12, 31)
 
 
-def test_earliest_filing_wins_for_amendment():
+def test_latest_amendment_visible_at_decision():
+    """결정 시점(2026-11-20)까지 공개된 정정(2026-05-10)은 그때 알 수 있었던 값이다(R06)."""
     payload = _payload(extra={
         "NetIncomeLoss": [
             {"start": "2025-01-01", "end": "2025-12-31", "val": 1_500_000_000, "form": "10-K",
@@ -115,6 +116,20 @@ def test_earliest_filing_wins_for_amendment():
         ]
     })
     series = annual_series(payload, DECISION)
+    assert series["net_income"][date(2025, 12, 31)] == pytest.approx(1_100_000_000)
+
+
+def test_amendment_before_acceptance_not_visible():
+    """정정이 공개되기 전 결정(2026-03-01)에서는 최초 값만 쓴다 — 두 경계를 함께 고정한다."""
+    payload = _payload(extra={
+        "NetIncomeLoss": [
+            {"start": "2025-01-01", "end": "2025-12-31", "val": 1_500_000_000, "form": "10-K",
+             "fp": "FY", "filed": "2026-02-10"},
+            {"start": "2025-01-01", "end": "2025-12-31", "val": 1_100_000_000, "form": "10-K",
+             "fp": "FY", "filed": "2026-05-10"},
+        ]
+    })
+    series = annual_series(payload, date(2026, 3, 1))
     assert series["net_income"][date(2025, 12, 31)] == pytest.approx(1_500_000_000)
 
 
@@ -189,11 +204,13 @@ def test_valuation_multiplier_is_usd_per_share_ratio():
 def test_valuation_multiplier_skips_suspended_sector_and_negative_fcff():
     f, _ = build_fundamentals(_payload(), DECISION)
     assert valuation_multiplier(f, 100.0, "Financials", 1.0, 0.042)[0] is None
-    # CAPEX 가 영업현금흐름을 삼키면 FCFF ≤ 0 → 계산 불가(0으로 채우지 않는다)
+    # 정상화 FCFF ≤ 0 이면 DCF 를 **폐기**하고 남은 방법(EPV·Graham)으로 중앙값을 낸다(§3.2.3 확장).
     heavy = AnnualFundamentals(**{**f.__dict__, "capex": [5_000, 5_000, 5_000, 5_000, 5_000]})
     mult, detail = valuation_multiplier(heavy, 100.0, "Technology", 1.0, 0.042)
-    assert mult is None
-    assert "FCFF" in detail["reason"]
+    assert mult is not None
+    assert "dcf_base" not in detail["methods"]
+    assert detail["dcf_dropped"] == "FCFF_NONPOSITIVE"
+    assert detail["v_confidence"] == "C"
 
 
 def test_revenue_cagr_and_peg():
