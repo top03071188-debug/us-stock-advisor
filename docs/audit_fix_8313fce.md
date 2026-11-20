@@ -55,9 +55,14 @@
 4. **공개 계층** — `config/public_allowlist.yaml` 에 01·02·09 의 새 키(`run_started_at`·`publish_lag_seconds`·
    `published_after_order_cutoff`·`inputs_hash`·`revision`·`supersedes`·`base_bar_date`·`return_base`·
    `market_cap_source`·`wacc_risk_free`·`fallback`, 그리고 거시 빈티지 메타 `policy`·`vintage`·`series_dropped`·
-   `cutoff_filter`·`available_at_source`·`replay`)를 추가하고 `build_public_data` 가
+   `cutoff_filter`·`available_at_source`·`replay`)와 **`target_band`(목표 밴드)** 를 추가하고 `build_public_data` 가
    `meta.json`(배치 시작·발행 지연·마감 후 발행·입력 지문·WACC 무위험금리 출처)과
    `signals/today.json`·`ledger/records.json`(`revision`·`supersedes`)에 실제로 내보내게 했다.
+   워치리스트 행·종목 상세에는 `dcf_dropped`(DCF 를 왜 뺐는지: `SHORT_HISTORY`·`FCFF_NONPOSITIVE`)도 함께 실었다 —
+   이 값이 없으면 HON 처럼 05 가드에 걸린 종목이 "왜 V 가 0 인지" 화면에서 설명되지 않는다.
+   `target_band` 는 `lo`·`hi`·`base_price`·`r_lo`·`r_hi`·`base_bar_date`·`return_base` 까지 공개해
+   종목 상세 ③ 에 **"목표 밴드 … · 기준 봉 YYYY-MM-DD 종가 … (base_price 고정)"** 이 뜬다(달러 파생값이며
+   이미 `generated_price` 로 공개되던 그 봉의 종가다 — 원시 시계열이 아니다).
 5. **화면(`web/app.js`)** — 배치 시작·발행까지 걸린 시간·입력 지문, **"주문 마감 후 발행" 배지**(`published_after_order_cutoff`),
    DGS10 미확보 시 기본값 사실, 신호 카드의 **"재발행 2회차 · …-001 대체"** 배지, 원장 탭 **회차 열**,
    종목 상세의 **"기준 봉 YYYY-MM-DD 종가 (base_price 고정)"** 줄.
@@ -157,6 +162,11 @@
 | `scripts/build_public_data.py` | 30개 파일 생성, 금지 키 0 · 200KB 초과 0 |
 | `scripts/run_walkforward.py --plan-only` | `attempts` = 1m/3m **planned**, 6m **deferred**(적격 폴드 1/3) |
 | `check_commit_scope` (CI 스텝) | 통과(로컬 동일 명령으로 확인) |
+
+점검 결과 중 **공개 화면에 반영할 것이 없는 키**도 적어 둔다: `universe[].market_cap_source` 와
+`diagnostics.market_cap_basis` 는 유니버스 행(스냅샷·내부 진단)에만 있고 공개 산출물에는 유니버스 표가 없다
+(공개 목록은 `watchlist.json`). 허용 목록에는 넣어 두었지만 화면이 읽지 않는다 — 화면에 시총 출처를 띄우려면
+별도 표가 필요하므로 이번 범위에서는 만들지 않았다.
 
 통합 경계 신규 테스트 3건: `test_sec_acceptance_helper_is_one_path_to_dates`,
 `test_pipeline_record_carries_track_b_valuation_fields`, `test_public_meta_and_today_carry_new_run_fields`.

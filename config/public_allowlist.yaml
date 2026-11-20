@@ -70,6 +70,13 @@ allow:
   - minority_interest
   - debt_reporting
   - valuation_quality
+  # v1.3.3 09-d: 목표 밴드의 **기준 봉·기준가 고정**을 화면까지 (달러 파생값, 원시 시계열 아님)
+  - target_band
+  - lo
+  - hi
+  - base_price
+  - r_lo
+  - r_hi
   # 요약·메타데이터
   - thesis_ko
   - one_line_ko

@@ -445,8 +445,8 @@ WATCH_ROW_FIELDS = (
     "ev_ebit_percentile", "ev_ebit_current", "ev_ebit_median_10y", "ev_ebit_samples",
     "ev_ebit_years", "ev_ebit_window", "ev_ebit_reason",
     "growth", "growth_raw_cagr", "growth_clipped_to_zero", "effective_fcff_years",
-    "normalization_method", "dcf_sensitivity", "wacc_sensitivity", "terminal_g_sensitivity",
-    "valuation_suspended",
+    "normalization_method", "dcf_sensitivity", "dcf_dropped", "wacc_sensitivity",
+    "terminal_g_sensitivity", "valuation_suspended",
 )
 
 

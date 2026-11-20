@@ -118,6 +118,7 @@ def build_candidates(data: dict) -> list[Candidate]:
             effective_fcff_years=_i("effective_fcff_years"),
             normalization_method=pick("normalization_method"),
             dcf_sensitivity=_f("dcf_sensitivity"),
+            dcf_dropped=pick("dcf_dropped"),
             wacc_sensitivity=_f("wacc_sensitivity"),
             terminal_g_sensitivity=_f("terminal_g_sensitivity"),
             peg=row.get("peg"),

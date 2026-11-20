@@ -45,6 +45,7 @@ class Candidate:
     effective_fcff_years: int | None = None
     normalization_method: str | None = None
     dcf_sensitivity: float | None = None
+    dcf_dropped: str | None = None         # 05: SHORT_HISTORY·FCFF_NONPOSITIVE — "왜 DCF 가 빠졌나"
     wacc_sensitivity: float | None = None
     terminal_g_sensitivity: float | None = None
     peg: float | None = None
@@ -123,6 +124,7 @@ def score_candidate(c: Candidate) -> dict:
         "effective_fcff_years": c.effective_fcff_years,
         "normalization_method": c.normalization_method,
         "dcf_sensitivity": c.dcf_sensitivity,
+        "dcf_dropped": c.dcf_dropped,
         "wacc_sensitivity": c.wacc_sensitivity,
         "terminal_g_sensitivity": c.terminal_g_sensitivity,
         "g": g.get("g"),
