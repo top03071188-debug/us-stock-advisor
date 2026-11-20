@@ -1,0 +1,100 @@
+# daily-postclose.yml — 기획서 6.3 의 정본 예시.
+#
+# Phase 1에는 아직 `scripts/run_daily.py`(수집→신호)가 없으므로 **schedule 은 꺼 두었다**.
+# Phase 3 에서 run_daily.py 가 들어오면 아래 cron 주석을 풀고 그대로 쓴다.
+# 배포는 이 실행 안에서 끝낸다 — GITHUB_TOKEN 푸시는 push 워크플로를 시작시키지 않는다(2.2.4).
+name: daily-postclose
+
+on:
+  # schedule:
+  #   - cron: "0 22 * * *"      # 07:00 KST (미국 장 마감 1~2시간 후)
+  workflow_dispatch:
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.lock
+      - name: Restore pipeline cache (public-safe paths only)
+        uses: actions/cache@v4
+        with:
+          # data/ 전체를 캐시하지 않는다 — 원시 시세·기사 발췌·스냅샷이 캐시로도 샌다(2.2.4)
+          path: |
+            data/cache/sec_cik
+            data/cache/yfinance
+          key: pipeline-${{ runner.os }}-${{ hashFiles('requirements.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            pipeline-${{ runner.os }}-${{ hashFiles('requirements.lock') }}-
+      - name: Run daily pipeline
+        id: pipeline
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python scripts/run_daily.py --mode postclose   # outputs: snapshot_id, snapshot_id_short
+      - name: Validate output schemas
+        run: python scripts/validate_outputs.py
+      - name: Archive snapshot (private repo, append-only, sha256 verified)
+        env:
+          GH_TOKEN: ${{ secrets.ARCHIVE_REPO_TOKEN }}      # 아카이브 저장소에만 권한을 준 PAT
+          ARCHIVE_REPO: ${{ vars.PRIVATE_ARCHIVE_REPO }}   # 예: top03071188-debug/us-stock-advisor-archive (비공개)
+          SNAPSHOT_SHORT: ${{ steps.pipeline.outputs.snapshot_id_short }}
+        run: |
+          set -euo pipefail
+          python scripts/archive_snapshot.py package --out dist_archive \
+            --name "snapshot_$(date -u +%F)_${SNAPSHOT_SHORT}"
+          TGZ=$(ls dist_archive/snapshot_*.tgz)
+          gh release view snapshots-2026 --repo "$ARCHIVE_REPO" --json assets > /tmp/assets.json 2>/dev/null || \
+            gh release create snapshots-2026 --repo "$ARCHIVE_REPO" \
+              --title "Snapshots 2026" --notes "walk-forward 재현용 원본 (비공개)"
+          # `gh release upload --skip-existing` 은 존재하지 않는 플래그다(gh 2.102.0 확인).
+          # ① 같은 이름 asset이 있는지 먼저 조회 → ② 있으면 sha256 대조(불일치 시 중단)
+          # → ③ 없을 때만 --clobber 없이 업로드한다.
+          set +e
+          python scripts/archive_snapshot.py check-asset --assets /tmp/assets.json --file "$TGZ"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 10 ]; then
+            gh release upload snapshots-2026 "$TGZ" --repo "$ARCHIVE_REPO"   # --clobber 금지
+          elif [ "$rc" -ne 0 ]; then
+            echo "::error::archive asset sha256 mismatch or check failed (rc=$rc)"
+            exit 1
+          fi
+      - name: Redact quotes for commit
+        run: |
+          python scripts/redact_quotes.py --mode sha256 \
+            data/quant_signals.json data/ledger/records.jsonl
+      - name: Commit contract data (allowlist only)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/quant_signals.json data/ledger/records.jsonl data/ledger/portfolio/ \
+                  data/ledger/executions/ data/ledger/debate_events/ data/ledger/debate_comparison.json \
+                  data/ledger/pilot_eval.json data/params_history.json
+          python scripts/check_commit_scope.py --staged
+          git diff --cached --quiet || git commit -m "data: quant signals $(date -u +%F)"
+          git push
+      - name: Build public data (allowlist only)
+        run: python scripts/build_public_data.py
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: web }
+  deploy:
+    needs: report
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - uses: actions/deploy-pages@v4

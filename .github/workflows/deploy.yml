@@ -1,0 +1,53 @@
+# deploy.yml — **사람이 푸시한 커밋**과 수동 실행 전용 (2.2.4).
+# Actions 가 GITHUB_TOKEN 으로 푸시한 커밋은 push 워크플로를 시작시키지 않는다.
+# 그래서 데이터를 만드는 워크플로(daily-postclose 등)는 **같은 실행 안에서** 배포까지 끝낸다.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "data/quant_signals.json"
+      - "data/debate_reports.json"
+      - "scripts/build_public_data.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.lock
+      - name: Build public data (allowlist only)
+        run: |
+          python scripts/build_public_data.py \
+            --signals data/quant_signals.json \
+            --folds data/walkforward/folds/summary.json \
+            --out web/data
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
