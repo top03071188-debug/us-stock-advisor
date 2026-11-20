@@ -1,8 +1,9 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-11-20T07:47:58Z",
+  "generated_at": "2026-11-20T10:09:22Z",
   "as_of": "2026-11-20",
-  "data_status": null,
+  "data_status": "ok",
+  "outage_id": null,
   "n_events": 7,
   "n_new": 7,
   "n_suppressed": 0,
@@ -11,13 +12,13 @@
   "new": [
     {
       "type": "debate_recommended",
-      "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-003",
+      "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-004",
       "label_ko": "토론 실행 권장",
       "severity": "info",
       "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
       "ticker": "MSFT",
-      "signal_id": "2026-11-20-MSFT-WATCH-003",
-      "sent_at": "2026-11-20T07:47:58Z",
+      "signal_id": "2026-11-20-MSFT-WATCH-004",
+      "sent_at": "2026-11-20T10:09:22Z",
       "channels": {
         "console": {
           "ok": true,
@@ -37,13 +38,13 @@
     },
     {
       "type": "debate_recommended",
-      "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-003",
+      "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-004",
       "label_ko": "토론 실행 권장",
       "severity": "info",
       "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
       "ticker": "NVDA",
-      "signal_id": "2026-11-20-NVDA-WATCH-003",
-      "sent_at": "2026-11-20T07:47:58Z",
+      "signal_id": "2026-11-20-NVDA-WATCH-004",
+      "sent_at": "2026-11-20T10:09:22Z",
       "channels": {
         "console": {
           "ok": true,
@@ -63,13 +64,13 @@
     },
     {
       "type": "debate_recommended",
-      "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-003",
+      "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-004",
       "label_ko": "토론 실행 권장",
       "severity": "info",
       "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
       "ticker": "ADBE",
-      "signal_id": "2026-11-20-ADBE-WATCH-003",
-      "sent_at": "2026-11-20T07:47:58Z",
+      "signal_id": "2026-11-20-ADBE-WATCH-004",
+      "sent_at": "2026-11-20T10:09:22Z",
       "channels": {
         "console": {
           "ok": true,
@@ -89,13 +90,13 @@
     },
     {
       "type": "debate_recommended",
-      "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-003",
+      "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-004",
       "label_ko": "토론 실행 권장",
       "severity": "info",
       "message_ko": "CSCO 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
       "ticker": "CSCO",
-      "signal_id": "2026-11-20-CSCO-WATCH-003",
-      "sent_at": "2026-11-20T07:47:58Z",
+      "signal_id": "2026-11-20-CSCO-WATCH-004",
+      "sent_at": "2026-11-20T10:09:22Z",
       "channels": {
         "console": {
           "ok": true,
@@ -115,13 +116,13 @@
     },
     {
       "type": "debate_recommended",
-      "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-003",
+      "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-004",
       "label_ko": "토론 실행 권장",
       "severity": "info",
       "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
       "ticker": "GOOGL",
-      "signal_id": "2026-11-20-GOOGL-WATCH-003",
-      "sent_at": "2026-11-20T07:47:58Z",
+      "signal_id": "2026-11-20-GOOGL-WATCH-004",
+      "sent_at": "2026-11-20T10:09:22Z",
       "channels": {
         "console": {
           "ok": true,
@@ -141,13 +142,13 @@
     },
     {
       "type": "debate_recommended",
-      "event_key": "debate_recommended:2026-11-20-META-WATCH-003",
+      "event_key": "debate_recommended:2026-11-20-META-WATCH-004",
       "label_ko": "토론 실행 권장",
       "severity": "info",
       "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
       "ticker": "META",
-      "signal_id": "2026-11-20-META-WATCH-003",
-      "sent_at": "2026-11-20T07:47:58Z",
+      "signal_id": "2026-11-20-META-WATCH-004",
+      "sent_at": "2026-11-20T10:09:22Z",
       "channels": {
         "console": {
           "ok": true,
@@ -167,13 +168,13 @@
     },
     {
       "type": "debate_recommended",
-      "event_key": "debate_recommended:2026-11-20-CAT-WATCH-003",
+      "event_key": "debate_recommended:2026-11-20-CAT-WATCH-004",
       "label_ko": "토론 실행 권장",
       "severity": "info",
       "message_ko": "CAT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
       "ticker": "CAT",
-      "signal_id": "2026-11-20-CAT-WATCH-003",
-      "sent_at": "2026-11-20T07:47:58Z",
+      "signal_id": "2026-11-20-CAT-WATCH-004",
+      "sent_at": "2026-11-20T10:09:22Z",
       "channels": {
         "console": {
           "ok": true,

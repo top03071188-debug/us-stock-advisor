@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "as_of": "2026-11-20",
-  "generated_at": "2026-11-20T07:47:56.303510Z",
+  "generated_at": "2026-11-20T10:08:17Z",
   "auto_downgrade_enabled": false,
   "n_reports": 0,
   "n_eligible": 0,
@@ -22,7 +22,7 @@
     "quant_mdd": 0.0,
     "debate_mdd": 0.0,
     "defense_improved": false,
-    "same_policy_version": true,
+    "same_policy_version": false,
     "policy_versions": [],
     "consecutive_quarters": 0,
     "quarters": [],

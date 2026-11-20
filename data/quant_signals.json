@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-20T07:47:58.520118Z",
+  "generated_at": "2026-11-20T10:09:21.125556Z",
   "data_cutoff_at": "2026-11-19T22:00:00Z",
-  "signal_published_at": "2026-11-20T07:47:56Z",
+  "signal_published_at": "2026-11-20T10:09:17Z",
   "order_cutoff_at": "2026-11-20T14:25:00Z",
   "as_of": "2026-11-20",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-  "code_commit": "fe0289f",
+  "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+  "code_commit": "400e206",
   "status": "normal",
   "mode": "postclose",
   "source": "live",
@@ -34,8 +34,8 @@
     "policy": "cutoff_vintage_point_query",
     "mode": "live",
     "data_cutoff_at": "2026-11-19T22:00:00Z",
-    "inputs_ingested_at": "2026-11-20T07:47:24.696997Z",
-    "lag_seconds": 35244.7,
+    "inputs_ingested_at": "2026-11-20T10:08:46.667893Z",
+    "lag_seconds": 43726.7,
     "after_cutoff": true,
     "available_at_source": "vintage_point_query",
     "vintage": "2026-11-18",
@@ -46,14 +46,14 @@
   "signals": [
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-MSFT-WATCH-003",
+      "signal_id": "2026-11-20-MSFT-WATCH-004",
       "ticker": "MSFT",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 58.24,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T07:47:56Z",
+      "signal_published_at": "2026-11-20T10:09:17Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -155,11 +155,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-      "code_commit": "fe0289f",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
-      "supersedes": "2026-11-20-MSFT-WATCH-002",
-      "revision": 3,
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "code_commit": "400e206",
+      "revision": 4,
+      "supersedes": "2026-11-20-MSFT-WATCH-003",
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
       "trade_grade": "WATCH",
       "components": {
         "quality": 82.43,
@@ -171,6 +171,18 @@
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
       "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_missing"
+      },
+      "debate_advice": null,
       "valuation": {
         "iv_low": 108.8083,
         "iv_median": 128.0098,
@@ -332,14 +344,14 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-NVDA-WATCH-003",
+      "signal_id": "2026-11-20-NVDA-WATCH-004",
       "ticker": "NVDA",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 62.76,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T07:47:56Z",
+      "signal_published_at": "2026-11-20T10:09:17Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -441,11 +453,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-      "code_commit": "fe0289f",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
-      "supersedes": "2026-11-20-NVDA-WATCH-002",
-      "revision": 3,
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "code_commit": "400e206",
+      "revision": 4,
+      "supersedes": "2026-11-20-NVDA-WATCH-003",
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
       "trade_grade": "WATCH",
       "components": {
         "quality": 77.54,
@@ -457,6 +469,18 @@
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
       "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_missing"
+      },
+      "debate_advice": null,
       "valuation": {
         "iv_low": 10.4582,
         "iv_median": 16.3878,
@@ -624,14 +648,14 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-ADBE-WATCH-003",
+      "signal_id": "2026-11-20-ADBE-WATCH-004",
       "ticker": "ADBE",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 65.4,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T07:47:56Z",
+      "signal_published_at": "2026-11-20T10:09:17Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -733,11 +757,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-      "code_commit": "fe0289f",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
-      "supersedes": "2026-11-20-ADBE-WATCH-002",
-      "revision": 3,
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "code_commit": "400e206",
+      "revision": 4,
+      "supersedes": "2026-11-20-ADBE-WATCH-003",
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
       "trade_grade": "WATCH",
       "components": {
         "quality": 85.0,
@@ -749,6 +773,18 @@
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
       "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_missing"
+      },
+      "debate_advice": null,
       "valuation": {
         "iv_low": 134.8643,
         "iv_median": 158.6639,
@@ -910,14 +946,14 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-CSCO-WATCH-003",
+      "signal_id": "2026-11-20-CSCO-WATCH-004",
       "ticker": "CSCO",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 57.11,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T07:47:56Z",
+      "signal_published_at": "2026-11-20T10:09:17Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1019,11 +1055,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-      "code_commit": "fe0289f",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
-      "supersedes": "2026-11-20-CSCO-WATCH-002",
-      "revision": 3,
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "code_commit": "400e206",
+      "revision": 4,
+      "supersedes": "2026-11-20-CSCO-WATCH-003",
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
       "trade_grade": "WATCH",
       "components": {
         "quality": 96.13,
@@ -1035,6 +1071,18 @@
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
       "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_missing"
+      },
+      "debate_advice": null,
       "valuation": {
         "iv_low": 26.1198,
         "iv_median": 30.7292,
@@ -1200,14 +1248,14 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-GOOGL-WATCH-003",
+      "signal_id": "2026-11-20-GOOGL-WATCH-004",
       "ticker": "GOOGL",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 65.78,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T07:47:56Z",
+      "signal_published_at": "2026-11-20T10:09:17Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1309,11 +1357,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-      "code_commit": "fe0289f",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
-      "supersedes": "2026-11-20-GOOGL-WATCH-002",
-      "revision": 3,
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "code_commit": "400e206",
+      "revision": 4,
+      "supersedes": "2026-11-20-GOOGL-WATCH-003",
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
       "trade_grade": "WATCH",
       "components": {
         "quality": 90.55,
@@ -1325,6 +1373,18 @@
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
       "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_missing"
+      },
+      "debate_advice": null,
       "valuation": {
         "iv_low": 51.5657,
         "iv_median": 60.6655,
@@ -1486,14 +1546,14 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-META-WATCH-003",
+      "signal_id": "2026-11-20-META-WATCH-004",
       "ticker": "META",
       "type": "WATCH",
       "grade": "C",
       "entry_score": 63.57,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T07:47:56Z",
+      "signal_published_at": "2026-11-20T10:09:17Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1581,11 +1641,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-      "code_commit": "fe0289f",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
-      "supersedes": "2026-11-20-META-WATCH-002",
-      "revision": 3,
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "code_commit": "400e206",
+      "revision": 4,
+      "supersedes": "2026-11-20-META-WATCH-003",
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
       "trade_grade": "WATCH",
       "components": {
         "quality": 89.77,
@@ -1597,6 +1657,17 @@
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
       "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "C",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 2,
+        "news_state": "not_read",
+        "reason": "core_evidence_missing"
+      },
+      "debate_advice": null,
       "valuation": {
         "iv_low": 133.9711,
         "iv_median": 157.613,
@@ -1758,14 +1829,14 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-20-CAT-WATCH-003",
+      "signal_id": "2026-11-20-CAT-WATCH-004",
       "ticker": "CAT",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 55.45,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T07:47:56Z",
+      "signal_published_at": "2026-11-20T10:09:17Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1867,11 +1938,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
-      "code_commit": "fe0289f",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
-      "supersedes": "2026-11-20-CAT-WATCH-002",
-      "revision": 3,
+      "snapshot_id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
+      "code_commit": "400e206",
+      "revision": 4,
+      "supersedes": "2026-11-20-CAT-WATCH-003",
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
       "trade_grade": "WATCH",
       "components": {
         "quality": 76.35,
@@ -1883,6 +1954,18 @@
       "debate_structural_risk": null,
       "debate_risk_gate_applied": false,
       "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_missing"
+      },
+      "debate_advice": null,
       "valuation": {
         "iv_low": 148.8881,
         "iv_median": 175.1624,
@@ -2584,8 +2667,8 @@
       "policy": "cutoff_vintage_point_query",
       "mode": "live",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "inputs_ingested_at": "2026-11-20T07:47:24.696997Z",
-      "lag_seconds": 35244.7,
+      "inputs_ingested_at": "2026-11-20T10:08:46.667893Z",
+      "lag_seconds": 43726.7,
       "after_cutoff": true,
       "available_at_source": "vintage_point_query",
       "vintage": "2026-11-18",
@@ -6769,10 +6852,11 @@
     },
     "market_cap_basis": "fast_info_market_cap",
     "snapshot": {
-      "id": "sha256:d2acd5daf67367fda8df4f755806b6b6eab51be2f39ec1c79d963b5c9f18972c",
+      "id": "sha256:c902432a9e767af6df92f41a093d50cf41ffa2ab68406cc80214f76bf123e889",
       "state": "created",
-      "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17"
-    }
+      "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c"
+    },
+    "supersession_cancellations": 0
   },
   "charts": {
     "AAPL": {
@@ -11377,8 +11461,8 @@
   },
   "next_trading_day": "2026-11-23",
   "watchlist_source": "data/watchlist/current.json",
-  "run_started_at": "2026-11-20T07:47:00Z",
-  "inputs_hash": "sha256:616ecb039ce2d908f462a4ed3d16f9e797e1a76ead55ad7f909d5e711e11ba17",
+  "run_started_at": "2026-11-20T10:08:17Z",
+  "inputs_hash": "sha256:5a06419539909dc7f20f43b2387bdf131ed403dcf34f7b4d1303e484b361a18c",
   "ledger_summary": {
     "schema_version": 1,
     "as_of": "2026-11-20",
@@ -11592,7 +11676,7 @@
       "verdict": "보류",
       "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
       "n_eff": 0,
-      "n_records": 21,
+      "n_records": 28,
       "n_eligible": 0,
       "metrics": [
         {
@@ -11601,7 +11685,7 @@
           "value": 0,
           "threshold": "≥ 15",
           "pass": false,
-          "note_ko": "체결·3개월 만기 0개(발행 신호 21건 중 유효 0건)"
+          "note_ko": "체결·3개월 만기 0개(발행 신호 28건 중 유효 0건)"
         },
         {
           "key": "net_after_cost",
@@ -11667,7 +11751,7 @@
     },
     "graded_sample": [
       {
-        "signal_id": "2026-11-20-MSFT-WATCH-003",
+        "signal_id": "2026-11-20-MSFT-WATCH-004",
         "ticker": "MSFT",
         "as_of": "2026-11-20",
         "grade": "B",
@@ -11745,7 +11829,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-20-NVDA-WATCH-003",
+        "signal_id": "2026-11-20-NVDA-WATCH-004",
         "ticker": "NVDA",
         "as_of": "2026-11-20",
         "grade": "B",
@@ -11823,7 +11907,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-20-ADBE-WATCH-003",
+        "signal_id": "2026-11-20-ADBE-WATCH-004",
         "ticker": "ADBE",
         "as_of": "2026-11-20",
         "grade": "B",
@@ -11901,7 +11985,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-20-CSCO-WATCH-003",
+        "signal_id": "2026-11-20-CSCO-WATCH-004",
         "ticker": "CSCO",
         "as_of": "2026-11-20",
         "grade": "B",
@@ -11979,7 +12063,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-20-GOOGL-WATCH-003",
+        "signal_id": "2026-11-20-GOOGL-WATCH-004",
         "ticker": "GOOGL",
         "as_of": "2026-11-20",
         "grade": "B",
@@ -12057,7 +12141,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-20-META-WATCH-003",
+        "signal_id": "2026-11-20-META-WATCH-004",
         "ticker": "META",
         "as_of": "2026-11-20",
         "grade": "C",
@@ -12135,7 +12219,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-20-CAT-WATCH-003",
+        "signal_id": "2026-11-20-CAT-WATCH-004",
         "ticker": "CAT",
         "as_of": "2026-11-20",
         "grade": "B",
@@ -12218,55 +12302,174 @@
         {
           "signal_id": "2026-11-20-ADBE-WATCH-001",
           "event": "superseded",
-          "reason": "SUPERSEDED_BEFORE_FREEZE",
+          "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-20-ADBE-WATCH-002",
-          "frozen_at": null
+          "frozen_at": "2026-11-19T22:02:11Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
         },
         {
-          "signal_id": "2026-11-20-GOOGL-WATCH-001",
+          "signal_id": "2026-11-20-ADBE-WATCH-002",
           "event": "superseded",
-          "reason": "SUPERSEDED_BEFORE_FREEZE",
-          "superseded_by": "2026-11-20-GOOGL-WATCH-002",
-          "frozen_at": null
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-ADBE-WATCH-003",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
         },
         {
-          "signal_id": "2026-11-20-MSFT-WATCH-001",
+          "signal_id": "2026-11-20-ADBE-WATCH-003",
           "event": "superseded",
-          "reason": "SUPERSEDED_BEFORE_FREEZE",
-          "superseded_by": "2026-11-20-MSFT-WATCH-002",
-          "frozen_at": null
-        },
-        {
-          "signal_id": "2026-11-20-NVDA-WATCH-001",
-          "event": "superseded",
-          "reason": "SUPERSEDED_BEFORE_FREEZE",
-          "superseded_by": "2026-11-20-NVDA-WATCH-002",
-          "frozen_at": null
-        },
-        {
-          "signal_id": "2026-11-20-CSCO-WATCH-001",
-          "event": "superseded",
-          "reason": "SUPERSEDED_BEFORE_FREEZE",
-          "superseded_by": "2026-11-20-CSCO-WATCH-002",
-          "frozen_at": null
-        },
-        {
-          "signal_id": "2026-11-20-META-WATCH-001",
-          "event": "superseded",
-          "reason": "SUPERSEDED_BEFORE_FREEZE",
-          "superseded_by": "2026-11-20-META-WATCH-002",
-          "frozen_at": null
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-ADBE-WATCH-004",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
         },
         {
           "signal_id": "2026-11-20-CAT-WATCH-001",
           "event": "superseded",
-          "reason": "SUPERSEDED_BEFORE_FREEZE",
+          "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-20-CAT-WATCH-002",
-          "frozen_at": null
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-CAT-WATCH-002",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-CAT-WATCH-003",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-CAT-WATCH-003",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-CAT-WATCH-004",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-CSCO-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-CSCO-WATCH-002",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-CSCO-WATCH-002",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-CSCO-WATCH-003",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-CSCO-WATCH-003",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-CSCO-WATCH-004",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-GOOGL-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-GOOGL-WATCH-002",
+          "frozen_at": "2026-11-19T22:02:11Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-GOOGL-WATCH-002",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-GOOGL-WATCH-003",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-GOOGL-WATCH-003",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-GOOGL-WATCH-004",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-META-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-META-WATCH-002",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-META-WATCH-002",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-META-WATCH-003",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-META-WATCH-003",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-META-WATCH-004",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-MSFT-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-MSFT-WATCH-002",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-MSFT-WATCH-002",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-MSFT-WATCH-003",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-MSFT-WATCH-003",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-MSFT-WATCH-004",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-NVDA-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-NVDA-WATCH-002",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-NVDA-WATCH-002",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-NVDA-WATCH-003",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-20-NVDA-WATCH-003",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-20-NVDA-WATCH-004",
+          "frozen_at": "2026-11-20T10:09:17Z",
+          "freeze_deadline_at": "2026-11-20T14:20:00Z"
         }
       ],
       "pending": [],
-      "order_cancellations": 7
+      "order_cancellations": 0
     },
     "debate_effect": {
       "pairs": 0,
@@ -12304,7 +12507,7 @@
     },
     "debate": {
       "status": "none",
-      "generated_at": "2026-11-20T07:47:56.303510Z",
+      "generated_at": "2026-11-20T10:08:17Z",
       "counts": {
         "reports": 0,
         "eligible": 0,
@@ -12326,7 +12529,7 @@
         "quant_mdd": 0.0,
         "debate_mdd": 0.0,
         "defense_improved": false,
-        "same_policy_version": true,
+        "same_policy_version": false,
         "policy_versions": [],
         "consecutive_quarters": 0,
         "quarters": [],
@@ -12348,60 +12551,60 @@
       "n_suppressed": 0,
       "events": [
         {
-          "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-003",
+          "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-004",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "MSFT",
-          "signal_id": "2026-11-20-MSFT-WATCH-003"
+          "signal_id": "2026-11-20-MSFT-WATCH-004"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-003",
+          "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-004",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "NVDA",
-          "signal_id": "2026-11-20-NVDA-WATCH-003"
+          "signal_id": "2026-11-20-NVDA-WATCH-004"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-003",
+          "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-004",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "ADBE",
-          "signal_id": "2026-11-20-ADBE-WATCH-003"
+          "signal_id": "2026-11-20-ADBE-WATCH-004"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-003",
+          "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-004",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "CSCO 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "CSCO",
-          "signal_id": "2026-11-20-CSCO-WATCH-003"
+          "signal_id": "2026-11-20-CSCO-WATCH-004"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-003",
+          "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-004",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "GOOGL",
-          "signal_id": "2026-11-20-GOOGL-WATCH-003"
+          "signal_id": "2026-11-20-GOOGL-WATCH-004"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-META-WATCH-003",
+          "event_key": "debate_recommended:2026-11-20-META-WATCH-004",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "META",
-          "signal_id": "2026-11-20-META-WATCH-003"
+          "signal_id": "2026-11-20-META-WATCH-004"
         },
         {
-          "event_key": "debate_recommended:2026-11-20-CAT-WATCH-003",
+          "event_key": "debate_recommended:2026-11-20-CAT-WATCH-004",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "CAT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "CAT",
-          "signal_id": "2026-11-20-CAT-WATCH-003"
+          "signal_id": "2026-11-20-CAT-WATCH-004"
         }
       ]
     }
@@ -12418,7 +12621,7 @@
   },
   "debate": {
     "status": "none",
-    "generated_at": "2026-11-20T07:47:56.303510Z",
+    "generated_at": "2026-11-20T10:08:17Z",
     "counts": {
       "reports": 0,
       "eligible": 0,
@@ -12435,8 +12638,8 @@
     "positions_open": 0,
     "tranches_pending": 0,
     "data_status": "ok",
-    "last_attempt_at": "2026-11-20T07:47:58Z",
-    "last_success_at": "2026-11-20T07:47:58Z",
+    "last_attempt_at": "2026-11-20T10:09:22Z",
+    "last_success_at": "2026-11-20T10:09:22Z",
     "data_cutoff_at": "2026-11-19T22:00:00Z",
     "target_session": "2026-11-20",
     "outage_id": null
@@ -12445,7 +12648,7 @@
     "verdict": "보류",
     "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
     "n_eff": 0,
-    "n_records": 21,
+    "n_records": 28,
     "n_eligible": 0,
     "metrics": [
       {
@@ -12454,7 +12657,7 @@
         "value": 0,
         "threshold": "≥ 15",
         "pass": false,
-        "note_ko": "체결·3개월 만기 0개(발행 신호 21건 중 유효 0건)"
+        "note_ko": "체결·3개월 만기 0개(발행 신호 28건 중 유효 0건)"
       },
       {
         "key": "net_after_cost",
@@ -12483,67 +12686,67 @@
     ]
   },
   "prices_as_of": "2026-11-19",
-  "publish_lag_seconds": 2.9,
+  "publish_lag_seconds": 5.1,
   "published_after_order_cutoff": false,
   "notifications": {
     "n_new": 7,
     "n_suppressed": 0,
     "events": [
       {
-        "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-003",
+        "event_key": "debate_recommended:2026-11-20-MSFT-WATCH-004",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "MSFT",
-        "signal_id": "2026-11-20-MSFT-WATCH-003"
+        "signal_id": "2026-11-20-MSFT-WATCH-004"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-003",
+        "event_key": "debate_recommended:2026-11-20-NVDA-WATCH-004",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "NVDA",
-        "signal_id": "2026-11-20-NVDA-WATCH-003"
+        "signal_id": "2026-11-20-NVDA-WATCH-004"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-003",
+        "event_key": "debate_recommended:2026-11-20-ADBE-WATCH-004",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "ADBE",
-        "signal_id": "2026-11-20-ADBE-WATCH-003"
+        "signal_id": "2026-11-20-ADBE-WATCH-004"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-003",
+        "event_key": "debate_recommended:2026-11-20-CSCO-WATCH-004",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "CSCO 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "CSCO",
-        "signal_id": "2026-11-20-CSCO-WATCH-003"
+        "signal_id": "2026-11-20-CSCO-WATCH-004"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-003",
+        "event_key": "debate_recommended:2026-11-20-GOOGL-WATCH-004",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "GOOGL",
-        "signal_id": "2026-11-20-GOOGL-WATCH-003"
+        "signal_id": "2026-11-20-GOOGL-WATCH-004"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-META-WATCH-003",
+        "event_key": "debate_recommended:2026-11-20-META-WATCH-004",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "META",
-        "signal_id": "2026-11-20-META-WATCH-003"
+        "signal_id": "2026-11-20-META-WATCH-004"
       },
       {
-        "event_key": "debate_recommended:2026-11-20-CAT-WATCH-003",
+        "event_key": "debate_recommended:2026-11-20-CAT-WATCH-004",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "CAT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "CAT",
-        "signal_id": "2026-11-20-CAT-WATCH-003"
+        "signal_id": "2026-11-20-CAT-WATCH-004"
       }
     ]
   }
