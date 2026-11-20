@@ -98,6 +98,10 @@ function fmtMoney(x) {
 
 function fmtKo(iso, withTime = true) {
   if (!iso) return "—";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) {
+    const [y, m, day] = String(iso).split("-");
+    return `${y}. ${m}. ${day}.`;
+  }
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso).slice(0, 10);
   const opts = withTime
@@ -238,7 +242,7 @@ function signalCard(sig) {
   const foot = [];
   if (sig.news_badge_ko) foot.push(badge(sig.news_badge_ko, "warn"));
   const entry = Array.isArray(sig.entry_plan) ? sig.entry_plan.find((t) => t.tranche === 1) : null;
-  if (entry && isNum(entry.price_ref)) {
+  if (decision === "BUY" && entry && isNum(entry.price_ref)) {
     foot.push(el("span", { class: "tiny", text: `분할 1차 ${fmtMoney(entry.price_ref)}` }));
   }
   if (sig.sizing_note_ko) foot.push(el("span", { class: "tiny", text: sig.sizing_note_ko }));

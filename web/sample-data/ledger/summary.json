@@ -18,13 +18,168 @@
     "n_positions": 0,
     "note_ko": "신호가 맞아도 현금이 놀면 계좌 성과는 다르다(4.12)."
   },
-  "horizons": {},
+  "horizons": {
+    "1w": {
+      "horizon": "1w",
+      "agreement": null,
+      "win_rate": null
+    },
+    "1m": {
+      "horizon": "1m",
+      "agreement": null,
+      "win_rate": null
+    },
+    "3m": {
+      "horizon": "3m",
+      "agreement": null,
+      "win_rate": null
+    },
+    "6m": {
+      "horizon": "6m",
+      "agreement": null,
+      "win_rate": null
+    }
+  },
   "folds": {
     "as_of": "2026-11-20",
     "holdout_start": "2026-08-20",
     "holdout_end": "2026-11-19",
     "window_months": 12,
-    "horizons": {},
+    "horizons": {
+      "1m": {
+        "horizon_td": 21,
+        "eligible_folds": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "count": 3,
+        "min_folds": 3,
+        "sufficient": true,
+        "folds": [
+          {
+            "fold_id": "F1",
+            "start": "2025-11-19",
+            "maturity": "2025-12-19",
+            "eligible": true,
+            "truncated": false,
+            "observed_days": 21
+          },
+          {
+            "fold_id": "F2",
+            "start": "2026-02-19",
+            "maturity": "2026-03-20",
+            "eligible": true,
+            "truncated": false,
+            "observed_days": 21
+          },
+          {
+            "fold_id": "F3",
+            "start": "2026-05-19",
+            "maturity": "2026-06-18",
+            "eligible": true,
+            "truncated": false,
+            "observed_days": 21
+          },
+          {
+            "fold_id": "F4",
+            "start": "2026-08-19",
+            "maturity": "2026-09-18",
+            "eligible": false,
+            "truncated": true,
+            "observed_days": 0
+          }
+        ]
+      },
+      "3m": {
+        "horizon_td": 63,
+        "eligible_folds": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "count": 3,
+        "min_folds": 3,
+        "sufficient": true,
+        "folds": [
+          {
+            "fold_id": "F1",
+            "start": "2025-11-19",
+            "maturity": "2026-02-23",
+            "eligible": true,
+            "truncated": false,
+            "observed_days": 63
+          },
+          {
+            "fold_id": "F2",
+            "start": "2026-02-19",
+            "maturity": "2026-05-20",
+            "eligible": true,
+            "truncated": false,
+            "observed_days": 63
+          },
+          {
+            "fold_id": "F3",
+            "start": "2026-05-19",
+            "maturity": "2026-08-19",
+            "eligible": true,
+            "truncated": false,
+            "observed_days": 63
+          },
+          {
+            "fold_id": "F4",
+            "start": "2026-08-19",
+            "maturity": "2026-11-17",
+            "eligible": false,
+            "truncated": true,
+            "observed_days": 0
+          }
+        ]
+      },
+      "6m": {
+        "horizon_td": 126,
+        "eligible_folds": [
+          "F1"
+        ],
+        "count": 1,
+        "min_folds": 3,
+        "sufficient": false,
+        "folds": [
+          {
+            "fold_id": "F1",
+            "start": "2025-11-19",
+            "maturity": "2026-05-22",
+            "eligible": true,
+            "truncated": false,
+            "observed_days": 126
+          },
+          {
+            "fold_id": "F2",
+            "start": "2026-02-19",
+            "maturity": "2026-08-20",
+            "eligible": false,
+            "truncated": true,
+            "observed_days": 125
+          },
+          {
+            "fold_id": "F3",
+            "start": "2026-05-19",
+            "maturity": "2026-11-17",
+            "eligible": false,
+            "truncated": true,
+            "observed_days": 63
+          },
+          {
+            "fold_id": "F4",
+            "start": "2026-08-19",
+            "maturity": "2027-02-19",
+            "eligible": false,
+            "truncated": true,
+            "observed_days": 0
+          }
+        ]
+      }
+    },
     "blocked": [
       "6m"
     ]
@@ -32,10 +187,41 @@
   "pilot": {
     "verdict": "보류",
     "reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
-    "n_eff": 4
+    "n_eff": 4,
+    "metrics": [
+      {
+        "key": "n_eff",
+        "label_ko": "유효 표본 N_eff",
+        "value": 4,
+        "threshold": "≥ 15",
+        "pass": false
+      },
+      {
+        "key": "net_after_cost",
+        "label_ko": "비용 후 순수익(SPY 대비)",
+        "value": null,
+        "threshold": "> 0",
+        "pass": null
+      },
+      {
+        "key": "cash_equivalent",
+        "label_ko": "유사 현금비중 벤치마크 대비",
+        "value": null,
+        "threshold": "> 0",
+        "pass": null
+      },
+      {
+        "key": "tail_loss",
+        "label_ko": "손실 구간(하위 20%) 평균",
+        "value": null,
+        "threshold": "≥ -0.08",
+        "pass": null
+      }
+    ]
   },
   "params_history": [
     {
+      "version": "params_v001",
       "created_at": "2026-11-19",
       "parent_version": null,
       "gate_result": {
@@ -56,7 +242,44 @@
       "confidence": "A",
       "action": null,
       "basis": "virtual_fill",
-      "horizons": {},
+      "horizons": {
+        "1w": {
+          "horizon_td": 5,
+          "maturity": "2026-11-30",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "1m": {
+          "horizon_td": 21,
+          "maturity": "2026-12-22",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "3m": {
+          "horizon_td": 63,
+          "maturity": "2027-02-24",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "6m": {
+          "horizon_td": 126,
+          "maturity": "2027-05-25",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        }
+      },
       "entry_score": 82.37,
       "sector": "Information Technology",
       "params_version": "params_v001"
@@ -69,7 +292,44 @@
       "confidence": "B",
       "action": null,
       "basis": "virtual_fill",
-      "horizons": {},
+      "horizons": {
+        "1w": {
+          "horizon_td": 5,
+          "maturity": "2026-11-30",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "1m": {
+          "horizon_td": 21,
+          "maturity": "2026-12-22",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "3m": {
+          "horizon_td": 63,
+          "maturity": "2027-02-24",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "6m": {
+          "horizon_td": 126,
+          "maturity": "2027-05-25",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        }
+      },
       "entry_score": 68.64,
       "sector": "Health Care",
       "params_version": "params_v001"
@@ -82,7 +342,44 @@
       "confidence": "B",
       "action": null,
       "basis": "virtual_fill",
-      "horizons": {},
+      "horizons": {
+        "1w": {
+          "horizon_td": 5,
+          "maturity": "2026-11-30",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "1m": {
+          "horizon_td": 21,
+          "maturity": "2026-12-22",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "3m": {
+          "horizon_td": 63,
+          "maturity": "2027-02-24",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "6m": {
+          "horizon_td": 126,
+          "maturity": "2027-05-25",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        }
+      },
       "entry_score": 70.85,
       "sector": "Energy",
       "params_version": "params_v001"
@@ -95,7 +392,44 @@
       "confidence": "C",
       "action": null,
       "basis": "virtual_fill",
-      "horizons": {},
+      "horizons": {
+        "1w": {
+          "horizon_td": 5,
+          "maturity": "2026-11-30",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "1m": {
+          "horizon_td": 21,
+          "maturity": "2026-12-22",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "3m": {
+          "horizon_td": 63,
+          "maturity": "2027-02-24",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        },
+        "6m": {
+          "horizon_td": 126,
+          "maturity": "2027-05-25",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0,
+          "agreement": null,
+          "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+        }
+      },
       "entry_score": 64.56,
       "sector": "Industrials",
       "params_version": "params_v001"

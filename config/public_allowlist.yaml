@@ -225,6 +225,12 @@ allow:
   - universe
   - veto_rules
   - groups
+  - metrics
+  - version
+  - 1w
+  - 1m
+  - 3m
+  - 6m
   - message_ko
   - release_ko
   - value
