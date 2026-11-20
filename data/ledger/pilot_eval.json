@@ -2,17 +2,18 @@
   "schema_version": 1,
   "as_of": "2026-11-20",
   "horizon": "3m",
-  "n_records": 2,
+  "n_records": 7,
+  "n_eligible": 0,
   "n_graded": 0,
-  "n_eff": 2,
+  "n_eff": 0,
   "metrics": [
     {
       "key": "n_eff",
       "label_ko": "유효 표본 N_eff",
-      "value": 2,
+      "value": 0,
       "threshold": "≥ 15",
       "pass": false,
-      "note_ko": "63거래일 클러스터 2개(신호 2건)"
+      "note_ko": "체결·3개월 만기 0개(발행 신호 7건 중 유효 0건)"
     },
     {
       "key": "net_after_cost",
@@ -20,15 +21,15 @@
       "value": null,
       "threshold": "> 0",
       "pass": null,
-      "note_ko": "평균 초과 None − 비용 0.0034"
+      "note_ko": "유효 표본 0건 — 계산 불가"
     },
     {
       "key": "cash_equivalent",
       "label_ko": "유사 현금비중 벤치마크 대비",
-      "value": null,
+      "value": 0.0,
       "threshold": "> 0",
-      "pass": null,
-      "note_ko": null
+      "pass": false,
+      "note_ko": "유효 표본 0건 — 계산 불가"
     },
     {
       "key": "tail_loss",
@@ -36,12 +37,12 @@
       "value": null,
       "threshold": "≥ -0.08",
       "pass": null,
-      "note_ko": null
+      "note_ko": "유효 표본 0건 — 계산 불가"
     }
   ],
   "verdict": "보류",
-  "verdict_reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
-  "benchmark_return": -0.06278055500508206,
+  "verdict_reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
+  "benchmark_return": -0.029276199674820202,
   "risk_free": 0.0,
   "costs": {
     "slippage": 10.0,

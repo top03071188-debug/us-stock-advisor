@@ -1,47 +1,568 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-20T02:34:58.566889Z",
+  "generated_at": "2026-11-20T04:05:37.232575Z",
   "data_cutoff_at": "2026-11-19T22:00:00Z",
-  "signal_published_at": "2026-11-19T22:02:11Z",
+  "signal_published_at": "2026-11-20T04:04:29Z",
   "order_cutoff_at": "2026-11-20T14:25:00Z",
   "as_of": "2026-11-20",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:e6fa84704bc48b330626992b9d89debe44401ddd9b5960fb8ae273fd60420d66",
-  "code_commit": "47dbda6",
+  "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+  "code_commit": "44da6ca",
   "status": "normal",
   "mode": "postclose",
   "source": "live",
   "regime": {
-    "regime": "neutral",
+    "regime": "risk_on",
     "votes": {
-      "real_rate": "neutral",
+      "real_rate": "risk_on",
       "t10y2y": "risk_on",
       "credit": "risk_on",
       "volatility": "neutral",
       "dollar": "neutral"
     },
-    "votes_risk_on": 2,
+    "votes_risk_on": 3,
     "votes_risk_off": 0,
     "inputs_missing": [],
     "verified": true,
     "extreme": false,
-    "multiplier": 0.7,
-    "margin_of_safety": 0.2,
-    "max_new_positions": 20,
-    "score": 50.0
+    "multiplier": 1.0,
+    "margin_of_safety": 0.15,
+    "max_new_positions": null,
+    "score": 80.0
+  },
+  "ingest": {
+    "data_cutoff_at": "2026-11-19T22:00:00Z",
+    "inputs_ingested_at": "2026-11-20T04:05:01.440880Z",
+    "lag_seconds": 21901.4,
+    "after_cutoff": true,
+    "available_at_source": "first_ingested_at"
   },
   "signals": [
+    {
+      "schema_version": 1,
+      "signal_id": "2026-11-20-MSFT-WATCH-001",
+      "ticker": "MSFT",
+      "type": "WATCH",
+      "grade": "B",
+      "entry_score": 58.24,
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_planned_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "target_session": "2026-11-20",
+      "generated_price": 498.29998779296875,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 498.3,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 463.42,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 428.54,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "target_band": {
+        "lo": 368.8196,
+        "hi": 433.5598,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 498.29998779296875,
+        "r_lo": -0.259844,
+        "r_hi": -0.129922,
+        "defensive": true
+      },
+      "expected_mdd": -0.1698,
+      "invalidation": {
+        "price": 429.88,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 288% 프리미엄(안전마진 -288%) · RSI 39",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2026-06-30",
+          "form": "10-K",
+          "accession": "0001193125-26-323660",
+          "filed_date": "2026-07-29",
+          "available_at": "2026-07-29T20:08:01Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2026-06-30",
+          "form": "10-K",
+          "accession": "0001193125-26-323660",
+          "filed_date": "2026-07-29",
+          "available_at": "2026-07-29T20:08:01Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526436133/msft-20260930.htm",
+          "filed_date": "2026-10-28",
+          "available_at": "2026-10-28T20:07:39+00:00",
+          "accession": "0001193125-26-436133",
+          "role": "reference"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -35.5,
+        "graham": -30.5,
+        "lynch": 31.7,
+        "druckenmiller": 60.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+      "code_commit": "44da6ca",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 82.43,
+        "valuation": 0.0,
+        "timing": 74.63,
+        "macro": 80.0,
+        "growth": 65.86
+      },
+      "valuation": {
+        "iv_low": 109.1027,
+        "iv_median": 128.3561,
+        "iv_high": 147.6095,
+        "price": 498.3,
+        "margin": -2.8822,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 101.0566,
+          "epv": 128.3561,
+          "graham": 154.8127
+        },
+        "iv_dcf_bear": 101.0566,
+        "iv_dcf_bull": 101.0566,
+        "fcff_normalized": 56649.0537,
+        "growth": 0.0,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -36549.0,
+        "wacc_valuation": 0.0978,
+        "v_confidence": "B",
+        "dcf_dropped": null
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "Intuit Stock Tumbles After Earnings Beat. It’s Selling Mailchimp.",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:54:00Z",
+          "url": "https://finnhub.io/api/news?id=37ba5922a099995f39e17d7f9b5dec87195afcc3c65077c8c79b6015feadf48f",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Bridgewater Warns of AI Security Risk as Anthropic Shares Rise in Debut",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:16:00Z",
+          "url": "https://finnhub.io/api/news?id=86f0f70b3dbbb031578c60d23282f67ec43d96a75a29fe7bcd2b4d1b99d5d3d3",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Anthropic has a 17-fold revenue growth hurdle to tackle: A closer look",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:13:40Z",
+          "url": "https://finnhub.io/api/news?id=ca982ca003caf78ae6c117f89c4276531cf9e98070ad945b6c2b69782b95d0d3",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Claude Users Excited to Invest in Anthropic, Says Ann Berry",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:06:15Z",
+          "url": "https://finnhub.io/api/news?id=e874eadc3981d83fa268150bc9da6dbeb23fac6e76a4e9f1840e9256ecc4fb5f",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Meta trades at 21x P/E, yet shareholders face a massive new bill",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T20:24:40Z",
+          "url": "https://finnhub.io/api/news?id=4c978823529e3b521d8c43c053a30b1781bb985fe7c725f99fd83765d83191d9",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "4",
+          "filed_date": "2026-11-16",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000078901926000236/xslF345X06/form4.xml",
+          "accession": "0000789019-26-000236",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-12",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000078901926000234/xslF345X06/form4.xml",
+          "accession": "0000789019-26-000234",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-10",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000078901926000232/xslF345X06/form4.xml",
+          "accession": "0000789019-26-000232",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-09",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000078901926000230/xslF345X06/form4.xml",
+          "accession": "0000789019-26-000230",
+          "items": []
+        },
+        {
+          "form": "DEFA14A",
+          "filed_date": "2026-11-09",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526453698/d136896ddefa14a.htm",
+          "accession": "0001193125-26-453698",
+          "items": []
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 39.2094,
+        "pct_b": -0.0043,
+        "dma50": 520.0588,
+        "dma200": 443.1782,
+        "atr_pct": 0.0319
+      },
+      "gate_summary": {
+        "failed": [
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B3": "안전마진 -288.2% < 임계 15%",
+          "B4": "눌림 조건 1/4 · T 74.63"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Information Technology",
+      "entry_band": null
+    },
+    {
+      "schema_version": 1,
+      "signal_id": "2026-11-20-NVDA-WATCH-001",
+      "ticker": "NVDA",
+      "type": "WATCH",
+      "grade": "B",
+      "entry_score": 62.76,
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_planned_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "target_session": "2026-11-20",
+      "generated_price": 145.97999572753906,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 145.98,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 135.76,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 125.54,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "target_band": {
+        "lo": 100.6389,
+        "hi": 123.3094,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 145.97999572753906,
+        "r_lo": -0.310598,
+        "r_hi": -0.155299,
+        "defensive": true
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 197.47,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 788% 프리미엄(안전마진 -788%) · RSI 20",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2026-01-25",
+          "form": "10-K",
+          "accession": "0001045810-26-000021",
+          "filed_date": "2026-02-25",
+          "available_at": "2026-02-25T21:42:19Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2026-01-25",
+          "form": "10-K",
+          "accession": "0001045810-26-000021",
+          "filed_date": "2026-02-25",
+          "available_at": "2026-02-25T21:42:19Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+          "filed_date": "2026-08-26",
+          "available_at": "2026-08-26T20:36:00+00:00",
+          "accession": "0001045810-26-000075",
+          "role": "reference"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -38.5,
+        "graham": -33.5,
+        "lynch": 100.0,
+        "druckenmiller": 60.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+      "code_commit": "44da6ca",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 77.54,
+        "valuation": 0.0,
+        "timing": 87.5,
+        "macro": 80.0,
+        "growth": 100.0
+      },
+      "valuation": {
+        "iv_low": 10.4864,
+        "iv_median": 16.434,
+        "iv_high": 24.8914,
+        "price": 145.98,
+        "margin": -7.8828,
+        "iv_band_basis": "bear_bull",
+        "median_method": "dcf_base",
+        "methods": {
+          "dcf_base": 16.434,
+          "epv": 8.8411,
+          "graham": 26.5915
+        },
+        "iv_dcf_bear": 12.3369,
+        "iv_dcf_bull": 21.6447,
+        "fcff_normalized": 25953.2464,
+        "growth": 0.15,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -2137.0,
+        "wacc_valuation": 0.1331,
+        "v_confidence": "B",
+        "dcf_dropped": null
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "The Crypto Bear Market Could Be Back. Here’s What I’m Doing About It.",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:53:02Z",
+          "url": "https://finnhub.io/api/news?id=b4ca2b67322a7d8ca50e0b0fb52548804c1f2ab7402487d53f5fc46f1a436dcf",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Dow Jones Futures Fall After Ugly Market Reversal To New Lows; Anthropic IPO Debuts, AMD Dives",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:52:20Z",
+          "url": "https://finnhub.io/api/news?id=69bbf58b91dbdb01dff38a7d669d331425154da8f5881991f205ab376c7c0be3",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Is a Bloom Energy Stock Crash Coming? 1 Warning Sign Investors Shouldn’t Ignore.",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:50:02Z",
+          "url": "https://finnhub.io/api/news?id=a82fe4732c9d5f1880ec5f5e0698cd5b9ee475dd4db153b0f27ee14970858830",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "\"The Big Short's\" Michael Burry Issued a Blunt Warning about Anthropic",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:48:02Z",
+          "url": "https://finnhub.io/api/news?id=4869dc00f2ee14ff17ef591cabf575c28d1460ed714f01e9277446cd81d57c44",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Update: Wall Street Tumbles Despite Anthropic's Blockbuster Market Debut",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:35:55Z",
+          "url": "https://finnhub.io/api/news?id=969f610c9ce566f817b43e7266a3b9db57457079e74c89802c2d70960b056030",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "144",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000192109426001223/xsl144X01/primary_doc.xml",
+          "accession": "0001921094-26-001223",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/nvda-20261117.htm",
+          "accession": "0001045810-26-000088",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        {
+          "form": "13F-HR",
+          "filed_date": "2026-11-16",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000084/xslForm13F_X02/primary_doc.xml",
+          "accession": "0001045810-26-000084",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-11-12",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000082/nvda-20261111.htm",
+          "accession": "0001045810-26-000082",
+          "items": [
+            "5.02",
+            "9.01"
+          ]
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-06",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000119764726000013/xslF345X06/wk-form4_1793999520.xml",
+          "accession": "0001197647-26-000013",
+          "items": []
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 19.6438,
+        "pct_b": 0.0856,
+        "dma50": 208.8556,
+        "dma200": 203.5772,
+        "atr_pct": 0.0677
+      },
+      "gate_summary": {
+        "failed": [
+          "B2",
+          "B3"
+        ],
+        "reasons": {
+          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
+          "B3": "안전마진 -788.3% < 임계 15%"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Information Technology",
+      "entry_band": null
+    },
     {
       "schema_version": 1,
       "signal_id": "2026-11-20-ADBE-WATCH-001",
       "ticker": "ADBE",
       "type": "WATCH",
       "grade": "B",
-      "entry_score": 66.41,
+      "entry_score": 64.56,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-19T22:02:11Z",
+      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "target_session": "2026-11-20",
       "generated_price": 221.67999267578125,
       "quant_intent": "no_action",
       "entry_plan": [
@@ -67,32 +588,41 @@
         }
       ],
       "target_band": {
-        "lo": 215.7418,
-        "hi": 218.7109,
+        "lo": 199.6244,
+        "hi": 210.6522,
         "horizon_td": 63,
         "basis": "base_price",
         "base_price": 221.67999267578125,
-        "r_lo": -0.026787,
-        "r_hi": -0.013394
+        "r_lo": -0.099493,
+        "r_hi": -0.049746,
+        "defensive": true
       },
       "expected_mdd": -0.2,
       "invalidation": {
         "price": 239.22,
         "reason": "200일선 −3% 이탈 + ROIC<WACC"
       },
-      "thesis_ko": "IV 대비 -8% 프리미엄 · RSI 33",
+      "thesis_ko": "IV 대비 40% 프리미엄(안전마진 -40%) · RSI 33",
       "evidence": [
         {
           "type": "fundamental",
+          "period_end": "2025-11-28",
+          "form": "10-K",
+          "accession": "0000796343-26-000003",
+          "filed_date": "2026-01-15",
+          "available_at": "2026-01-15T22:01:55Z",
           "metric": "quality_composite",
-          "value_kind": "score_0_100",
-          "filed_date": "2026-11-20"
+          "value_kind": "score_0_100"
         },
         {
           "type": "fundamental",
+          "period_end": "2025-11-28",
+          "form": "10-K",
+          "accession": "0000796343-26-000003",
+          "filed_date": "2026-01-15",
+          "available_at": "2026-01-15T22:01:55Z",
           "metric": "fcf_margin_5y",
-          "value_kind": "ratio",
-          "filed_date": "2026-11-20"
+          "value_kind": "ratio"
         },
         {
           "type": "sec_filing",
@@ -100,7 +630,8 @@
           "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000156/adbe-20260828.htm",
           "filed_date": "2026-09-22",
           "available_at": "2026-09-22T20:04:02+00:00",
-          "accession": "0000796343-26-000156"
+          "accession": "0000796343-26-000156",
+          "role": "reference"
         },
         {
           "type": "market",
@@ -109,10 +640,10 @@
         }
       ],
       "investor_scores": {
-        "buffett": -1.8,
-        "graham": 0.3,
-        "lynch": 80.7,
-        "druckenmiller": 0.0
+        "buffett": -34.0,
+        "graham": -29.0,
+        "lynch": 100.0,
+        "druckenmiller": 60.0
       },
       "conflict": true,
       "position": {
@@ -128,22 +659,38 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:e6fa84704bc48b330626992b9d89debe44401ddd9b5960fb8ae273fd60420d66",
-      "code_commit": "47dbda6",
+      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+      "code_commit": "44da6ca",
       "trade_grade": "WATCH",
       "components": {
         "quality": 85.0,
-        "valuation": 29.28,
+        "valuation": 0.0,
         "timing": 85.29,
-        "macro": 50.0,
-        "growth": 90.36
+        "macro": 80.0,
+        "growth": 100.0
       },
       "valuation": {
-        "iv_low": 174.0067,
-        "iv_median": 204.7138,
-        "iv_high": 235.4208,
+        "iv_low": 134.8643,
+        "iv_median": 158.6639,
+        "iv_high": 182.4635,
         "price": 221.68,
-        "margin": -0.0829
+        "margin": -0.3972,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 306.7476,
+          "epv": 158.6639,
+          "graham": 101.127
+        },
+        "iv_dcf_bear": 274.1118,
+        "iv_dcf_bull": 342.5828,
+        "fcff_normalized": 6236.1192,
+        "growth": 0.0517,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -385.0,
+        "wacc_valuation": 0.08,
+        "v_confidence": "B",
+        "dcf_dropped": null
       },
       "news_state": "not_read",
       "news": [
@@ -248,7 +795,264 @@
         ],
         "reasons": {
           "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -8.3% < 임계 20%"
+          "B3": "안전마진 -39.7% < 임계 15%"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Information Technology",
+      "entry_band": null
+    },
+    {
+      "schema_version": 1,
+      "signal_id": "2026-11-20-CSCO-WATCH-001",
+      "ticker": "CSCO",
+      "type": "WATCH",
+      "grade": "B",
+      "entry_score": 57.57,
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_planned_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "target_session": "2026-11-20",
+      "generated_price": 94.69999694824219,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 94.7,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 88.07,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 81.44,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "target_band": {
+        "lo": 72.3102,
+        "hi": 83.5051,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 94.69999694824219,
+        "r_lo": -0.236429,
+        "r_hi": -0.118214,
+        "defensive": true
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 99.56,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 208% 프리미엄(안전마진 -208%) · RSI 38 · 성장률 0 이하 → 등급 상한 WATCH",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2026-07-25",
+          "form": "10-K",
+          "accession": "0000858877-26-000132",
+          "filed_date": "2026-09-02",
+          "available_at": "2026-09-02T20:36:56Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2026-07-25",
+          "form": "10-K",
+          "accession": "0000858877-26-000132",
+          "filed_date": "2026-09-02",
+          "available_at": "2026-09-02T20:36:56Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000185/csco-20261024.htm",
+          "filed_date": "2026-11-17",
+          "available_at": "2026-11-17T21:36:56+00:00",
+          "accession": "0000858877-26-000185",
+          "role": "reference"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -26.4,
+        "graham": -21.4,
+        "lynch": -100.0,
+        "druckenmiller": 60.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+      "code_commit": "44da6ca",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 97.68,
+        "valuation": 0.0,
+        "timing": 81.33,
+        "macro": 80.0,
+        "growth": 0.0
+      },
+      "valuation": {
+        "iv_low": 26.1198,
+        "iv_median": 30.7292,
+        "iv_high": 35.3385,
+        "price": 94.7,
+        "margin": -2.0818,
+        "iv_band_basis": "bear_bull",
+        "median_method": "graham",
+        "methods": {
+          "dcf_base": 67.1727,
+          "epv": 28.9506,
+          "graham": 30.7292
+        },
+        "iv_dcf_bear": 52.3867,
+        "iv_dcf_bull": 85.2055,
+        "fcff_normalized": 12972.8977,
+        "growth": 0.1174,
+        "growth_basis": "fcff_cagr",
+        "net_debt": 6954.0,
+        "wacc_valuation": 0.0961,
+        "v_confidence": "B",
+        "dcf_dropped": null
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "Cisco’s CEO Just Sold $27 Million of Stock in 3 Days",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T18:02:27Z",
+          "url": "https://finnhub.io/api/news?id=9bdf5e90b546e392313cd58aab4997a39fb8142acfb9de1b5103ff2002eeb9b7",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Top AI Stocks to Add to Your Portfolio for Healthy Returns",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T17:33:00Z",
+          "url": "https://finnhub.io/api/news?id=183fbc7a733c6ac9ee34d4d0eb00a177c3499d14ce2bc245d75c9cf936578cfe",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Ken Fisher and 14 Other Big Funds Sold Lumentum Last Quarter, While 18 Bought. Who’s Right?",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T15:43:19Z",
+          "url": "https://finnhub.io/api/news?id=5b3a5265e9b170bd160d1e09514ccf4d9849fc9291d68b8bb3693610d4ad1bb7",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Connecting People to Humanitarian Assistance With Responsible AI",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T15:30:00Z",
+          "url": "https://finnhub.io/api/news?id=7b6fa3b5c7b2c448f76cd064e7be58c62eefbf5b48720dde10815ceeb02d4f77",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "4 Tech Dividend Stocks Yielding Over 2% That Retirees Can Own for Growth and Income",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T15:20:52Z",
+          "url": "https://finnhub.io/api/news?id=0dc51ffb9239cc093b35a0a662aabde40317709b82625651f2f42a58df821bfb",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "144",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/858877/000195004726011347/xsl144X01/primary_doc.xml",
+          "accession": "0001950047-26-011347",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-18",
+          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000197/xslF345X06/wk-form4_1795041975.xml",
+          "accession": "0000858877-26-000197",
+          "items": []
+        },
+        {
+          "form": "144",
+          "filed_date": "2026-11-18",
+          "url": "https://www.sec.gov/Archives/edgar/data/858877/000195004726011302/xsl144X01/primary_doc.xml",
+          "accession": "0001950047-26-011302",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000195/xslF345X06/wk-form4_1794953642.xml",
+          "accession": "0000858877-26-000195",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/858877/000085887726000194/xslF345X06/wk-form4_1794953636.xml",
+          "accession": "0000858877-26-000194",
+          "items": []
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 37.9298,
+        "pct_b": 0.2089,
+        "dma50": 106.6818,
+        "dma200": 102.6419,
+        "atr_pct": 0.0402
+      },
+      "gate_summary": {
+        "failed": [
+          "B0",
+          "B2",
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B0": "대가 쿼럼 미달(가치·성장 점수 +20 이상 필요)",
+          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
+          "B3": "안전마진 -208.2% < 임계 15%",
+          "B4": "눌림 조건 1/4 · T 81.33"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
@@ -262,11 +1066,13 @@
       "ticker": "GOOGL",
       "type": "WATCH",
       "grade": "B",
-      "entry_score": 56.02,
+      "entry_score": 65.78,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-19T22:02:11Z",
+      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "target_session": "2026-11-20",
       "generated_price": 272.6600036621094,
       "quant_intent": "no_action",
       "entry_plan": [
@@ -292,32 +1098,41 @@
         }
       ],
       "target_band": {
-        "lo": 205.861,
-        "hi": 239.2605,
+        "lo": 198.5067,
+        "hi": 235.5833,
         "horizon_td": 63,
         "basis": "base_price",
         "base_price": 272.6600036621094,
-        "r_lo": -0.24499,
-        "r_hi": -0.122495
+        "r_lo": -0.271963,
+        "r_hi": -0.135981,
+        "defensive": true
       },
       "expected_mdd": -0.2,
       "invalidation": {
         "price": 327.18,
         "reason": "200일선 −3% 이탈 + ROIC<WACC"
       },
-      "thesis_ko": "IV 대비 -233% 프리미엄 · RSI 31",
+      "thesis_ko": "IV 대비 349% 프리미엄(안전마진 -349%) · RSI 31",
       "evidence": [
         {
           "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001652044-26-000018",
+          "filed_date": "2026-02-05",
+          "available_at": "2026-02-05T02:56:03Z",
           "metric": "quality_composite",
-          "value_kind": "score_0_100",
-          "filed_date": "2026-11-20"
+          "value_kind": "score_0_100"
         },
         {
           "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001652044-26-000018",
+          "filed_date": "2026-02-05",
+          "available_at": "2026-02-05T02:56:03Z",
           "metric": "fcf_margin_5y",
-          "value_kind": "ratio",
-          "filed_date": "2026-11-20"
+          "value_kind": "ratio"
         },
         {
           "type": "sec_filing",
@@ -325,7 +1140,8 @@
           "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000084/goog-20260930.htm",
           "filed_date": "2026-10-29",
           "available_at": "2026-10-29T00:29:06+00:00",
-          "accession": "0001652044-26-000084"
+          "accession": "0001652044-26-000084",
+          "role": "reference"
         },
         {
           "type": "market",
@@ -336,10 +1152,10 @@
       "investor_scores": {
         "buffett": -30.7,
         "graham": -25.7,
-        "lynch": -21.3,
-        "druckenmiller": 0.0
+        "lynch": 83.9,
+        "druckenmiller": 60.0
       },
-      "conflict": false,
+      "conflict": true,
       "position": {
         "plan_weight_target": 0.0,
         "tranche": 0,
@@ -353,22 +1169,38 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:e6fa84704bc48b330626992b9d89debe44401ddd9b5960fb8ae273fd60420d66",
-      "code_commit": "47dbda6",
+      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+      "code_commit": "44da6ca",
       "trade_grade": "WATCH",
       "components": {
         "quality": 90.55,
         "valuation": 0.0,
         "timing": 87.07,
-        "macro": 50.0,
-        "growth": 39.36
+        "macro": 80.0,
+        "growth": 91.97
       },
       "valuation": {
-        "iv_low": 69.5348,
-        "iv_median": 81.8057,
-        "iv_high": 94.0765,
+        "iv_low": 51.6744,
+        "iv_median": 60.7934,
+        "iv_high": 69.9124,
         "price": 272.66,
-        "margin": -2.333
+        "margin": -3.485,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 51.0855,
+          "epv": 60.7934,
+          "graham": 90.8644
+        },
+        "iv_dcf_bear": 51.0855,
+        "iv_dcf_bull": 51.0855,
+        "fcff_normalized": 48265.0172,
+        "growth": 0.0,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -78300.0,
+        "wacc_valuation": 0.1064,
+        "v_confidence": "B",
+        "dcf_dropped": null
       },
       "news_state": "not_read",
       "news": [
@@ -468,6 +1300,502 @@
       },
       "gate_summary": {
         "failed": [
+          "B2",
+          "B3"
+        ],
+        "reasons": {
+          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
+          "B3": "안전마진 -348.5% < 임계 15%"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Communication Services",
+      "entry_band": null
+    },
+    {
+      "schema_version": 1,
+      "signal_id": "2026-11-20-META-WATCH-001",
+      "ticker": "META",
+      "type": "WATCH",
+      "grade": "C",
+      "entry_score": 62.03,
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_planned_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "target_session": "2026-11-20",
+      "generated_price": 616.3800048828125,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 616.38,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 573.23,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 530.09,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "target_band": {
+        "lo": 456.0605,
+        "hi": 536.2203,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 616.3800048828125,
+        "r_lo": -0.260098,
+        "r_hi": -0.130049,
+        "defensive": true
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 610.62,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 289% 프리미엄(안전마진 -289%) · RSI 41",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001628280-26-003942",
+          "filed_date": "2026-01-29",
+          "available_at": "2026-01-29T00:13:46Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001628280-26-003942",
+          "filed_date": "2026-01-29",
+          "available_at": "2026-01-29T00:13:46Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -31.1,
+        "graham": -26.1,
+        "lynch": 58.5,
+        "druckenmiller": 60.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+      "code_commit": "44da6ca",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 89.77,
+        "valuation": 0.0,
+        "timing": 75.88,
+        "macro": 80.0,
+        "growth": 79.25
+      },
+      "valuation": {
+        "iv_low": 134.5757,
+        "iv_median": 158.3244,
+        "iv_high": 182.073,
+        "price": 616.38,
+        "margin": -2.8931,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 134.2232,
+          "epv": 158.3244,
+          "graham": 211.1944
+        },
+        "iv_dcf_bear": 134.2232,
+        "iv_dcf_bull": 134.2232,
+        "fcff_normalized": 25382.2514,
+        "growth": 0.0,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -22848.0,
+        "wacc_valuation": 0.0974,
+        "v_confidence": "B",
+        "dcf_dropped": null
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "The 25 Biggest U.S. IPOs of All Time",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:38:58Z",
+          "url": "https://finnhub.io/api/news?id=7c050ac71aa344e37d9bd3a13713c3b456e199879e13685595bd2d3a37381fa1",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Intuit Beats Fiscal Q1 Goals, Gives Soft Outlook, Sells Mailchimp",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T21:21:37Z",
+          "url": "https://finnhub.io/api/news?id=0d6864adb4124b36ab69caef8f0f680eaf3771227e064104784ab4d6266e8792",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Meta trades at 21x P/E, yet shareholders face a massive new bill",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T20:24:40Z",
+          "url": "https://finnhub.io/api/news?id=4c978823529e3b521d8c43c053a30b1781bb985fe7c725f99fd83765d83191d9",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Turkey’s monopolies watchdog takes on all comers",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T20:21:26Z",
+          "url": "https://finnhub.io/api/news?id=7b75d239b5f09e0f235e7cfa6f7888408264298c1447651feb118e4c8cc02a27",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Oklo Just Dropped 22% in a Month. What Would It Take to Get OKLO Stock to $25?",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T20:05:32Z",
+          "url": "https://finnhub.io/api/news?id=034a240bbd5ec0a9ba1aa9a87eb0d0e74c802b85eb7452919ea2d43847c4f4c0",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017707/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017707",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017706/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017706",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017705/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017705",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017704/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017704",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017703/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017703",
+          "items": []
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 41.4256,
+        "pct_b": 0.3219,
+        "dma50": 679.3606,
+        "dma200": 629.5026,
+        "atr_pct": 0.0345
+      },
+      "gate_summary": {
+        "failed": [
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B3": "안전마진 -289.3% < 임계 15%",
+          "B4": "눌림 조건 1/4 · T 75.88"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Communication Services",
+      "entry_band": null
+    },
+    {
+      "schema_version": 1,
+      "signal_id": "2026-11-20-CAT-WATCH-001",
+      "ticker": "CAT",
+      "type": "WATCH",
+      "grade": "B",
+      "entry_score": 55.45,
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-20T04:04:29Z",
+      "signal_published_planned_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "target_session": "2026-11-20",
+      "generated_price": 537.3699951171875,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 537.37,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 499.75,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 462.14,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "target_band": {
+        "lo": 410.5973,
+        "hi": 473.9837,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 537.3699951171875,
+        "r_lo": -0.235913,
+        "r_hi": -0.117957,
+        "defensive": true
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 780.76,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 207% 프리미엄(안전마진 -207%) · RSI 27",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0000018230-26-000008",
+          "filed_date": "2026-02-13",
+          "available_at": "2026-02-13T15:18:27Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0000018230-26-000008",
+          "filed_date": "2026-02-13",
+          "available_at": "2026-02-13T15:18:27Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000057/cat-20260930.htm",
+          "filed_date": "2026-11-04",
+          "available_at": "2026-11-04T15:49:09+00:00",
+          "accession": "0000018230-26-000057",
+          "role": "reference"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -39.2,
+        "graham": -34.2,
+        "lynch": -39.0,
+        "druckenmiller": 60.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:27c9e9b5e1ab44955c4ce8ef4d5688fe48d58fe9483bb2ae95cb4f070a4be91e",
+      "code_commit": "44da6ca",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 76.35,
+        "valuation": 0.0,
+        "timing": 87.5,
+        "macro": 80.0,
+        "growth": 30.49
+      },
+      "valuation": {
+        "iv_low": 148.8881,
+        "iv_median": 175.1624,
+        "iv_high": 201.4368,
+        "price": 537.37,
+        "margin": -2.0678,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 362.167,
+          "epv": 175.1624,
+          "graham": 138.1981
+        },
+        "iv_dcf_bear": 303.9926,
+        "iv_dcf_bull": 427.9964,
+        "fcff_normalized": 8731.7367,
+        "growth": 0.0694,
+        "growth_basis": "fcff_cagr",
+        "net_debt": 26230.0,
+        "wacc_valuation": 0.08,
+        "v_confidence": "B",
+        "dcf_dropped": null
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "5 Energy Stocks to Benefit from Anthropic’s $1.5 Trillion Debut",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T22:00:00Z",
+          "url": "https://finnhub.io/api/news?id=f869e49e42d161714c45a2e6b7a96d2f74133c4db8c3507a49d3da09db426678",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Dow Jones Losers Today: NIKE and UnitedHealth Lead Declines",
+          "source": "ChartMill",
+          "published_at": "2026-11-19T20:10:56Z",
+          "url": "https://finnhub.io/api/news?id=764a49d7747e3d89111c720cc2e3ed6b4fcd0e72e6268381837376f4b640bb41",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Caterpillar CEO Joe Creed joins Walmart board of directors",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T18:26:59Z",
+          "url": "https://finnhub.io/api/news?id=cd4235135a36b7af8f833058a202ffc4dd5aea77213d17746825c2179c438902",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Caterpillar (CAT) Isn’t Just a Bulldozer Stock Anymore, and Ken Fisher Knows Why",
+          "source": "Yahoo",
+          "published_at": "2026-11-19T18:14:00Z",
+          "url": "https://finnhub.io/api/news?id=c1ff1385ec65d1db9e085fc61d6a551d25bbc9ab806aff794b35faec8940b46f",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Dow Jones Decliners: UNH, NKE, CAT Lead Today's Session",
+          "source": "ChartMill",
+          "published_at": "2026-11-19T17:41:08Z",
+          "url": "https://finnhub.io/api/news?id=b6162d886ac583e3fa73417f71ed6a81fb35f3b2fc24e5365a930308760a2b6d",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "4",
+          "filed_date": "2026-11-13",
+          "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465926127088/xslF345X06/tm2629746-1_4seq1.xml",
+          "accession": "0001104659-26-127088",
+          "items": []
+        },
+        {
+          "form": "10-Q",
+          "filed_date": "2026-11-04",
+          "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000057/cat-20260930.htm",
+          "accession": "0000018230-26-000057",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-03",
+          "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465926121809/xslF345X06/tm2628874-1_4seq1.xml",
+          "accession": "0001104659-26-121809",
+          "items": []
+        },
+        {
+          "form": "3",
+          "filed_date": "2026-11-02",
+          "url": "https://www.sec.gov/Archives/edgar/data/18230/000110465926121054/xslF345X06/tm2628200-1_3seq1.xml",
+          "accession": "0001104659-26-121054",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-10-29",
+          "url": "https://www.sec.gov/Archives/edgar/data/18230/000001823026000052/cat-20261029.htm",
+          "accession": "0000018230-26-000052",
+          "items": [
+            "2.02",
+            "7.01",
+            "9.01"
+          ]
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 27.0181,
+        "pct_b": 0.1391,
+        "dma50": 720.3766,
+        "dma200": 804.9044,
+        "atr_pct": 0.0535
+      },
+      "gate_summary": {
+        "failed": [
           "B0",
           "B2",
           "B3"
@@ -475,12 +1803,12 @@
         "reasons": {
           "B0": "대가 쿼럼 미달(가치·성장 점수 +20 이상 필요)",
           "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -233.3% < 임계 20%"
+          "B3": "안전마진 -206.8% < 임계 15%"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
       "decision": "WATCH",
-      "sector": "Communication Services",
+      "sector": "Industrials",
       "entry_band": null
     }
   ],
@@ -493,25 +1821,46 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 42.5,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0712,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "MSFT",
       "sector": "Information Technology",
       "q": 82.43,
       "v": 0.0,
-      "g": 44.51,
-      "rank_score": 50.117,
-      "valuation_suspended": false
+      "g": 65.86,
+      "rank_score": 54.387,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0878,
+      "wacc_valuation": 0.0978,
+      "iv_band_basis": "bear_bull"
+    },
+    {
+      "ticker": "NVDA",
+      "sector": "Information Technology",
+      "q": 77.54,
+      "v": 0.0,
+      "g": 100.0,
+      "rank_score": 58.77,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0895,
+      "wacc_valuation": 0.1331,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "ADBE",
       "sector": "Information Technology",
       "q": 85.0,
-      "v": 29.28,
-      "g": 90.36,
-      "rank_score": 69.356,
-      "valuation_suspended": false
+      "v": 0.0,
+      "g": 100.0,
+      "rank_score": 62.5,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0741,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "CSCO",
@@ -520,34 +1869,58 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 48.84,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0764,
+      "wacc_valuation": 0.0961,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "GOOGL",
       "sector": "Communication Services",
       "q": 90.55,
       "v": 0.0,
-      "g": 39.36,
-      "rank_score": 53.147,
-      "valuation_suspended": false
+      "g": 91.97,
+      "rank_score": 63.669,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0868,
+      "wacc_valuation": 0.1064,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "META",
       "sector": "Communication Services",
-      "q": 89.64,
+      "q": 89.77,
       "v": 0.0,
-      "g": 52.69,
-      "rank_score": 55.358,
-      "valuation_suspended": false
+      "g": 79.25,
+      "rank_score": 60.735,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0809,
+      "wacc_valuation": 0.0974,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "DIS",
       "sector": "Communication Services",
       "q": 58.6,
       "v": 0.0,
+      "g": 100.0,
+      "rank_score": 49.3,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0777,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
+    },
+    {
+      "ticker": "TSLA",
+      "sector": "Consumer Discretionary",
+      "q": 57.87,
+      "v": 0.0,
       "g": 0.0,
-      "rank_score": 29.3,
-      "valuation_suspended": false
+      "rank_score": 28.935,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0882,
+      "wacc_valuation": 0.1435,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "HD",
@@ -556,7 +1929,22 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 32.305,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0491,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
+    },
+    {
+      "ticker": "WMT",
+      "sector": "Consumer Staples",
+      "q": 66.56,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 33.28,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0768,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "PG",
@@ -565,7 +1953,10 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 47.72,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0738,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "KO",
@@ -574,7 +1965,10 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 39.9,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0629,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "COST",
@@ -583,7 +1977,10 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 39.065,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.084,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "JNJ",
@@ -592,43 +1989,58 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 40.345,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0755,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "MRK",
       "sector": "Health Care",
       "q": 83.58,
       "v": 0.0,
-      "g": 25.62,
-      "rank_score": 46.914,
-      "valuation_suspended": false
+      "g": 0.0,
+      "rank_score": 41.79,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0683,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "CVX",
       "sector": "Energy",
-      "q": 66.9,
+      "q": 66.86,
       "v": 0.0,
       "g": 0.0,
-      "rank_score": 33.45,
-      "valuation_suspended": false
+      "rank_score": 33.43,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0814,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "CAT",
       "sector": "Industrials",
       "q": 76.35,
       "v": 0.0,
-      "g": 0.0,
-      "rank_score": 38.175,
-      "valuation_suspended": false
+      "g": 30.49,
+      "rank_score": 44.273,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0587,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "HON",
       "sector": "Industrials",
-      "q": 79.97,
+      "q": 81.9,
       "v": 0.0,
       "g": 0.0,
-      "rank_score": 39.985,
-      "valuation_suspended": false
+      "rank_score": 40.95,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0545,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "UPS",
@@ -637,16 +2049,22 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 30.01,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0602,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "LIN",
       "sector": "Materials",
-      "q": 72.71,
+      "q": 72.67,
       "v": 0.0,
-      "g": 0.0,
-      "rank_score": 36.355,
-      "valuation_suspended": false
+      "g": 53.28,
+      "rank_score": 46.991,
+      "valuation_suspended": false,
+      "wacc_qc": 0.0721,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "SHW",
@@ -655,10 +2073,13 @@
       "v": 0.0,
       "g": 0.0,
       "rank_score": 33.88,
-      "valuation_suspended": false
+      "valuation_suspended": false,
+      "wacc_qc": 0.0562,
+      "wacc_valuation": 0.08,
+      "iv_band_basis": "bear_bull"
     }
   ],
-  "watchlist_count": 19,
+  "watchlist_count": 22,
   "position_checks": [],
   "diagnostics": {
     "mode": "live",
@@ -702,6 +2123,14 @@
       "VIXCLS",
       "WALCL"
     ],
+    "macro_missing_series": [],
+    "macro_ingest": {
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "inputs_ingested_at": "2026-11-20T04:05:01.440880Z",
+      "lag_seconds": 21901.4,
+      "after_cutoff": true,
+      "available_at_source": "first_ingested_at"
+    },
     "meta_missing": [],
     "xbrl_detail": {
       "AAPL": {
@@ -711,9 +2140,61 @@
           "2025-09-27",
           "2024-09-28",
           "2023-09-30",
-          "2022-09-24"
+          "2022-09-24",
+          "2021-09-25"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-09-26",
+            "raw": 14720.306,
+            "adjusted": 14720.306,
+            "basis": "as_reported",
+            "accn": "0000320193-26-000026",
+            "filed": "2026-11-03"
+          },
+          {
+            "fy": "2025-09-27",
+            "raw": 15004.697,
+            "adjusted": 15004.697,
+            "basis": "as_reported",
+            "accn": "0000320193-26-000026",
+            "filed": "2026-11-03"
+          },
+          {
+            "fy": "2024-09-28",
+            "raw": 15408.095,
+            "adjusted": 15408.095,
+            "basis": "as_reported",
+            "accn": "0000320193-26-000026",
+            "filed": "2026-11-03"
+          },
+          {
+            "fy": "2023-09-30",
+            "raw": 15812.547,
+            "adjusted": 15812.547,
+            "basis": "as_reported",
+            "accn": "0000320193-25-000079",
+            "filed": "2025-10-31"
+          },
+          {
+            "fy": "2022-09-24",
+            "raw": 16325.819,
+            "adjusted": 16325.819,
+            "basis": "as_reported",
+            "accn": "0000320193-24-000123",
+            "filed": "2024-11-01"
+          },
+          {
+            "fy": "2021-09-25",
+            "raw": 16864.919,
+            "adjusted": 16864.919,
+            "basis": "as_reported",
+            "accn": "0000320193-23-000106",
+            "filed": "2023-11-03"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "MSFT": {
         "completeness": 1.0,
@@ -722,9 +2203,61 @@
           "2025-06-30",
           "2024-06-30",
           "2023-06-30",
-          "2022-06-30"
+          "2022-06-30",
+          "2021-06-30"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-06-30",
+            "raw": 7453.0,
+            "adjusted": 7453.0,
+            "basis": "as_reported",
+            "accn": "0001193125-26-323660",
+            "filed": "2026-07-29"
+          },
+          {
+            "fy": "2025-06-30",
+            "raw": 7465.0,
+            "adjusted": 7465.0,
+            "basis": "as_reported",
+            "accn": "0001193125-26-323660",
+            "filed": "2026-07-29"
+          },
+          {
+            "fy": "2024-06-30",
+            "raw": 7469.0,
+            "adjusted": 7469.0,
+            "basis": "as_reported",
+            "accn": "0001193125-26-323660",
+            "filed": "2026-07-29"
+          },
+          {
+            "fy": "2023-06-30",
+            "raw": 7472.0,
+            "adjusted": 7472.0,
+            "basis": "as_reported",
+            "accn": "0000950170-25-100235",
+            "filed": "2025-07-30"
+          },
+          {
+            "fy": "2022-06-30",
+            "raw": 7540.0,
+            "adjusted": 7540.0,
+            "basis": "as_reported",
+            "accn": "0000950170-24-087843",
+            "filed": "2024-07-30"
+          },
+          {
+            "fy": "2021-06-30",
+            "raw": 7608.0,
+            "adjusted": 7608.0,
+            "basis": "as_reported",
+            "accn": "0000950170-23-035122",
+            "filed": "2023-07-27"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "NVDA": {
         "completeness": 1.0,
@@ -733,9 +2266,61 @@
           "2025-01-26",
           "2024-01-28",
           "2023-01-29",
-          "2022-01-30"
+          "2022-01-30",
+          "2021-01-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-01-25",
+            "raw": 24514.0,
+            "adjusted": 24514.0,
+            "basis": "as_reported",
+            "accn": "0001045810-26-000021",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2025-01-26",
+            "raw": 24804.0,
+            "adjusted": 24804.0,
+            "basis": "as_reported",
+            "accn": "0001045810-26-000021",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2024-01-28",
+            "raw": 24940.0,
+            "adjusted": 24940.0,
+            "basis": "restated",
+            "accn": "0001045810-26-000021",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2023-01-29",
+            "raw": 25070.0,
+            "adjusted": 25070.0,
+            "basis": "restated",
+            "accn": "0001045810-25-000023",
+            "filed": "2025-02-26"
+          },
+          {
+            "fy": "2022-01-30",
+            "raw": 2535.0,
+            "adjusted": 25350.0,
+            "basis": "split_adjusted",
+            "accn": "0001045810-24-000029",
+            "filed": "2024-02-21"
+          },
+          {
+            "fy": "2021-01-31",
+            "raw": 2510.0,
+            "adjusted": 25100.0,
+            "basis": "split_adjusted",
+            "accn": "0001045810-23-000017",
+            "filed": "2023-02-24"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "AVGO": {
         "completeness": 1.0,
@@ -744,9 +2329,61 @@
           "2024-11-03",
           "2023-10-29",
           "2022-10-30",
-          "2021-10-31"
+          "2021-10-31",
+          "2020-11-01"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-11-02",
+            "raw": 4853.0,
+            "adjusted": 4853.0,
+            "basis": "as_reported",
+            "accn": "0001730168-25-000121",
+            "filed": "2025-12-18"
+          },
+          {
+            "fy": "2024-11-03",
+            "raw": 4778.0,
+            "adjusted": 4778.0,
+            "basis": "as_reported",
+            "accn": "0001730168-25-000121",
+            "filed": "2025-12-18"
+          },
+          {
+            "fy": "2023-10-29",
+            "raw": 4272.0,
+            "adjusted": 4272.0,
+            "basis": "restated",
+            "accn": "0001730168-25-000121",
+            "filed": "2025-12-18"
+          },
+          {
+            "fy": "2022-10-30",
+            "raw": 4232.0,
+            "adjusted": 4232.0,
+            "basis": "restated",
+            "accn": "0001730168-24-000139",
+            "filed": "2024-12-20"
+          },
+          {
+            "fy": "2021-10-31",
+            "raw": 429.0,
+            "adjusted": 4290.0,
+            "basis": "split_adjusted",
+            "accn": "0001730168-23-000096",
+            "filed": "2023-12-14"
+          },
+          {
+            "fy": "2020-11-01",
+            "raw": 421.0,
+            "adjusted": 4210.0,
+            "basis": "split_adjusted",
+            "accn": "0001730168-22-000118",
+            "filed": "2022-12-16"
+          }
+        ],
+        "xbrl_acceptance_missing": false
       },
       "ORCL": {
         "completeness": 1.0,
@@ -755,9 +2392,61 @@
           "2025-05-31",
           "2024-05-31",
           "2023-05-31",
-          "2022-05-31"
+          "2022-05-31",
+          "2021-05-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-05-31",
+            "raw": 2914.0,
+            "adjusted": 2914.0,
+            "basis": "as_reported",
+            "accn": "0001193125-26-277521",
+            "filed": "2026-06-22"
+          },
+          {
+            "fy": "2025-05-31",
+            "raw": 2866.0,
+            "adjusted": 2866.0,
+            "basis": "as_reported",
+            "accn": "0001193125-26-277521",
+            "filed": "2026-06-22"
+          },
+          {
+            "fy": "2024-05-31",
+            "raw": 2823.0,
+            "adjusted": 2823.0,
+            "basis": "as_reported",
+            "accn": "0001193125-26-277521",
+            "filed": "2026-06-22"
+          },
+          {
+            "fy": "2023-05-31",
+            "raw": 2766.0,
+            "adjusted": 2766.0,
+            "basis": "as_reported",
+            "accn": "0000950170-25-087926",
+            "filed": "2025-06-18"
+          },
+          {
+            "fy": "2022-05-31",
+            "raw": 2786.0,
+            "adjusted": 2786.0,
+            "basis": "as_reported",
+            "accn": "0000950170-24-075605",
+            "filed": "2024-06-20"
+          },
+          {
+            "fy": "2021-05-31",
+            "raw": 3022.0,
+            "adjusted": 3022.0,
+            "basis": "as_reported",
+            "accn": "0000950170-23-028914",
+            "filed": "2023-06-20"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "ADBE": {
         "completeness": 1.0,
@@ -766,9 +2455,61 @@
           "2024-11-29",
           "2023-12-01",
           "2022-12-02",
-          "2021-12-03"
+          "2021-12-03",
+          "2020-11-27"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-11-28",
+            "raw": 427.0,
+            "adjusted": 427.0,
+            "basis": "as_reported",
+            "accn": "0000796343-26-000003",
+            "filed": "2026-01-15"
+          },
+          {
+            "fy": "2024-11-29",
+            "raw": 449.7,
+            "adjusted": 449.7,
+            "basis": "as_reported",
+            "accn": "0000796343-26-000003",
+            "filed": "2026-01-15"
+          },
+          {
+            "fy": "2023-12-01",
+            "raw": 459.1,
+            "adjusted": 459.1,
+            "basis": "as_reported",
+            "accn": "0000796343-26-000003",
+            "filed": "2026-01-15"
+          },
+          {
+            "fy": "2022-12-02",
+            "raw": 470.9,
+            "adjusted": 470.9,
+            "basis": "as_reported",
+            "accn": "0000796343-25-000004",
+            "filed": "2025-01-13"
+          },
+          {
+            "fy": "2021-12-03",
+            "raw": 481.0,
+            "adjusted": 481.0,
+            "basis": "as_reported",
+            "accn": "0000796343-24-000006",
+            "filed": "2024-01-17"
+          },
+          {
+            "fy": "2020-11-27",
+            "raw": 485.5,
+            "adjusted": 485.5,
+            "basis": "as_reported",
+            "accn": "0000796343-23-000007",
+            "filed": "2023-01-17"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "CSCO": {
         "completeness": 1.0,
@@ -777,9 +2518,61 @@
           "2025-07-26",
           "2024-07-27",
           "2023-07-29",
-          "2022-07-30"
+          "2022-07-30",
+          "2021-07-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-07-25",
+            "raw": 3987.0,
+            "adjusted": 3987.0,
+            "basis": "as_reported",
+            "accn": "0000858877-26-000132",
+            "filed": "2026-09-02"
+          },
+          {
+            "fy": "2025-07-26",
+            "raw": 3998.0,
+            "adjusted": 3998.0,
+            "basis": "as_reported",
+            "accn": "0000858877-26-000132",
+            "filed": "2026-09-02"
+          },
+          {
+            "fy": "2024-07-27",
+            "raw": 4062.0,
+            "adjusted": 4062.0,
+            "basis": "as_reported",
+            "accn": "0000858877-26-000132",
+            "filed": "2026-09-02"
+          },
+          {
+            "fy": "2023-07-29",
+            "raw": 4105.0,
+            "adjusted": 4105.0,
+            "basis": "as_reported",
+            "accn": "0000858877-25-000111",
+            "filed": "2025-09-03"
+          },
+          {
+            "fy": "2022-07-30",
+            "raw": 4192.0,
+            "adjusted": 4192.0,
+            "basis": "as_reported",
+            "accn": "0000858877-24-000017",
+            "filed": "2024-09-05"
+          },
+          {
+            "fy": "2021-07-31",
+            "raw": 4236.0,
+            "adjusted": 4236.0,
+            "basis": "as_reported",
+            "accn": "0000858877-23-000023",
+            "filed": "2023-09-07"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "GOOGL": {
         "completeness": 0.9778,
@@ -788,9 +2581,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 12230.0,
+            "adjusted": 12230.0,
+            "basis": "as_reported",
+            "accn": "0001652044-26-000018",
+            "filed": "2026-02-05"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 12447.0,
+            "adjusted": 12447.0,
+            "basis": "as_reported",
+            "accn": "0001652044-26-000018",
+            "filed": "2026-02-05"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 12722.0,
+            "adjusted": 12722.0,
+            "basis": "as_reported",
+            "accn": "0001652044-26-000018",
+            "filed": "2026-02-05"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 13159.0,
+            "adjusted": 13159.0,
+            "basis": "as_reported",
+            "accn": "0001652044-25-000014",
+            "filed": "2025-02-05"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "META": {
         "completeness": 1.0,
@@ -799,9 +2644,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 2574.0,
+            "adjusted": 2574.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-003942",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 2614.0,
+            "adjusted": 2614.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-003942",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 2629.0,
+            "adjusted": 2629.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-003942",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 2702.0,
+            "adjusted": 2702.0,
+            "basis": "as_reported",
+            "accn": "0001326801-25-000017",
+            "filed": "2025-01-30"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 2859.0,
+            "adjusted": 2859.0,
+            "basis": "as_reported",
+            "accn": "0001326801-24-000012",
+            "filed": "2024-02-02"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 2888.0,
+            "adjusted": 2888.0,
+            "basis": "as_reported",
+            "accn": "0001326801-23-000013",
+            "filed": "2023-02-02"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "NFLX": {
         "completeness": 1.0,
@@ -810,9 +2707,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 4343.863,
+            "adjusted": 4343.863,
+            "basis": "as_reported",
+            "accn": "0001065280-26-000034",
+            "filed": "2026-01-23"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 4392.608,
+            "adjusted": 4392.608,
+            "basis": "restated",
+            "accn": "0001065280-26-000034",
+            "filed": "2026-01-23"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 4494.966,
+            "adjusted": 4494.966,
+            "basis": "restated",
+            "accn": "0001065280-26-000034",
+            "filed": "2026-01-23"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 451.29,
+            "adjusted": 4512.9,
+            "basis": "split_adjusted",
+            "accn": "0001065280-25-000044",
+            "filed": "2025-01-27"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 455.372,
+            "adjusted": 4553.72,
+            "basis": "split_adjusted",
+            "accn": "0001065280-24-000030",
+            "filed": "2024-01-26"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 454.208,
+            "adjusted": 4542.08,
+            "basis": "split_adjusted",
+            "accn": "0001065280-23-000035",
+            "filed": "2023-01-26"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "DIS": {
         "completeness": 1.0,
@@ -821,9 +2770,61 @@
           "2025-09-27",
           "2024-09-28",
           "2023-09-30",
-          "2022-10-01"
+          "2022-10-01",
+          "2021-10-02"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-10-03",
+            "raw": 1759.0,
+            "adjusted": 1759.0,
+            "basis": "as_reported",
+            "accn": "0001744489-26-000066",
+            "filed": "2026-11-17"
+          },
+          {
+            "fy": "2025-09-27",
+            "raw": 1811.0,
+            "adjusted": 1811.0,
+            "basis": "as_reported",
+            "accn": "0001744489-26-000066",
+            "filed": "2026-11-17"
+          },
+          {
+            "fy": "2024-09-28",
+            "raw": 1831.0,
+            "adjusted": 1831.0,
+            "basis": "as_reported",
+            "accn": "0001744489-26-000066",
+            "filed": "2026-11-17"
+          },
+          {
+            "fy": "2023-09-30",
+            "raw": 1830.0,
+            "adjusted": 1830.0,
+            "basis": "as_reported",
+            "accn": "0001744489-25-000155",
+            "filed": "2025-11-13"
+          },
+          {
+            "fy": "2022-10-01",
+            "raw": 1827.0,
+            "adjusted": 1827.0,
+            "basis": "as_reported",
+            "accn": "0001744489-24-000276",
+            "filed": "2024-11-14"
+          },
+          {
+            "fy": "2021-10-02",
+            "raw": 1828.0,
+            "adjusted": 1828.0,
+            "basis": "as_reported",
+            "accn": "0001744489-23-000216",
+            "filed": "2023-11-21"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "AMZN": {
         "completeness": 1.0,
@@ -832,9 +2833,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 10827.0,
+            "adjusted": 10827.0,
+            "basis": "as_reported",
+            "accn": "0001018724-26-000004",
+            "filed": "2026-02-06"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 10721.0,
+            "adjusted": 10721.0,
+            "basis": "as_reported",
+            "accn": "0001018724-26-000004",
+            "filed": "2026-02-06"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 10492.0,
+            "adjusted": 10492.0,
+            "basis": "as_reported",
+            "accn": "0001018724-26-000004",
+            "filed": "2026-02-06"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 10189.0,
+            "adjusted": 10189.0,
+            "basis": "as_reported",
+            "accn": "0001018724-25-000004",
+            "filed": "2025-02-07"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 10296.0,
+            "adjusted": 10296.0,
+            "basis": "restated",
+            "accn": "0001018724-24-000008",
+            "filed": "2024-02-02"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 10198.0,
+            "adjusted": 10198.0,
+            "basis": "restated",
+            "accn": "0001018724-23-000004",
+            "filed": "2023-02-03"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "TSLA": {
         "completeness": 1.0,
@@ -843,9 +2896,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 3528.0,
+            "adjusted": 3528.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-003952",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 3498.0,
+            "adjusted": 3498.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-003952",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 3485.0,
+            "adjusted": 3485.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-003952",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 3475.0,
+            "adjusted": 3475.0,
+            "basis": "as_reported",
+            "accn": "0001628280-25-003063",
+            "filed": "2025-01-30"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 3386.0,
+            "adjusted": 3386.0,
+            "basis": "restated",
+            "accn": "0001628280-24-002390",
+            "filed": "2024-01-29"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 3249.0,
+            "adjusted": 3249.0,
+            "basis": "restated",
+            "accn": "0000950170-23-001409",
+            "filed": "2023-01-31"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "HD": {
         "completeness": 1.0,
@@ -854,9 +2959,61 @@
           "2025-02-02",
           "2024-01-28",
           "2023-01-29",
-          "2022-01-30"
+          "2022-01-30",
+          "2021-01-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-02-01",
+            "raw": 995.0,
+            "adjusted": 995.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-019436",
+            "filed": "2026-03-18"
+          },
+          {
+            "fy": "2025-02-02",
+            "raw": 993.0,
+            "adjusted": 993.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-019436",
+            "filed": "2026-03-18"
+          },
+          {
+            "fy": "2024-01-28",
+            "raw": 1002.0,
+            "adjusted": 1002.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-019436",
+            "filed": "2026-03-18"
+          },
+          {
+            "fy": "2023-01-29",
+            "raw": 1025.0,
+            "adjusted": 1025.0,
+            "basis": "as_reported",
+            "accn": "0000354950-25-000085",
+            "filed": "2025-03-21"
+          },
+          {
+            "fy": "2022-01-30",
+            "raw": 1058.0,
+            "adjusted": 1058.0,
+            "basis": "as_reported",
+            "accn": "0000354950-24-000062",
+            "filed": "2024-03-13"
+          },
+          {
+            "fy": "2021-01-31",
+            "raw": 1078.0,
+            "adjusted": 1078.0,
+            "basis": "as_reported",
+            "accn": "0000354950-23-000059",
+            "filed": "2023-03-15"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "MCD": {
         "completeness": 1.0,
@@ -865,9 +3022,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 716.4,
+            "adjusted": 716.4,
+            "basis": "as_reported",
+            "accn": "0000063908-26-000035",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 721.9,
+            "adjusted": 721.9,
+            "basis": "as_reported",
+            "accn": "0000063908-26-000035",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 732.3,
+            "adjusted": 732.3,
+            "basis": "as_reported",
+            "accn": "0000063908-26-000035",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 741.3,
+            "adjusted": 741.3,
+            "basis": "as_reported",
+            "accn": "0000063908-25-000012",
+            "filed": "2025-02-25"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 751.8,
+            "adjusted": 751.8,
+            "basis": "as_reported",
+            "accn": "0000063908-24-000072",
+            "filed": "2024-02-22"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 750.1,
+            "adjusted": 750.1,
+            "basis": "as_reported",
+            "accn": "0000063908-23-000012",
+            "filed": "2023-02-24"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "NKE": {
         "completeness": 0.8889,
@@ -876,9 +3085,61 @@
           "2025-05-31",
           "2024-05-31",
           "2023-05-31",
-          "2022-05-31"
+          "2022-05-31",
+          "2021-05-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-05-31",
+            "raw": 1481.0,
+            "adjusted": 1481.0,
+            "basis": "as_reported",
+            "accn": "0000320187-26-000088",
+            "filed": "2026-07-15"
+          },
+          {
+            "fy": "2025-05-31",
+            "raw": 1487.6,
+            "adjusted": 1487.6,
+            "basis": "as_reported",
+            "accn": "0000320187-26-000088",
+            "filed": "2026-07-15"
+          },
+          {
+            "fy": "2024-05-31",
+            "raw": 1529.7,
+            "adjusted": 1529.7,
+            "basis": "as_reported",
+            "accn": "0000320187-26-000088",
+            "filed": "2026-07-15"
+          },
+          {
+            "fy": "2023-05-31",
+            "raw": 1569.8,
+            "adjusted": 1569.8,
+            "basis": "as_reported",
+            "accn": "0000320187-25-000047",
+            "filed": "2025-07-17"
+          },
+          {
+            "fy": "2022-05-31",
+            "raw": 1610.8,
+            "adjusted": 1610.8,
+            "basis": "as_reported",
+            "accn": "0000320187-24-000044",
+            "filed": "2024-07-25"
+          },
+          {
+            "fy": "2021-05-31",
+            "raw": 1609.4,
+            "adjusted": 1609.4,
+            "basis": "as_reported",
+            "accn": "0000320187-23-000039",
+            "filed": "2023-07-20"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "WMT": {
         "completeness": 1.0,
@@ -887,9 +3148,61 @@
           "2025-01-31",
           "2024-01-31",
           "2023-01-31",
-          "2022-01-31"
+          "2022-01-31",
+          "2021-01-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-01-31",
+            "raw": 8022.0,
+            "adjusted": 8022.0,
+            "basis": "as_reported",
+            "accn": "0000104169-26-000055",
+            "filed": "2026-03-13"
+          },
+          {
+            "fy": "2025-01-31",
+            "raw": 8081.0,
+            "adjusted": 8081.0,
+            "basis": "as_reported",
+            "accn": "0000104169-26-000055",
+            "filed": "2026-03-13"
+          },
+          {
+            "fy": "2024-01-31",
+            "raw": 8108.0,
+            "adjusted": 8108.0,
+            "basis": "restated",
+            "accn": "0000104169-26-000055",
+            "filed": "2026-03-13"
+          },
+          {
+            "fy": "2023-01-31",
+            "raw": 8202.0,
+            "adjusted": 8202.0,
+            "basis": "restated",
+            "accn": "0000104169-25-000021",
+            "filed": "2025-03-14"
+          },
+          {
+            "fy": "2022-01-31",
+            "raw": 8415.0,
+            "adjusted": 8415.0,
+            "basis": "restated",
+            "accn": "0000104169-24-000056",
+            "filed": "2024-03-15"
+          },
+          {
+            "fy": "2021-01-31",
+            "raw": 2847.0,
+            "adjusted": 8541.0,
+            "basis": "split_adjusted",
+            "accn": "0000104169-23-000020",
+            "filed": "2023-03-17"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "PG": {
         "completeness": 1.0,
@@ -898,9 +3211,61 @@
           "2025-06-30",
           "2024-06-30",
           "2023-06-30",
-          "2022-06-30"
+          "2022-06-30",
+          "2021-06-30"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-06-30",
+            "raw": 2422.5,
+            "adjusted": 2422.5,
+            "basis": "as_reported",
+            "accn": "0000080424-26-000103",
+            "filed": "2026-08-04"
+          },
+          {
+            "fy": "2025-06-30",
+            "raw": 2454.4,
+            "adjusted": 2454.4,
+            "basis": "as_reported",
+            "accn": "0000080424-26-000103",
+            "filed": "2026-08-04"
+          },
+          {
+            "fy": "2024-06-30",
+            "raw": 2471.9,
+            "adjusted": 2471.9,
+            "basis": "as_reported",
+            "accn": "0000080424-26-000103",
+            "filed": "2026-08-04"
+          },
+          {
+            "fy": "2023-06-30",
+            "raw": 2483.9,
+            "adjusted": 2483.9,
+            "basis": "as_reported",
+            "accn": "0000080424-25-000076",
+            "filed": "2025-08-04"
+          },
+          {
+            "fy": "2022-06-30",
+            "raw": 2539.1,
+            "adjusted": 2539.1,
+            "basis": "as_reported",
+            "accn": "0000080424-24-000083",
+            "filed": "2024-08-05"
+          },
+          {
+            "fy": "2021-06-30",
+            "raw": 2601.0,
+            "adjusted": 2601.0,
+            "basis": "as_reported",
+            "accn": "0000080424-23-000073",
+            "filed": "2023-08-04"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "KO": {
         "completeness": 1.0,
@@ -909,9 +3274,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 4313.0,
+            "adjusted": 4313.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-010047",
+            "filed": "2026-02-20"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 4320.0,
+            "adjusted": 4320.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-010047",
+            "filed": "2026-02-20"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 4339.0,
+            "adjusted": 4339.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-010047",
+            "filed": "2026-02-20"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 4350.0,
+            "adjusted": 4350.0,
+            "basis": "as_reported",
+            "accn": "0000021344-25-000011",
+            "filed": "2025-02-20"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 4340.0,
+            "adjusted": 4340.0,
+            "basis": "as_reported",
+            "accn": "0000021344-24-000009",
+            "filed": "2024-02-20"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 4323.0,
+            "adjusted": 4323.0,
+            "basis": "as_reported",
+            "accn": "0000021344-23-000011",
+            "filed": "2023-02-21"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "PEP": {
         "completeness": 1.0,
@@ -920,9 +3337,61 @@
           "2024-12-28",
           "2023-12-30",
           "2022-12-31",
-          "2021-12-25"
+          "2021-12-25",
+          "2020-12-26"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-27",
+            "raw": 1373.0,
+            "adjusted": 1373.0,
+            "basis": "as_reported",
+            "accn": "0000077476-26-000007",
+            "filed": "2026-02-03"
+          },
+          {
+            "fy": "2024-12-28",
+            "raw": 1378.0,
+            "adjusted": 1378.0,
+            "basis": "as_reported",
+            "accn": "0000077476-26-000007",
+            "filed": "2026-02-03"
+          },
+          {
+            "fy": "2023-12-30",
+            "raw": 1383.0,
+            "adjusted": 1383.0,
+            "basis": "as_reported",
+            "accn": "0000077476-26-000007",
+            "filed": "2026-02-03"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 1387.0,
+            "adjusted": 1387.0,
+            "basis": "as_reported",
+            "accn": "0000077476-25-000007",
+            "filed": "2025-02-04"
+          },
+          {
+            "fy": "2021-12-25",
+            "raw": 1389.0,
+            "adjusted": 1389.0,
+            "basis": "as_reported",
+            "accn": "0000077476-24-000008",
+            "filed": "2024-02-09"
+          },
+          {
+            "fy": "2020-12-26",
+            "raw": 1392.0,
+            "adjusted": 1392.0,
+            "basis": "as_reported",
+            "accn": "0000077476-23-000007",
+            "filed": "2023-02-09"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "COST": {
         "completeness": 1.0,
@@ -931,9 +3400,61 @@
           "2025-08-31",
           "2024-09-01",
           "2023-09-03",
-          "2022-08-28"
+          "2022-08-28",
+          "2021-08-29"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-08-30",
+            "raw": 444.427,
+            "adjusted": 444.427,
+            "basis": "as_reported",
+            "accn": "0000909832-26-000093",
+            "filed": "2026-10-07"
+          },
+          {
+            "fy": "2025-08-31",
+            "raw": 444.803,
+            "adjusted": 444.803,
+            "basis": "as_reported",
+            "accn": "0000909832-26-000093",
+            "filed": "2026-10-07"
+          },
+          {
+            "fy": "2024-09-01",
+            "raw": 444.759,
+            "adjusted": 444.759,
+            "basis": "as_reported",
+            "accn": "0000909832-26-000093",
+            "filed": "2026-10-07"
+          },
+          {
+            "fy": "2023-09-03",
+            "raw": 444.452,
+            "adjusted": 444.452,
+            "basis": "as_reported",
+            "accn": "0000909832-25-000101",
+            "filed": "2025-10-08"
+          },
+          {
+            "fy": "2022-08-28",
+            "raw": 444.757,
+            "adjusted": 444.757,
+            "basis": "as_reported",
+            "accn": "0000909832-24-000049",
+            "filed": "2024-10-09"
+          },
+          {
+            "fy": "2021-08-29",
+            "raw": 444.346,
+            "adjusted": 444.346,
+            "basis": "as_reported",
+            "accn": "0000909832-23-000042",
+            "filed": "2023-10-11"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "JNJ": {
         "completeness": 1.0,
@@ -942,9 +3463,61 @@
           "2024-12-29",
           "2023-12-31",
           "2023-01-01",
-          "2022-01-02"
+          "2022-01-02",
+          "2021-01-03"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-28",
+            "raw": 2429.4,
+            "adjusted": 2429.4,
+            "basis": "as_reported",
+            "accn": "0000200406-26-000016",
+            "filed": "2026-02-11"
+          },
+          {
+            "fy": "2024-12-29",
+            "raw": 2429.4,
+            "adjusted": 2429.4,
+            "basis": "as_reported",
+            "accn": "0000200406-26-000016",
+            "filed": "2026-02-11"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 2560.4,
+            "adjusted": 2560.4,
+            "basis": "as_reported",
+            "accn": "0000200406-26-000016",
+            "filed": "2026-02-11"
+          },
+          {
+            "fy": "2023-01-01",
+            "raw": 2663.9,
+            "adjusted": 2663.9,
+            "basis": "as_reported",
+            "accn": "0000200406-25-000038",
+            "filed": "2025-02-13"
+          },
+          {
+            "fy": "2022-01-02",
+            "raw": 2674.0,
+            "adjusted": 2674.0,
+            "basis": "as_reported",
+            "accn": "0000200406-24-000013",
+            "filed": "2024-02-16"
+          },
+          {
+            "fy": "2021-01-03",
+            "raw": 2670.7,
+            "adjusted": 2670.7,
+            "basis": "as_reported",
+            "accn": "0000200406-23-000016",
+            "filed": "2023-02-16"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "UNH": {
         "completeness": 1.0,
@@ -953,9 +3526,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 911.0,
+            "adjusted": 911.0,
+            "basis": "as_reported",
+            "accn": "0000731766-26-000062",
+            "filed": "2026-03-02"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 929.0,
+            "adjusted": 929.0,
+            "basis": "as_reported",
+            "accn": "0000731766-26-000062",
+            "filed": "2026-03-02"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 938.0,
+            "adjusted": 938.0,
+            "basis": "as_reported",
+            "accn": "0000731766-26-000062",
+            "filed": "2026-03-02"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 950.0,
+            "adjusted": 950.0,
+            "basis": "as_reported",
+            "accn": "0000731766-25-000063",
+            "filed": "2025-02-27"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 956.0,
+            "adjusted": 956.0,
+            "basis": "as_reported",
+            "accn": "0000731766-24-000081",
+            "filed": "2024-02-28"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 961.0,
+            "adjusted": 961.0,
+            "basis": "as_reported",
+            "accn": "0000731766-23-000008",
+            "filed": "2023-02-24"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "LLY": {
         "completeness": 0.8889,
@@ -964,9 +3589,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 899.3,
+            "adjusted": 899.3,
+            "basis": "as_reported",
+            "accn": "0000059478-26-000013",
+            "filed": "2026-02-12"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 904.1,
+            "adjusted": 904.1,
+            "basis": "as_reported",
+            "accn": "0000059478-26-000013",
+            "filed": "2026-02-12"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 903.3,
+            "adjusted": 903.3,
+            "basis": "as_reported",
+            "accn": "0000059478-26-000013",
+            "filed": "2026-02-12"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 904.619,
+            "adjusted": 904.619,
+            "basis": "as_reported",
+            "accn": "0000059478-25-000067",
+            "filed": "2025-02-19"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 911.681,
+            "adjusted": 911.681,
+            "basis": "as_reported",
+            "accn": "0000059478-24-000065",
+            "filed": "2024-02-21"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 912.505,
+            "adjusted": 912.505,
+            "basis": "as_reported",
+            "accn": "0000059478-23-000082",
+            "filed": "2023-02-22"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "MRK": {
         "completeness": 1.0,
@@ -975,9 +3652,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 2507.0,
+            "adjusted": 2507.0,
+            "basis": "as_reported",
+            "accn": "0000310158-26-000063",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 2541.0,
+            "adjusted": 2541.0,
+            "basis": "as_reported",
+            "accn": "0000310158-26-000063",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 2547.0,
+            "adjusted": 2547.0,
+            "basis": "as_reported",
+            "accn": "0000310158-26-000063",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 2542.0,
+            "adjusted": 2542.0,
+            "basis": "as_reported",
+            "accn": "0001628280-25-007732",
+            "filed": "2025-02-25"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 2538.0,
+            "adjusted": 2538.0,
+            "basis": "as_reported",
+            "accn": "0001628280-24-006850",
+            "filed": "2024-02-26"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 2541.0,
+            "adjusted": 2541.0,
+            "basis": "restated",
+            "accn": "0001628280-23-005061",
+            "filed": "2023-02-24"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "ABBV": {
         "completeness": 1.0,
@@ -986,14 +3715,68 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 1773.0,
+            "adjusted": 1773.0,
+            "basis": "as_reported",
+            "accn": "0001551152-26-000008",
+            "filed": "2026-02-20"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 1773.0,
+            "adjusted": 1773.0,
+            "basis": "as_reported",
+            "accn": "0001551152-26-000008",
+            "filed": "2026-02-20"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 1773.0,
+            "adjusted": 1773.0,
+            "basis": "as_reported",
+            "accn": "0001551152-26-000008",
+            "filed": "2026-02-20"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 1778.0,
+            "adjusted": 1778.0,
+            "basis": "as_reported",
+            "accn": "0001551152-25-000020",
+            "filed": "2025-02-14"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 1777.0,
+            "adjusted": 1777.0,
+            "basis": "as_reported",
+            "accn": "0001551152-24-000011",
+            "filed": "2024-02-20"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 1673.0,
+            "adjusted": 1673.0,
+            "basis": "as_reported",
+            "accn": "0001551152-23-000011",
+            "filed": "2023-02-17"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "XOM": {
         "completeness": 0.0,
         "fiscal_years": null,
-        "reason": "no_annual_facts"
+        "reason": "no_annual_facts",
+        "shares_used": null,
+        "xbrl_acceptance_missing": null
       },
       "CVX": {
         "completeness": 1.0,
@@ -1002,9 +3785,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 1856.0,
+            "adjusted": 1856.0,
+            "basis": "as_reported",
+            "accn": "0000093410-26-000078",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 1817.0,
+            "adjusted": 1817.0,
+            "basis": "as_reported",
+            "accn": "0000093410-26-000078",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 1880.0,
+            "adjusted": 1880.0,
+            "basis": "as_reported",
+            "accn": "0000093410-26-000078",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 1940.0,
+            "adjusted": 1940.0,
+            "basis": "as_reported",
+            "accn": "0000093410-25-000009",
+            "filed": "2025-02-21"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 1920.0,
+            "adjusted": 1920.0,
+            "basis": "as_reported",
+            "accn": "0000093410-24-000013",
+            "filed": "2024-02-26"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 1870.0,
+            "adjusted": 1870.0,
+            "basis": "as_reported",
+            "accn": "0000093410-23-000009",
+            "filed": "2023-02-23"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "CAT": {
         "completeness": 1.0,
@@ -1013,9 +3848,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 472.3,
+            "adjusted": 472.3,
+            "basis": "as_reported",
+            "accn": "0000018230-26-000008",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 489.4,
+            "adjusted": 489.4,
+            "basis": "as_reported",
+            "accn": "0000018230-26-000008",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 513.6,
+            "adjusted": 513.6,
+            "basis": "as_reported",
+            "accn": "0000018230-26-000008",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 530.4,
+            "adjusted": 530.4,
+            "basis": "as_reported",
+            "accn": "0000018230-25-000008",
+            "filed": "2025-02-14"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 548.5,
+            "adjusted": 548.5,
+            "basis": "as_reported",
+            "accn": "0000018230-24-000009",
+            "filed": "2024-02-16"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 548.6,
+            "adjusted": 548.6,
+            "basis": "as_reported",
+            "accn": "0000018230-23-000011",
+            "filed": "2023-02-15"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "GE": {
         "completeness": 0.8889,
@@ -1024,9 +3911,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 1068.0,
+            "adjusted": 1068.0,
+            "basis": "as_reported",
+            "accn": "0000040545-26-000008",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 1094.0,
+            "adjusted": 1094.0,
+            "basis": "as_reported",
+            "accn": "0000040545-26-000008",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 1099.0,
+            "adjusted": 1099.0,
+            "basis": "restated",
+            "accn": "0000040545-26-000008",
+            "filed": "2026-01-29"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 1101.0,
+            "adjusted": 1101.0,
+            "basis": "restated",
+            "accn": "0000040545-25-000015",
+            "filed": "2025-02-03"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 1098.0,
+            "adjusted": 1375.794,
+            "basis": "split_adjusted",
+            "accn": "0000040545-24-000027",
+            "filed": "2024-02-02"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 1095.0,
+            "adjusted": 1372.035,
+            "basis": "split_adjusted",
+            "accn": "0000040545-23-000023",
+            "filed": "2023-02-10"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "HON": {
         "completeness": 0.9778,
@@ -1035,9 +3974,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 642.8,
+            "adjusted": 642.8,
+            "basis": "as_reported",
+            "accn": "0000773840-26-000013",
+            "filed": "2026-02-17"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 655.3,
+            "adjusted": 655.3,
+            "basis": "restated",
+            "accn": "0000773840-26-000013",
+            "filed": "2026-02-17"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 668.2,
+            "adjusted": 668.2,
+            "basis": "restated",
+            "accn": "0000773840-26-000013",
+            "filed": "2026-02-17"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 683.1,
+            "adjusted": 724.7691,
+            "basis": "split_adjusted",
+            "accn": "0000773840-25-000010",
+            "filed": "2025-02-14"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 700.4,
+            "adjusted": 743.1244,
+            "basis": "split_adjusted",
+            "accn": "0000773840-24-000014",
+            "filed": "2024-02-16"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 711.2,
+            "adjusted": 754.5832,
+            "basis": "split_adjusted",
+            "accn": "0000773840-23-000013",
+            "filed": "2023-02-10"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "UPS": {
         "completeness": 1.0,
@@ -1046,9 +4037,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 850.0,
+            "adjusted": 850.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-008432",
+            "filed": "2026-02-17"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 856.0,
+            "adjusted": 856.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-008432",
+            "filed": "2026-02-17"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 860.0,
+            "adjusted": 860.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-008432",
+            "filed": "2026-02-17"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 875.0,
+            "adjusted": 875.0,
+            "basis": "as_reported",
+            "accn": "0001090727-25-000019",
+            "filed": "2025-02-18"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 878.0,
+            "adjusted": 878.0,
+            "basis": "as_reported",
+            "accn": "0001090727-24-000008",
+            "filed": "2024-02-20"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 871.0,
+            "adjusted": 871.0,
+            "basis": "as_reported",
+            "accn": "0001090727-23-000006",
+            "filed": "2023-02-21"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "BA": {
         "completeness": 1.0,
@@ -1057,9 +4100,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 762.3,
+            "adjusted": 762.3,
+            "basis": "as_reported",
+            "accn": "0001628280-26-004357",
+            "filed": "2026-01-30"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 646.9,
+            "adjusted": 646.9,
+            "basis": "as_reported",
+            "accn": "0001628280-26-004357",
+            "filed": "2026-01-30"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 605.8,
+            "adjusted": 605.8,
+            "basis": "as_reported",
+            "accn": "0001628280-26-004357",
+            "filed": "2026-01-30"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 594.9,
+            "adjusted": 594.9,
+            "basis": "as_reported",
+            "accn": "0000012927-25-000015",
+            "filed": "2025-02-03"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 587.6,
+            "adjusted": 587.6,
+            "basis": "as_reported",
+            "accn": "0000012927-24-000010",
+            "filed": "2024-01-31"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 568.6,
+            "adjusted": 568.6,
+            "basis": "as_reported",
+            "accn": "0000012927-23-000007",
+            "filed": "2023-01-27"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "JPM": {
         "completeness": 0.8889,
@@ -1068,9 +4163,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 2781.5,
+            "adjusted": 2781.5,
+            "basis": "as_reported",
+            "accn": "0001628280-26-008131",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 2879.0,
+            "adjusted": 2879.0,
+            "basis": "as_reported",
+            "accn": "0001628280-26-008131",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 2943.1,
+            "adjusted": 2943.1,
+            "basis": "as_reported",
+            "accn": "0001628280-26-008131",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 2970.0,
+            "adjusted": 2970.0,
+            "basis": "as_reported",
+            "accn": "0000019617-25-000270",
+            "filed": "2025-02-14"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 3026.6,
+            "adjusted": 3026.6,
+            "basis": "as_reported",
+            "accn": "0000019617-24-000225",
+            "filed": "2024-02-16"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 3087.4,
+            "adjusted": 3087.4,
+            "basis": "as_reported",
+            "accn": "0000019617-23-000231",
+            "filed": "2023-02-21"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "BAC": {
         "completeness": 0.8889,
@@ -1079,9 +4226,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 7680.9,
+            "adjusted": 7680.9,
+            "basis": "as_reported",
+            "accn": "0000070858-26-000157",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 7935.8,
+            "adjusted": 7935.8,
+            "basis": "as_reported",
+            "accn": "0000070858-26-000157",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 8080.5,
+            "adjusted": 8080.5,
+            "basis": "as_reported",
+            "accn": "0000070858-26-000157",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 8167.5,
+            "adjusted": 8167.5,
+            "basis": "as_reported",
+            "accn": "0000070858-25-000139",
+            "filed": "2025-02-25"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 8558.4,
+            "adjusted": 8558.4,
+            "basis": "as_reported",
+            "accn": "0000070858-24-000122",
+            "filed": "2024-02-20"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 8796.9,
+            "adjusted": 8796.9,
+            "basis": "as_reported",
+            "accn": "0000070858-23-000092",
+            "filed": "2023-02-22"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "V": {
         "completeness": 0.8889,
@@ -1090,9 +4289,61 @@
           "2025-09-30",
           "2024-09-30",
           "2023-09-30",
-          "2022-09-30"
+          "2022-09-30",
+          "2021-09-30"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2026-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2025-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2024-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2023-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2022-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2021-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "MA": {
         "completeness": 1.0,
@@ -1101,9 +4352,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 906.0,
+            "adjusted": 906.0,
+            "basis": "as_reported",
+            "accn": "0001141391-26-000013",
+            "filed": "2026-02-11"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 927.0,
+            "adjusted": 927.0,
+            "basis": "as_reported",
+            "accn": "0001141391-26-000013",
+            "filed": "2026-02-11"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 946.0,
+            "adjusted": 946.0,
+            "basis": "as_reported",
+            "accn": "0001141391-26-000013",
+            "filed": "2026-02-11"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 971.0,
+            "adjusted": 971.0,
+            "basis": "as_reported",
+            "accn": "0001141391-25-000011",
+            "filed": "2025-02-12"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 992.0,
+            "adjusted": 992.0,
+            "basis": "as_reported",
+            "accn": "0001141391-24-000022",
+            "filed": "2024-02-13"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 1006.0,
+            "adjusted": 1006.0,
+            "basis": "as_reported",
+            "accn": "0001141391-23-000020",
+            "filed": "2023-02-14"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "LIN": {
         "completeness": 1.0,
@@ -1112,9 +4415,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 472.195,
+            "adjusted": 472.195,
+            "basis": "as_reported",
+            "accn": "0001628280-26-011430",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 482.092,
+            "adjusted": 482.092,
+            "basis": "as_reported",
+            "accn": "0001628280-26-011430",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 492.29,
+            "adjusted": 492.29,
+            "basis": "as_reported",
+            "accn": "0001628280-26-011430",
+            "filed": "2026-02-25"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 504.038,
+            "adjusted": 504.038,
+            "basis": "as_reported",
+            "accn": "0001628280-25-007990",
+            "filed": "2025-02-26"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 521.875,
+            "adjusted": 521.875,
+            "basis": "as_reported",
+            "accn": "0001628280-24-007424",
+            "filed": "2024-02-28"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 531.157,
+            "adjusted": 531.157,
+            "basis": "as_reported",
+            "accn": "0001628280-23-005434",
+            "filed": "2023-02-28"
+          }
+        ],
+        "xbrl_acceptance_missing": false
       },
       "SHW": {
         "completeness": 1.0,
@@ -1123,9 +4478,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 250.4,
+            "adjusted": 250.4,
+            "basis": "as_reported",
+            "accn": "0000089800-26-000008",
+            "filed": "2026-02-19"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 254.1,
+            "adjusted": 254.1,
+            "basis": "as_reported",
+            "accn": "0000089800-26-000008",
+            "filed": "2026-02-19"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 258.3,
+            "adjusted": 258.3,
+            "basis": "as_reported",
+            "accn": "0000089800-26-000008",
+            "filed": "2026-02-19"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 261.8,
+            "adjusted": 261.8,
+            "basis": "as_reported",
+            "accn": "0000089800-25-000030",
+            "filed": "2025-02-20"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 267.1,
+            "adjusted": 267.1,
+            "basis": "as_reported",
+            "accn": "0000089800-24-000033",
+            "filed": "2024-02-20"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 275.8,
+            "adjusted": 275.8,
+            "basis": "restated",
+            "accn": "0000089800-23-000007",
+            "filed": "2023-02-22"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "NEE": {
         "completeness": 0.8889,
@@ -1134,9 +4541,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 2070.6,
+            "adjusted": 2070.6,
+            "basis": "as_reported",
+            "accn": "0000753308-26-000015",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 2059.2,
+            "adjusted": 2059.2,
+            "basis": "as_reported",
+            "accn": "0000753308-26-000015",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 2030.8,
+            "adjusted": 2030.8,
+            "basis": "as_reported",
+            "accn": "0000753308-26-000015",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 1978.6,
+            "adjusted": 1978.6,
+            "basis": "as_reported",
+            "accn": "0000753308-25-000011",
+            "filed": "2025-02-14"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 1972.2,
+            "adjusted": 1972.2,
+            "basis": "as_reported",
+            "accn": "0000753308-24-000008",
+            "filed": "2024-02-16"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 1968.8,
+            "adjusted": 1968.8,
+            "basis": "as_reported",
+            "accn": "0000753308-23-000019",
+            "filed": "2023-02-17"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "DUK": {
         "completeness": 1.0,
@@ -1145,9 +4604,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 777.0,
+            "adjusted": 777.0,
+            "basis": "as_reported",
+            "accn": "0001326160-26-000014",
+            "filed": "2026-02-26"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 772.0,
+            "adjusted": 772.0,
+            "basis": "as_reported",
+            "accn": "0001326160-26-000014",
+            "filed": "2026-02-26"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 771.0,
+            "adjusted": 771.0,
+            "basis": "as_reported",
+            "accn": "0001326160-26-000014",
+            "filed": "2026-02-26"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 770.0,
+            "adjusted": 770.0,
+            "basis": "as_reported",
+            "accn": "0001326160-25-000072",
+            "filed": "2025-02-27"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 769.0,
+            "adjusted": 769.0,
+            "basis": "as_reported",
+            "accn": "0001326160-24-000037",
+            "filed": "2024-02-23"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 738.0,
+            "adjusted": 738.0,
+            "basis": "as_reported",
+            "accn": "0001326160-23-000073",
+            "filed": "2023-02-27"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "AMT": {
         "completeness": 1.0,
@@ -1156,9 +4667,61 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 468.757,
+            "adjusted": 468.757,
+            "basis": "as_reported",
+            "accn": "0001053507-26-000035",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 468.12,
+            "adjusted": 468.12,
+            "basis": "as_reported",
+            "accn": "0001053507-26-000035",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 467.162,
+            "adjusted": 467.162,
+            "basis": "as_reported",
+            "accn": "0001053507-26-000035",
+            "filed": "2026-02-24"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 462.75,
+            "adjusted": 462.75,
+            "basis": "as_reported",
+            "accn": "0001053507-25-000025",
+            "filed": "2025-02-25"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 453.294,
+            "adjusted": 453.294,
+            "basis": "as_reported",
+            "accn": "0001053507-24-000011",
+            "filed": "2024-02-27"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 446.104,
+            "adjusted": 446.104,
+            "basis": "as_reported",
+            "accn": "0001053507-23-000023",
+            "filed": "2023-02-23"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       },
       "PLD": {
         "completeness": 0.8889,
@@ -1167,11 +4730,73 @@
           "2024-12-31",
           "2023-12-31",
           "2022-12-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2020-12-31"
         ],
-        "reason": null
+        "reason": null,
+        "shares_used": [
+          {
+            "fy": "2025-12-31",
+            "raw": 956.832,
+            "adjusted": 956.832,
+            "basis": "as_reported",
+            "accn": "0001193125-26-051453",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2024-12-31",
+            "raw": 953.59,
+            "adjusted": 953.59,
+            "basis": "as_reported",
+            "accn": "0001193125-26-051453",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2023-12-31",
+            "raw": 951.791,
+            "adjusted": 951.791,
+            "basis": "as_reported",
+            "accn": "0001193125-26-051453",
+            "filed": "2026-02-13"
+          },
+          {
+            "fy": "2022-12-31",
+            "raw": 811.608,
+            "adjusted": 811.608,
+            "basis": "as_reported",
+            "accn": "0000950170-25-021272",
+            "filed": "2025-02-14"
+          },
+          {
+            "fy": "2021-12-31",
+            "raw": 764.762,
+            "adjusted": 764.762,
+            "basis": "as_reported",
+            "accn": "0000950170-24-014539",
+            "filed": "2024-02-13"
+          },
+          {
+            "fy": "2020-12-31",
+            "raw": 754.414,
+            "adjusted": 754.414,
+            "basis": "as_reported",
+            "accn": "0001564590-23-001902",
+            "filed": "2023-02-14"
+          }
+        ],
+        "xbrl_acceptance_missing": true
       }
-    }
+    },
+    "record_skips": [
+      {
+        "signal_id": "2026-11-20-ADBE-WATCH-001",
+        "reason": "signal_id=2026-11-20-ADBE-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
+      },
+      {
+        "signal_id": "2026-11-20-GOOGL-WATCH-001",
+        "reason": "signal_id=2026-11-20-GOOGL-WATCH-001 가 다른 내용으로 이미 기록돼 있다 — 수정 금지"
+      }
+    ]
   },
   "charts": {
     "AAPL": {
@@ -1610,6 +5235,225 @@
         89.398,
         89.718,
         90.075
+      ]
+    },
+    "NVDA": {
+      "basis": "split_adj_index_base100",
+      "labels": [
+        "2025-11-28",
+        "2025-12-05",
+        "2025-12-12",
+        "2025-12-19",
+        "2025-12-26",
+        "2026-01-02",
+        "2026-01-09",
+        "2026-01-16",
+        "2026-01-23",
+        "2026-01-30",
+        "2026-02-06",
+        "2026-02-13",
+        "2026-02-20",
+        "2026-02-27",
+        "2026-03-06",
+        "2026-03-13",
+        "2026-03-20",
+        "2026-03-27",
+        "2026-04-03",
+        "2026-04-10",
+        "2026-04-17",
+        "2026-04-24",
+        "2026-05-01",
+        "2026-05-08",
+        "2026-05-15",
+        "2026-05-22",
+        "2026-05-29",
+        "2026-06-05",
+        "2026-06-12",
+        "2026-06-19",
+        "2026-06-26",
+        "2026-07-03",
+        "2026-07-10",
+        "2026-07-17",
+        "2026-07-24",
+        "2026-07-31",
+        "2026-08-07",
+        "2026-08-14",
+        "2026-08-21",
+        "2026-08-28",
+        "2026-09-04",
+        "2026-09-11",
+        "2026-09-18",
+        "2026-09-25",
+        "2026-10-02",
+        "2026-10-09",
+        "2026-10-16",
+        "2026-10-23",
+        "2026-10-30",
+        "2026-11-06",
+        "2026-11-13",
+        "2026-11-20"
+      ],
+      "index": [
+        100.0,
+        103.056,
+        98.881,
+        102.254,
+        107.644,
+        106.695,
+        104.441,
+        105.215,
+        106.028,
+        107.983,
+        104.751,
+        103.282,
+        107.243,
+        100.107,
+        100.463,
+        101.836,
+        97.571,
+        94.644,
+        100.22,
+        106.571,
+        113.943,
+        117.667,
+        112.119,
+        121.582,
+        127.299,
+        121.655,
+        119.288,
+        115.876,
+        115.927,
+        119.034,
+        108.774,
+        110.073,
+        119.186,
+        114.582,
+        116.859,
+        113.418,
+        126.531,
+        127.209,
+        121.311,
+        122.91,
+        130.147,
+        123.328,
+        125.576,
+        127.158,
+        132.175,
+        129.537,
+        120.977,
+        119.186,
+        115.616,
+        105.446,
+        92.006,
+        82.475
+      ],
+      "dma50": [
+        105.554,
+        105.705,
+        105.564,
+        104.888,
+        105.122,
+        105.374,
+        105.296,
+        104.27,
+        103.856,
+        103.852,
+        103.71,
+        104.184,
+        104.407,
+        104.871,
+        105.088,
+        104.78,
+        104.294,
+        103.667,
+        103.193,
+        102.869,
+        103.557,
+        104.534,
+        105.737,
+        106.582,
+        109.08,
+        111.191,
+        112.626,
+        114.942,
+        116.899,
+        118.255,
+        118.693,
+        118.529,
+        118.192,
+        118.596,
+        118.183,
+        116.483,
+        116.426,
+        116.678,
+        117.275,
+        117.751,
+        118.964,
+        120.104,
+        121.058,
+        122.021,
+        123.321,
+        125.467,
+        126.032,
+        125.696,
+        125.282,
+        124.188,
+        121.27,
+        117.998
+      ],
+      "dma200": [
+        86.818,
+        87.422,
+        88.178,
+        89.018,
+        89.887,
+        90.675,
+        91.631,
+        92.687,
+        93.619,
+        94.778,
+        95.861,
+        96.992,
+        97.845,
+        98.846,
+        99.512,
+        100.221,
+        100.811,
+        101.258,
+        101.592,
+        102.114,
+        102.697,
+        103.303,
+        103.874,
+        104.368,
+        105.069,
+        105.668,
+        106.019,
+        106.538,
+        106.926,
+        107.289,
+        107.706,
+        107.925,
+        108.288,
+        108.698,
+        108.987,
+        109.103,
+        109.592,
+        110.124,
+        110.332,
+        110.636,
+        111.118,
+        111.566,
+        112.078,
+        112.697,
+        113.398,
+        114.211,
+        114.673,
+        115.065,
+        115.471,
+        115.634,
+        115.362,
+        115.015
       ]
     },
     "ADBE": {
@@ -2707,6 +6551,225 @@
         99.554
       ]
     },
+    "TSLA": {
+      "basis": "split_adj_index_base100",
+      "labels": [
+        "2025-11-28",
+        "2025-12-05",
+        "2025-12-12",
+        "2025-12-19",
+        "2025-12-26",
+        "2026-01-02",
+        "2026-01-09",
+        "2026-01-16",
+        "2026-01-23",
+        "2026-01-30",
+        "2026-02-06",
+        "2026-02-13",
+        "2026-02-20",
+        "2026-02-27",
+        "2026-03-06",
+        "2026-03-13",
+        "2026-03-20",
+        "2026-03-27",
+        "2026-04-03",
+        "2026-04-10",
+        "2026-04-17",
+        "2026-04-24",
+        "2026-05-01",
+        "2026-05-08",
+        "2026-05-15",
+        "2026-05-22",
+        "2026-05-29",
+        "2026-06-05",
+        "2026-06-12",
+        "2026-06-19",
+        "2026-06-26",
+        "2026-07-03",
+        "2026-07-10",
+        "2026-07-17",
+        "2026-07-24",
+        "2026-07-31",
+        "2026-08-07",
+        "2026-08-14",
+        "2026-08-21",
+        "2026-08-28",
+        "2026-09-04",
+        "2026-09-11",
+        "2026-09-18",
+        "2026-09-25",
+        "2026-10-02",
+        "2026-10-09",
+        "2026-10-16",
+        "2026-10-23",
+        "2026-10-30",
+        "2026-11-06",
+        "2026-11-13",
+        "2026-11-20"
+      ],
+      "index": [
+        100.0,
+        105.772,
+        106.693,
+        111.863,
+        110.466,
+        101.836,
+        103.45,
+        101.704,
+        104.391,
+        100.056,
+        95.569,
+        97.041,
+        95.734,
+        93.57,
+        92.226,
+        90.941,
+        85.538,
+        84.113,
+        83.825,
+        81.119,
+        93.131,
+        87.477,
+        90.852,
+        99.577,
+        98.157,
+        99.033,
+        101.306,
+        90.894,
+        94.481,
+        93.1,
+        88.27,
+        91.464,
+        94.79,
+        88.532,
+        72.769,
+        72.346,
+        76.384,
+        79.566,
+        84.353,
+        81.073,
+        82.312,
+        84.952,
+        84.68,
+        86.503,
+        86.15,
+        88.965,
+        82.46,
+        86.529,
+        92.942,
+        83.274,
+        90.713,
+        87.038
+      ],
+      "dma50": [
+        100.879,
+        101.173,
+        101.258,
+        102.219,
+        103.247,
+        103.45,
+        103.275,
+        102.999,
+        102.842,
+        103.117,
+        103.343,
+        103.203,
+        102.504,
+        101.388,
+        99.498,
+        97.786,
+        96.54,
+        94.994,
+        93.795,
+        91.663,
+        90.739,
+        89.983,
+        89.201,
+        89.079,
+        89.913,
+        90.275,
+        91.079,
+        91.891,
+        92.591,
+        93.565,
+        94.094,
+        94.479,
+        95.124,
+        95.265,
+        93.581,
+        90.839,
+        88.44,
+        86.265,
+        85.05,
+        83.798,
+        83.211,
+        82.409,
+        81.42,
+        80.956,
+        80.801,
+        82.466,
+        83.563,
+        84.564,
+        85.92,
+        86.509,
+        87.115,
+        87.414
+      ],
+      "dma200": [
+        79.135,
+        79.641,
+        80.452,
+        81.62,
+        82.749,
+        83.735,
+        84.792,
+        85.809,
+        86.653,
+        87.692,
+        88.686,
+        89.537,
+        90.136,
+        90.816,
+        91.15,
+        91.464,
+        91.681,
+        92.073,
+        92.269,
+        92.371,
+        92.723,
+        93.186,
+        93.566,
+        94.006,
+        94.706,
+        95.318,
+        95.806,
+        96.274,
+        96.635,
+        96.93,
+        97.163,
+        97.312,
+        97.203,
+        96.95,
+        96.406,
+        95.683,
+        95.031,
+        94.4,
+        93.758,
+        93.202,
+        92.884,
+        92.737,
+        92.365,
+        91.969,
+        91.402,
+        90.802,
+        90.195,
+        89.813,
+        89.569,
+        89.236,
+        88.972,
+        88.783
+      ]
+    },
     "HD": {
       "basis": "split_adj_index_base100",
       "labels": [
@@ -2924,6 +6987,225 @@
         93.415,
         93.212,
         92.988
+      ]
+    },
+    "WMT": {
+      "basis": "split_adj_index_base100",
+      "labels": [
+        "2025-11-28",
+        "2025-12-05",
+        "2025-12-12",
+        "2025-12-19",
+        "2025-12-26",
+        "2026-01-02",
+        "2026-01-09",
+        "2026-01-16",
+        "2026-01-23",
+        "2026-01-30",
+        "2026-02-06",
+        "2026-02-13",
+        "2026-02-20",
+        "2026-02-27",
+        "2026-03-06",
+        "2026-03-13",
+        "2026-03-20",
+        "2026-03-27",
+        "2026-04-03",
+        "2026-04-10",
+        "2026-04-17",
+        "2026-04-24",
+        "2026-05-01",
+        "2026-05-08",
+        "2026-05-15",
+        "2026-05-22",
+        "2026-05-29",
+        "2026-06-05",
+        "2026-06-12",
+        "2026-06-19",
+        "2026-06-26",
+        "2026-07-03",
+        "2026-07-10",
+        "2026-07-17",
+        "2026-07-24",
+        "2026-07-31",
+        "2026-08-07",
+        "2026-08-14",
+        "2026-08-21",
+        "2026-08-28",
+        "2026-09-04",
+        "2026-09-11",
+        "2026-09-18",
+        "2026-09-25",
+        "2026-10-02",
+        "2026-10-09",
+        "2026-10-16",
+        "2026-10-23",
+        "2026-10-30",
+        "2026-11-06",
+        "2026-11-13",
+        "2026-11-20"
+      ],
+      "index": [
+        100.0,
+        104.163,
+        105.601,
+        103.484,
+        101.113,
+        102.036,
+        103.638,
+        108.316,
+        106.533,
+        107.809,
+        118.704,
+        121.156,
+        111.293,
+        115.781,
+        112.026,
+        114.487,
+        107.701,
+        111.203,
+        113.827,
+        114.714,
+        115.374,
+        117.564,
+        119.084,
+        118.026,
+        118.949,
+        108.832,
+        104.742,
+        107.574,
+        109.529,
+        106.036,
+        104.687,
+        101.204,
+        103.068,
+        103.375,
+        99.059,
+        100.624,
+        101.213,
+        104.307,
+        93.838,
+        93.286,
+        96.95,
+        96.96,
+        96.579,
+        97.711,
+        94.344,
+        100.76,
+        107.511,
+        108.488,
+        111.764,
+        113.582,
+        115.908,
+        114.053
+      ],
+      "dma50": [
+        93.972,
+        94.964,
+        96.069,
+        97.235,
+        97.717,
+        98.1,
+        98.816,
+        100.4,
+        101.585,
+        102.903,
+        105.064,
+        106.901,
+        107.722,
+        108.689,
+        109.722,
+        110.918,
+        111.809,
+        112.26,
+        112.646,
+        113.474,
+        113.662,
+        113.786,
+        113.765,
+        114.237,
+        114.586,
+        114.91,
+        114.407,
+        113.958,
+        113.655,
+        113.2,
+        112.418,
+        111.308,
+        109.757,
+        108.264,
+        106.475,
+        104.637,
+        103.713,
+        103.6,
+        102.793,
+        101.353,
+        100.337,
+        99.838,
+        99.455,
+        98.981,
+        98.5,
+        98.187,
+        98.555,
+        99.023,
+        99.75,
+        101.785,
+        103.645,
+        105.175
+      ],
+      "dma200": [
+        88.644,
+        88.89,
+        89.319,
+        89.75,
+        90.178,
+        90.657,
+        91.276,
+        92.021,
+        92.608,
+        93.233,
+        94.012,
+        94.803,
+        95.304,
+        95.948,
+        96.602,
+        97.239,
+        97.783,
+        98.332,
+        98.87,
+        99.554,
+        100.188,
+        100.913,
+        101.687,
+        102.477,
+        103.227,
+        103.866,
+        104.125,
+        104.475,
+        104.979,
+        105.387,
+        105.756,
+        105.929,
+        106.133,
+        106.385,
+        106.558,
+        106.782,
+        106.877,
+        107.067,
+        107.252,
+        107.304,
+        107.383,
+        107.43,
+        107.412,
+        107.291,
+        107.068,
+        106.93,
+        107.018,
+        107.16,
+        107.238,
+        107.42,
+        107.623,
+        107.67
       ]
     },
     "PG": {
@@ -5341,7 +9623,7 @@
   "ledger_summary": {
     "schema_version": 1,
     "as_of": "2026-11-20",
-    "n_signals": 2,
+    "n_signals": 7,
     "n_graded_3m": 0,
     "accuracy": {
       "label_ko": "신호 정확도",
@@ -5551,36 +9833,42 @@
     },
     "pilot": {
       "verdict": "보류",
-      "reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
-      "n_eff": 2,
+      "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
+      "n_eff": 0,
+      "n_records": 7,
+      "n_eligible": 0,
       "metrics": [
         {
           "key": "n_eff",
           "label_ko": "유효 표본 N_eff",
-          "value": 2,
+          "value": 0,
           "threshold": "≥ 15",
-          "pass": false
+          "pass": false,
+          "note_ko": "체결·3개월 만기 0개(발행 신호 7건 중 유효 0건)"
         },
         {
           "key": "net_after_cost",
           "label_ko": "비용 후 순수익(SPY 대비)",
           "value": null,
           "threshold": "> 0",
-          "pass": null
+          "pass": null,
+          "note_ko": "유효 표본 0건 — 계산 불가"
         },
         {
           "key": "cash_equivalent",
           "label_ko": "유사 현금비중 벤치마크 대비",
-          "value": null,
+          "value": 0.0,
           "threshold": "> 0",
-          "pass": null
+          "pass": false,
+          "note_ko": "유효 표본 0건 — 계산 불가"
         },
         {
           "key": "tail_loss",
           "label_ko": "손실 구간(하위 20%) 평균",
           "value": null,
           "threshold": "≥ -0.08",
-          "pass": null
+          "pass": null,
+          "note_ko": "유효 표본 0건 — 계산 불가"
         }
       ]
     },
@@ -5598,6 +9886,12 @@
       }
     ],
     "signal_history": [],
+    "benchmark_trailing": {
+      "1w": -0.05448277718991601,
+      "1m": -0.07401470689128253,
+      "3m": -0.06278055500508206,
+      "6m": -0.031268175882663396
+    },
     "holdout": {
       "holdout_start": "2026-08-20",
       "holdout_end": "2026-11-19",
@@ -5617,12 +9911,21 @@
         "confidence": "B",
         "action": null,
         "basis": "virtual_fill",
+        "entry_session": "2026-11-20",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
         "horizons": {
           "1w": {
             "horizon_td": 5,
             "maturity": "2026-11-30",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5634,6 +9937,8 @@
             "maturity": "2026-12-22",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5645,6 +9950,8 @@
             "maturity": "2027-02-24",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5656,6 +9963,8 @@
             "maturity": "2027-05-25",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5675,12 +9984,21 @@
         "confidence": "B",
         "action": null,
         "basis": "virtual_fill",
+        "entry_session": "2026-11-20",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
         "horizons": {
           "1w": {
             "horizon_td": 5,
             "maturity": "2026-11-30",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5692,6 +10010,8 @@
             "maturity": "2026-12-22",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5703,6 +10023,8 @@
             "maturity": "2027-02-24",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5714,6 +10036,8 @@
             "maturity": "2027-05-25",
             "eligible": false,
             "truncated": true,
+            "matured": false,
+            "complete": false,
             "observed_days": 0,
             "agreement": null,
             "return": null,
@@ -5724,6 +10048,371 @@
         "entry_score": 56.02,
         "sector": "Communication Services",
         "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-20-MSFT-WATCH-001",
+        "ticker": "MSFT",
+        "as_of": "2026-11-20",
+        "grade": "B",
+        "confidence": "B",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-20",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          }
+        },
+        "entry_score": 58.24,
+        "sector": "Information Technology",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-20-NVDA-WATCH-001",
+        "ticker": "NVDA",
+        "as_of": "2026-11-20",
+        "grade": "B",
+        "confidence": "B",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-20",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          }
+        },
+        "entry_score": 62.76,
+        "sector": "Information Technology",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-20-CSCO-WATCH-001",
+        "ticker": "CSCO",
+        "as_of": "2026-11-20",
+        "grade": "B",
+        "confidence": "B",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-20",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          }
+        },
+        "entry_score": 57.57,
+        "sector": "Information Technology",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-20-META-WATCH-001",
+        "ticker": "META",
+        "as_of": "2026-11-20",
+        "grade": "C",
+        "confidence": "C",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-20",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          }
+        },
+        "entry_score": 62.03,
+        "sector": "Communication Services",
+        "params_version": "params_v001"
+      },
+      {
+        "signal_id": "2026-11-20-CAT-WATCH-001",
+        "ticker": "CAT",
+        "as_of": "2026-11-20",
+        "grade": "B",
+        "confidence": "B",
+        "action": null,
+        "basis": "virtual_fill",
+        "entry_session": "2026-11-20",
+        "complete": {
+          "1w": false,
+          "1m": false,
+          "3m": false,
+          "6m": false
+        },
+        "horizons": {
+          "1w": {
+            "horizon_td": 5,
+            "maturity": "2026-11-30",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "1m": {
+            "horizon_td": 21,
+            "maturity": "2026-12-22",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "3m": {
+            "horizon_td": 63,
+            "maturity": "2027-02-24",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          },
+          "6m": {
+            "horizon_td": 126,
+            "maturity": "2027-05-25",
+            "eligible": false,
+            "truncated": true,
+            "matured": false,
+            "complete": false,
+            "observed_days": 0,
+            "agreement": null,
+            "return": null,
+            "excess_return": null,
+            "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)"
+          }
+        },
+        "entry_score": 55.45,
+        "sector": "Industrials",
+        "params_version": "params_v001"
       }
     ],
     "settlement": {
@@ -5731,45 +10420,54 @@
       "pending": []
     }
   },
+  "target_session": "2026-11-20",
+  "signal_published_planned_at": "2026-11-19T22:02:11Z",
   "portfolio": {
     "as_of": "2026-11-20",
     "cash_pct": 1.0,
     "invested_pct": 0.0,
+    "avg_exposure": 0.0,
     "equity_index": 1.0,
     "positions": []
   },
   "pilot_eval": {
     "verdict": "보류",
-    "reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
-    "n_eff": 2,
+    "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
+    "n_eff": 0,
+    "n_records": 7,
+    "n_eligible": 0,
     "metrics": [
       {
         "key": "n_eff",
         "label_ko": "유효 표본 N_eff",
-        "value": 2,
+        "value": 0,
         "threshold": "≥ 15",
-        "pass": false
+        "pass": false,
+        "note_ko": "체결·3개월 만기 0개(발행 신호 7건 중 유효 0건)"
       },
       {
         "key": "net_after_cost",
         "label_ko": "비용 후 순수익(SPY 대비)",
         "value": null,
         "threshold": "> 0",
-        "pass": null
+        "pass": null,
+        "note_ko": "유효 표본 0건 — 계산 불가"
       },
       {
         "key": "cash_equivalent",
         "label_ko": "유사 현금비중 벤치마크 대비",
-        "value": null,
+        "value": 0.0,
         "threshold": "> 0",
-        "pass": null
+        "pass": false,
+        "note_ko": "유효 표본 0건 — 계산 불가"
       },
       {
         "key": "tail_loss",
         "label_ko": "손실 구간(하위 20%) 평균",
         "value": null,
         "threshold": "≥ -0.08",
-        "pass": null
+        "pass": null,
+        "note_ko": "유효 표본 0건 — 계산 불가"
       }
     ]
   },
