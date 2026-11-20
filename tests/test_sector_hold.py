@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from engine.metrics.valuation import SUSPEND_REASON, classify_sector, value_company
 from engine.screener import Candidate, screen

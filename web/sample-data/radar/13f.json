@@ -1,0 +1,18 @@
+{
+  "as_of": "2026-11-20",
+  "watermark_ko": "45일 전 분기말 기준",
+  "period_end": null,
+  "lag_days": 45,
+  "stale": true,
+  "stale_days": null,
+  "filers": [],
+  "n_filers": 0,
+  "counts": {
+    "new": 0,
+    "increase": 0,
+    "reduce": 0,
+    "exit": 0
+  },
+  "watchlist_overlap": [],
+  "note_ko": "13F 수집 이전 — 레이더는 비어 있는 것이 정상이다(weekly-screen 이 채운다)."
+}

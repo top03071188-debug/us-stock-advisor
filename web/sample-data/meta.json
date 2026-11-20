@@ -1,9 +1,19 @@
 {
-  "generated_at": "2026-11-19T17:30:00+09:00",
+  "generated_at": "2026-11-20T01:26:18.478476Z",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:sample",
+  "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
   "status": "sample",
+  "mode": "postclose",
+  "source": "fixtures",
   "regime": "neutral",
-  "data_cutoff_at": "2026-11-18T22:00:00Z",
-  "debate_status": "none"
+  "regime_verified": true,
+  "regime_multiplier": 0.7,
+  "data_cutoff_at": "2026-11-19T22:00:00Z",
+  "signal_published_at": "2026-11-19T22:02:11Z",
+  "order_cutoff_at": "2026-11-20T14:25:00Z",
+  "as_of": "2026-11-20",
+  "prices_as_of": "2026-11-19",
+  "debate_generated_at": null,
+  "debate_status": "none",
+  "note_ko": "샘플(합성) 데이터입니다 — 실전 신호가 아닙니다."
 }

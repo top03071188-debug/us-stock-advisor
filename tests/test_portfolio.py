@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 
 import pytest
 
@@ -22,8 +22,8 @@ D3 = date(2026, 11, 23)
 COMMIT = datetime(2026, 11, 18, 22, 0, tzinfo=timezone.utc)
 
 
-def bar(day: date, o: float, h: float, l: float, c: float, **kw) -> Bar:
-    return Bar(date=day, raw_open=o, raw_high=h, raw_low=l, raw_close=c, **kw)
+def bar(day: date, o: float, h: float, lo: float, c: float, **kw) -> Bar:
+    return Bar(date=day, raw_open=o, raw_high=h, raw_low=lo, raw_close=c, **kw)
 
 
 def order(stop_min: float = 90.0, limit_max: float = 110.0, plan_weight: float = 0.05,

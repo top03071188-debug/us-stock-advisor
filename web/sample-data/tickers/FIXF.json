@@ -1,0 +1,458 @@
+{
+  "ticker": "FIXF",
+  "as_of": "2026-11-20",
+  "status": "sample",
+  "watchlist": {
+    "ticker": "FIXF",
+    "sector": "Industrials",
+    "q": 92.7,
+    "v": 65.15,
+    "g": 0.0,
+    "rank_score": 65.895
+  },
+  "signal": {
+    "signal_id": "2026-11-20-FIXF-WATCH-001",
+    "ticker": "FIXF",
+    "type": "WATCH",
+    "trade_grade": "WATCH",
+    "grade": "C",
+    "entry_score": 64.56,
+    "decision": "WATCH",
+    "as_of": "2026-11-20",
+    "data_cutoff_at": "2026-11-19T22:00:00Z",
+    "signal_published_at": "2026-11-19T22:02:11Z",
+    "order_cutoff_at": "2026-11-20T14:25:00Z",
+    "generated_price": 145.14838636821858,
+    "quant_intent": "no_action",
+    "thesis_ko": "IV 대비 9% 할인 · RSI 55",
+    "valuation": {
+      "iv_low": 135.7137,
+      "iv_median": 159.6632,
+      "iv_high": 183.6127,
+      "price": 145.1484,
+      "margin": 0.0909
+    },
+    "indicators": {
+      "rsi14": 55.0809,
+      "pct_b": 0.7489,
+      "dma50": 144.1032,
+      "dma200": 141.5228,
+      "atr_pct": 0.0122
+    },
+    "investor_scores": {
+      "buffett": 42.3,
+      "graham": 40.8,
+      "lynch": -6.0,
+      "druckenmiller": 0.0
+    },
+    "components": {
+      "valuation": 65.15,
+      "timing": 41.33
+    },
+    "conflict": false,
+    "news_state": "insufficient_evidence",
+    "expected_mdd": -0.05,
+    "invalidation": {
+      "price": 137.28,
+      "reason": "200일선 −3% 이탈 + ROIC<WACC"
+    },
+    "gate_summary": {
+      "failed": [
+        "B3",
+        "B4"
+      ],
+      "reasons": {
+        "B3": "안전마진 9.1% < 임계 20%",
+        "B4": "눌림 조건 0/4 · T 41.33"
+      }
+    },
+    "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+    "params_version": "params_v001",
+    "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
+    "track": "quant_only",
+    "veto": [],
+    "news": [
+      {
+        "headline": "FIXF 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+        "source": "FixtureWire",
+        "published_at": "2026-11-19T21:40:00Z",
+        "url": "https://example.com/news/fixf",
+        "impact": "neutral",
+        "durability": "structural",
+        "quote_verified": null
+      }
+    ],
+    "filings": [
+      {
+        "form": "10-Q",
+        "filed_date": "2026-11-08",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXF/10q.htm",
+        "accession": "0000FIXF-26-0001",
+        "items": []
+      },
+      {
+        "form": "8-K",
+        "filed_date": "2026-10-21",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXF/8k.htm",
+        "accession": "0000FIXF-26-0002",
+        "items": [
+          "2.02"
+        ]
+      }
+    ],
+    "risk": {
+      "veto": [],
+      "note_ko": null
+    },
+    "evidence": [
+      {
+        "type": "fundamental",
+        "metric": "quality_composite",
+        "value_kind": "score_0_100",
+        "filed_date": "2026-11-20"
+      },
+      {
+        "type": "fundamental",
+        "metric": "fcf_margin_5y",
+        "value_kind": "ratio",
+        "filed_date": "2026-11-20"
+      },
+      {
+        "type": "sec_filing",
+        "form": "10-Q",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXF/10q.htm",
+        "filed_date": "2026-11-08",
+        "available_at": "2026-11-08T20:05:00Z",
+        "accession": "0000FIXF-26-0001"
+      },
+      {
+        "type": "news",
+        "url": "https://example.com/news/fixf",
+        "headline": "FIXF 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+        "source": "FixtureWire",
+        "published_at": "2026-11-19T21:40:00Z",
+        "available_at": "2026-11-19T21:40:00Z"
+      },
+      {
+        "type": "market",
+        "metric": "atr_pct",
+        "value_kind": "ratio"
+      }
+    ],
+    "entry_plan": [
+      {
+        "tranche": 1,
+        "weight": 0.4,
+        "price_ref": 145.15,
+        "provisional": true
+      },
+      {
+        "tranche": 2,
+        "weight": 0.3,
+        "price_ref": 134.99,
+        "provisional": true
+      },
+      {
+        "tranche": 3,
+        "weight": 0.3,
+        "price_ref": 124.83,
+        "provisional": true,
+        "active": false,
+        "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+      }
+    ],
+    "confidence_label_ko": "C 근거 약함",
+    "news_badge_ko": "뉴스 근거 부족"
+  },
+  "last_signal": null,
+  "chart": {
+    "basis": "split_adj_index_base100",
+    "labels": [
+      "2025-11-28",
+      "2025-12-05",
+      "2025-12-12",
+      "2025-12-19",
+      "2025-12-26",
+      "2026-01-02",
+      "2026-01-09",
+      "2026-01-16",
+      "2026-01-23",
+      "2026-01-30",
+      "2026-02-06",
+      "2026-02-13",
+      "2026-02-20",
+      "2026-02-27",
+      "2026-03-06",
+      "2026-03-13",
+      "2026-03-20",
+      "2026-03-27",
+      "2026-04-03",
+      "2026-04-10",
+      "2026-04-17",
+      "2026-04-24",
+      "2026-05-01",
+      "2026-05-08",
+      "2026-05-15",
+      "2026-05-22",
+      "2026-05-29",
+      "2026-06-05",
+      "2026-06-12",
+      "2026-06-19",
+      "2026-06-26",
+      "2026-07-03",
+      "2026-07-10",
+      "2026-07-17",
+      "2026-07-24",
+      "2026-07-31",
+      "2026-08-07",
+      "2026-08-14",
+      "2026-08-21",
+      "2026-08-28",
+      "2026-09-04",
+      "2026-09-11",
+      "2026-09-18",
+      "2026-09-25",
+      "2026-10-02",
+      "2026-10-09",
+      "2026-10-16",
+      "2026-10-23",
+      "2026-10-30",
+      "2026-11-06",
+      "2026-11-13",
+      "2026-11-20"
+    ],
+    "index": [
+      100.0,
+      100.607,
+      101.061,
+      100.307,
+      101.09,
+      101.321,
+      100.304,
+      100.928,
+      101.633,
+      101.373,
+      101.73,
+      101.56,
+      101.924,
+      101.972,
+      102.009,
+      102.361,
+      102.189,
+      102.611,
+      102.912,
+      103.296,
+      102.948,
+      103.096,
+      103.642,
+      104.194,
+      103.406,
+      103.445,
+      103.641,
+      103.848,
+      104.095,
+      104.343,
+      104.159,
+      104.052,
+      104.631,
+      105.014,
+      104.853,
+      104.785,
+      105.545,
+      105.728,
+      105.868,
+      105.198,
+      105.733,
+      105.317,
+      105.505,
+      105.261,
+      106.218,
+      106.185,
+      106.42,
+      106.072,
+      106.418,
+      106.925,
+      106.417,
+      107.078
+    ],
+    "dma50": [
+      99.825,
+      99.942,
+      100.048,
+      100.164,
+      100.312,
+      100.409,
+      100.516,
+      100.614,
+      100.766,
+      100.927,
+      101.092,
+      101.25,
+      101.371,
+      101.519,
+      101.62,
+      101.767,
+      101.907,
+      102.029,
+      102.178,
+      102.32,
+      102.43,
+      102.53,
+      102.665,
+      102.834,
+      102.973,
+      103.117,
+      103.214,
+      103.344,
+      103.422,
+      103.529,
+      103.643,
+      103.763,
+      103.891,
+      103.967,
+      104.085,
+      104.193,
+      104.353,
+      104.491,
+      104.658,
+      104.803,
+      104.94,
+      105.089,
+      105.232,
+      105.337,
+      105.497,
+      105.622,
+      105.727,
+      105.832,
+      105.94,
+      106.088,
+      106.218,
+      106.307
+    ],
+    "dma200": [
+      97.91,
+      98.038,
+      98.167,
+      98.293,
+      98.427,
+      98.551,
+      98.678,
+      98.815,
+      98.947,
+      99.072,
+      99.206,
+      99.336,
+      99.462,
+      99.59,
+      99.716,
+      99.837,
+      99.963,
+      100.082,
+      100.212,
+      100.341,
+      100.471,
+      100.601,
+      100.738,
+      100.879,
+      101.01,
+      101.142,
+      101.262,
+      101.385,
+      101.502,
+      101.626,
+      101.748,
+      101.871,
+      101.994,
+      102.121,
+      102.248,
+      102.372,
+      102.498,
+      102.62,
+      102.756,
+      102.895,
+      103.026,
+      103.158,
+      103.29,
+      103.414,
+      103.544,
+      103.675,
+      103.8,
+      103.924,
+      104.05,
+      104.185,
+      104.308,
+      104.403
+    ]
+  },
+  "indicators": {
+    "rsi14": 55.0809,
+    "pct_b": 0.7489,
+    "dma50": 144.1032,
+    "dma200": 141.5228,
+    "atr_pct": 0.0122
+  },
+  "investor_scores": {
+    "buffett": 42.3,
+    "graham": 40.8,
+    "lynch": -6.0,
+    "druckenmiller": 0.0
+  },
+  "valuation": {
+    "iv_low": 135.7137,
+    "iv_median": 159.6632,
+    "iv_high": 183.6127,
+    "price": 145.1484,
+    "margin": 0.0909
+  },
+  "news": [
+    {
+      "headline": "FIXF 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+      "source": "FixtureWire",
+      "published_at": "2026-11-19T21:40:00Z",
+      "url": "https://example.com/news/fixf",
+      "impact": "neutral",
+      "durability": "structural",
+      "quote_verified": null
+    }
+  ],
+  "filings": [
+    {
+      "form": "10-Q",
+      "filed_date": "2026-11-08",
+      "url": "https://www.sec.gov/Archives/edgar/data/FIXF/10q.htm",
+      "accession": "0000FIXF-26-0001",
+      "items": []
+    },
+    {
+      "form": "8-K",
+      "filed_date": "2026-10-21",
+      "url": "https://www.sec.gov/Archives/edgar/data/FIXF/8k.htm",
+      "accession": "0000FIXF-26-0002",
+      "items": [
+        "2.02"
+      ]
+    }
+  ],
+  "risk": {
+    "veto": [],
+    "note_ko": null
+  },
+  "invalidation": {
+    "price": 137.28,
+    "reason": "200일선 −3% 이탈 + ROIC<WACC"
+  },
+  "gate_summary": {
+    "failed": [
+      "B3",
+      "B4"
+    ],
+    "reasons": {
+      "B3": "안전마진 9.1% < 임계 20%",
+      "B4": "눌림 조건 0/4 · T 41.33"
+    }
+  },
+  "debate": null,
+  "debate_note_ko": "토론 없음 — PC에서 `python codex_debate/run_debate.py --tickers FIXF` 로 돌릴 수 있습니다.",
+  "position_check": null,
+  "params_version": "params_v001"
+}

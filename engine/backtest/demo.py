@@ -12,7 +12,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from engine.backtest.execution import EntryBand
 from engine.decide.signals import EntryContext, build_entry_plan, evaluate_entry
-from engine.ledger.portfolio import Bar, BuyOrder, CorporateAction, TrancheOrder
+from engine.ledger.portfolio import BuyOrder, CorporateAction, TrancheOrder
 from engine.utils.dates import trading_days
 
 DEMO_TICKERS = {"AAA": 120.0, "BBB": 78.0, "CCC": 240.0, "DDD": 55.0, "EEE": 310.0, "FFF": 165.0}
@@ -72,7 +72,6 @@ def _context(ticker: str, row: dict) -> EntryContext:
 
 def build_demo_scenario(seed: int = 7, days: int = 300, signal_offset: int = 214) -> dict:
     """3종목 · 300거래일. `signal_offset` 일에 신호를 만들고 다음 거래일 개장에 주문이 걸린다."""
-    rng = random.Random(seed)
     start = date(2026, 1, 2)
     end = start + timedelta(days=int(days * 1.45) + 10)
     calendar = trading_days(start, end)[:days]

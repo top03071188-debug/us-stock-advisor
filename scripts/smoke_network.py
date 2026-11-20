@@ -24,10 +24,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from engine.data.macro import FredClient, build_limits  # noqa: E402
 from engine.data.news import FinnhubClient  # noqa: E402
-from engine.data.prices import build_price_frame, verify_against_raw_source  # noqa: E402
+from engine.data.prices import build_price_frame  # noqa: E402
 from engine.data.sec_edgar import SecClient, parse_submissions  # noqa: E402
-from engine.metrics.technical import atr_pct, snapshot_indicators  # noqa: E402
-from engine.models import PriceKind  # noqa: E402
+from engine.metrics.technical import snapshot_indicators  # noqa: E402
 from engine.utils.io import load_dotenv  # noqa: E402
 
 

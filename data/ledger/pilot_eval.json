@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-11-20",
+  "horizon": "3m",
+  "n_records": 0,
+  "n_graded": 0,
+  "n_eff": 0,
+  "metrics": [
+    {
+      "key": "n_eff",
+      "label_ko": "유효 표본 N_eff",
+      "value": 0,
+      "threshold": "≥ 15",
+      "pass": false,
+      "note_ko": "신호 0건"
+    },
+    {
+      "key": "net_after_cost",
+      "label_ko": "비용 후 순수익(SPY 대비)",
+      "value": null,
+      "threshold": "> 0",
+      "pass": null,
+      "note_ko": "채점 표본 없음"
+    },
+    {
+      "key": "cash_equivalent",
+      "label_ko": "유사 현금비중 벤치마크 대비",
+      "value": null,
+      "threshold": "> 0",
+      "pass": null,
+      "note_ko": "계좌 곡선 없음"
+    },
+    {
+      "key": "tail_loss",
+      "label_ko": "손실 구간(하위 20%) 평균",
+      "value": null,
+      "threshold": "≥ -0.08",
+      "pass": null,
+      "note_ko": "채점 표본 없음"
+    }
+  ],
+  "verdict": "보류",
+  "verdict_reason_ko": "채점 표본 0건 — 판정 보류(4.7.3)",
+  "note_ko": "55점·승률 52% 는 참고치다 — 게이트는 이 4지표로만 판단한다."
+}

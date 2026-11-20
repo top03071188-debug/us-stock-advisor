@@ -1,0 +1,66 @@
+{
+  "as_of": "2026-11-20",
+  "count": 4,
+  "records": [
+    {
+      "signal_id": "2026-11-20-FIXA-BUY-001",
+      "ticker": "FIXA",
+      "as_of": "2026-11-20",
+      "type": "BUY",
+      "grade": "A",
+      "trade_grade": "BUY",
+      "entry_score": 82.37,
+      "quant_intent": "pending_buy",
+      "action": null,
+      "decision": "BUY",
+      "thesis_ko": "IV 대비 30% 할인 · RSI 19",
+      "params_version": "params_v001",
+      "signal_published_at": "2026-11-19T22:02:11Z"
+    },
+    {
+      "signal_id": "2026-11-20-FIXB-WATCH-001",
+      "ticker": "FIXB",
+      "as_of": "2026-11-20",
+      "type": "WATCH",
+      "grade": "B",
+      "trade_grade": "WATCH",
+      "entry_score": 68.64,
+      "quant_intent": "no_action",
+      "action": null,
+      "decision": "WATCH",
+      "thesis_ko": "IV 대비 15% 할인 · RSI 51",
+      "params_version": "params_v001",
+      "signal_published_at": "2026-11-19T22:02:11Z"
+    },
+    {
+      "signal_id": "2026-11-20-FIXE-WATCH-001",
+      "ticker": "FIXE",
+      "as_of": "2026-11-20",
+      "type": "WATCH",
+      "grade": "B",
+      "trade_grade": "WATCH",
+      "entry_score": 70.85,
+      "quant_intent": "no_action",
+      "action": null,
+      "decision": "WATCH",
+      "thesis_ko": "IV 대비 23% 할인 · RSI 50",
+      "params_version": "params_v001",
+      "signal_published_at": "2026-11-19T22:02:11Z"
+    },
+    {
+      "signal_id": "2026-11-20-FIXF-WATCH-001",
+      "ticker": "FIXF",
+      "as_of": "2026-11-20",
+      "type": "WATCH",
+      "grade": "C",
+      "trade_grade": "WATCH",
+      "entry_score": 64.56,
+      "quant_intent": "no_action",
+      "action": null,
+      "decision": "WATCH",
+      "thesis_ko": "IV 대비 9% 할인 · RSI 55",
+      "params_version": "params_v001",
+      "signal_published_at": "2026-11-19T22:02:11Z"
+    }
+  ]
+}

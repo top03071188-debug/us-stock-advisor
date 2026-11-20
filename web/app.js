@@ -1,142 +1,891 @@
-/* Phase 1 대시보드 초안 — 정적 JSON 로더 (빌드 도구 없이 바로 동작).
- * 데이터는 `data/`(빌드 산출물) 에서 읽고, 없으면 `sample-data/` 로 폴백한다.
- * 공개 산출물에는 원시 OHLC·뉴스 본문·보유 정보가 없다(2.2.4).
+/* web/app.js — 대시보드 v1 (기획서 §5.1~5.7). 빌드 도구 없이 도는 정적 앱.
+ *
+ * 데이터는 `./data/`(빌드 산출물)에서 읽고, 없으면 `./sample-data/`로 폴백한다.
+ * 공개 산출물에는 원시 OHLC·뉴스 본문·보유 수량·평단이 없다(2.2.4).
+ * 화면은 색만으로 구분하지 않는다 — 항상 텍스트 배지·화살표를 함께 쓴다(5.6).
  */
-const FILES = ["meta.json", "folds.json", "watchlist.json", "signals/today.json", "ledger/summary.json"];
+"use strict";
 
-async function loadJson(name) {
-  for (const base of ["./data/", "./sample-data/"]) {
-    try {
-      const r = await fetch(base + name, { cache: "no-cache" });
-      if (r.ok) return await r.json();
-    } catch (_) { /* 다음 경로 */ }
-  }
-  return null;
-}
+const CORE_FILES = [
+  "meta.json",
+  "signals/today.json",
+  "folds.json",
+  "watchlist.json",
+  "ledger/summary.json",
+  "ledger/records.json",
+  "ledger/portfolio.json",
+  "radar/13f.json",
+  "config.json",
+];
+
+const ROUTES = ["today", "ticker", "ledger", "radar"];
+const STATUS_LABEL = {
+  normal: { text: "데이터 정상", cls: "ok" },
+  degraded: { text: "일부 소스 실패", cls: "warn" },
+  stale: { text: "데이터 지연", cls: "warn" },
+  sample: { text: "샘플(합성) 데이터", cls: "warn" },
+  awaiting_first_run: { text: "첫 배치 대기", cls: "info" },
+};
+const REGIME_LABEL = { risk_on: "위험 선호(Risk-On)", neutral: "중립(Neutral)", risk_off: "위험 회피(Risk-Off)" };
+const NEWS_LABEL = { not_read: "뉴스 미판독", insufficient_evidence: "뉴스 근거 부족", read_done: "뉴스 판독 완료" };
+const DECISION_LABEL = { BUY: "매수", SELL: "매도", WATCH: "관찰" };
+
+const state = { core: {}, tickers: [], ticker: null, route: "today", sampleMode: false, bound: false };
+
+/* ────────────────────────── 공용 ────────────────────────── */
+const $ = (id) => document.getElementById(id);
 
 function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
+    if (v === null || v === undefined || v === false) continue;
     if (k === "class") node.className = v;
-    else if (k === "text") node.textContent = v;
-    else node.setAttribute(k, v);
+    else if (k === "text") node.textContent = String(v);
+    else if (k === "html") node.innerHTML = v;
+    else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+    else node.setAttribute(k, v === true ? "" : String(v));
   }
-  for (const c of children) node.append(c);
+  for (const child of [].concat(children)) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(typeof child === "string" || typeof child === "number" ? document.createTextNode(String(child)) : child);
+  }
   return node;
 }
 
-function badge(text, kind) {
-  return el("span", { class: `tag ${kind || ""}`, text });
+function clear(node) {
+  while (node.firstChild) node.removeChild(node.firstChild);
+  return node;
 }
 
-function gradeKind(type) {
-  if (!type) return "";
-  if (type.startsWith("BUY") || type === "STRONG_BUY") return "buy";
-  if (type === "WATCH") return "watch";
-  if (type.startsWith("TRIM") || type === "SELL") return "sell";
-  return "";
+function badge(text, cls) {
+  return el("span", { class: `badge ${cls || ""}`.trim(), text });
 }
 
-function renderMeta(meta) {
-  const badgeEl = document.getElementById("status-badge");
-  const status = (meta && meta.status) || "sample";
-  badgeEl.textContent = status === "normal" ? "데이터 정상" : `데이터 ${status}`;
-  badgeEl.classList.add(status === "normal" ? "ok" : "warn");
-  document.getElementById("regime").textContent =
-    meta && meta.regime ? `레짐: ${meta.regime}` : "레짐 정보 없음";
-  const bits = [];
-  if (meta && meta.params_version) bits.push(meta.params_version);
-  if (meta && meta.data_cutoff_at) bits.push(`마감 ${meta.data_cutoff_at}`);
-  if (meta && meta.snapshot_id) bits.push(meta.snapshot_id.slice(0, 18));
-  document.getElementById("meta").textContent = bits.join(" · ");
-  document.getElementById("build").textContent =
-    meta && meta.generated_at ? `빌드 ${meta.generated_at}` : "";
+const NF = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 });
+
+function isNum(x) {
+  return typeof x === "number" && Number.isFinite(x);
 }
 
-function renderFolds(folds) {
-  const host = document.getElementById("folds");
-  host.replaceChildren();
-  if (!folds || !folds.horizons) {
-    host.append(el("p", { class: "empty", text: "폴드 요약 파일이 없습니다." }));
-    return;
+/** 첫 번째로 값이 있는(number/string) 인자를 돌려준다 — `??` 대신 쓰는 헬퍼. */
+function pick(...values) {
+  for (const v of values) {
+    if (v !== null && v !== undefined) return v;
   }
-  const table = el("table");
-  const head = el("tr", {}, [el("th", { text: "기간" }), el("th", { text: "적격 폴드" }),
-    el("th", { text: "상태" }), el("th", { text: "만기" })]);
-  table.append(head);
-  for (const [name, h] of Object.entries(folds.horizons)) {
-    const mats = (h.folds || []).filter((f) => f.eligible).map((f) => f.maturity).join(", ");
-    table.append(el("tr", {}, [
-      el("td", { text: name }),
-      el("td", { class: "num", text: `${h.count}개 (${(h.eligible_folds || []).join("·")})` }),
-      el("td", {}, [badge(h.sufficient ? "정상" : "보정 보류", h.sufficient ? "buy" : "watch")]),
-      el("td", { class: "tiny num", text: mats }),
+  return null;
+}
+
+function fmtPct(x, digits = 1) {
+  if (!isNum(x)) return "—";
+  return `${(x * 100).toFixed(digits)}%`;
+}
+
+function fmtSignedPct(x, digits = 1) {
+  if (!isNum(x)) return "—";
+  const arrow = x > 0 ? "▲ " : x < 0 ? "▼ " : "";
+  return `${arrow}${x > 0 ? "+" : ""}${(x * 100).toFixed(digits)}%`;
+}
+
+function fmtNum(x, digits = 1) {
+  if (!isNum(x)) return "—";
+  return x.toFixed(digits);
+}
+
+function fmtMoney(x) {
+  if (!isNum(x)) return "—";
+  return `$${NF.format(Math.round(x * 100) / 100)}`;
+}
+
+function fmtKo(iso, withTime = true) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso).slice(0, 10);
+  const opts = withTime
+    ? { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul" }
+    : { year: "numeric", month: "2-digit", day: "2-digit" };
+  return new Intl.DateTimeFormat("ko-KR", opts).format(d);
+}
+
+function passMark(pass) {
+  if (pass === true) return el("span", { class: "good", text: "✓ 통과" });
+  if (pass === false) return el("span", { class: "bad", text: "✗ 미달" });
+  return el("span", { class: "muted", text: "— 계산 불가" });
+}
+
+async function loadJson(name) {
+  const bases = state.sampleMode ? ["./sample-data/"] : ["./data/", "./sample-data/"];
+  for (const base of bases) {
+    try {
+      const res = await fetch(base + name, { cache: "no-cache" });
+      if (res.ok) return await res.json();
+    } catch (err) {
+      /* 다음 경로 시도 — 파일이 없으면 정상 상태로 처리한다 */
+    }
+  }
+  return null;
+}
+
+function section(title, children, extra) {
+  return el("section", { class: "card" }, [el("h2", { text: title }, extra || null), ...[].concat(children)]);
+}
+
+function emptyState(text) {
+  return el("p", { class: "empty", text });
+}
+
+/* ────────────────────────── 오늘 ────────────────────────── */
+function renderStatus(meta) {
+  const node = $("status-badge");
+  const status = (meta && meta.status) || "awaiting_first_run";
+  const info = STATUS_LABEL[status] || { text: `상태 ${status}`, cls: "warn" };
+  node.textContent = info.text;
+  node.className = `badge ${info.cls}`;
+  const bits = [];
+  if (meta && meta.as_of) bits.push(`기준일 ${meta.as_of}`);
+  if (meta && meta.prices_as_of) bits.push(`마지막 종가 ${meta.prices_as_of}`);
+  if (meta && meta.params_version) bits.push(meta.params_version);
+  $("build").textContent = bits.join(" · ") + (meta && meta.generated_at ? ` · 빌드 ${fmtKo(meta.generated_at)}` : "");
+}
+
+function sampleToggle(label, onClick) {
+  return el("button", {
+    type: "button", class: "badge info",
+    style: "min-height:44px;padding:8px 12px;cursor:pointer;background:transparent;",
+    text: label, onclick: onClick,
+  });
+}
+
+function renderFreshness(meta) {
+  const host = clear($("freshness"));
+  const status = (meta && meta.status) || "awaiting_first_run";
+  const info = STATUS_LABEL[status] || { text: status, cls: "warn" };
+  const cls = info.cls === "ok" ? "is-ok" : info.cls === "bad" ? "is-bad" : "is-warn";
+  const rows = [
+    el("div", { class: "banner " + cls }, [
+      el("strong", { text: info.text }),
+      el("span", { class: "tiny", text: `발행 ${fmtKo(meta && meta.signal_published_at)} · 마감 ${fmtKo(meta && meta.data_cutoff_at)}` }),
+    ]),
+  ];
+  if (meta && meta.note_ko) rows.push(el("p", { class: "tiny", text: meta.note_ko }));
+  if (meta && meta.source) {
+    rows.push(el("p", { class: "tiny", text: `데이터 출처: ${meta.source === "fixtures" ? "픽스처(합성)" : meta.source}` }));
+  }
+  if (state.sampleMode) {
+    rows.push(el("div", { class: "banner is-warn" }, [
+      el("strong", { text: "샘플 화면" }),
+      el("span", { class: "tiny", text: "합성 데이터입니다 — 실전 신호가 아닙니다." }),
+      sampleToggle("실데이터로 돌아가기", () => { state.sampleMode = false; state.ticker = null; boot(); }),
+    ]));
+  } else if (status === "awaiting_first_run") {
+    rows.push(el("div", { class: "banner is-warn" }, [
+      el("strong", { text: "아직 실전 배치가 돌지 않았습니다" }),
+      el("span", { class: "tiny", text: "신호가 비어 있는 것이 정상입니다. 화면 구성을 샘플(합성) 데이터로 미리 볼 수 있습니다." }),
+      sampleToggle("샘플 화면 보기", () => { state.sampleMode = true; state.ticker = null; boot(); }),
     ]));
   }
+  host.append(...rows);
+}
+
+function renderRegime(meta) {
+  const host = clear($("regime-banner"));
+  if (!meta || !meta.regime) {
+    host.append(el("div", { class: "banner" }, [el("strong", { text: "시장 레짐: 판정 불가" }),
+      el("span", { class: "tiny", text: "거시 지표가 부족합니다 — 포지션 배수 0.5 로 보수 운용(2.7)." })]));
+    return;
+  }
+  const label = REGIME_LABEL[meta.regime] || meta.regime;
+  const verified = meta.regime_verified === false ? "미검증(신호 3개 미만)" : "검증됨";
+  host.append(el("div", { class: "banner" }, [
+    el("strong", { text: `시장 레짐: ${label}` }),
+    el("span", { class: "tiny", text: `포지션 배수 ${fmtNum(meta.regime_multiplier, 2)} · ${verified}` }),
+  ]));
+}
+
+function signalNumbers(sig) {
+  const v = sig.valuation || {};
+  const ind = sig.indicators || {};
+  const items = [];
+  items.push(el("span", {}, [el("span", { class: "tiny", text: "안전마진 " }),
+    el("span", { class: "num", text: fmtPct(v.margin) })]));
+  items.push(el("span", {}, [el("span", { class: "tiny", text: "RSI " }),
+    el("span", { class: "num", text: fmtNum(ind.rsi14, 0) })]));
+  if (isNum(v.iv_low) && isNum(v.iv_high)) {
+    items.push(el("span", {}, [el("span", { class: "tiny", text: "IV 밴드 " }),
+      el("span", { class: "num", text: `${fmtMoney(v.iv_low)}~${fmtMoney(v.iv_high)}` })]));
+  }
+  return el("div", { class: "sig-nums" }, items);
+}
+
+function signalCard(sig) {
+  const decision = sig.decision || sig.type;
+  const typeCls = decision === "BUY" ? "type-buy" : decision === "SELL" ? "type-sell" : "type-watch";
+  const arrow = decision === "BUY" ? "arrow-up" : decision === "SELL" ? "arrow-down" : "";
+  const head = el("div", { class: "sig-head" }, [
+    el("span", { class: `badge ${decision === "BUY" ? "ok" : decision === "SELL" ? "bad" : "warn"}`,
+      text: `${DECISION_LABEL[decision] || decision} ${decision}` }),
+    el("span", { class: "sig-ticker" }, [el("span", { class: `${typeCls} ${arrow}`, text: "" }), sig.ticker]),
+    el("span", { class: "sig-score num", text: `${fmtNum(sig.entry_score, 1)}점` }),
+    badge(sig.confidence_label_ko || "신뢰도 미상", "info"),
+  ]);
+  const foot = [];
+  if (sig.news_badge_ko) foot.push(badge(sig.news_badge_ko, "warn"));
+  const entry = Array.isArray(sig.entry_plan) ? sig.entry_plan.find((t) => t.tranche === 1) : null;
+  if (entry && isNum(entry.price_ref)) {
+    foot.push(el("span", { class: "tiny", text: `분할 1차 ${fmtMoney(entry.price_ref)}` }));
+  }
+  if (sig.sizing_note_ko) foot.push(el("span", { class: "tiny", text: sig.sizing_note_ko }));
+  foot.push(el("span", { class: "tiny", text: `근거 ${(sig.evidence || []).length}건` }));
+  foot.push(el("span", { class: "tiny", text: `발행 ${fmtKo(sig.signal_published_at)} · ${sig.params_version || ""}` }));
+
+  return el("button", {
+    class: "sig", type: "button", "data-ticker": sig.ticker,
+    "aria-label": `${sig.ticker} ${DECISION_LABEL[decision] || decision} ${fmtNum(sig.entry_score, 1)}점 상세 보기`,
+    onclick: () => setRoute("ticker", sig.ticker),
+  }, [
+    head,
+    signalNumbers(sig),
+    el("p", { class: "sig-why", text: sig.thesis_ko || "요약 없음" }),
+    el("div", { class: "sig-foot" }, foot),
+  ]);
+}
+
+function renderToday(today, config) {
+  const host = clear($("signals"));
+  const signals = (today && today.signals) || [];
+  const counts = (today && today.counts) || {};
+  $("signal-count").textContent = signals.length
+    ? `매수 ${counts.buy || 0} · 매도 ${counts.sell || 0} · 관찰 ${counts.watch || 0}`
+    : "";
+  if (!signals.length) {
+    host.append(emptyState((today && today.notes) || "오늘 신호 없음 — 기준을 넘은 종목이 없습니다(정상)."));
+    if (today && today.blocked_note_ko) host.append(el("p", { class: "tiny", text: today.blocked_note_ko }));
+  } else {
+    signals.forEach((sig) => host.append(signalCard(sig)));
+  }
+
+  const blockedHost = clear($("blocked"));
+  const blocked = (today && today.blocked) || [];
+  if (!blocked.length) {
+    blockedHost.append(emptyState("차단된 종목 없음 — Veto 가 발동하지 않았습니다."));
+  } else {
+    blocked.forEach((b) => {
+      blockedHost.append(el("div", { class: "row" }, [
+        el("div", {}, [
+          el("span", { class: "sig-ticker", text: b.ticker }),
+          el("span", { class: "tiny", text: `  ${(b.codes || []).join("·")}` }),
+          el("p", { class: "tiny", text: b.message_ko || b.reason || "" }),
+        ]),
+        b.grade ? badge(b.grade, "warn") : null,
+      ]));
+    });
+  }
+
+  const rulesHost = clear($("today-rules"));
+  const gates = (config && config.entry_gates) || {};
+  const margins = gates.margin_of_safety || {};
+  rulesHost.append(el("div", { class: "kv" }, [
+    el("dt", { text: "안전마진" }),
+    el("dd", { class: "num", text: `Risk-On ${fmtPct(margins.risk_on)} · Neutral ${fmtPct(margins.neutral)} · Risk-Off ${fmtPct(margins.risk_off)}` }),
+    el("dt", { text: "타이밍" }),
+    el("dd", { class: "num", text: `T ≥ ${fmtNum(gates.timing_min, 0)} · 눌림 조건 ${gates.dip_conditions_required || "—"}개` }),
+    el("dt", { text: "등급" }),
+    el("dd", { class: "num", text: `STRONG_BUY ${(config && config.grades && config.grades.strong_buy) || "—"} · BUY ${(config && config.grades && config.grades.buy) || "—"} · WATCH ${(config && config.grades && config.grades.watch) || "—"}` }),
+    el("dt", { text: "파라미터" }),
+    el("dd", { text: (config && config.params_version) || "—" }),
+  ]));
+}
+
+/* ────────────────────────── 종목 ────────────────────────── */
+function investorBars(scores, conflict) {
+  const names = [["buffett", "버핏"], ["graham", "그레이엄"], ["lynch", "린치"], ["druckenmiller", "드러켄밀러"]];
+  const rows = names.filter(([key]) => isNum(scores[key])).map(([key, label]) => {
+    const value = scores[key];
+    const width = Math.min(100, Math.abs(value) / 2);
+    return el("div", { class: "bar-row" }, [
+      el("span", { text: label }),
+      el("div", { class: "bar-track", role: "img", "aria-label": `${label} ${value}` }, [
+        el("span", { class: "bar-zero" }),
+        el("span", { class: `bar-fill ${value >= 0 ? "pos" : "neg"}`, style: `width:${width}%` }),
+      ]),
+      el("span", { class: "bar-val num", text: `${value > 0 ? "+" : ""}${value.toFixed(1)}` }),
+    ]);
+  });
+  if (!rows.length) return emptyState("대가별 점수 없음 — 근거 부족으로 계산하지 않았습니다.");
+  return el("div", { class: "bars" }, [
+    conflict ? el("p", { class: "tiny" }, [badge("의견 충돌", "warn"),
+      el("span", { text: "  대가 간 점수 차이가 60 이상입니다 — 어느 한쪽 근거만 보고 결정하지 않습니다." })]) : null,
+    ...rows,
+    el("p", { class: "tiny", text: "−100 ~ +100 · 0 기준선" }),
+  ]);
+}
+
+function valuationBand(valuation) {
+  const v = valuation || {};
+  if (!isNum(v.iv_low) || !isNum(v.iv_high) || !isNum(v.price)) {
+    return emptyState("밸류에이션 밴드 없음 — 가치평가 보류 업종이거나 IV 계산 불가(3.2.1).");
+  }
+  const lo = Math.min(v.iv_low, v.price);
+  const hi = Math.max(v.iv_high, v.price);
+  const span = hi > lo ? hi - lo : 1;
+  const left = ((v.iv_low - lo) / span) * 100;
+  const width = ((v.iv_high - v.iv_low) / span) * 100;
+  const pricePos = Math.max(0, Math.min(100, ((v.price - lo) / span) * 100));
+  return el("div", { class: "band" }, [
+    el("p", { class: "mos" }, [el("span", { text: `안전마진 ${fmtPct(v.margin)}` }),
+      el("span", { class: "tiny", text: isNum(v.margin) && v.margin >= 0 ? "  (IV 대비 할인)" : "  (IV 대비 프리미엄)" })]),
+    el("div", { class: "band-track", role: "img",
+      "aria-label": `IV 밴드 ${fmtMoney(v.iv_low)}~${fmtMoney(v.iv_high)}, 중앙값 ${fmtMoney(v.iv_median)}, 현재가 ${fmtMoney(v.price)}` }, [
+      el("span", { class: "band-span", style: `left:${left}%;width:${width}%` }),
+      el("span", { class: "band-price", style: `left:${pricePos}%` }),
+    ]),
+    el("div", { class: "band-legend num" }, [
+      el("span", { text: `IV_low ${fmtMoney(v.iv_low)}` }),
+      el("span", { text: `IV 중앙 ${fmtMoney(v.iv_median)}` }),
+      el("span", { text: `IV_high ${fmtMoney(v.iv_high)}` }),
+    ]),
+    el("p", { class: "tiny", text: `현재가 ${fmtMoney(v.price)} (raw_as_traded) · IV 는 USD/share` }),
+  ]);
+}
+
+function svgChart(chart) {
+  const NS = "http://www.w3.org/2000/svg";
+  if (!chart || !Array.isArray(chart.index) || chart.index.length < 2) {
+    return emptyState("차트 없음 — 주 1회 정규화 지수가 아직 없습니다.");
+  }
+  const width = 320;
+  const height = 150;
+  const pad = { l: 4, r: 4, t: 10, b: 16 };
+  const series = [chart.index, chart.dma50, chart.dma200].filter((s) => Array.isArray(s) && s.length);
+  const values = [];
+  series.forEach((s) => s.forEach((v) => { if (isNum(v)) values.push(v); }));
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max > min ? max - min : 1;
+  const x = (i, n) => pad.l + (i / Math.max(1, n - 1)) * (width - pad.l - pad.r);
+  const y = (v) => pad.t + (1 - (v - min) / span) * (height - pad.t - pad.b);
+
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "chart");
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label",
+    `주 1회 정규화 지수 차트 · ${chart.labels ? chart.labels[0] : ""} ~ ${chart.labels ? chart.labels[chart.labels.length - 1] : ""}`);
+
+  const draw = (arr, color, dashed, widthPx) => {
+    if (!Array.isArray(arr) || arr.length !== chart.index.length) return;
+    let d = "";
+    let started = false;
+    arr.forEach((v, i) => {
+      if (!isNum(v)) { started = false; return; }
+      d += `${started ? "L" : "M"}${x(i, arr.length).toFixed(1)} ${y(v).toFixed(1)} `;
+      started = true;
+    });
+    if (!d) return;
+    const path = document.createElementNS(NS, "path");
+    path.setAttribute("d", d.trim());
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", color);
+    path.setAttribute("stroke-width", String(widthPx));
+    path.setAttribute("stroke-linejoin", "round");
+    if (dashed) path.setAttribute("stroke-dasharray", "4 3");
+    svg.append(path);
+  };
+
+  draw(chart.dma200, "var(--muted)", true, 1.2);
+  draw(chart.dma50, "var(--info)", true, 1.4);
+  draw(chart.index, "var(--text)", false, 1.8);
+
+  const baseline = document.createElementNS(NS, "line");
+  baseline.setAttribute("x1", pad.l);
+  baseline.setAttribute("x2", width - pad.r);
+  baseline.setAttribute("y1", y(100));
+  baseline.setAttribute("y2", y(100));
+  baseline.setAttribute("stroke", "var(--line)");
+  baseline.setAttribute("stroke-width", "1");
+  svg.append(baseline);
+
+  return el("div", {}, [
+    svg,
+    el("div", { class: "legend" }, [
+      el("span", {}, [el("span", { class: "swatch", style: "background:var(--text)" }), "지수(기준일=100)"]),
+      el("span", {}, [el("span", { class: "swatch", style: "background:var(--info)" }), "50일선"]),
+      el("span", {}, [el("span", { class: "swatch", style: "background:var(--muted)" }), "200일선"]),
+    ]),
+    el("p", { class: "tiny", text: "주 1회 간격 정규화 지수만 공개합니다 — 원시 OHLC·거래량 시계열은 공개 산출물에 없습니다(2.2.4)." }),
+  ]);
+}
+
+function newsBlock(sig) {
+  const items = (sig && sig.news) || [];
+  const stateLabel = NEWS_LABEL[(sig && sig.news_state) || ""] || "뉴스 상태 미상";
+  const host = el("div", { class: "stack" }, [
+    el("p", { class: "tiny" }, [badge(stateLabel, sig && sig.news_state === "read_done" ? "ok" : "warn"),
+      el("span", { text: "  인용문은 공개 페이지에 싣지 않습니다 — 근거는 원문 링크와 검증 배지로만." })]),
+  ]);
+  if (!items.length) {
+    host.append(emptyState("표시할 기사 없음 — 48시간이 지난 기사는 판독 대상에서 제외합니다(2.7)."));
+    return host;
+  }
+  items.forEach((n) => {
+    host.append(el("div", { class: "row" }, [
+      el("div", {}, [
+        n.url ? el("a", { href: n.url, target: "_blank", rel: "noopener noreferrer", text: n.headline || n.url }) :
+          el("span", { text: n.headline || "제목 없음" }),
+        el("p", { class: "tiny", text: `${n.source || "출처 미상"} · ${fmtKo(n.published_at)}` }),
+      ]),
+      n.quote_verified === true ? badge("인용 검증", "ok") : (n.quote_verified === false ? badge("근거 미확인", "warn") : null),
+    ]));
+  });
+  return host;
+}
+
+function riskBlock(sig, tickerDoc) {
+  const vetoes = ((sig && sig.risk && sig.risk.veto) || []).concat([]);
+  const filings = (sig && sig.filings) || [];
+  const invalidation = (sig && sig.invalidation) || null;
+  const check = tickerDoc && tickerDoc.position_check;
+  const host = el("div", { class: "stack" });
+  if (vetoes.length) {
+    vetoes.forEach((v) => host.append(el("div", { class: "row" }, [
+      el("div", {}, [el("strong", { text: `${v.code} ${v.name || ""}` }),
+        el("p", { class: "tiny", text: v.message_ko || v.detail || "" })]),
+      v.blocking ? badge("차단", "bad") : badge("경고", "warn"),
+    ])));
+  } else {
+    host.append(el("p", { class: "tiny" }, [badge("Veto 없음", "ok"),
+      el("span", { text: "  12종 리스크 가드가 발동하지 않았습니다(3.6)." })]));
+  }
+  if (filings.length) {
+    const table = el("table", {}, [
+      el("caption", { text: "최근 공시 (filed_date = 접수 시각 기준)" }),
+      el("thead", {}, [el("tr", {}, [el("th", { text: "양식" }), el("th", { text: "접수일" }),
+        el("th", { text: "Item" }), el("th", { text: "원문" })])]),
+      el("tbody", {}, filings.map((f) => el("tr", {}, [
+        el("td", { text: f.form || "—" }),
+        el("td", { class: "num", text: f.filed_date || "—" }),
+        el("td", { class: "wrap", text: (f.items || []).join(", ") || "—" }),
+        el("td", {}, [f.url ? el("a", { href: f.url, target: "_blank", rel: "noopener noreferrer", text: "SEC" }) : "—"]),
+      ]))),
+    ]);
+    host.append(table);
+  }
+  if (invalidation) {
+    host.append(el("p", { class: "tiny", text: `이 신호가 틀릴 조건: ${fmtMoney(invalidation.price)} 이탈 — ${invalidation.reason || ""}` }));
+  }
+  if (check) {
+    host.append(el("div", { class: "row" }, [
+      el("div", {}, [el("strong", { text: `보유 점검: ${check.verdict}` }),
+        el("p", { class: "tiny", text: `exit_score ${fmtNum(check.exit_score, 1)} · S1~S5 는 매일 다시 계산합니다(3.2.5)` })]),
+      check.verdict === "EXIT" ? badge("청산 신호", "bad") : badge("유지", "ok"),
+    ]));
+  }
+  return host;
+}
+
+function debateBlock(tickerDoc, ticker) {
+  const debate = tickerDoc && tickerDoc.debate;
+  if (debate) {
+    return el("div", { class: "stack" }, [
+      el("p", { class: "tiny", text: "토론 리포트가 연결됐습니다 — 정량 등급과 토론 등급을 병기합니다(3.11.8)." }),
+    ]);
+  }
+  return el("div", { class: "stack" }, [
+    el("p", { class: "empty", text: (tickerDoc && tickerDoc.debate_note_ko) ||
+      `토론 없음 — PC에서 \`python codex_debate/run_debate.py --tickers ${ticker}\` 로 돌릴 수 있습니다.` }),
+    el("p", { class: "tiny", text: "토론은 행동이 갈릴 때만 별도 줄로 표시하고, 화면 기본 등급은 바꾸지 않습니다(자동 하향 OFF)." }),
+  ]);
+}
+
+function renderTicker(tickerDoc) {
+  const host = clear($("ticker-body"));
+  if (!tickerDoc) {
+    host.append(emptyState("이 종목의 데이터 파일이 없습니다 — 오늘 신호 또는 워치리스트에 없습니다."));
+    return;
+  }
+  const sig = tickerDoc.signal;
+  const decision = (sig && (sig.decision || sig.type)) || null;
+  const header = el("section", { class: "card" }, [
+    el("h2", { text: "① 결론" }),
+    el("div", { class: "sig-head" }, [
+      decision ? el("span", { class: `badge ${decision === "BUY" ? "ok" : decision === "SELL" ? "bad" : "warn"}`,
+        text: `${DECISION_LABEL[decision] || decision} ${decision}` }) : badge("신호 없음", "info"),
+      el("span", { class: "sig-ticker", text: tickerDoc.ticker }),
+      sig ? el("span", { class: "sig-score num", text: `${fmtNum(sig.entry_score, 1)}점` }) : null,
+      sig ? badge(sig.confidence_label_ko || "신뢰도 미상", "info") : null,
+    ]),
+    el("p", { class: "tiny", text: [
+      `정량 등급 ${(sig && sig.trade_grade) || "—"}`,
+      `갱신 ${fmtKo(tickerDoc.as_of)}`,
+      tickerDoc.watchlist && tickerDoc.watchlist.sector ? tickerDoc.watchlist.sector : null,
+      tickerDoc.params_version,
+    ].filter(Boolean).join(" · ") }),
+    sig && sig.thesis_ko ? el("p", { class: "sig-why", text: sig.thesis_ko }) : el("p", { class: "empty", text: tickerDoc.last_signal || "최근 신호 없음" }),
+    sig && sig.gate_summary && (sig.gate_summary.failed || []).length
+      ? el("p", { class: "tiny", text: `통과하지 못한 게이트: ${sig.gate_summary.failed.join(" · ")}` }) : null,
+  ]);
+
+  const bars = el("section", { class: "card" }, [el("h2", { text: "② 대가별 점수" }), investorBars((sig && sig.investor_scores) || {}, sig && sig.conflict)]);
+  const band = el("section", { class: "card" }, [el("h2", { text: "③ 밸류에이션 밴드" }), valuationBand(sig && sig.valuation)]);
+  const chart = el("section", { class: "card" }, [el("h2", { text: "④ 차트 (1년 주 1회 정규화)" }), svgChart(tickerDoc.chart)]);
+  const news = el("section", { class: "card" }, [el("h2", { text: "⑤ 뉴스 판독" }), newsBlock(sig)]);
+  const risk = el("section", { class: "card" }, [el("h2", { text: "⑥ 리스크 가드 · 근거 원문" }), riskBlock(sig, tickerDoc)]);
+  const debate = el("section", { class: "card" }, [el("h2", { text: "⑦ 찬반 토론" }), debateBlock(tickerDoc, tickerDoc.ticker)]);
+  host.append(header, bars, band, chart, news, risk, debate);
+}
+
+/* ────────────────────────── 성적표 ────────────────────────── */
+function renderHoldout(summary) {
+  const host = clear($("holdout-banner"));
+  const holdout = (summary && summary.holdout) || {};
+  const text = holdout.note_ko || `홀드아웃은 분기 1회만 열립니다 — 다음 개봉 ${holdout.next_open || "—"}`;
+  host.append(el("div", { class: "banner is-warn" }, [
+    el("strong", { text: "🔒 홀드아웃 잠금" }),
+    el("span", { class: "tiny", text: text }),
+  ]));
+  if (holdout.holdout_start) {
+    host.append(el("p", { class: "tiny", text: `잠금 구간 ${holdout.holdout_start} ~ ${holdout.holdout_end} · 평가 ${holdout.evaluations || 0}회` }));
+  }
+}
+
+function renderFolds(summary) {
+  const host = clear($("folds"));
+  const folds = (summary && summary.folds) || {};
+  const horizons = folds.horizons || {};
+  const names = Object.keys(horizons);
+  if (!names.length) {
+    host.append(emptyState("폴드 요약 없음 — 분기 워크포워드가 아직 돌지 않았습니다."));
+    return;
+  }
+  const table = el("table", {}, [
+    el("caption", { text: "기간별 적격 폴드 — 6개월 보류를 숨기지 않는다(4.2.1·4.2.7)" }),
+    el("thead", {}, [el("tr", {}, [el("th", { text: "기간" }), el("th", { class: "num", text: "적격 폴드" }),
+      el("th", { text: "상태" }), el("th", { text: "폴드" })])]),
+    el("tbody", {}, names.map((name) => {
+      const h = horizons[name] || {};
+      const ok = h.sufficient !== false;
+      return el("tr", {}, [
+        el("td", { text: `${name.toUpperCase()} (${h.horizon_td || "—"}거래일)` }),
+        el("td", { class: "num", text: `${isNum(h.count) ? h.count : 0}/${h.min_folds || 3}` }),
+        el("td", {}, [ok ? el("span", { class: "good", text: "보정 가능" }) : el("span", { class: "deferred", text: "보정 보류" })]),
+        el("td", { class: "tiny wrap", text: (h.eligible_folds || []).join(" · ") || "—" }),
+      ]);
+    })),
+  ]);
   host.append(table);
   if (folds.holdout_start) {
-    host.append(el("p", { class: "tiny",
-      text: `홀드아웃 ${folds.holdout_start} ~ ${folds.holdout_end} · 보정 금지(분기 1회 평가)` }));
+    host.append(el("p", { class: "tiny", text: `홀드아웃 ${folds.holdout_start} ~ ${folds.holdout_end} · 경계에서 잘린 폴드는 참고용으로만 표시` }));
   }
+  (folds.blocked || []).forEach((name) => {
+    host.append(el("p", { class: "tiny deferred", text: `${name.toUpperCase()} 보정 보류 — 적격 폴드가 3개 미만입니다.` }));
+  });
 }
 
-function renderSignals(today) {
-  const host = document.getElementById("signals");
-  host.replaceChildren();
-  const signals = (today && today.signals) || [];
-  if (!signals.length) {
-    host.className = "empty";
-    host.textContent = (today && today.notes) || "오늘 기준을 넘은 신호 없음 — 차단 사유는 다음 단계에서 표시됩니다.";
+function metricRow(label, value, note) {
+  return el("div", { class: "row" }, [
+    el("div", {}, [el("span", { text: label }), note ? el("p", { class: "tiny", text: note }) : null]),
+    el("span", { class: "num", text: value }),
+  ]);
+}
+
+function renderStrategy(summary, portfolio) {
+  const host = clear($("strategy"));
+  const accuracy = (summary && summary.accuracy) || {};
+  const strategy = (summary && summary.strategy) || {};
+  const p = portfolio || {};
+  host.append(section("신호 정확도 (방향이 맞았나)", [
+    metricRow("3개월 Agreement", fmtNum(accuracy.agreement_3m, 1), "A/B/C 가중 평균(4.2.4)"),
+    metricRow("IC (점수-수익률 순위상관)", fmtNum(accuracy.ic_3m, 2), "3건 미만이면 계산하지 않음"),
+    metricRow("승률", fmtPct(accuracy.win_rate), "참고치 55% — 게이트 아님"),
+    metricRow("평균 3개월 초과수익", fmtSignedPct(accuracy.mean_excess), accuracy.note_ko || "SPY 대비"),
+  ]));
+  host.append(section("전략 (모의 계좌)", [
+    metricRow("자산 지수(초기=1)", fmtNum(pick(p.equity_index, strategy.equity_index), 4), null),
+    metricRow("현금 비중", fmtPct(pick(p.cash_pct, strategy.cash_pct)), null),
+    metricRow("투자 비중", fmtPct(pick(p.invested_pct, strategy.invested_pct)), "평균 노출도"),
+    metricRow("보유 종목", `${pick(p.n_positions, strategy.n_positions, 0)}개`, strategy.note_ko || null),
+  ], null));
+}
+
+function renderPilot(summary, pilotEval) {
+  const host = clear($("pilot"));
+  const pilot = (summary && summary.pilot) || {};
+  const verdict = pilot.verdict || "보류";
+  host.append(el("p", { class: "mos" }, [
+    el("span", { class: verdict === "소액 파일럿 후보" ? "good" : "deferred", text: `판정: ${verdict}` }),
+  ]));
+  if (pilot.reason_ko) host.append(el("p", { class: "tiny", text: pilot.reason_ko }));
+  const metrics = pilot.metrics || (pilotEval && pilotEval.metrics) || [];
+  if (!metrics.length) {
+    host.append(emptyState("파일럿 지표 없음"));
     return;
   }
-  host.className = "";
-  for (const s of signals) {
-    const row = el("div", { class: "row" });
-    const left = el("div", {}, [
-      el("div", {}, [badge(s.type || "NONE", gradeKind(s.type)), el("span", { class: "ticker", text: ` ${s.ticker}` })]),
-      el("div", { class: "tiny", text: s.thesis_ko || s.note || "" }),
-    ]);
-    const right = el("div", { class: "num", text: s.entry_score != null ? `${s.entry_score}점` : "" });
-    row.append(left, right);
-    host.append(row);
-  }
+  const table = el("table", {}, [
+    el("caption", { text: "네 지표를 함께 본다 — 하나만 통과시키지 않는다(4.7.3)" }),
+    el("thead", {}, [el("tr", {}, [el("th", { text: "지표" }), el("th", { class: "num", text: "값" }),
+      el("th", { text: "기준" }), el("th", { text: "판정" })])]),
+    el("tbody", {}, metrics.map((m) => el("tr", {}, [
+      el("td", { class: "wrap", text: m.label_ko || m.key }),
+      el("td", { class: "num", text: isNum(m.value) ? (String(m.key).includes("loss") || String(m.key) === "tail_loss" ? fmtPct(m.value) : fmtNum(m.value, 3)) : "—" }),
+      el("td", { class: "tiny", text: m.threshold || "—" }),
+      el("td", {}, [passMark(m.pass)]),
+    ]))),
+  ]);
+  host.append(table);
+  host.append(el("p", { class: "tiny", text: "N_eff 는 같은 종목이 63거래일 안에 겹치면 하나로 묶은 표본 수입니다." }));
 }
 
-function renderWatchlist(list) {
-  const host = document.getElementById("watchlist");
-  host.replaceChildren();
-  const rows = (list && list.watchlist) || [];
+function renderHistory(summary, records) {
+  const host = clear($("history"));
+  const rows = (summary && summary.signal_history) || [];
+  const all = records && Array.isArray(records.records) ? records.records : [];
+  if (!rows.length && !all.length) {
+    host.append(emptyState("신호 이력 없음 — 아직 발행된 신호가 없습니다."));
+    return;
+  }
+  const body = (rows.length ? rows : all).slice(0, 50).map((r) => el("tr", {}, [
+    el("td", { class: "num", text: String(r.as_of || (r.signal_id || "").slice(0, 10)) }),
+    el("td", { text: r.ticker || "—" }),
+    el("td", { text: r.action || (r.quant_intent === "pending_buy" ? "체결 대기" : r.quant_intent === "no_action" ? "관찰" : (r.action || "—")) }),
+    el("td", { class: "num", text: isNum(r.excess) ? fmtSignedPct(r.excess) : "—" }),
+  ]));
+  host.append(el("table", {}, [
+    el("caption", { text: `최근 ${body.length}건 · 초과수익은 SPY 대비 3개월` }),
+    el("thead", {}, [el("tr", {}, [el("th", { text: "발행일" }), el("th", { text: "티커" }),
+      el("th", { text: "행동" }), el("th", { class: "num", text: "3M 초과" })])]),
+    el("tbody", {}, body),
+  ]));
+  host.append(el("p", { class: "tiny", text: "`action` 은 체결 이벤트에서만 나온다 — 발행 레코드에는 의도만 있다(4.7.1)." }));
+}
+
+function renderParams(summary) {
+  const host = clear($("params"));
+  const rows = (summary && summary.params_history) || [];
   if (!rows.length) {
-    host.className = "empty";
-    host.textContent = "통과 종목 0개 — 최소 개수를 채우지 않는 것이 정상입니다.";
+    host.append(emptyState("파라미터 이력 없음"));
     return;
   }
-  host.className = "";
-  const table = el("table");
-  table.append(el("tr", {}, [el("th", { text: "티커" }), el("th", { text: "섹터" }),
-    el("th", { text: "Q" }), el("th", { text: "V" }), el("th", { text: "G" }), el("th", { text: "정렬" })]));
-  for (const w of rows) {
-    table.append(el("tr", {}, [
-      el("td", { class: "ticker", text: w.ticker }),
-      el("td", { class: "tiny", text: w.sector || "" }),
-      el("td", { class: "num", text: w.q ?? "—" }),
-      el("td", { class: "num", text: w.v ?? "—" }),
-      el("td", { class: "num", text: w.g ?? "—" }),
-      el("td", { class: "num", text: w.rank_score ?? "—" }),
+  rows.slice().reverse().forEach((row) => {
+    host.append(el("div", { class: "row" }, [
+      el("div", {}, [el("strong", { text: row.version || "—" }),
+        el("p", { class: "tiny", text: `이전 ${row.parent_version || "—"} · ${row.created_at || ""}` }),
+        row.note_ko ? el("p", { class: "tiny", text: row.note_ko }) : null]),
+      badge((row.gate_result && row.gate_result.status) || "active", "info"),
+    ]));
+  });
+  host.append(el("p", { class: "tiny", text: "파라미터 변경은 PR 로만 반영한다(4.3 가드2)." }));
+}
+
+function renderDebateEffect(summary) {
+  const host = clear($("debate-effect"));
+  const eff = (summary && summary.debate_effect) || { pairs: 0, net_pp: null, verdict: "표본 0건 — 판정 보류" };
+  const pairs = eff.pairs || 0;
+  if (pairs < 30) {
+    host.append(el("p", { class: "mos", text: `표본 ${pairs}건 — 판정 보류` }));
+    host.append(el("p", { class: "tiny", text: "행동이 갈린 페어 30건·N_eff 15 이상이 되어야 판정합니다(4.8.2)." }));
+    return;
+  }
+  host.append(el("p", { class: "mos", text: `순효과 ${fmtNum(eff.net_pp, 2)}%p` }));
+  host.append(el("p", { class: "tiny", text: `페어 ${pairs}건 · ${eff.verdict || ""}` }));
+}
+
+function renderLedger(summary, portfolio, records, pilotEval) {
+  renderHoldout(summary);
+  renderFolds(summary);
+  renderStrategy(summary, portfolio);
+  renderPilot(summary, pilotEval);
+  renderHistory(summary, records);
+  renderParams(summary);
+  renderDebateEffect(summary);
+}
+
+/* ────────────────────────── 레이더 ────────────────────────── */
+function renderRadar(radar, watch, config, today) {
+  const host = clear($("radar-watermark"));
+  const mark = (radar && radar.watermark_ko) || "45일 전 분기말 기준";
+  host.append(el("div", { class: `banner ${radar && radar.stale ? "is-warn" : "is-ok"}` }, [
+    el("strong", { text: mark }),
+    el("span", { class: "tiny", text: [
+      radar && radar.period_end ? `분기말 ${radar.period_end}` : "분기말 미확인",
+      radar && radar.stale_days !== null && radar && radar.stale_days !== undefined ? `지연 ${radar.stale_days}일` : null,
+      `제출 기한 +${(radar && radar.lag_days) || 45}일 반영`,
+    ].filter(Boolean).join(" · ") }),
+  ]));
+  if (radar && radar.stale) host.append(el("p", { class: "tiny", text: "13F 는 지연 표시만 하고 신호에는 쓰지 않습니다(2.7)." }));
+
+  const radarHost = clear($("radar"));
+  const filers = (radar && radar.filers) || [];
+  if (!filers.length) {
+    radarHost.append(emptyState((radar && radar.note_ko) || "13F 제출 없음 — 레이더는 비어 있는 것이 정상입니다."));
+  } else {
+    filers.forEach((filer) => {
+      radarHost.append(el("h3", { class: "tiny", text: `${filer.filer_name || filer.filer_cik} · ${filer.period_end || ""} · 보유 ${filer.n_holdings || 0}종목` }));
+      const changes = (filer.changes || []).filter((c) => c.kind !== "unchanged").slice(0, 12);
+      if (!changes.length) {
+        radarHost.append(emptyState("이번 분기 유의미한 변동 없음"));
+        return;
+      }
+      const table = el("table", {}, [
+        el("caption", { text: "신규 편입·확대·축소·청산 (평가액 기준)" }),
+        el("thead", {}, [el("tr", {}, [el("th", { text: "종목" }), el("th", { text: "변화" }),
+          el("th", { class: "num", text: "평가액" }), el("th", { class: "num", text: "변화율" })])]),
+        el("tbody", {}, changes.map((c) => el("tr", {}, [
+          el("td", { class: "wrap" }, [c.issuer || c.cusip,
+            c.in_watchlist ? el("span", {}, [el("br"), badge("워치리스트", "info")]) : null]),
+          el("td", { text: c.kind_ko || c.kind }),
+          el("td", { class: "num", text: fmtMoney(c.value_usd) }),
+          el("td", { class: "num", text: isNum(c.delta_pct) ? fmtSignedPct(c.delta_pct) : "신규" }),
+        ]))),
+      ]);
+      radarHost.append(table);
+    });
+  }
+
+  const diffHost = clear($("watch-diff"));
+  const entered = (watch && watch.entered) || [];
+  const exited = (watch && watch.exited) || [];
+  if (!entered.length && !exited.length) {
+    diffHost.append(emptyState(`이번 주 변동 없음 — 워치리스트 ${pick(watch && watch.count, 0)}종목 유지.`));
+  } else {
+    entered.forEach((e) => diffHost.append(el("div", { class: "row" }, [
+      el("div", {}, [el("strong", { text: `+ ${e.ticker}` }), el("p", { class: "tiny", text: e.reason_ko || "" })]),
+      badge("편입", "ok"),
+    ])));
+    exited.forEach((e) => diffHost.append(el("div", { class: "row" }, [
+      el("div", {}, [el("strong", { text: `− ${e.ticker}` }), el("p", { class: "tiny", text: e.reason_ko || "" })]),
+      badge("편출", "bad"),
+    ])));
+  }
+  ((watch && watch.valuation_suspended) || []).forEach((s) => {
+    diffHost.append(el("p", { class: "tiny", text: `${s.ticker}: 가치평가 보류 업종(${s.reason || "SECTOR_FORMULA_PENDING"}) — 워치리스트 제외.` }));
+  });
+
+  const calHost = clear($("calendar"));
+  const t = today || {};
+  if (t.as_of) {
+    calHost.append(el("p", { class: "tiny", text: `기준일 ${t.as_of} · 다음 거래일 주문 마감은 발행 정보의 order_cutoff_at 을 따릅니다.` }));
+  }
+  calHost.append(emptyState("실적·공시 캘린더는 8-K Item 2.02 이력으로 추정하지만 아직 화면에 연결하지 않았습니다(정직 표기)."));
+
+  const rulesHost = clear($("rules"));
+  const gates = (config && config.entry_gates) || {};
+  const exit = (config && config.exit) || {};
+  rulesHost.append(el("div", { class: "kv" }, [
+    el("dt", { text: "파라미터" }),
+    el("dd", { text: (config && config.params_version) || "—" }),
+    el("dt", { text: "안전마진" }),
+    el("dd", { class: "num", text: `RO ${fmtPct((gates.margin_of_safety || {}).risk_on)} / N ${fmtPct((gates.margin_of_safety || {}).neutral)} / ROff ${fmtPct((gates.margin_of_safety || {}).risk_off)}` }),
+    el("dt", { text: "청산 임계" }),
+    el("dd", { class: "num", text: `exit_score ${fmtNum(exit.exit_score, 0)} · trim ${fmtNum(exit.trim_score, 0)}` }),
+    el("dt", { text: "리스크" }),
+    el("dd", { class: "num", text: `1회 ${fmtPct((config && config.risk && config.risk.risk_per_trade), 2)} · 종목 ${fmtPct((config && config.risk && config.risk.max_position), 0)} · 섹터 ${fmtPct((config && config.risk && config.risk.max_sector), 0)}` }),
+  ]));
+  const vetoRules = (config && config.veto_rules) || [];
+  if (vetoRules.length) {
+    rulesHost.append(el("table", {}, [
+      el("caption", { text: "리스크 가드 12종 (고정)" }),
+      el("thead", {}, [el("tr", {}, [el("th", { text: "코드" }), el("th", { text: "이름" }), el("th", { text: "차단 사유" })])]),
+      el("tbody", {}, vetoRules.map((v) => el("tr", {}, [
+        el("td", { text: v.code }), el("td", { class: "tiny wrap", text: v.name }),
+        el("td", { class: "tiny wrap", text: v.message_ko }),
+      ]))),
     ]));
   }
-  host.append(table);
 }
 
-(async function main() {
-  const [meta, folds, watchlist, today, ledger] = await Promise.all(FILES.map(loadJson));
-  renderMeta(meta);
-  renderFolds(folds);
-  renderSignals(today);
-  renderWatchlist(watchlist);
-  if (ledger && ledger.agreement) {
-    document.getElementById("signals").append(
-      el("p", { class: "tiny", text: `누적 Agreement ${ledger.agreement} · 승률 ${ledger.win_rate ?? "—"}` })
-    );
+/* ────────────────────────── 라우팅 ────────────────────────── */
+function setRoute(route, ticker) {
+  const next = ROUTES.includes(route) ? route : "today";
+  state.route = next;
+  if (ticker) state.ticker = ticker;
+  if (next === "ticker" && !state.ticker && state.tickers.length) state.ticker = state.tickers[0];
+  const hash = next === "ticker" && state.ticker ? `#ticker/${state.ticker}` : `#${next}`;
+  if (location.hash !== hash) history.replaceState(null, "", hash);
+  ROUTES.forEach((name) => {
+    const view = $(`view-${name}`);
+    const tab = $(`tab-${name}`);
+    const active = name === next;
+    if (view) view.hidden = !active;
+    if (tab) tab.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  if (next === "ticker") loadTicker(state.ticker);
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+async function loadTicker(ticker) {
+  if (!ticker) return;
+  const select = $("ticker-select");
+  if (select && select.value !== ticker) select.value = ticker;
+  const doc = await loadJson(`tickers/${ticker}.json`);
+  renderTicker(doc);
+}
+
+function parseHash() {
+  const raw = (location.hash || "#today").replace(/^#/, "");
+  const [route, ticker] = raw.split("/");
+  if (route === "ticker" && ticker) state.ticker = decodeURIComponent(ticker);
+  return ROUTES.includes(route) ? route : "today";
+}
+
+function fillTickerSelect(today, watch) {
+  const select = $("ticker-select");
+  if (!select) return;
+  clear(select);
+  const seen = new Set();
+  const add = (ticker, label) => {
+    if (!ticker || seen.has(ticker)) return;
+    seen.add(ticker);
+    select.append(el("option", { value: ticker, text: label ? `${ticker} · ${label}` : ticker }));
+  };
+  ((today && today.signals) || []).forEach((s) => add(s.ticker, DECISION_LABEL[s.decision || s.type] || ""));
+  ((watch && watch.watchlist) || []).forEach((w) => add(w.ticker, w.sector || ""));
+  state.tickers = Array.from(seen);
+  if (!state.tickers.length) {
+    select.append(el("option", { value: "", text: "종목 없음" }));
+    select.disabled = true;
+    return;
   }
-})();
+  select.disabled = false;
+  select.value = state.ticker && seen.has(state.ticker) ? state.ticker : state.tickers[0];
+  state.ticker = select.value;
+  select.addEventListener("change", (event) => setRoute("ticker", event.target.value));
+}
+
+/* ────────────────────────── 시작 ────────────────────────── */
+async function boot() {
+  const results = await Promise.all(CORE_FILES.map(loadJson));
+  const [meta, today, folds, watch, summary, records, portfolio, radar, config] = results;
+  state.core = { meta, today, folds, watch, summary, records, portfolio, radar, config, foldsOnly: folds };
+
+  renderStatus(meta);
+  renderFreshness(meta);
+  renderRegime(meta);
+  renderToday(today, config);
+  renderLedger(summary, portfolio, records, (summary && summary.pilot) || null);
+  renderRadar(radar, watch, config, today);
+  fillTickerSelect(today, watch);
+
+  if (!state.bound) {
+    state.bound = true;
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => setRoute(tab.dataset.route));
+    });
+    window.addEventListener("hashchange", () => setRoute(parseHash()));
+  }
+
+  const route = parseHash();
+  setRoute(route, state.ticker);
+}
+
+boot().catch((err) => {
+  const host = $("signals");
+  if (host) {
+    clear(host);
+    host.append(emptyState(`데이터를 불러오지 못했습니다: ${err && err.message ? err.message : err}`));
+  }
+  const node = $("status-badge");
+  if (node) {
+    node.textContent = "데이터 오류";
+    node.className = "badge bad";
+  }
+});

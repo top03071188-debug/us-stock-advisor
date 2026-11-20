@@ -15,8 +15,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from engine.backtest.execution import OrderNotPlaceable, build_entry_band, entry_plan
-from engine.decide.macro import RegimeView, regime_adjustments
-from engine.decide.sizing import size_position, stop_distance_for
+from engine.decide.macro import RegimeView
+from engine.decide.sizing import size_position
 
 GRADE_ORDER = {"NONE": 0, "WATCH": 1, "BUY": 2, "STRONG_BUY": 3}
 NEWS_STATES = ("not_read", "insufficient_evidence", "read_done")

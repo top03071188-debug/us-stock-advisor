@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from engine.screener import Candidate, GATE_LABELS, hard_gates, screen, score_candidate
-from tests.helpers import annual_fundamentals, example_inputs
+from tests.helpers import annual_fundamentals
 
 
 def make(ticker="AAA", sector="Technology", cap=5e10, adv=2e8, price=100.0, rows=2000,

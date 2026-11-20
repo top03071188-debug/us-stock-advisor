@@ -2,42 +2,118 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>미국 주식 어드바이저 · Phase 1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0f14" />
+<meta name="description" content="미국 주식 하이브리드 투자 조언 앱 — 정량 신호·성적표·레이더 (정보 제공용, 투자 권유 아님)" />
+<title>미국 주식 어드바이저</title>
 <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+<a class="skip" href="#app">본문으로 건너뛰기</a>
+
 <header class="topbar">
   <h1>투자 어드바이저</h1>
-  <span id="status-badge" class="badge">데이터 불러오는 중…</span>
+  <p id="status-badge" class="badge" role="status" aria-live="polite">데이터 불러오는 중…</p>
 </header>
 
+<nav class="tabs" role="tablist" aria-label="화면 선택">
+  <button class="tab" role="tab" id="tab-today" data-route="today" aria-controls="view-today" aria-selected="true">
+    <span class="tab-ico" aria-hidden="true">◉</span><span>오늘</span>
+  </button>
+  <button class="tab" role="tab" id="tab-ticker" data-route="ticker" aria-controls="view-ticker" aria-selected="false">
+    <span class="tab-ico" aria-hidden="true">▤</span><span>종목</span>
+  </button>
+  <button class="tab" role="tab" id="tab-ledger" data-route="ledger" aria-controls="view-ledger" aria-selected="false">
+    <span class="tab-ico" aria-hidden="true">▦</span><span>성적표</span>
+  </button>
+  <button class="tab" role="tab" id="tab-radar" data-route="radar" aria-controls="view-radar" aria-selected="false">
+    <span class="tab-ico" aria-hidden="true">◈</span><span>레이더</span>
+  </button>
+</nav>
+
 <main id="app">
-  <section class="card">
-    <h2>시장 상태</h2>
-    <div id="regime" class="muted">—</div>
-    <div id="meta" class="tiny"></div>
+  <!-- ───── 오늘 ───── -->
+  <section class="view" id="view-today" role="tabpanel" aria-labelledby="tab-today">
+    <div id="freshness"></div>
+    <div id="regime-banner"></div>
+    <section class="card" aria-labelledby="h-signals">
+      <h2 id="h-signals">오늘의 신호 <span id="signal-count" class="tiny"></span></h2>
+      <div id="signals" class="stack"><p class="empty">불러오는 중…</p></div>
+    </section>
+    <section class="card" aria-labelledby="h-blocked">
+      <h2 id="h-blocked">차단 목록 <span class="tiny">(안 산 이유도 정보입니다)</span></h2>
+      <div id="blocked" class="stack"><p class="empty">불러오는 중…</p></div>
+    </section>
+    <section class="card" aria-labelledby="h-today-rules">
+      <h2 id="h-today-rules">현재 규칙 요약</h2>
+      <div id="today-rules" class="tiny"></div>
+    </section>
   </section>
 
-  <section class="card">
-    <h2>폴드 요약 <span class="tiny">(거래일 기준 · 홀드아웃 잠금)</span></h2>
-    <div id="folds"></div>
+  <!-- ───── 종목 ───── -->
+  <section class="view" id="view-ticker" role="tabpanel" aria-labelledby="tab-ticker" hidden>
+    <div class="picker">
+      <label for="ticker-select" class="tiny">종목 선택</label>
+      <select id="ticker-select"></select>
+    </div>
+    <div id="ticker-body"><p class="empty">종목을 선택하세요.</p></div>
   </section>
 
-  <section class="card">
-    <h2>오늘의 신호</h2>
-    <div id="signals" class="empty">신호 없음</div>
+  <!-- ───── 성적표 ───── -->
+  <section class="view" id="view-ledger" role="tabpanel" aria-labelledby="tab-ledger" hidden>
+    <div id="holdout-banner"></div>
+    <section class="card" aria-labelledby="h-folds">
+      <h2 id="h-folds">워크포워드 <span class="tiny">(거래일 기준 · 기간별 분리)</span></h2>
+      <div id="folds"></div>
+    </section>
+    <section class="card" aria-labelledby="h-strategy">
+      <h2 id="h-strategy">전략(모의 계좌) vs 신호 정확도</h2>
+      <div id="strategy"></div>
+    </section>
+    <section class="card" aria-labelledby="h-pilot">
+      <h2 id="h-pilot">소액 파일럿 4지표</h2>
+      <div id="pilot"></div>
+    </section>
+    <section class="card" aria-labelledby="h-history">
+      <h2 id="h-history">신호 이력</h2>
+      <div id="history"></div>
+    </section>
+    <section class="card" aria-labelledby="h-params">
+      <h2 id="h-params">파라미터 이력</h2>
+      <div id="params"></div>
+    </section>
+    <section class="card" aria-labelledby="h-debate">
+      <h2 id="h-debate">토론 효과</h2>
+      <div id="debate-effect"></div>
+    </section>
   </section>
 
-  <section class="card">
-    <h2>워치리스트</h2>
-    <div id="watchlist" class="empty">워치리스트 없음</div>
+  <!-- ───── 레이더 ───── -->
+  <section class="view" id="view-radar" role="tabpanel" aria-labelledby="tab-radar" hidden>
+    <div id="radar-watermark"></div>
+    <section class="card" aria-labelledby="h-13f">
+      <h2 id="h-13f">13F 변화 <span class="tiny">(레이더 전용 — 신호에 쓰지 않음)</span></h2>
+      <div id="radar"></div>
+    </section>
+    <section class="card" aria-labelledby="h-watch-diff">
+      <h2 id="h-watch-diff">워치리스트 변동</h2>
+      <div id="watch-diff"></div>
+    </section>
+    <section class="card" aria-labelledby="h-calendar">
+      <h2 id="h-calendar">실적·공시 캘린더</h2>
+      <div id="calendar"></div>
+    </section>
+    <section class="card" aria-labelledby="h-rules">
+      <h2 id="h-rules">현재 규칙</h2>
+      <div id="rules"></div>
+    </section>
   </section>
 </main>
 
 <footer class="foot">
   <p>이 앱은 정보 제공용이며 투자 권유가 아닙니다. 투자 판단과 손실의 책임은 본인에게 있습니다.</p>
   <p class="tiny" id="build"></p>
+  <p class="tiny"><a href="./data/meta.json">데이터 계약(meta.json)</a></p>
 </footer>
 
 <script src="./app.js"></script>

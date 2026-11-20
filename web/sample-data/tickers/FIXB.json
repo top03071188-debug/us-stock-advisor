@@ -1,0 +1,450 @@
+{
+  "ticker": "FIXB",
+  "as_of": "2026-11-20",
+  "status": "sample",
+  "watchlist": {
+    "ticker": "FIXB",
+    "sector": "Health Care",
+    "q": 92.7,
+    "v": 75.42,
+    "g": 0.0,
+    "rank_score": 68.976
+  },
+  "signal": {
+    "signal_id": "2026-11-20-FIXB-WATCH-001",
+    "ticker": "FIXB",
+    "type": "WATCH",
+    "trade_grade": "WATCH",
+    "grade": "B",
+    "entry_score": 68.64,
+    "decision": "WATCH",
+    "as_of": "2026-11-20",
+    "data_cutoff_at": "2026-11-19T22:00:00Z",
+    "signal_published_at": "2026-11-19T22:02:11Z",
+    "order_cutoff_at": "2026-11-20T14:25:00Z",
+    "generated_price": 104.0557665364618,
+    "quant_intent": "no_action",
+    "thesis_ko": "IV 대비 15% 할인 · RSI 51",
+    "valuation": {
+      "iv_low": 104.3679,
+      "iv_median": 122.7858,
+      "iv_high": 141.2037,
+      "price": 104.0558,
+      "margin": 0.1525
+    },
+    "indicators": {
+      "rsi14": 50.8153,
+      "pct_b": 0.5497,
+      "dma50": 103.858,
+      "dma200": 103.6242,
+      "atr_pct": 0.0132
+    },
+    "investor_scores": {
+      "buffett": 53.6,
+      "graham": 51.0,
+      "lynch": -12.0,
+      "druckenmiller": 0.0
+    },
+    "components": {
+      "valuation": 75.42,
+      "timing": 50.35
+    },
+    "conflict": true,
+    "news_state": "not_read",
+    "expected_mdd": -0.055,
+    "invalidation": {
+      "price": 100.52,
+      "reason": "200일선 −3% 이탈 + ROIC<WACC"
+    },
+    "gate_summary": {
+      "failed": [
+        "B3",
+        "B4"
+      ],
+      "reasons": {
+        "B3": "안전마진 15.3% < 임계 20%",
+        "B4": "눌림 조건 0/4 · T 50.35"
+      }
+    },
+    "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+    "params_version": "params_v001",
+    "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
+    "track": "quant_only",
+    "veto": [],
+    "news": [
+      {
+        "headline": "FIXB 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+        "source": "FixtureWire",
+        "published_at": "2026-11-19T21:40:00Z",
+        "url": "https://example.com/news/fixb",
+        "impact": "neutral",
+        "durability": "structural",
+        "quote_verified": null
+      }
+    ],
+    "filings": [
+      {
+        "form": "10-Q",
+        "filed_date": "2026-11-08",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXB/10q.htm",
+        "accession": "0000FIXB-26-0001",
+        "items": []
+      },
+      {
+        "form": "8-K",
+        "filed_date": "2026-10-21",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXB/8k.htm",
+        "accession": "0000FIXB-26-0002",
+        "items": [
+          "2.02"
+        ]
+      }
+    ],
+    "risk": {
+      "veto": [],
+      "note_ko": null
+    },
+    "evidence": [
+      {
+        "type": "fundamental",
+        "metric": "quality_composite",
+        "value_kind": "score_0_100",
+        "filed_date": "2026-11-20"
+      },
+      {
+        "type": "fundamental",
+        "metric": "fcf_margin_5y",
+        "value_kind": "ratio",
+        "filed_date": "2026-11-20"
+      },
+      {
+        "type": "sec_filing",
+        "form": "10-Q",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXB/10q.htm",
+        "filed_date": "2026-11-08",
+        "available_at": "2026-11-08T20:05:00Z",
+        "accession": "0000FIXB-26-0001"
+      },
+      {
+        "type": "market",
+        "metric": "atr_pct",
+        "value_kind": "ratio"
+      }
+    ],
+    "entry_plan": [
+      {
+        "tranche": 1,
+        "weight": 0.4,
+        "price_ref": 104.06,
+        "provisional": true
+      },
+      {
+        "tranche": 2,
+        "weight": 0.3,
+        "price_ref": 96.77,
+        "provisional": true
+      },
+      {
+        "tranche": 3,
+        "weight": 0.3,
+        "price_ref": 89.49,
+        "provisional": true,
+        "active": false,
+        "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+      }
+    ],
+    "confidence_label_ko": "B 참고",
+    "news_badge_ko": "뉴스 미판독"
+  },
+  "last_signal": null,
+  "chart": {
+    "basis": "split_adj_index_base100",
+    "labels": [
+      "2025-11-28",
+      "2025-12-05",
+      "2025-12-12",
+      "2025-12-19",
+      "2025-12-26",
+      "2026-01-02",
+      "2026-01-09",
+      "2026-01-16",
+      "2026-01-23",
+      "2026-01-30",
+      "2026-02-06",
+      "2026-02-13",
+      "2026-02-20",
+      "2026-02-27",
+      "2026-03-06",
+      "2026-03-13",
+      "2026-03-20",
+      "2026-03-27",
+      "2026-04-03",
+      "2026-04-10",
+      "2026-04-17",
+      "2026-04-24",
+      "2026-05-01",
+      "2026-05-08",
+      "2026-05-15",
+      "2026-05-22",
+      "2026-05-29",
+      "2026-06-05",
+      "2026-06-12",
+      "2026-06-19",
+      "2026-06-26",
+      "2026-07-03",
+      "2026-07-10",
+      "2026-07-17",
+      "2026-07-24",
+      "2026-07-31",
+      "2026-08-07",
+      "2026-08-14",
+      "2026-08-21",
+      "2026-08-28",
+      "2026-09-04",
+      "2026-09-11",
+      "2026-09-18",
+      "2026-09-25",
+      "2026-10-02",
+      "2026-10-09",
+      "2026-10-16",
+      "2026-10-23",
+      "2026-10-30",
+      "2026-11-06",
+      "2026-11-13",
+      "2026-11-20"
+    ],
+    "index": [
+      100.0,
+      99.767,
+      100.702,
+      99.962,
+      99.36,
+      99.706,
+      99.903,
+      100.963,
+      100.873,
+      100.49,
+      100.209,
+      100.437,
+      99.891,
+      100.554,
+      101.092,
+      100.009,
+      99.961,
+      100.784,
+      99.354,
+      99.825,
+      100.623,
+      100.167,
+      100.546,
+      99.975,
+      99.821,
+      100.595,
+      100.944,
+      99.934,
+      101.118,
+      100.536,
+      100.384,
+      100.241,
+      100.53,
+      100.566,
+      99.829,
+      100.197,
+      100.072,
+      100.639,
+      100.721,
+      99.175,
+      100.509,
+      100.175,
+      100.615,
+      100.766,
+      101.094,
+      100.829,
+      100.534,
+      101.081,
+      100.814,
+      100.258,
+      100.684,
+      100.867
+    ],
+    "dma50": [
+      100.061,
+      100.07,
+      100.076,
+      100.098,
+      100.046,
+      100.039,
+      100.065,
+      100.092,
+      100.094,
+      100.107,
+      100.159,
+      100.161,
+      100.158,
+      100.146,
+      100.191,
+      100.232,
+      100.243,
+      100.26,
+      100.227,
+      100.22,
+      100.256,
+      100.25,
+      100.257,
+      100.254,
+      100.225,
+      100.235,
+      100.277,
+      100.265,
+      100.338,
+      100.382,
+      100.369,
+      100.396,
+      100.443,
+      100.461,
+      100.474,
+      100.463,
+      100.426,
+      100.431,
+      100.44,
+      100.427,
+      100.446,
+      100.468,
+      100.469,
+      100.468,
+      100.502,
+      100.525,
+      100.551,
+      100.614,
+      100.61,
+      100.651,
+      100.682,
+      100.675
+    ],
+    "dma200": [
+      99.787,
+      99.8,
+      99.815,
+      99.84,
+      99.852,
+      99.86,
+      99.87,
+      99.888,
+      99.906,
+      99.917,
+      99.929,
+      99.943,
+      99.946,
+      99.963,
+      99.982,
+      100.004,
+      100.025,
+      100.049,
+      100.051,
+      100.059,
+      100.071,
+      100.08,
+      100.083,
+      100.083,
+      100.089,
+      100.109,
+      100.142,
+      100.159,
+      100.175,
+      100.202,
+      100.211,
+      100.219,
+      100.234,
+      100.24,
+      100.234,
+      100.242,
+      100.252,
+      100.262,
+      100.275,
+      100.284,
+      100.308,
+      100.319,
+      100.332,
+      100.332,
+      100.348,
+      100.364,
+      100.374,
+      100.393,
+      100.404,
+      100.42,
+      100.438,
+      100.449
+    ]
+  },
+  "indicators": {
+    "rsi14": 50.8153,
+    "pct_b": 0.5497,
+    "dma50": 103.858,
+    "dma200": 103.6242,
+    "atr_pct": 0.0132
+  },
+  "investor_scores": {
+    "buffett": 53.6,
+    "graham": 51.0,
+    "lynch": -12.0,
+    "druckenmiller": 0.0
+  },
+  "valuation": {
+    "iv_low": 104.3679,
+    "iv_median": 122.7858,
+    "iv_high": 141.2037,
+    "price": 104.0558,
+    "margin": 0.1525
+  },
+  "news": [
+    {
+      "headline": "FIXB 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+      "source": "FixtureWire",
+      "published_at": "2026-11-19T21:40:00Z",
+      "url": "https://example.com/news/fixb",
+      "impact": "neutral",
+      "durability": "structural",
+      "quote_verified": null
+    }
+  ],
+  "filings": [
+    {
+      "form": "10-Q",
+      "filed_date": "2026-11-08",
+      "url": "https://www.sec.gov/Archives/edgar/data/FIXB/10q.htm",
+      "accession": "0000FIXB-26-0001",
+      "items": []
+    },
+    {
+      "form": "8-K",
+      "filed_date": "2026-10-21",
+      "url": "https://www.sec.gov/Archives/edgar/data/FIXB/8k.htm",
+      "accession": "0000FIXB-26-0002",
+      "items": [
+        "2.02"
+      ]
+    }
+  ],
+  "risk": {
+    "veto": [],
+    "note_ko": null
+  },
+  "invalidation": {
+    "price": 100.52,
+    "reason": "200일선 −3% 이탈 + ROIC<WACC"
+  },
+  "gate_summary": {
+    "failed": [
+      "B3",
+      "B4"
+    ],
+    "reasons": {
+      "B3": "안전마진 15.3% < 임계 20%",
+      "B4": "눌림 조건 0/4 · T 50.35"
+    }
+  },
+  "debate": null,
+  "debate_note_ko": "토론 없음 — PC에서 `python codex_debate/run_debate.py --tickers FIXB` 로 돌릴 수 있습니다.",
+  "position_check": null,
+  "params_version": "params_v001"
+}

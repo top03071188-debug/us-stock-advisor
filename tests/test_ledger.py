@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 
 from engine.backtest.walk_forward import agreement_components
-from engine.decide.signals import expected_mdd, target_band
+from engine.decide.signals import target_band
 from engine.ledger.grade import (HORIZONS_TD, grade_record, realized_mdd, summarize_grades,
                                  weighted_agreement)
 from engine.ledger.record import (RecordError, append_immutable, assert_publish_record, debate_event,

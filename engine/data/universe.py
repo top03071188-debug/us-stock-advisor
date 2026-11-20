@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import os
-from datetime import date, datetime
+from datetime import datetime
 
 import pandas as pd
 

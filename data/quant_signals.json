@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-19T22:02:11Z",
+  "data_cutoff_at": "2026-11-19T22:00:00Z",
+  "signal_published_at": "2026-11-19T22:02:11Z",
+  "order_cutoff_at": "2026-11-20T14:25:00Z",
+  "as_of": "2026-11-20",
+  "params_version": "params_v001",
+  "snapshot_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "code_commit": "init",
+  "status": "awaiting_first_run",
+  "mode": "postclose",
+  "source": "none",
+  "regime": {
+    "regime": "neutral",
+    "votes": {},
+    "votes_risk_on": 0,
+    "votes_risk_off": 0,
+    "inputs_missing": [
+      "real_rate",
+      "t10y2y",
+      "credit",
+      "volatility",
+      "dollar"
+    ],
+    "verified": false,
+    "extreme": false,
+    "multiplier": 0.7,
+    "margin_of_safety": 0.2,
+    "max_new_positions": 20,
+    "score": 50.0
+  },
+  "signals": [],
+  "blocked": [],
+  "watchlist": [],
+  "watchlist_count": 0,
+  "ledger_summary": {
+    "schema_version": 1,
+    "as_of": "2026-11-20",
+    "n_signals": 0,
+    "n_graded_3m": 0,
+    "accuracy": {
+      "label_ko": "신호 정확도",
+      "agreement_3m": null,
+      "ic_3m": null,
+      "win_rate": null,
+      "mean_excess": null,
+      "benchmark_connected": false,
+      "note_ko": "채점 표본 없음"
+    },
+    "strategy": {
+      "label_ko": "전략(모의 계좌)",
+      "equity_index": 1.0,
+      "cash_pct": 1.0,
+      "invested_pct": 0.0,
+      "n_positions": 0
+    },
+    "horizons": {},
+    "folds": {},
+    "pilot": {
+      "verdict": "보류",
+      "reason_ko": "채점 표본 0건 — 판정 보류(4.7.3)"
+    },
+    "params_history": [],
+    "signal_history": [],
+    "debate_effect": {
+      "pairs": 0,
+      "net_pp": null,
+      "verdict": "표본 0건 — 판정 보류"
+    },
+    "note_ko": "아직 실전 배치가 한 번도 돌지 않았습니다 — 신호가 비어 있는 것이 정상입니다."
+  },
+  "portfolio": {
+    "as_of": "2026-11-20",
+    "cash_pct": 1.0,
+    "invested_pct": 0.0,
+    "equity_index": 1.0,
+    "positions": []
+  },
+  "pilot_eval": {
+    "verdict": "보류",
+    "reason_ko": "채점 표본 0건 — 판정 보류(4.7.3)",
+    "n_eff": 0,
+    "metrics": [
+      {
+        "key": "n_eff",
+        "label_ko": "유효 표본 N_eff",
+        "value": 0,
+        "threshold": "≥ 15",
+        "pass": false
+      },
+      {
+        "key": "net_after_cost",
+        "label_ko": "비용 후 순수익(SPY 대비)",
+        "value": null,
+        "threshold": "> 0",
+        "pass": null
+      },
+      {
+        "key": "cash_equivalent",
+        "label_ko": "유사 현금비중 벤치마크 대비",
+        "value": null,
+        "threshold": "> 0",
+        "pass": null
+      },
+      {
+        "key": "tail_loss",
+        "label_ko": "손실 구간(하위 20%) 평균",
+        "value": null,
+        "threshold": "≥ -0.08",
+        "pass": null
+      }
+    ]
+  },
+  "charts": {},
+  "position_checks": [],
+  "diagnostics": {
+    "mode": "init",
+    "degraded": [],
+    "sources": {}
+  },
+  "note_ko": "아직 실전 배치가 한 번도 돌지 않았습니다 — 신호가 비어 있는 것이 정상입니다."
+}

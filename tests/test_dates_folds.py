@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 
 import pandas as pd
-import pytest
 
 from engine.utils.dates import (
     add_trading_days,
@@ -21,7 +20,6 @@ from engine.utils.dates import (
     prev_trading_day,
     signal_published_at,
     trading_day_count,
-    trading_days,
 )
 
 

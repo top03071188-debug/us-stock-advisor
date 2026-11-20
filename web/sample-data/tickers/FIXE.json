@@ -1,0 +1,446 @@
+{
+  "ticker": "FIXE",
+  "as_of": "2026-11-20",
+  "status": "sample",
+  "watchlist": {
+    "ticker": "FIXE",
+    "sector": "Energy",
+    "q": 92.7,
+    "v": 88.46,
+    "g": 0.0,
+    "rank_score": 72.888
+  },
+  "signal": {
+    "signal_id": "2026-11-20-FIXE-WATCH-001",
+    "ticker": "FIXE",
+    "type": "WATCH",
+    "trade_grade": "WATCH",
+    "grade": "B",
+    "entry_score": 70.85,
+    "decision": "WATCH",
+    "as_of": "2026-11-20",
+    "data_cutoff_at": "2026-11-19T22:00:00Z",
+    "signal_published_at": "2026-11-19T22:02:11Z",
+    "order_cutoff_at": "2026-11-20T14:25:00Z",
+    "generated_price": 70.36495901773738,
+    "quant_intent": "no_action",
+    "thesis_ko": "IV 대비 23% 할인 · RSI 50",
+    "valuation": {
+      "iv_low": 77.7533,
+      "iv_median": 91.4744,
+      "iv_high": 105.1956,
+      "price": 70.365,
+      "margin": 0.2308
+    },
+    "indicators": {
+      "rsi14": 50.2024,
+      "pct_b": 0.5848,
+      "dma50": 70.5527,
+      "dma200": 72.2991,
+      "atr_pct": 0.0152
+    },
+    "investor_scores": {
+      "buffett": 67.9,
+      "graham": 64.1,
+      "lynch": -34.0,
+      "druckenmiller": 0.0
+    },
+    "components": {
+      "valuation": 88.46,
+      "timing": 50.64
+    },
+    "conflict": true,
+    "news_state": "not_read",
+    "expected_mdd": -0.0842,
+    "invalidation": {
+      "price": 70.13,
+      "reason": "200일선 −3% 이탈 + ROIC<WACC"
+    },
+    "gate_summary": {
+      "failed": [
+        "B4"
+      ],
+      "reasons": {
+        "B4": "눌림 조건 0/4 · T 50.64"
+      }
+    },
+    "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+    "params_version": "params_v001",
+    "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
+    "track": "quant_only",
+    "veto": [],
+    "news": [
+      {
+        "headline": "FIXE 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+        "source": "FixtureWire",
+        "published_at": "2026-11-19T21:40:00Z",
+        "url": "https://example.com/news/fixe",
+        "impact": "neutral",
+        "durability": "structural",
+        "quote_verified": null
+      }
+    ],
+    "filings": [
+      {
+        "form": "10-Q",
+        "filed_date": "2026-11-08",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXE/10q.htm",
+        "accession": "0000FIXE-26-0001",
+        "items": []
+      },
+      {
+        "form": "8-K",
+        "filed_date": "2026-10-21",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXE/8k.htm",
+        "accession": "0000FIXE-26-0002",
+        "items": [
+          "2.02"
+        ]
+      }
+    ],
+    "risk": {
+      "veto": [],
+      "note_ko": null
+    },
+    "evidence": [
+      {
+        "type": "fundamental",
+        "metric": "quality_composite",
+        "value_kind": "score_0_100",
+        "filed_date": "2026-11-20"
+      },
+      {
+        "type": "fundamental",
+        "metric": "fcf_margin_5y",
+        "value_kind": "ratio",
+        "filed_date": "2026-11-20"
+      },
+      {
+        "type": "sec_filing",
+        "form": "10-Q",
+        "url": "https://www.sec.gov/Archives/edgar/data/FIXE/10q.htm",
+        "filed_date": "2026-11-08",
+        "available_at": "2026-11-08T20:05:00Z",
+        "accession": "0000FIXE-26-0001"
+      },
+      {
+        "type": "market",
+        "metric": "atr_pct",
+        "value_kind": "ratio"
+      }
+    ],
+    "entry_plan": [
+      {
+        "tranche": 1,
+        "weight": 0.4,
+        "price_ref": 70.36,
+        "provisional": true
+      },
+      {
+        "tranche": 2,
+        "weight": 0.3,
+        "price_ref": 65.44,
+        "provisional": true
+      },
+      {
+        "tranche": 3,
+        "weight": 0.3,
+        "price_ref": 60.51,
+        "provisional": true,
+        "active": false,
+        "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+      }
+    ],
+    "confidence_label_ko": "B 참고",
+    "news_badge_ko": "뉴스 미판독"
+  },
+  "last_signal": null,
+  "chart": {
+    "basis": "split_adj_index_base100",
+    "labels": [
+      "2025-11-28",
+      "2025-12-05",
+      "2025-12-12",
+      "2025-12-19",
+      "2025-12-26",
+      "2026-01-02",
+      "2026-01-09",
+      "2026-01-16",
+      "2026-01-23",
+      "2026-01-30",
+      "2026-02-06",
+      "2026-02-13",
+      "2026-02-20",
+      "2026-02-27",
+      "2026-03-06",
+      "2026-03-13",
+      "2026-03-20",
+      "2026-03-27",
+      "2026-04-03",
+      "2026-04-10",
+      "2026-04-17",
+      "2026-04-24",
+      "2026-05-01",
+      "2026-05-08",
+      "2026-05-15",
+      "2026-05-22",
+      "2026-05-29",
+      "2026-06-05",
+      "2026-06-12",
+      "2026-06-19",
+      "2026-06-26",
+      "2026-07-03",
+      "2026-07-10",
+      "2026-07-17",
+      "2026-07-24",
+      "2026-07-31",
+      "2026-08-07",
+      "2026-08-14",
+      "2026-08-21",
+      "2026-08-28",
+      "2026-09-04",
+      "2026-09-11",
+      "2026-09-18",
+      "2026-09-25",
+      "2026-10-02",
+      "2026-10-09",
+      "2026-10-16",
+      "2026-10-23",
+      "2026-10-30",
+      "2026-11-06",
+      "2026-11-13",
+      "2026-11-20"
+    ],
+    "index": [
+      100.0,
+      100.119,
+      99.71,
+      99.959,
+      99.566,
+      99.076,
+      98.724,
+      98.671,
+      98.525,
+      98.023,
+      98.728,
+      98.715,
+      96.878,
+      98.871,
+      97.744,
+      98.558,
+      98.078,
+      97.699,
+      98.238,
+      96.586,
+      97.481,
+      96.185,
+      96.504,
+      96.01,
+      96.708,
+      95.329,
+      95.322,
+      95.91,
+      95.993,
+      96.409,
+      95.595,
+      95.364,
+      95.77,
+      94.721,
+      95.224,
+      94.688,
+      93.889,
+      94.594,
+      93.863,
+      95.165,
+      94.055,
+      94.048,
+      93.992,
+      92.903,
+      93.906,
+      93.003,
+      91.992,
+      93.008,
+      92.385,
+      92.858,
+      92.46,
+      92.721
+    ],
+    "dma50": [
+      100.834,
+      100.669,
+      100.496,
+      100.324,
+      100.195,
+      100.049,
+      99.863,
+      99.669,
+      99.52,
+      99.316,
+      99.14,
+      99.035,
+      98.868,
+      98.709,
+      98.548,
+      98.388,
+      98.217,
+      98.104,
+      97.94,
+      97.817,
+      97.705,
+      97.494,
+      97.356,
+      97.235,
+      97.101,
+      96.916,
+      96.799,
+      96.613,
+      96.495,
+      96.322,
+      96.136,
+      96.001,
+      95.858,
+      95.662,
+      95.525,
+      95.376,
+      95.162,
+      95.054,
+      94.857,
+      94.767,
+      94.652,
+      94.522,
+      94.319,
+      94.135,
+      93.991,
+      93.866,
+      93.763,
+      93.606,
+      93.453,
+      93.266,
+      93.073,
+      92.968
+    ],
+    "dma200": [
+      103.064,
+      102.903,
+      102.755,
+      102.602,
+      102.454,
+      102.313,
+      102.161,
+      101.993,
+      101.841,
+      101.686,
+      101.537,
+      101.392,
+      101.242,
+      101.087,
+      100.931,
+      100.782,
+      100.634,
+      100.469,
+      100.304,
+      100.146,
+      99.999,
+      99.833,
+      99.672,
+      99.53,
+      99.39,
+      99.227,
+      99.072,
+      98.902,
+      98.76,
+      98.603,
+      98.454,
+      98.3,
+      98.145,
+      97.983,
+      97.842,
+      97.682,
+      97.51,
+      97.36,
+      97.203,
+      97.055,
+      96.908,
+      96.763,
+      96.601,
+      96.435,
+      96.291,
+      96.136,
+      95.985,
+      95.844,
+      95.686,
+      95.543,
+      95.392,
+      95.27
+    ]
+  },
+  "indicators": {
+    "rsi14": 50.2024,
+    "pct_b": 0.5848,
+    "dma50": 70.5527,
+    "dma200": 72.2991,
+    "atr_pct": 0.0152
+  },
+  "investor_scores": {
+    "buffett": 67.9,
+    "graham": 64.1,
+    "lynch": -34.0,
+    "druckenmiller": 0.0
+  },
+  "valuation": {
+    "iv_low": 77.7533,
+    "iv_median": 91.4744,
+    "iv_high": 105.1956,
+    "price": 70.365,
+    "margin": 0.2308
+  },
+  "news": [
+    {
+      "headline": "FIXE 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+      "source": "FixtureWire",
+      "published_at": "2026-11-19T21:40:00Z",
+      "url": "https://example.com/news/fixe",
+      "impact": "neutral",
+      "durability": "structural",
+      "quote_verified": null
+    }
+  ],
+  "filings": [
+    {
+      "form": "10-Q",
+      "filed_date": "2026-11-08",
+      "url": "https://www.sec.gov/Archives/edgar/data/FIXE/10q.htm",
+      "accession": "0000FIXE-26-0001",
+      "items": []
+    },
+    {
+      "form": "8-K",
+      "filed_date": "2026-10-21",
+      "url": "https://www.sec.gov/Archives/edgar/data/FIXE/8k.htm",
+      "accession": "0000FIXE-26-0002",
+      "items": [
+        "2.02"
+      ]
+    }
+  ],
+  "risk": {
+    "veto": [],
+    "note_ko": null
+  },
+  "invalidation": {
+    "price": 70.13,
+    "reason": "200일선 −3% 이탈 + ROIC<WACC"
+  },
+  "gate_summary": {
+    "failed": [
+      "B4"
+    ],
+    "reasons": {
+      "B4": "눌림 조건 0/4 · T 50.64"
+    }
+  },
+  "debate": null,
+  "debate_note_ko": "토론 없음 — PC에서 `python codex_debate/run_debate.py --tickers FIXE` 로 돌릴 수 있습니다.",
+  "position_check": null,
+  "params_version": "params_v001"
+}

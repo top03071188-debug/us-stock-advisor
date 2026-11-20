@@ -157,7 +157,9 @@ def weighted_agreement(grades: list[dict], horizon: str = "3m") -> dict:
     return {
         "horizon": horizon,
         "weighted_agreement": None if den == 0 else round(num / den, 2),
-        "n": int(den > 0 and sum(1 for g in grades if ((g.get("horizons") or {}).get(horizon) or {}).get("agreement", {}).get("total") is not None)),
+        "n": int(den > 0 and sum(
+            1 for g in grades
+            if (((g.get("horizons") or {}).get(horizon) or {}).get("agreement") or {}).get("total") is not None)),
         "weights": GRADE_WEIGHTS,
     }
 
@@ -167,7 +169,7 @@ def summarize_grades(grades: list[dict], horizon: str = "3m") -> dict:
     rows = []
     for g in grades:
         h = (g.get("horizons") or {}).get(horizon) or {}
-        if h.get("agreement", {}).get("total") is None:
+        if (h.get("agreement") or {}).get("total") is None:
             continue
         rows.append({"score": g.get("entry_score", 0.0), "excess": h["excess_return"],
                      "agreement": h["agreement"]["total"]})

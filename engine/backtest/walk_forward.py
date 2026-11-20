@@ -11,12 +11,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import numpy as np
 
-from engine.utils.dates import Fold, add_trading_days, fold_summary
+from engine.utils.dates import Fold, fold_summary
 
 
 @dataclass

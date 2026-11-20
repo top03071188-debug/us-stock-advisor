@@ -153,20 +153,20 @@ def quality_score(f: AnnualFundamentals) -> dict:
 
     parts = {
         # 자본수익성 30점: 스프레드 0 → 0, +10%p → 100
-        "roic_spread": 30 * _scale(spread, 0.0, 0.10),
+        "roic_spread": 30 * _scale(spread, 0.0, 0.10) / 100.0,
         # 안정성 15점: 표준편차 6%p → 0, 3%p → 100, 0%p → 100 (낮을수록 좋다)
-        "roe_stability": 15 * (1.0 - _scale(roe_sd, 0.03, 0.09)) if np.isfinite(roe_sd) else 0.0,
+        "roe_stability": 15 * (1.0 - _scale(roe_sd, 0.03, 0.09) / 100.0) if np.isfinite(roe_sd) else 0.0,
         # 현금창출 20점: FCF 마진 0 → 0, 20% → 100
-        "fcf_margin": 20 * _scale(fcf_m, 0.0, 0.20),
+        "fcf_margin": 20 * _scale(fcf_m, 0.0, 0.20) / 100.0,
         # 이익 품질 15점: FCF/순이익 0.7 → 0, 1.0 → 100
-        "fcf_quality": 15 * _scale(fcf_ni, 0.70, 1.00),
+        "fcf_quality": 15 * _scale(fcf_ni, 0.70, 1.00) / 100.0,
         # 재무 건전성 10점: 순부채/EBITDA 2.5배 → 0, 1.0배 이하 → 100 + 이자보상 6배 이상
         "balance_sheet": 10 * (
             0.6 * (1.0 - _scale(nd_e, 1.0, 2.5) / 100.0)
             + 0.4 * (1.0 if ic >= 15 else _scale(ic, 6.0, 15.0) / 100.0)
         ),
         # 희석 10점: +5% → 0, 0% → 100
-        "dilution": 10 * (1.0 - _scale(dil, 0.0, 0.05)) if np.isfinite(dil) else 0.0,
+        "dilution": 10 * (1.0 - _scale(dil, 0.0, 0.05) / 100.0) if np.isfinite(dil) else 0.0,
     }
     total = float(sum(parts.values()))
     return {

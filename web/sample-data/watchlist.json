@@ -1,21 +1,92 @@
 {
-  "as_of": "2026-11-19",
+  "as_of": "2026-11-20",
+  "count": 5,
   "watchlist": [
     {
-      "ticker": "SAMPLE",
-      "sector": "Information Technology",
-      "q": 82,
-      "v": 71,
-      "g": 60,
-      "rank_score": 72.9
+      "ticker": "FIXC",
+      "sector": "Consumer Discretionary",
+      "q": 92.7,
+      "v": 100.0,
+      "g": 0.0,
+      "rank_score": 76.35,
+      "valuation_suspended": false
     },
     {
-      "ticker": "DEMO",
+      "ticker": "FIXA",
+      "sector": "Information Technology",
+      "q": 92.7,
+      "v": 99.3,
+      "g": 0.0,
+      "rank_score": 76.14,
+      "valuation_suspended": false
+    },
+    {
+      "ticker": "FIXE",
+      "sector": "Energy",
+      "q": 92.7,
+      "v": 88.46,
+      "g": 0.0,
+      "rank_score": 72.888,
+      "valuation_suspended": false
+    },
+    {
+      "ticker": "FIXB",
+      "sector": "Health Care",
+      "q": 92.7,
+      "v": 75.42,
+      "g": 0.0,
+      "rank_score": 68.976,
+      "valuation_suspended": false
+    },
+    {
+      "ticker": "FIXF",
       "sector": "Industrials",
-      "q": 76,
-      "v": 68,
-      "g": 65,
-      "rank_score": 70.6
+      "q": 92.7,
+      "v": 65.15,
+      "g": 0.0,
+      "rank_score": 65.895,
+      "valuation_suspended": false
     }
-  ]
+  ],
+  "entered": [
+    {
+      "ticker": "FIXA",
+      "sector": "Information Technology",
+      "rank_score": 76.14,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "FIXB",
+      "sector": "Health Care",
+      "rank_score": 68.976,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "FIXC",
+      "sector": "Consumer Discretionary",
+      "rank_score": 76.35,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "FIXE",
+      "sector": "Energy",
+      "rank_score": 72.888,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "FIXF",
+      "sector": "Industrials",
+      "rank_score": 65.895,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    }
+  ],
+  "exited": [],
+  "valuation_suspended": [
+    {
+      "ticker": "FIXD",
+      "sector": "Financials",
+      "reason": "SECTOR_FORMULA_PENDING"
+    }
+  ],
+  "excluded": []
 }

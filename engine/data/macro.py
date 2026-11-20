@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from engine.utils.dates import ET, UTC, et_day_end, first_decision_after
+from engine.utils.dates import UTC, et_day_end, first_decision_after
 
 FRED_BASE = "https://api.stlouisfed.org/fred"
 DEFAULT_SERIES = [

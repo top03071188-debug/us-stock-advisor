@@ -1,0 +1,53 @@
+# config/universe.yaml — Phase 3 부트스트랩 유니버스 (공개 정보만)
+#
+# [정직한 한계] S&P 500 전체(약 500) 목록은 지수 구성종목 시계열(`data/corpus/universe_history`,
+# 2.4.5)이 있어야 시점 고정으로 쓸 수 있고 그 데이터는 아직 확보하지 못했다. 그때까지는
+# 아래 **대형주 부분집합**으로 파이프라인을 돌린다. 부분집합으로 돌린 성과는 "상한 추정"이며
+# 생존편향이 있다 — `data/limits.json` 과 대시보드의 "미검증" 표기에 그대로 남긴다.
+version: universe_v001
+benchmark: SPY
+sources: "Phase 3 부트스트랩(대형주 부분집합) — universe_history 확보 전"
+tickers:
+  - {ticker: AAPL, sector: Information Technology}
+  - {ticker: MSFT, sector: Information Technology}
+  - {ticker: NVDA, sector: Information Technology}
+  - {ticker: AVGO, sector: Information Technology}
+  - {ticker: ORCL, sector: Information Technology}
+  - {ticker: ADBE, sector: Information Technology}
+  - {ticker: CSCO, sector: Information Technology}
+  - {ticker: GOOGL, sector: Communication Services}
+  - {ticker: META, sector: Communication Services}
+  - {ticker: NFLX, sector: Communication Services}
+  - {ticker: DIS, sector: Communication Services}
+  - {ticker: AMZN, sector: Consumer Discretionary}
+  - {ticker: TSLA, sector: Consumer Discretionary}
+  - {ticker: HD, sector: Consumer Discretionary}
+  - {ticker: MCD, sector: Consumer Discretionary}
+  - {ticker: NKE, sector: Consumer Discretionary}
+  - {ticker: WMT, sector: Consumer Staples}
+  - {ticker: PG, sector: Consumer Staples}
+  - {ticker: KO, sector: Consumer Staples}
+  - {ticker: PEP, sector: Consumer Staples}
+  - {ticker: COST, sector: Consumer Staples}
+  - {ticker: JNJ, sector: Health Care}
+  - {ticker: UNH, sector: Health Care}
+  - {ticker: LLY, sector: Health Care}
+  - {ticker: MRK, sector: Health Care}
+  - {ticker: ABBV, sector: Health Care}
+  - {ticker: XOM, sector: Energy}
+  - {ticker: CVX, sector: Energy}
+  - {ticker: CAT, sector: Industrials}
+  - {ticker: GE, sector: Industrials}
+  - {ticker: HON, sector: Industrials}
+  - {ticker: UPS, sector: Industrials}
+  - {ticker: BA, sector: Industrials}
+  - {ticker: JPM, sector: Financials}
+  - {ticker: BAC, sector: Financials}
+  - {ticker: V, sector: Financials}
+  - {ticker: MA, sector: Financials}
+  - {ticker: LIN, sector: Materials}
+  - {ticker: SHW, sector: Materials}
+  - {ticker: NEE, sector: Utilities}
+  - {ticker: DUK, sector: Utilities}
+  - {ticker: AMT, sector: Real Estate}
+  - {ticker: PLD, sector: Real Estate}

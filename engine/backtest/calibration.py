@@ -117,7 +117,6 @@ def calibrate(observations: list[FoldObservation], base_params: dict,
     for cand in neighbors(base_params):
         cand = rebalance_weights(cand)
         obj = objective(eligible, cand, base_params, l2_lambda)
-        improved = [o.fold_id for o in eligible if o.agreement_mean >= np.mean([x.agreement_mean for x in eligible])]
         record["candidates"].append({"params": cand, "objective": round(obj, 5)})
         if best is None or obj < best[1]:
             best = (cand, obj)

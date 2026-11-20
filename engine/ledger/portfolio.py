@@ -24,8 +24,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 
 from engine.backtest.execution import EntryBand, opening_fill
-from engine.decide.sizing import (MAX_POSITION, MAX_SECTOR, RISK_PER_TRADE, recheck_planned_loss,
-                                  stop_distance_for)
+from engine.decide.sizing import (MAX_POSITION, MAX_SECTOR, RISK_PER_TRADE, recheck_planned_loss)
 from engine.utils.dates import market_open_at
 
 

@@ -1,0 +1,78 @@
+{
+  "params_version": "params_v001",
+  "created_at": "2026-11-19",
+  "entry_weights": {
+    "valuation": 0.25,
+    "timing": 0.2
+  },
+  "entry_gates": {},
+  "grades": {
+    "buy": 68,
+    "watch": 55
+  },
+  "exit": {
+    "exit_score": 75
+  },
+  "risk": {},
+  "scaling": {
+    "exit": [
+      0.3333,
+      0.3333,
+      0.3334
+    ]
+  },
+  "universe": {
+    "index": "SP500"
+  },
+  "veto_rules": [
+    {
+      "code": "V01",
+      "name": "EARNINGS_WINDOW"
+    },
+    {
+      "code": "V02",
+      "name": "DATA_STALE"
+    },
+    {
+      "code": "V03",
+      "name": "STRUCTURAL_8K"
+    },
+    {
+      "code": "V04",
+      "name": "GOING_CONCERN"
+    },
+    {
+      "code": "V05",
+      "name": "LIQUIDITY"
+    },
+    {
+      "code": "V06",
+      "name": "MACRO_EXTREME"
+    },
+    {
+      "code": "V07",
+      "name": "SECTOR_CAP"
+    },
+    {
+      "code": "V08",
+      "name": "POSITION_CAP"
+    },
+    {
+      "code": "V09",
+      "name": "THESIS_BREAK"
+    },
+    {
+      "code": "V10",
+      "name": "SPLIT_ANOMALY"
+    },
+    {
+      "code": "V11",
+      "name": "NEWS_INJECTION"
+    },
+    {
+      "code": "V12",
+      "name": "EVIDENCE_MISSING"
+    }
+  ],
+  "note_ko": "화면의 '현재 규칙' — 보정은 분기 PR 로만 반영한다."
+}

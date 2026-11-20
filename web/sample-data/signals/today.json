@@ -1,15 +1,620 @@
 {
-  "as_of": "2026-11-19",
+  "as_of": "2026-11-20",
+  "status": "sample",
+  "regime": {
+    "regime": "neutral",
+    "inputs_missing": [],
+    "score": 50.0
+  },
   "signals": [
     {
-      "ticker": "SAMPLE",
+      "signal_id": "2026-11-20-FIXA-BUY-001",
+      "ticker": "FIXA",
       "type": "BUY",
-      "entry_score": 69.4,
-      "thesis_ko": "Phase 1 샘플 — 실제 신호가 아닙니다"
+      "trade_grade": "BUY",
+      "grade": "A",
+      "entry_score": 82.37,
+      "decision": "BUY",
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "generated_price": 173.80751126730846,
+      "quant_intent": "pending_buy",
+      "thesis_ko": "IV 대비 30% 할인 · RSI 19",
+      "valuation": {
+        "iv_low": 209.7857,
+        "iv_median": 246.8067,
+        "iv_high": 283.8277,
+        "price": 173.8075,
+        "margin": 0.2958
+      },
+      "indicators": {
+        "rsi14": 18.8226,
+        "pct_b": 0.0602,
+        "dma50": 182.1782,
+        "dma200": 179.0442,
+        "atr_pct": 0.0129
+      },
+      "investor_scores": {
+        "buffett": 79.8,
+        "graham": 74.9,
+        "lynch": 16.0,
+        "druckenmiller": 0.0
+      },
+      "components": {
+        "valuation": 99.3,
+        "timing": 82.18
+      },
+      "conflict": true,
+      "news_state": "read_done",
+      "expected_mdd": -0.05,
+      "invalidation": {
+        "price": 173.67,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "gate_summary": {
+        "failed": [],
+        "reasons": {}
+      },
+      "sizing_note_ko": null,
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
+      "track": "quant_only",
+      "veto": [],
+      "news": [
+        {
+          "headline": "FIXA 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+          "source": "FixtureWire",
+          "published_at": "2026-11-19T21:40:00Z",
+          "url": "https://example.com/news/fixa",
+          "impact": "neutral",
+          "durability": "structural",
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "10-Q",
+          "filed_date": "2026-11-08",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXA/10q.htm",
+          "accession": "0000FIXA-26-0001",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-10-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXA/8k.htm",
+          "accession": "0000FIXA-26-0002",
+          "items": [
+            "2.02"
+          ]
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "evidence": [
+        {
+          "type": "fundamental",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "fundamental",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXA/10q.htm",
+          "filed_date": "2026-11-08",
+          "available_at": "2026-11-08T20:05:00Z",
+          "accession": "0000FIXA-26-0001"
+        },
+        {
+          "type": "news",
+          "url": "https://example.com/news/fixa",
+          "headline": "FIXA 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+          "source": "FixtureWire",
+          "published_at": "2026-11-19T21:40:00Z",
+          "available_at": "2026-11-19T21:40:00Z"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 173.81,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 161.64,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 149.47,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "confidence_label_ko": "A 데이터·근거 충족",
+      "news_badge_ko": null
+    },
+    {
+      "signal_id": "2026-11-20-FIXB-WATCH-001",
+      "ticker": "FIXB",
+      "type": "WATCH",
+      "trade_grade": "WATCH",
+      "grade": "B",
+      "entry_score": 68.64,
+      "decision": "WATCH",
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "generated_price": 104.0557665364618,
+      "quant_intent": "no_action",
+      "thesis_ko": "IV 대비 15% 할인 · RSI 51",
+      "valuation": {
+        "iv_low": 104.3679,
+        "iv_median": 122.7858,
+        "iv_high": 141.2037,
+        "price": 104.0558,
+        "margin": 0.1525
+      },
+      "indicators": {
+        "rsi14": 50.8153,
+        "pct_b": 0.5497,
+        "dma50": 103.858,
+        "dma200": 103.6242,
+        "atr_pct": 0.0132
+      },
+      "investor_scores": {
+        "buffett": 53.6,
+        "graham": 51.0,
+        "lynch": -12.0,
+        "druckenmiller": 0.0
+      },
+      "components": {
+        "valuation": 75.42,
+        "timing": 50.35
+      },
+      "conflict": true,
+      "news_state": "not_read",
+      "expected_mdd": -0.055,
+      "invalidation": {
+        "price": 100.52,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "gate_summary": {
+        "failed": [
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B3": "안전마진 15.3% < 임계 20%",
+          "B4": "눌림 조건 0/4 · T 50.35"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
+      "track": "quant_only",
+      "veto": [],
+      "news": [
+        {
+          "headline": "FIXB 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+          "source": "FixtureWire",
+          "published_at": "2026-11-19T21:40:00Z",
+          "url": "https://example.com/news/fixb",
+          "impact": "neutral",
+          "durability": "structural",
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "10-Q",
+          "filed_date": "2026-11-08",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXB/10q.htm",
+          "accession": "0000FIXB-26-0001",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-10-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXB/8k.htm",
+          "accession": "0000FIXB-26-0002",
+          "items": [
+            "2.02"
+          ]
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "evidence": [
+        {
+          "type": "fundamental",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "fundamental",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXB/10q.htm",
+          "filed_date": "2026-11-08",
+          "available_at": "2026-11-08T20:05:00Z",
+          "accession": "0000FIXB-26-0001"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 104.06,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 96.77,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 89.49,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "confidence_label_ko": "B 참고",
+      "news_badge_ko": "뉴스 미판독"
+    },
+    {
+      "signal_id": "2026-11-20-FIXE-WATCH-001",
+      "ticker": "FIXE",
+      "type": "WATCH",
+      "trade_grade": "WATCH",
+      "grade": "B",
+      "entry_score": 70.85,
+      "decision": "WATCH",
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "generated_price": 70.36495901773738,
+      "quant_intent": "no_action",
+      "thesis_ko": "IV 대비 23% 할인 · RSI 50",
+      "valuation": {
+        "iv_low": 77.7533,
+        "iv_median": 91.4744,
+        "iv_high": 105.1956,
+        "price": 70.365,
+        "margin": 0.2308
+      },
+      "indicators": {
+        "rsi14": 50.2024,
+        "pct_b": 0.5848,
+        "dma50": 70.5527,
+        "dma200": 72.2991,
+        "atr_pct": 0.0152
+      },
+      "investor_scores": {
+        "buffett": 67.9,
+        "graham": 64.1,
+        "lynch": -34.0,
+        "druckenmiller": 0.0
+      },
+      "components": {
+        "valuation": 88.46,
+        "timing": 50.64
+      },
+      "conflict": true,
+      "news_state": "not_read",
+      "expected_mdd": -0.0842,
+      "invalidation": {
+        "price": 70.13,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "gate_summary": {
+        "failed": [
+          "B4"
+        ],
+        "reasons": {
+          "B4": "눌림 조건 0/4 · T 50.64"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
+      "track": "quant_only",
+      "veto": [],
+      "news": [
+        {
+          "headline": "FIXE 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+          "source": "FixtureWire",
+          "published_at": "2026-11-19T21:40:00Z",
+          "url": "https://example.com/news/fixe",
+          "impact": "neutral",
+          "durability": "structural",
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "10-Q",
+          "filed_date": "2026-11-08",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXE/10q.htm",
+          "accession": "0000FIXE-26-0001",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-10-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXE/8k.htm",
+          "accession": "0000FIXE-26-0002",
+          "items": [
+            "2.02"
+          ]
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "evidence": [
+        {
+          "type": "fundamental",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "fundamental",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXE/10q.htm",
+          "filed_date": "2026-11-08",
+          "available_at": "2026-11-08T20:05:00Z",
+          "accession": "0000FIXE-26-0001"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 70.36,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 65.44,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 60.51,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "confidence_label_ko": "B 참고",
+      "news_badge_ko": "뉴스 미판독"
+    },
+    {
+      "signal_id": "2026-11-20-FIXF-WATCH-001",
+      "ticker": "FIXF",
+      "type": "WATCH",
+      "trade_grade": "WATCH",
+      "grade": "C",
+      "entry_score": 64.56,
+      "decision": "WATCH",
+      "as_of": "2026-11-20",
+      "data_cutoff_at": "2026-11-19T22:00:00Z",
+      "signal_published_at": "2026-11-19T22:02:11Z",
+      "order_cutoff_at": "2026-11-20T14:25:00Z",
+      "generated_price": 145.14838636821858,
+      "quant_intent": "no_action",
+      "thesis_ko": "IV 대비 9% 할인 · RSI 55",
+      "valuation": {
+        "iv_low": 135.7137,
+        "iv_median": 159.6632,
+        "iv_high": 183.6127,
+        "price": 145.1484,
+        "margin": 0.0909
+      },
+      "indicators": {
+        "rsi14": 55.0809,
+        "pct_b": 0.7489,
+        "dma50": 144.1032,
+        "dma200": 141.5228,
+        "atr_pct": 0.0122
+      },
+      "investor_scores": {
+        "buffett": 42.3,
+        "graham": 40.8,
+        "lynch": -6.0,
+        "druckenmiller": 0.0
+      },
+      "components": {
+        "valuation": 65.15,
+        "timing": 41.33
+      },
+      "conflict": false,
+      "news_state": "insufficient_evidence",
+      "expected_mdd": -0.05,
+      "invalidation": {
+        "price": 137.28,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "gate_summary": {
+        "failed": [
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B3": "안전마진 9.1% < 임계 20%",
+          "B4": "눌림 조건 0/4 · T 41.33"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:05190565500643a900cc0a5858b46a828050937bb959b41521802c1adf8d9955",
+      "track": "quant_only",
+      "veto": [],
+      "news": [
+        {
+          "headline": "FIXF 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+          "source": "FixtureWire",
+          "published_at": "2026-11-19T21:40:00Z",
+          "url": "https://example.com/news/fixf",
+          "impact": "neutral",
+          "durability": "structural",
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "10-Q",
+          "filed_date": "2026-11-08",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXF/10q.htm",
+          "accession": "0000FIXF-26-0001",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-10-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXF/8k.htm",
+          "accession": "0000FIXF-26-0002",
+          "items": [
+            "2.02"
+          ]
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "evidence": [
+        {
+          "type": "fundamental",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "fundamental",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio",
+          "filed_date": "2026-11-20"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/FIXF/10q.htm",
+          "filed_date": "2026-11-08",
+          "available_at": "2026-11-08T20:05:00Z",
+          "accession": "0000FIXF-26-0001"
+        },
+        {
+          "type": "news",
+          "url": "https://example.com/news/fixf",
+          "headline": "FIXF 합성 뉴스 헤드라인(픽스처) — 실제 기사가 아니다",
+          "source": "FixtureWire",
+          "published_at": "2026-11-19T21:40:00Z",
+          "available_at": "2026-11-19T21:40:00Z"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 145.15,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 134.99,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 124.83,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
+      ],
+      "confidence_label_ko": "C 근거 약함",
+      "news_badge_ko": "뉴스 근거 부족"
     }
   ],
-  "blocked": [],
-  "watchlist": 2,
-  "regime": "neutral",
-  "notes": null
+  "blocked": [
+    {
+      "ticker": "FIXC",
+      "reason": "V01",
+      "grade": "WATCH"
+    }
+  ],
+  "counts": {
+    "buy": 1,
+    "sell": 0,
+    "watch": 3
+  },
+  "watchlist_count": 5,
+  "params_version": "params_v001",
+  "published_at": "2026-11-19T22:02:11Z",
+  "notes": null,
+  "blocked_note_ko": "차단 1건 — 안 산 이유도 정보입니다."
 }

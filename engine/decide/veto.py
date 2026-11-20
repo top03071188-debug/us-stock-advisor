@@ -155,7 +155,6 @@ def veto_check(inputs: VetoInputs, rules: dict | None = None) -> VetoResult:
 
     p = by_code["V12"]["params"]
     required = set(p["required_evidence_types"])
-    types = {e.get("type") for e in inputs.evidence}
     core = [e for e in inputs.evidence if e.get("type") in required]
     invalid = [e for e in core if e.get("quote_verified") is False]
     if not core:

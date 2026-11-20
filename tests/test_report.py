@@ -47,7 +47,6 @@ def test_benchmark_comparison():
 
 def test_cost_sensitivity_runs_four_levels_and_decays():
     scenario = build_demo_scenario()
-    runs = {bps: run_scenario(scenario, slippage_bps=float(bps)).result() for bps in COST_SENSITIVITY_BPS}
 
     def _run(slippage_bps: float, **_kwargs):
         return run_scenario(scenario, slippage_bps=slippage_bps).result()
