@@ -283,7 +283,7 @@
           "quote_missing:news-c2f59bef54ce"
         ],
         "confidence_cap": "C",
-        "report_validated_at": "2026-11-20T13:56:10+00:00",
+        "report_validated_at": "2026-11-20T13:56:11+00:00",
         "resume_key": "sha256:5131076512d9e255b1d978f14ac39b93fed87e6c764d977549bc7caa4735654f",
         "injection_scope": null,
         "injection_blocking": false,
@@ -502,7 +502,7 @@
             "flags": {}
           }
         },
-        "report_sha256": "sha256:9e6f41a6a112e6b83701ef57c66fee81e0e6a1a5932c19880ad49c1b67894acf"
+        "report_sha256": "sha256:a3c9b25289e698f265346c6a30cb462cc64ad2bb84790706f34e588058c9e05a"
       },
       "quant_grade": "WATCH",
       "display_grade": "WATCH",

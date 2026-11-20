@@ -862,6 +862,14 @@ def assemble_validated(
     if validated_at is not None:
         validated_iso = validated_at if isinstance(validated_at, str) else validated_at.isoformat()
     validated_dt = _parse_iso(validated_iso) if validated_iso else completed_dt
+    # [수정 A] 검증 시각은 완료 시각보다 앞설 수 없다.
+    # 호출자가 초 단위로 절사한 시각(`isoformat(timespec="seconds")`)을 넘기면 완료 시각의
+    # 마이크로초가 잘려 `validated < completed` 가 되고(2026-11-20 GOOGL 0.53초 역전),
+    # 트랙 1 이 `VALIDATED_BEFORE_COMPLETED` 로 편입을 거부한다. 같은 초 안의 호출은
+    # 완료 시각을 그대로 쓴다 — 검증이 완료보다 먼저일 수는 없기 때문이다.
+    if completed_dt is not None and validated_dt is not None and validated_dt < completed_dt:
+        validated_dt = completed_dt
+        validated_iso = completed if isinstance(completed, str) else completed.isoformat()
     order_cutoff = _parse_iso(ctx.get("order_cutoff_at"))
     published = _parse_iso(ctx.get("signal_published_at"))
     # 마감 판정은 **검증된 시각**의 최댓값으로 한다 — 완료는 마감 전·검증은 마감 후인 리포트는 늦다.
@@ -1051,6 +1059,13 @@ def _validate_report(rep: dict, auto_downgrade_enabled: bool) -> list[str]:
         errors.append(f"{rid}: 등급을 올린 리포트는 허용되지 않는다")
     completed = _parse_iso(rep.get("completed_at"))
     validated = _parse_iso((rep.get("validation") or {}).get("report_validated_at")) or completed
+    # 트랙 1(`engine/ledger/debate.py` 의 `VALIDATED_BEFORE_COMPLETED`)과 **대칭**인 계약 검사다.
+    # 검증 시각이 완료 시각보다 앞선 리포트는 0.53초 차이라도 편입될 수 없다(수정 A).
+    if completed is not None and validated is not None and validated < completed:
+        errors.append(
+            f"{rid}: report_validated_at({(rep.get('validation') or {}).get('report_validated_at')}) "
+            f"이 completed_at({rep.get('completed_at')}) 보다 앞선다"
+        )
     order = _parse_iso(rep.get("order_cutoff_at"))
     published = _parse_iso(rep.get("signal_published_at"))
     if completed and order:

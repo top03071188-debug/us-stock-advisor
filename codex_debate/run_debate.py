@@ -481,6 +481,9 @@ def _save_report(
         provider=cfg.provider,
         report_seq=seq,
         # 검증 시각 — 이 프로세스가 결과를 받아 검증한 순간. `completed_at`(모델 자기 신고)과 별개다.
+        # 두 값 모두 `_now_iso()`(초 단위)지만 앞의 것이 먼저 계산되므로 `validated >= completed` 이고,
+        # 초 절사는 두 값을 같이 내리므로 순서를 뒤집지 않는다. 그래도 `assemble_validated` 가
+        # `validated < completed` 를 완료 시각으로 올려 막는다(수정 A — 공유 계약).
         validated_at=_now_iso(),
         model_version=cfg.model,
         blocked_before_calls=blocked_before_calls,

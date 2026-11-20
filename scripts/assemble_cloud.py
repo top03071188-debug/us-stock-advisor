@@ -278,7 +278,11 @@ def _assemble(args: argparse.Namespace, signals: dict) -> int:
             auto_downgrade_enabled=False,
             provider="codex",                         # 스키마 허용값은 codex|openai 뿐이다
             report_seq=_report_seq(doc, ticker, as_of),
-            validated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            # [수정 A] 검증 시각은 `completed_at`(조립 시각)과 같은 순간이다. 초 단위로 절사한
+            # 별도 값을 넘기면 완료 시각의 마이크로초가 잘려 `validated < completed`(0.53초 역전)가
+            # 되고 트랙 1 이 `VALIDATED_BEFORE_COMPLETED` 로 편입을 거부한다. `None` 이면
+            # `assemble_validated` 가 `completed` 와 **같은 타임스탬프**를 쓴다.
+            validated_at=None,
             model_version=cfg.model,
         )
         upsert_report(doc, report)

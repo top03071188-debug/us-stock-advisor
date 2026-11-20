@@ -21,7 +21,7 @@ import copy
 import json
 import shutil
 import subprocess
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -34,6 +34,16 @@ from scripts import build_public_data, notify, run_daily
 ROOT = Path(__file__).resolve().parents[1]
 AS_OF = "2026-11-20"
 LATER = "2026-11-24"
+
+
+def future_cutoff(hours: int = 3) -> str:
+    """동결 마감이 **아직 지나지 않은** 주문 마감 — 실행 시각 기준으로 만든다.
+
+    고정 날짜(`2026-11-20T14:25:00Z` + 버퍼 5분)를 쓰면 그 시각이 지난 뒤부터 교체가
+    `FROZEN_ORDER_STANDS` 로 뒤집혀 "취소가 그 실행에서 기록된다" 테스트가 실패한다(시한폭탄).
+    """
+    return (datetime.now(timezone.utc) + timedelta(hours=hours)).replace(
+        microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 @pytest.fixture
@@ -802,7 +812,7 @@ def test_revision_chain_cancellations_are_recorded_in_the_same_run(workdir, monk
     first = record_of(sid="2026-11-20-FIXA-BUY-001", ticker="FIXA", as_of=AS_OF)
     first.update({"as_of": AS_OF, "target_session": AS_OF, "inputs_hash": "hash-a",
                   "signal_published_at": "2026-11-20T04:00:00Z",
-                  "order_cutoff_at": "2026-11-20T14:25:00Z", "sector": "Information Technology"})
+                  "order_cutoff_at": future_cutoff(), "sector": "Information Technology"})
     second = copy.deepcopy(first)
     second.update({"signal_id": "2026-11-20-FIXA-BUY-002", "revision": 2, "inputs_hash": "hash-b",
                    "signal_published_at": "2026-11-20T04:30:00Z",
