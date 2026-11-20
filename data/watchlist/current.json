@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "as_of": "2026-11-20",
-  "generated_at": "2026-11-20T06:01:48.389096Z",
+  "generated_at": "2026-11-20T23:42:27.449619Z",
   "params_version": "params_v001",
   "watchlist": [
     {
@@ -110,15 +110,15 @@
       "q": 89.77,
       "v": 0.0,
       "v_raw": 0.0,
-      "margin": -2.902055,
+      "margin": -2.782809,
       "v_penalties": 10.0,
-      "hist_divergence_signed": -0.6539,
-      "ev_ebit_percentile": 21.49,
-      "ev_ebit_current": 18.7775,
+      "hist_divergence_signed": -0.6546,
+      "ev_ebit_percentile": 19.01,
+      "ev_ebit_current": 18.1544,
       "ev_ebit_median_10y": 24.6359,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-21~2026-11-18",
+      "ev_ebit_window": "2016-11-21~2026-11-19",
       "ev_ebit_reason": null,
       "growth": 0.0,
       "growth_raw_cagr": -0.091931,
@@ -127,10 +127,10 @@
       "normalization_method": "adjusted",
       "dcf_sensitivity": 0.0,
       "dcf_dropped": null,
-      "wacc_sensitivity": 0.1292,
-      "terminal_g_sensitivity": 0.0483,
-      "g": 79.25,
-      "rank_score": 60.735,
+      "wacc_sensitivity": 0.1288,
+      "terminal_g_sensitivity": 0.0481,
+      "g": 81.45,
+      "rank_score": 61.175,
       "parts": {
         "roic_spread": 30.0,
         "roe_stability": 8.98,
@@ -149,7 +149,7 @@
         "dilution_3y": -0.04737231680236864,
         "wacc_qc": 0.08094666806769885,
         "roic": 0.2733645141105688,
-        "wacc_valuation": 0.09763646467944156
+        "wacc_valuation": 0.09786616496186283
       },
       "valuation_suspended": false,
       "suspend_reason": null
