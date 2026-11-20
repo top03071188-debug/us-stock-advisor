@@ -726,9 +726,31 @@ def _run(monkeypatch, as_of: str) -> int:
     return run_daily.main(["--mode", "postclose", "--offline", "--as-of", as_of, "--root", "."])
 
 
+def pin_publish_time(monkeypatch) -> None:
+    """발행 시각을 **계획 시각**(`cutoff + 131s`)으로 고정한다 — 돌리는 시각에 결과가 흘들리지 않게.
+
+    파이프라인은 `signal_published_at` 을 결과가 확정된 **실제 시각(now)** 으로 적는다. 그래서 이 테스트를
+    주문 마감(09:25 ET) 60분 전~마감 사이에 돌리면 `completed = published + 60분` 이 마감을 넘어
+    `late`(COMPLETED_AFTER_ORDER_CUTOFF)가 되고, 발행이 마감에 가까울수록 `validated ≤ frozen`
+    자리도 사라진다 — 하루 한 시간짜리 flake(2026-11-20 13:25Z~14:25Z 창에서 실제로 깨졌다).
+
+    시각 규칙(`engine/`)은 그대로 두고 **테스트 입력만** 결정적으로 만든다: `publish_times` 에
+    계획보다 이른 시각을 넘기면 파이프라인이 계획 시각으로 올려 잡는 기존 동작을 그대로 쓴다.
+    """
+    from scripts import run_daily
+
+    real = run_daily.publish_times
+
+    def pinned(as_of, mode, published_at=None):
+        return real(as_of, mode, published_at=datetime(2000, 1, 1, tzinfo=timezone.utc))
+
+    monkeypatch.setattr(run_daily, "publish_times", pinned)
+
+
 def test_run_daily_end_to_end_with_debate(workdir, monkeypatch):
     from scripts import run_daily  # noqa: F401 — 경로 등록
 
+    pin_publish_time(monkeypatch)  # 발행·완료·검증 시각을 고정(하루 중 어느 시각에 돌려도 같은 케이스)
     assert _run(monkeypatch, AS_OF) == 0
     records = [json.loads(line) for line in
                Path("data/ledger/records.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
