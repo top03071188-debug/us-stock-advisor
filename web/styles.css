@@ -244,3 +244,40 @@ td.num, th.num { text-align: right; }
 .deferred { color: var(--warn); font-weight: 700; }
 .good { color: var(--buy); font-weight: 700; }
 .bad { color: var(--sell); font-weight: 700; }
+
+/* ── Phase 4: 토론 카드·A/B 위젯·실시간 분할 현황 (5.3~5.4) ───────────────── */
+.debate-rounds { display: grid; gap: 10px; }
+@media (min-width: 720px) { .debate-rounds { grid-template-columns: repeat(3, 1fr); align-items: start; } }
+.debate-col { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
+.debate-col h3 { margin: 0 0 6px; font-size: 12px; color: var(--muted); font-weight: 700; }
+.skill-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.skill-row:last-child { border-bottom: 0; }
+.skill-row p { margin: 0; }
+.skill-score { font-variant-numeric: tabular-nums; font-weight: 700; }
+.skill-score.pos { color: var(--buy); }
+.skill-score.neg { color: var(--sell); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 720px) { .metric-grid { grid-template-columns: repeat(3, 1fr); } }
+.metric-cell { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
+.metric-label { font-size: 11px; color: var(--muted); font-weight: 600; }
+.metric-value { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.big-verdict { font-size: 22px; font-weight: 800; line-height: 1.25; }
+.big-verdict.warn { color: var(--warn); }
+.big-verdict.ok { color: var(--buy); }
+.big-verdict.bad { color: var(--sell); }
+
+.tranche-row { display: grid; grid-template-columns: 52px 1fr; gap: 8px; align-items: start; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+.tranche-row:last-child { border-bottom: 0; }
+.tranche-bar { height: 8px; border-radius: 4px; background: var(--card-2); border: 1px solid var(--line); overflow: hidden; }
+.tranche-bar > span { display: block; height: 100%; background: var(--info); }
+.tranche-chip { font-variant-numeric: tabular-nums; }
+.note-box { border-left: 3px solid var(--line); padding: 4px 0 4px 9px; margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+.notify-list { display: grid; gap: 6px; }
+.notify-item { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: start; font-size: 13px; }
+button.linkish {
+  appearance: none; background: none; border: 0; padding: 0; margin: 0;
+  color: var(--info); font: inherit; font-weight: 700; cursor: pointer; min-height: 44px;
+}
+button.linkish:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }

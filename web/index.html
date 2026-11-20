@@ -4,9 +4,17 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0b0f14" />
-<meta name="description" content="미국 주식 하이브리드 투자 조언 앱 — 정량 신호·성적표·레이더 (정보 제공용, 투자 권유 아님)" />
+<meta name="description" content="미국 주식 하이브리드 투자 조언 앱 — 정량 신호·토론 비교·성적표·레이더 (정보 제공용, 투자 권유 아님)" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="투자 어드바이저" />
+<meta name="application-name" content="투자 어드바이저" />
 <title>미국 주식 어드바이저</title>
-<link rel="stylesheet" href="./styles.css?v=phase3-6" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" href="./icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./icon.svg" />
+<link rel="stylesheet" href="./styles.css?v=phase4-1" />
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -35,6 +43,7 @@
   <!-- ───── 오늘 ───── -->
   <section class="view" id="view-today" role="tabpanel" aria-labelledby="tab-today">
     <div id="freshness"></div>
+    <div id="notify-banner"></div>
     <div id="regime-banner"></div>
     <section class="card" aria-labelledby="h-signals">
       <h2 id="h-signals">오늘의 신호 <span id="signal-count" class="tiny"></span></h2>
@@ -83,8 +92,12 @@
       <div id="params"></div>
     </section>
     <section class="card" aria-labelledby="h-debate">
-      <h2 id="h-debate">토론 효과</h2>
+      <h2 id="h-debate">AI 토론 효과 (A/B) <span class="tiny">quant_only vs codex_debated</span></h2>
       <div id="debate-effect"></div>
+    </section>
+    <section class="card" aria-labelledby="h-live-positions">
+      <h2 id="h-live-positions">실시간 모의 보유 · 분할 현황</h2>
+      <div id="live-positions"></div>
     </section>
   </section>
 
@@ -116,6 +129,6 @@
   <p class="tiny"><a href="./data/meta.json">데이터 계약(meta.json)</a></p>
 </footer>
 
-<script src="./app.js?v=v133-audit2"></script>
+<script src="./app.js?v=phase4-1"></script>
 </body>
 </html>

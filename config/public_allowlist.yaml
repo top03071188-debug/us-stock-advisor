@@ -352,6 +352,107 @@ allow:
   - B5
   - B6
 
+  # ── Phase 4: 토론 편입·A/B 비교·알림·실시간 분할/익절 (3.11.8 · 4.8 · 5.3~5.4) ─────────
+  # 판정·비율·상태·요약뿐이다. 인용 원문(`quote`)·본문 발췌·수량·평단은 여기에도 없다.
+  - auto_downgrade_enabled
+  - comparison
+  - by_ticker
+  - reports
+  - divergent_pairs
+  - same_action_pairs
+  - n_graded_pairs
+  - avoided_loss
+  - missed_gain
+  - net
+  - cost
+  - net_after_cost
+  - avoided_loss_pp
+  - missed_gain_pp
+  - net_pp
+  - net_after_cost_pp
+  - avoidance_accuracy
+  - drawdown
+  - by_regime
+  - quarters
+  - quarter
+  - consecutive_quarters
+  - verdict_ko
+  - entry_day
+  - quant_action
+  - debate_action
+  - quant_grade
+  - recommendation
+  - return
+  - complete
+  - days
+  - quant_mean_mdd
+  - quant_tail_5pct
+  - debate_mean_mdd
+  - debate_tail_5pct
+  - defense_improved
+  - badge
+  - late
+  - invalid
+  - display_grade
+  - divergent
+  - auto_downgrade_applied
+  - round1
+  - round2
+  - round3
+  - skill
+  - stance
+  - quote_sha256_count
+  - rebuttals
+  - target_skill
+  - point
+  - guard
+  - chair
+  - veto_codes
+  - additional_blocks
+  - structural_risk
+  - reasoning
+  - consensus
+  - dissent
+  - grade_recommendation
+  - entry_plan_refs
+  - exit_refs
+  - validation
+  - skills_in
+  - skills_kept
+  - quotes_checked
+  - quotes_dropped
+  - numbers_checked
+  - numbers_rejected
+  - positions_open
+  - tranches_pending
+  - stop_count
+  - trim_count
+  - stop_reentry_blocked_count
+  - blocked_reentries
+  - forced_exits
+  - data_status
+  - last_run_at
+  - n_events
+  - n_new
+  - n_suppressed
+  - suppressed
+  - channels
+  - event_key
+  - sent_at
+  - tranches
+  - tranches_filled
+  - filled_at
+  - cancelled_by
+  - stop_headroom_pct
+  - trailing
+  - trim_stage
+  - trim_done
+  - last_event_ko
+  - high_gain_pct
+  - position
+  - debate_display
+  - debate_effect_verdict
+
 deny_keys:                       # 하나라도 있으면 커밋·배포 실패 [고정]
   - quote
   - evidence_quote

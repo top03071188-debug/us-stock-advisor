@@ -30,6 +30,7 @@ import pandas as pd
 
 from engine.backtest.execution import EntryBand, band_from_dict, opening_fill
 from engine.ledger import grade as grade_mod
+from engine.decide.sizing import recheck_planned_loss
 from engine.ledger.record import EXECUTION_EVENTS, execution_event, reanchor_event, superseded_ids
 
 INITIAL_CASH = 1_000_000.0
@@ -533,10 +534,17 @@ def summary(graded: list[dict], portfolio: dict, pilot: dict | None, folds: dict
 
 
 def write_public_state(state: dict, root: str | Path = PORTFOLIO_DIR) -> Path:
+    """공개 계좌 스냅샷 — `state.json` 과 `latest.json` 에 같은 내용을 쓴다.
+
+    `latest.json` 은 화면·문서가 가리키는 이름이고, `state.json` 은 기존 계약 이름이다.
+    둘 다 **비중·상태만** 담는다(`shares`·`avg_cost`·`cash_balance` 금지, 2.2.3).
+    """
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(state, ensure_ascii=False, indent=2)
     path = root / "state.json"
-    path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    path.write_text(text, encoding="utf-8")
+    (root / "latest.json").write_text(text, encoding="utf-8")
     return path
 
 
@@ -660,3 +668,494 @@ def stats_from_curve(index_points: list[float]) -> dict:
 
 def missing_benchmark_note() -> str:
     return "SPY 총수익 벤치마크가 데이터셋에 없어 초과수익·IC 를 계산하지 않았다(정직 표기)."
+
+
+# ══════════════════════ 실시간 2·3차 분할 · 손절/분할익절 정산 (Phase 4) ══════════════════════
+#
+# 기획서 3.5 · 4.12 의 "한 거래일의 처리 순서"를 실시간 Paper Ledger 에 그대로 적용한다.
+#   1) 기업 이벤트(분할) → 2) 갭 손절 → 3) 장중 **손절 먼저** → 4) 2·3차 지정가 →
+#   5) 분할익절(IV_high·RSI) → 6) 종가 트레일링 갱신.
+# 전량 청산(S5·S3·EXIT)이 나면 **같은 봉의 잔여 2·3차 주문을 즉시 취소**하고
+# `cancelled_by` 를 남긴다 — 그러지 않으면 손절로 다 팔고 같은 날 3차가 체결돼 포지션이 다시 열린다.
+
+PROFIT_TAKE_FRACTION = 1.0 / 3.0
+TRANCHE_DROPS_LIVE = (0.0, -0.07, -0.14)
+HEALTH_PATH = Path("data/health.json")
+
+
+def _tranche_plan(record: dict, reanchor: dict | None, first_fill: float,
+                  initial_stop: float, params: dict | None) -> list[dict]:
+    """2·3차 주문 상태 — 재고정(`plan_reanchor`)이 있으면 그 가격을 쓴다(실제 1차 체결가 기준)."""
+    scaling = (params or {}).get("portfolio") or {}
+    weights = list(scaling.get("tranches") or [0.40, 0.30, 0.30])
+    drops = list(scaling.get("tranche_drops") or TRANCHE_DROPS_LIVE)
+    plan = list((reanchor or {}).get("plan") or [])
+    by_index = {int(row.get("tranche")): row for row in plan if row.get("tranche") is not None}
+    rows = []
+    for index, weight in zip((1, 2, 3), weights):
+        row = by_index.get(index) or {}
+        if index == 1:
+            rows.append({"tranche": 1, "weight": float(weight), "price_ref": round(first_fill, 4),
+                         "status": "filled", "filled_at": None, "cancelled_by": None, "note": None})
+            continue
+        drop = float(drops[index - 1]) if len(drops) >= index else TRANCHE_DROPS_LIVE[index - 1]
+        price = float(row.get("price_ref") if row.get("price_ref") is not None else first_fill * (1.0 + drop))
+        status = "pending"
+        note = None
+        if index == 3 and price <= initial_stop:
+            status = "invalid"
+            note = "3차 지정가가 초기 손절가 이하 → 무효(3.5)"
+        elif row.get("active") is False:
+            status = "invalid"
+            note = row.get("note") or "손절선 밖 → 무효"
+        elif row.get("note"):
+            note = row.get("note")
+        rows.append({"tranche": index, "weight": float(weight), "price_ref": round(price, 4),
+                     "status": status, "filled_at": None, "cancelled_by": None, "note": note})
+    return rows
+
+
+def _indicator_lines(panel) -> dict:
+    """봉별 200일선·RSI(14) — 3차 200일선 조건과 분할익식 RSI 조건에 쓴다(sadj 기준)."""
+    if panel is None:
+        return {}
+    try:
+        from engine.metrics.technical import dma, rsi14
+        from engine.models import PriceKind
+        series = panel.series(PriceKind.split_adj_ohlc)
+        line200 = dma(series, 200)
+        rsi = rsi14(series, 14)
+    except Exception:  # noqa: BLE001 — 지표를 못 만들면 조건을 쓰지 않는다(체결 규칙은 유지)
+        return {}
+    out = {}
+    for idx in panel.frame.index:
+        d200 = line200.get(idx)
+        r = rsi.get(idx)
+        out[idx.date()] = (None if d200 is None or pd.isna(d200) else float(d200),
+                           None if r is None or pd.isna(r) else float(r))
+    return out
+
+
+def settle_positions(records: list[dict], executions: dict[str, dict],
+                     reanchors: dict[str, dict] | None, panels: dict, as_of: date,
+                     params: dict | None = None, *, forced_exits: dict[str, str] | None = None,
+                     initial_cash: float = INITIAL_CASH,
+                     slippage_bps: float = SLIPPAGE_BPS) -> dict:
+    """1차 체결 이후의 2·3차 분할·손절·분할익절을 봉 단위로 정산한다.
+
+    발행 레코드·체결 이벤트는 고치지 않는다 — 여기서 만드는 것은 **파생 상태**(화면·건강 지표)다.
+    `forced_exits` 는 `pipeline` 이 계산한 S1~S5/EXIT 판정(`{ticker: "S3"|"S5"|"EXIT"}`)으로,
+    `as_of` 봉 시가에 전량 청산하고 잔여 분할을 취소한다.
+    """
+    reanchors = reanchors or {}
+    forced_exits = forced_exits or {}
+    risk = (params or {}).get("risk") or {}
+    risk_per_trade = float(risk.get("risk_per_trade") or 0.0075)
+    max_position = float(risk.get("max_position") or 0.05)
+    superseded = superseded_ids(records)
+    states: dict[str, dict] = {}
+    events: list[dict] = []
+    cancelled: list[dict] = []
+
+    for record in records or []:
+        sid = str(record.get("signal_id"))
+        if sid in superseded:
+            continue
+        ticker = record.get("ticker")
+        panel = panels.get(ticker)
+        if panel is None or panel.frame.empty:
+            continue
+        event = executions.get(sid) or {}
+        track = event.get("quant_track") or {}
+        if track.get("execution_event") != "buy_filled" or track.get("fill_price") is None:
+            continue
+        bars = bars_for(panel, as_of)
+        if not bars:
+            continue
+        fill_day = None
+        if event.get("at"):
+            try:
+                fill_day = date.fromisoformat(str(event["at"])[:10])
+            except ValueError:
+                fill_day = None
+        if fill_day is None:
+            fill_day = _session_of(record)
+        if fill_day is None:
+            continue
+        dates = [bar["date"] for bar in bars]
+        start = next((i for i, d in enumerate(dates) if d >= fill_day), None)
+        if start is None:
+            continue
+        fill = float(track["fill_price"])
+        first_fill = float((reanchors.get(sid) or {}).get("first_fill") or fill)
+        stop_distance = float((record.get("position") or {}).get("stop_distance") or 0.0)
+        initial_stop = float((reanchors.get(sid) or {}).get("stop_price") or first_fill * (1.0 - stop_distance))
+        tranches = _tranche_plan(record, reanchors.get(sid), first_fill, initial_stop, params)
+        weight = float(track.get("weight") or (record.get("position") or {}).get("tranche_weight") or 0.0)
+        qty = (weight * initial_cash / fill) if fill > 0 else 0.0
+        if qty <= 0:
+            continue
+        valuation = record.get("valuation") or {}
+        iv_high = valuation.get("iv_high") if not record.get("valuation_suspended") else None
+        st = {
+            "signal_id": sid, "ticker": ticker, "sector": record.get("sector") or "",
+            "opened_at": fill_day.isoformat(), "first_fill": round(first_fill, 4),
+            "qty": qty, "avg_cost": fill, "equity_base": initial_cash,
+            "stop_distance": round(stop_distance, 6), "initial_stop": round(initial_stop, 4),
+            "stop_price": round(initial_stop, 4), "trailing_high": fill,
+            "iv_high": None if iv_high is None else float(iv_high),
+            "atr_pct": (record.get("indicators") or {}).get("atr_pct"),
+            "tranches": tranches, "trim_done": [], "trim_stage": "none",
+            "cash_spent": weight * initial_cash, "cash_returned": 0.0,
+            "exit": None, "last_price": fill, "pending_sell_fraction": 0.0,
+            "last_event_ko": "1차 체결",
+        }
+        tranches[0]["filled_at"] = fill_day.isoformat()
+        lines = _indicator_lines(panel)
+        factor_prev = float(bars[start].get("split_factor") or 1.0)
+        cash_left = float(track.get("weight") or 0.0) * initial_cash
+        for bar in bars[start:]:
+            day = bar["date"]
+            if st["exit"] is not None:
+                break
+            # 1) 기업 이벤트 — 분할을 먼저 적용한다(수량·가격만 조정, 손절 거리는 그대로)
+            factor = float(bar.get("split_factor") or 1.0)
+            if factor > 0 and abs(factor - factor_prev) > 1e-12:
+                ratio = factor_prev / factor
+                st["qty"] *= ratio
+                st["avg_cost"] /= ratio
+                st["stop_price"] /= ratio
+                st["initial_stop"] /= ratio
+                st["trailing_high"] /= ratio
+                st["first_fill"] /= ratio
+                for row in st["tranches"]:
+                    if row.get("price_ref") is not None:
+                        row["price_ref"] = round(float(row["price_ref"]) / ratio, 4)
+                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                               "event": "split_adjustment", "ratio": round(ratio, 6)})
+            factor_prev = factor
+            # 2) 전일 종가 조건으로 예약된 매도(RSI 75 · 200일선 이탈) → 오늘 시가
+            if st["pending_sell_fraction"] > 0 and st["exit"] is None:
+                fraction = st["pending_sell_fraction"]
+                st["pending_sell_fraction"] = 0.0
+                if fraction >= 0.999:
+                    st["exit"] = {"reason": "S4", "at": day.isoformat(), "price": round(float(bar["raw_open"]), 4)}
+                    st["cash_returned"] += st["qty"] * float(bar["raw_open"]) * (1.0 - slippage_bps / 1e4)
+                    events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                                   "event": "exit_filled", "reason": "S4",
+                                   "price": round(float(bar["raw_open"]), 4)})
+                    _cancel_pending(st, sid, ticker, day, "S4", cancelled)
+                    st["last_event_ko"] = "200일선 이탈 — 잔여 청산(S4)"
+                    break
+                sold = st["qty"] * fraction
+                st["qty"] -= sold
+                st["cash_returned"] += sold * float(bar["raw_open"]) * (1.0 - slippage_bps / 1e4)
+                st["trim_stage"] = "rsi"
+                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                               "event": "profit_take", "reason": "rsi", "fraction": round(fraction, 4),
+                               "price": round(float(bar["raw_open"]), 4)})
+                if st["qty"] <= 1e-9:
+                    st["exit"] = {"reason": "S2", "at": day.isoformat(), "price": round(float(bar["raw_open"]), 4)}
+                    break
+            # 3) 전량 청산 판정(pipeline) — as_of 봉 시가에 청산하고 잔여 분할 취소
+            if day == as_of and forced_exits.get(ticker) and st["exit"] is None:
+                reason = str(forced_exits[ticker])
+                st["exit"] = {"reason": reason, "at": day.isoformat(), "price": round(float(bar["raw_open"]), 4)}
+                st["cash_returned"] += st["qty"] * float(bar["raw_open"]) * (1.0 - slippage_bps / 1e4)
+                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                               "event": "exit_filled", "reason": reason,
+                               "price": round(float(bar["raw_open"]), 4)})
+                _cancel_pending(st, sid, ticker, day, reason, cancelled)
+                st["last_event_ko"] = f"{reason} — 잔여 분할 즉시 취소"
+                break
+            # 4) 손절 먼저 — 갭이면 시가, 아니면 손절가
+            if float(bar["raw_open"]) <= st["stop_price"]:
+                _stop_out(st, sid, ticker, day, float(bar["raw_open"]), "S5", cancelled, events,
+                          slippage_bps)
+                break
+            if float(bar["raw_low"]) <= st["stop_price"]:
+                _stop_out(st, sid, ticker, day, float(st["stop_price"]), "S5", cancelled, events,
+                          slippage_bps)
+                break
+            # 5) 전일 종가 조건(RSI ≤ 25)으로 예약된 2차 매수 → 오늘 시가(3.4.4 표)
+            if st.get("pending_buy"):
+                index = int(st.pop("pending_buy"))
+                row = next((r for r in st["tranches"] if int(r["tranche"]) == index), None)
+                if row is not None and row["status"] == "pending":
+                    cash_left = _fill_tranche(st, row, sid, ticker, day, float(bar["raw_open"]),
+                                              "rsi_next_open", cash_left, risk_per_trade,
+                                              max_position, events)
+            # 5b) 2·3차 지정가 — 손절이 나지 않은 봉에서만(장중 순서는 '손절 먼저')
+            line200, _rsi = lines.get(day, (None, None))
+            for row in st["tranches"]:
+                if row["status"] != "pending":
+                    continue
+                index = int(row["tranche"])
+                price_ref = float(row["price_ref"])
+                triggered = index == 2 and float(bar["raw_low"]) <= price_ref
+                if index == 3:
+                    by_limit = float(bar["raw_low"]) <= price_ref
+                    by_dma = line200 is not None and float(bar["sadj_close"]) <= line200 * 0.97
+                    triggered = by_limit or by_dma
+                    if by_dma and not by_limit:
+                        price_ref = float(bar["raw_open"])     # 200일선 조건은 다음 거래일 시가 체결
+                if not triggered:
+                    continue
+                if price_ref <= st["initial_stop"]:
+                    row["status"] = "invalid"
+                    row["note"] = "지정가가 초기 손절가 이하 → 무효"
+                    continue
+                cash_left = _fill_tranche(st, row, sid, ticker, day, price_ref, "limit",
+                                          cash_left, risk_per_trade, max_position, events)
+            # 6) 분할익절 — IV_high 1/3
+            if (st["iv_high"] is not None and float(bar["raw_high"]) >= st["iv_high"]
+                    and "iv_high" not in st["trim_done"] and st["qty"] > 0):
+                sold = st["qty"] * PROFIT_TAKE_FRACTION
+                st["qty"] -= sold
+                st["cash_returned"] += sold * float(st["iv_high"]) * (1.0 - slippage_bps / 1e4)
+                st["trim_done"].append("iv_high")
+                st["trim_stage"] = "iv_high"
+                st["last_event_ko"] = "IV_high 도달 — 1/3 분할익절"
+                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                               "event": "profit_take", "reason": "iv_high",
+                               "fraction": round(PROFIT_TAKE_FRACTION, 4),
+                               "price": round(float(st["iv_high"]), 4)})
+            # 7) 종가 — 트레일링 갱신, 전일 종가 조건 예약
+            st["trailing_high"] = max(st["trailing_high"], float(bar["raw_high"]))
+            st["stop_price"] = max(st["stop_price"],
+                                  st["trailing_high"] * (1.0 - st["stop_distance"]))
+            st["last_price"] = float(bar["raw_close"])
+            _line200, rsi = lines.get(day, (None, None))
+            if (rsi is not None and rsi <= 25.0
+                    and any(int(r["tranche"]) == 2 and r["status"] == "pending" for r in st["tranches"])):
+                st["pending_buy"] = 2           # 전일 RSI ≤ 25 → 다음 거래일 시가 2차 체결
+            if rsi is not None and rsi >= 75.0 and "rsi" not in st["trim_done"]:
+                st["trim_done"].append("rsi")
+                st["pending_sell_fraction"] = PROFIT_TAKE_FRACTION
+            if line200 is not None and float(bar["sadj_close"]) < line200 and st["trim_stage"] != "none":
+                st["pending_sell_fraction"] = 1.0
+        # 청산되지 않았으면 마지막 종가로 평가한다
+        if st["exit"] is None:
+            st["stop_price"] = max(st["stop_price"], st["initial_stop"])
+        states[sid] = st
+
+    by_ticker: dict[str, dict] = {}
+    for sid, st in sorted(states.items(), key=lambda kv: (kv[1]["opened_at"], kv[0])):
+        ticker = st["ticker"]
+        if ticker not in by_ticker:
+            by_ticker[ticker] = {**st, "signal_ids": [sid], "qty": st["qty"],
+                                 "cash_spent": st["cash_spent"], "cash_returned": st["cash_returned"]}
+            continue
+        agg = by_ticker[ticker]
+        total = agg["qty"] + st["qty"]
+        agg["avg_cost"] = ((agg["avg_cost"] * agg["qty"] + st["avg_cost"] * st["qty"]) / total) if total else 0.0
+        agg["qty"] = total
+        agg["cash_spent"] += st["cash_spent"]
+        agg["cash_returned"] += st["cash_returned"]
+        agg["stop_price"] = max(agg["stop_price"], st["stop_price"])
+        agg["trailing_high"] = max(agg["trailing_high"], st["trailing_high"])
+        agg["signal_ids"].append(sid)
+        if agg["exit"] is None:
+            agg["exit"] = st["exit"]
+        agg["tranches"] = st["tranches"]
+        agg["trim_stage"] = st["trim_stage"]
+        agg["trim_done"] = sorted(set(agg["trim_done"]) | set(st["trim_done"]))
+        agg["last_price"] = st["last_price"]
+
+    cash = initial_cash - sum(st["cash_spent"] for st in states.values()) + \
+        sum(st["cash_returned"] for st in states.values())
+    health = {
+        "positions_open": sum(1 for st in states.values() if st["exit"] is None),
+        "tranches_filled": sum(1 for st in states.values() for row in st["tranches"]
+                               if row["status"] == "filled"),
+        "tranches_pending": sum(1 for st in states.values() for row in st["tranches"]
+                                if row["status"] == "pending"),
+        "stop_count": sum(1 for st in states.values() if (st["exit"] or {}).get("reason") == "S5"),
+        "trim_count": sum(1 for event in events if event.get("event") == "profit_take"),
+        "stop_reentry_blocked_count": len(cancelled),
+        "blocked_reentries": cancelled[:50],
+    }
+    return {
+        "as_of": as_of.isoformat(),
+        "positions": by_ticker,
+        "by_signal": states,
+        "events": events,
+        "cancelled": cancelled,
+        "health": health,
+        "cash": round(cash, 4),
+        "initial_cash": initial_cash,
+        "holdings": {
+            t: {"ticker": t, "shares": st["qty"], "avg_cost": st["avg_cost"],
+                "stop_price": st["stop_price"], "trailing_high": st["trailing_high"],
+                "initial_stop": st["initial_stop"], "tranches_filled":
+                sorted({int(row["tranche"]) for row in st["tranches"] if row["status"] == "filled"})}
+            for t, st in by_ticker.items() if st["exit"] is None and st["qty"] > 1e-9
+        },
+    }
+
+
+def _fill_tranche(st: dict, row: dict, sid: str, ticker: str, day: date, price: float,
+                  reason: str, cash_left: float, risk_per_trade: float, max_position: float,
+                  events: list[dict]) -> float:
+    """분할 체결 직전 **계획 손실 재검증**(3.8) → 통과하면 체결, 초과하면 축소/거절.
+
+    Returns: 남은 현금(체결했으면 줄어든 값).
+    """
+    index = int(row["tranche"])
+    price = float(price)
+    if price <= 0:
+        return cash_left
+    want = float(row["weight"]) * float(st["equity_base"]) / price
+    check = recheck_planned_loss(st["qty"], st["avg_cost"], st["stop_price"], want, price,
+                                 float(st["equity_base"]), cash=cash_left,
+                                 max_position=max_position, risk_per_trade=risk_per_trade)
+    if check["action"] == "reject":
+        row["status"] = "rejected"
+        row["note"] = "체결 전 계획 손실 재검증 초과 — 수량 축소 불가"
+        events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                       "event": "tranche_rejected", "tranche": index,
+                       "reason": check.get("reason")})
+        return cash_left
+    add = float(check["allowed_shares"])
+    notional = add * price
+    if notional > cash_left:
+        return cash_left
+    cash_left -= notional
+    st["avg_cost"] = (st["avg_cost"] * st["qty"] + add * price) / (st["qty"] + add)
+    st["qty"] += add
+    st["cash_spent"] += notional
+    row["status"] = "filled"
+    row["filled_at"] = day.isoformat()
+    st["last_event_ko"] = f"{index}차 분할 체결"
+    events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                   "event": "buy_filled", "tranche": index, "price": round(price, 4),
+                   "weight": round(row["weight"], 6), "recheck": check["action"],
+                   "reason": reason})
+    return cash_left
+
+
+def _stop_out(st: dict, sid: str, ticker: str, day: date, price: float, reason: str,
+              cancelled: list[dict], events: list[dict], slippage_bps: float) -> None:
+    """전량 손절 + 같은 봉 잔여 2·3차 주문 취소(3.5 [고정])."""
+    st["exit"] = {"reason": reason, "at": day.isoformat(), "price": round(float(price), 4)}
+    st["cash_returned"] += st["qty"] * float(price) * (1.0 - slippage_bps / 1e4)
+    events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
+                   "event": "exit_filled", "reason": reason, "price": round(float(price), 4)})
+    _cancel_pending(st, sid, ticker, day, reason, cancelled)
+    st["last_event_ko"] = f"{reason} 손절 — 잔여 분할 즉시 취소"
+
+
+def _cancel_pending(st: dict, sid: str, ticker: str, day: date, reason: str,
+                    cancelled: list[dict]) -> None:
+    for row in st["tranches"]:
+        if row["status"] != "pending":
+            continue
+        row["status"] = "cancelled"
+        row["cancelled_by"] = reason
+        cancelled.append({"ticker": ticker, "signal_id": sid, "tranche": int(row["tranche"]),
+                          "cancelled_by": reason, "at": day.isoformat()})
+
+
+def mark_positions(settlement: dict, panels: dict, as_of: date) -> dict:
+    """정산 상태 → **공개용 비중 요약**(수량·평단·금액 없음, 2.2.3)."""
+    initial = float(settlement.get("initial_cash") or INITIAL_CASH)
+    cash = float(settlement.get("cash") or initial)
+    rows = []
+    holdings_value = 0.0
+    for ticker, st in sorted(settlement.get("positions", {}).items()):
+        if st.get("exit") is not None or float(st.get("qty") or 0.0) <= 1e-9:
+            continue
+        panel = panels.get(ticker)
+        price = float(st.get("last_price") or st.get("avg_cost") or 0.0)
+        if panel is not None and not panel.frame.empty:
+            price = float(panel.frame.iloc[-1]["raw_close"])
+        value = float(st["qty"]) * price
+        holdings_value += value
+        stop = float(st.get("stop_price") or 0.0)
+        rows.append({
+            "ticker": ticker,
+            "sector": st.get("sector") or "",
+            "opened_at": st.get("opened_at"),
+            "tranches_filled": sorted({int(r["tranche"]) for r in st.get("tranches") or []
+                                       if r.get("status") == "filled"}),
+            "tranches": [{k: r.get(k) for k in ("tranche", "weight", "price_ref", "status",
+                                                "filled_at", "cancelled_by", "note")}
+                         for r in st.get("tranches") or []],
+            "stop_distance": round(float(st.get("stop_distance") or 0.0), 4),
+            "stop_price": round(stop, 4),
+            "stop_headroom_pct": (None if price <= 0 else round((price - stop) / price, 4)),
+            "trailing": {"active": bool(stop > float(st.get("initial_stop") or 0.0)),
+                         "high_gain_pct": (None if not st.get("first_fill")
+                                           else round(float(st.get("trailing_high") or 0.0)
+                                                      / float(st["first_fill"]) - 1.0, 4)),
+                         "stop_distance": round(float(st.get("stop_distance") or 0.0), 4)},
+            "trim_stage": st.get("trim_stage") or "none",
+            "trim_done": list(st.get("trim_done") or []),
+            "exit": st.get("exit"),
+            "last_event_ko": st.get("last_event_ko"),
+            "value": value,
+        })
+    equity = cash + holdings_value
+    total = equity if equity > 0 else initial
+    positions = [{
+        "ticker": r["ticker"], "sector": r["sector"], "opened_at": r["opened_at"],
+        "tranches_filled": r["tranches_filled"], "tranches": r["tranches"],
+        "stop_distance": r["stop_distance"], "stop_price": r["stop_price"],
+        "stop_headroom_pct": r["stop_headroom_pct"], "trailing": r["trailing"],
+        "trim_stage": r["trim_stage"], "trim_done": r["trim_done"],
+        "last_event_ko": r["last_event_ko"],
+        "weight": round(r["value"] / total, 6),
+    } for r in rows]
+    sector_weights: dict[str, float] = {}
+    for p in positions:
+        sector_weights[p["sector"]] = round(sector_weights.get(p["sector"], 0.0) + p["weight"], 6)
+    return {
+        "as_of": as_of.isoformat(),
+        "cash_pct": round(cash / total, 6),
+        "invested_pct": round(holdings_value / total, 6),
+        "equity_index": round(equity / initial, 6),
+        "positions": positions,
+        "n_positions": len(positions),
+        "sector_weights": sector_weights,
+        "note_ko": "모의 계좌(초기 100만 달러) — 수량·평단·금액은 공개 산출물에 넣지 않는다.",
+    }
+
+
+def write_health(health: dict, as_of: date, *, path: str | Path = HEALTH_PATH,
+                 status: str | None = None, degraded: list | None = None,
+                 extra: dict | None = None) -> Path:
+    """`data/health.json` — 규칙이 실제로 작동했는지 보는 건강 지표(3.5)."""
+    payload = {
+        "schema_version": 1,
+        "as_of": as_of.isoformat(),
+        "generated_at": _iso(datetime.now(timezone.utc)),
+        "status": status,
+        "degraded": list(degraded or []),
+        **{k: health.get(k) for k in ("positions_open", "tranches_filled", "tranches_pending",
+                                      "stop_count", "trim_count", "stop_reentry_blocked_count")},
+        "blocked_reentries": list(health.get("blocked_reentries") or []),
+        "note_ko": "손절 직후 재진입 차단 건수는 같은 봉에서 취소된 2·3차 주문 수다(3.5).",
+    }
+    payload.update(extra or {})
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return p
+
+
+def position_checks_from(settlement: dict) -> list[dict]:
+    """정산 상태 → `evaluate_exit` 입력(보유 dict). `pipeline` 이 S1~S5 를 다시 계산한다."""
+    out = []
+    for ticker, st in sorted(settlement.get("positions", {}).items()):
+        if st.get("exit") is not None or float(st.get("qty") or 0.0) <= 1e-9:
+            continue
+        out.append({
+            "ticker": ticker, "sector": st.get("sector") or "",
+            "shares": st["qty"], "avg_cost": st["avg_cost"],
+            "stop_price": st.get("stop_price"), "trailing_high": st.get("trailing_high"),
+            "initial_stop": st.get("initial_stop"),
+            "tranche": 1, "tranches_filled": sorted({int(r["tranche"]) for r in st.get("tranches") or []
+                                                    if r.get("status") == "filled"}),
+            "stop_distance": st.get("stop_distance"),
+        })
+    return out

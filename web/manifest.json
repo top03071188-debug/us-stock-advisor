@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "name": "미국 주식 어드바이저",
+  "short_name": "투자 어드바이저",
+  "description": "미국 주식 하이브리드 투자 조언 대시보드 — 정량 신호·토론 비교·성적표·레이더 (정보 제공용, 투자 권유 아님)",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

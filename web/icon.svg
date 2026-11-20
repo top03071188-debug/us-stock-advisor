@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="미국 주식 어드바이저">
+  <rect width="512" height="512" rx="96" fill="#0b0f14"/>
+  <rect x="72" y="96" width="368" height="320" rx="28" fill="#141a22" stroke="#26303c" stroke-width="8"/>
+  <polyline points="104,344 176,300 232,320 296,232 356,256 408,168" fill="none" stroke="#34d17a" stroke-width="26"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="408" cy="168" r="22" fill="#34d17a"/>
+  <rect x="104" y="120" width="120" height="14" rx="7" fill="#6fb3ff" opacity="0.85"/>
+  <rect x="104" y="148" width="72" height="12" rx="6" fill="#9aabc0" opacity="0.7"/>
+</svg>

@@ -30,6 +30,10 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from engine.ledger import debate as debate_mod  # noqa: E402
+
 DEFAULT_ALLOWLIST = Path("config/public_allowlist.yaml")
 DEFAULT_PARAMS = Path("config/params_v001.yaml")
 DEFAULT_VETO = Path("config/veto_rules.yaml")
@@ -88,7 +92,7 @@ def _json_size(obj) -> int:
 
 
 # ────────────────────────────── 각 파일 ──────────────────────────────
-def build_meta(signals: dict | None, debate: dict | None) -> dict:
+def build_meta(signals: dict | None, debate: dict | None, debate_comparison: dict | None = None) -> dict:
     signals = signals or {}
     regime = signals.get("regime") or {}
     source = signals.get("source")
@@ -119,7 +123,10 @@ def build_meta(signals: dict | None, debate: dict | None) -> dict:
         "as_of": signals.get("as_of"),
         "prices_as_of": signals.get("prices_as_of"),
         "debate_generated_at": (debate or {}).get("generated_at"),
-        "debate_status": "ok" if debate else "none",
+        "debate_status": ("none" if not debate else
+                          "stale" if (debate_comparison or {}).get("as_of") not in (None, signals.get("as_of"))
+                          else "ok"),
+        "debate_effect_verdict": (debate_comparison or {}).get("verdict"),
         "note_ko": {
             "awaiting_first_run": "아직 실전 배치가 한 번도 돌지 않았습니다 — 아래 신호는 비어 있는 것이 정상입니다.",
             "sample": "샘플(합성) 데이터입니다 — 실전 신호가 아닙니다.",
@@ -177,7 +184,8 @@ def build_today(signals: dict | None) -> dict:
     }
 
 
-def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = None) -> dict:
+def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = None,
+                 debate_row: dict | None = None, position: dict | None = None) -> dict:
     signals = signals or {}
     rows = [s for s in signals.get("signals") or [] if s.get("ticker") == ticker]
     record = public_signal(rows[0]) if rows else None
@@ -203,9 +211,16 @@ def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = Non
         "risk": (record or {}).get("risk") or {"veto": []},
         "invalidation": (record or {}).get("invalidation"),
         "gate_summary": (record or {}).get("gate_summary"),
-        "debate": None,
-        "debate_note_ko": "토론 없음 — PC에서 `python codex_debate/run_debate.py --tickers "
-                          f"{ticker}` 로 돌릴 수 있습니다.",
+        "debate": debate_row,
+        "debate_note_ko": (None if debate_row else DEBATE_TICKER_NOTE.format(ticker=ticker)),
+        "debate_display": None if not debate_row else {
+            "badge": debate_row.get("badge"), "quant_grade": debate_row.get("quant_grade"),
+            "display_grade": debate_row.get("display_grade"),
+            "recommendation": debate_row.get("recommendation"),
+            "one_line_ko": ((debate_row.get("round3") or {}).get("chair") or {}).get("one_line_ko"),
+        },
+        "position": ({k: position.get(k) for k in POSITION_FIELDS if position.get(k) is not None}
+                     if position else None),
         "position_check": None if not checks else {
             "verdict": checks.get("verdict"), "exit_score": checks.get("exit_score"),
             "triggers": checks.get("triggers"), "reason_ko": checks.get("reason_ko"),
@@ -312,8 +327,8 @@ def build_portfolio(signals: dict | None, state: dict | None) -> dict:
         "invested_pct": portfolio.get("invested_pct"),
         "equity_index": portfolio.get("equity_index"),
         "n_positions": portfolio.get("n_positions", len(portfolio.get("positions") or [])),
-        "positions": [{"ticker": p.get("ticker"), "weight": p.get("weight"), "sector": p.get("sector"),
-                       "opened_at": p.get("opened_at")} for p in portfolio.get("positions") or []],
+        "positions": [{k: p.get(k) for k in POSITION_FIELDS if p.get(k) is not None}
+                      for p in portfolio.get("positions") or []],
         "sector_weights": portfolio.get("sector_weights") or {},
         "note_ko": portfolio.get("note_ko") or "모의 계좌 — 비중만 공개한다.",
     }
@@ -467,12 +482,133 @@ def build_watchlist(watch: dict | None) -> dict:
     }
 
 
+# ────────────────────────────── Phase 4: 토론·건강·알림 ──────────────────────────────
+DEBATE_TICKER_NOTE = ("토론 없음 — PC에서 `python codex_debate/run_debate.py --tickers {ticker}` "
+                      "로 돌릴 수 있습니다.")
+
+COMPARISON_FIELDS = (
+    "schema_version", "as_of", "generated_at", "horizon_td", "auto_downgrade_enabled",
+    "divergent_pairs", "same_action_pairs", "n_graded_pairs", "n_eff",
+    "avoided_loss", "missed_gain", "net", "cost", "net_after_cost",
+    "avoided_loss_pp", "missed_gain_pp", "net_pp", "net_after_cost_pp",
+    "avoidance_accuracy", "drawdown", "pairs", "by_regime", "quarters",
+    "consecutive_quarters", "verdict", "verdict_ko", "note_ko", "counts",
+)
+
+NO_DEBATE_COMPARISON = {
+    "schema_version": 1, "as_of": None, "horizon_td": 63, "auto_downgrade_enabled": False,
+    "divergent_pairs": 0, "same_action_pairs": 0, "n_graded_pairs": 0, "n_eff": 0,
+    "avoided_loss": 0.0, "missed_gain": 0.0, "net": 0.0, "cost": 0.0, "net_after_cost": 0.0,
+    "avoided_loss_pp": 0.0, "missed_gain_pp": 0.0, "net_pp": 0.0, "net_after_cost_pp": 0.0,
+    "avoidance_accuracy": None, "pairs": [], "by_regime": {}, "quarters": [],
+    "consecutive_quarters": 0, "verdict": debate_mod.VERDICT_INSUFFICIENT,
+    "note_ko": "토론 비교 표본 없음 — 행동이 갈린 페어가 아직 없다(토론 0건이면 정상).",
+}
+
+MAX_DEBATE_REPORTS = 40
+
+POSITION_FIELDS = ("ticker", "weight", "sector", "opened_at", "tranches_filled", "tranches",
+                   "stop_distance", "stop_price", "stop_headroom_pct", "trailing", "trim_stage",
+                   "trim_done", "last_event_ko")
+
+
+def _as_date(value):
+    from datetime import date as _date
+    try:
+        return _date.fromisoformat(str(value)[:10])
+    except (TypeError, ValueError):
+        return None
+
+
+def build_debate(reports_doc: dict | None, records: list[dict] | None,
+                 comparison: dict | None, params: dict | None, as_of: str | None) -> dict:
+    """`web/data/debate.json` — 토론 0건이어도 **항상 만든다**(화면은 '토론 없음'을 읽는다, 5.7)."""
+    doc = reports_doc or {}
+    result = debate_mod.reconcile_debates(doc, records or [], {}, params=params, write=False,
+                                          as_of=_as_date(as_of) if as_of else None)
+    rows = list((result.get("by_signal") or {}).values())
+    rows.sort(key=lambda r: (str(r.get("completed_at") or ""), str(r.get("signal_id") or "")),
+              reverse=True)
+    by_ticker: dict[str, dict] = {}
+    for row in rows:
+        ticker = row.get("ticker")
+        if ticker and ticker not in by_ticker:
+            by_ticker[ticker] = row
+    # 200KB 제한(5.6): 리포트 목록은 최근 것만 싣는다 — 종목별 요약은 전부 남긴다.
+    rows = rows[:MAX_DEBATE_REPORTS]
+    source = comparison or {}
+    summary = {k: source.get(k) for k in COMPARISON_FIELDS if k in source}
+    summary.update({k: v for k, v in NO_DEBATE_COMPARISON.items() if k not in summary})
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "as_of": as_of,
+        "status": "ok" if rows else "none",
+        "counts": {"reports": result.get("n_reports", 0), "eligible": result.get("n_eligible", 0),
+                   "late": result.get("n_late", 0), "invalid": result.get("n_invalid", 0)},
+        "auto_downgrade_enabled": bool(((params or {}).get("debate") or {}).get(
+            "auto_downgrade_enabled", False)),
+        "comparison": summary,
+        "reports": rows,
+        "by_ticker": by_ticker,
+        "note_ko": (None if rows else
+                    "토론을 아직 한 번도 돌리지 않았습니다 — 표시가 비어 있는 것이 정상입니다."),
+    }
+
+
+def build_health(health: dict | None) -> dict:
+    """`web/data/health.json` — 규칙이 실제로 작동했는지 보는 지표(3.5)."""
+    health = health or {}
+    return {
+        "schema_version": 1,
+        "as_of": health.get("as_of"),
+        "generated_at": health.get("generated_at"),
+        "status": health.get("status"),
+        "data_status": health.get("data_status") or health.get("status"),
+        "degraded": health.get("degraded") or [],
+        "positions_open": health.get("positions_open", 0),
+        "tranches_filled": health.get("tranches_filled", 0),
+        "tranches_pending": health.get("tranches_pending", 0),
+        "stop_count": health.get("stop_count", 0),
+        "trim_count": health.get("trim_count", 0),
+        "stop_reentry_blocked_count": health.get("stop_reentry_blocked_count", 0),
+        "blocked_reentries": (health.get("blocked_reentries") or [])[:20],
+        "forced_exits": health.get("forced_exits") or {},
+        "cash_pct": health.get("cash_pct"),
+        "last_run_at": health.get("last_run_at"),
+        "note_ko": health.get("note_ko") or "손절 직후 재진입 차단 건수는 같은 봉에서 취소된 2·3차 주문 수다.",
+    }
+
+
+def build_notifications(doc: dict | None) -> dict:
+    """`web/data/notifications.json` — 최근 알림 요약(중복 0건 계약)."""
+    doc = doc or {}
+    rows = [{k: e.get(k) for k in ("event_key", "type", "label_ko", "severity", "message_ko",
+                                   "ticker", "signal_id", "sent_at")}
+            for e in (doc.get("new") or [])[:20]]
+    return {
+        "schema_version": 1,
+        "generated_at": doc.get("generated_at"),
+        "as_of": doc.get("as_of"),
+        "n_events": doc.get("n_events", 0),
+        "n_new": doc.get("n_new", 0),
+        "n_suppressed": doc.get("n_suppressed", 0),
+        "new": rows,
+        "channels": doc.get("channels") or {},
+        "note_ko": doc.get("note_ko") or "같은 signal_id·event_key 는 다시 보내지 않는다.",
+    }
+
+
 def build(signals: dict | None, folds: dict | None, records: list[dict] | None, rules: dict,
           *, radar: dict | None = None, portfolio_state: dict | None = None,
           watch: dict | None = None, params: dict | None = None, veto: dict | None = None,
-          params_history: list[dict] | None = None, pilot_eval: dict | None = None) -> dict:
+          params_history: list[dict] | None = None, pilot_eval: dict | None = None,
+          debate_reports: dict | None = None, debate_comparison: dict | None = None,
+          health: dict | None = None, notifications: dict | None = None) -> dict:
     out: dict[str, dict] = {}
-    out["meta.json"] = build_meta(signals, None)
+    debate_doc = build_debate(debate_reports, records, debate_comparison, params,
+                              (signals or {}).get("as_of"))
+    out["meta.json"] = build_meta(signals, debate_reports, debate_comparison)
     out["signals/today.json"] = build_today(signals)
     out["ledger/summary.json"] = build_ledger(signals, records, portfolio_state, folds=folds,
                                               params_history=params_history, pilot_eval=pilot_eval)
@@ -482,11 +618,18 @@ def build(signals: dict | None, folds: dict | None, records: list[dict] | None, 
     out["config.json"] = build_config(params, veto)
     out["folds.json"] = build_folds(folds)
     out["watchlist.json"] = build_watchlist(watch)
+    out["debate.json"] = debate_doc
+    out["health.json"] = build_health(health)
+    out["notifications.json"] = build_notifications(notifications)
 
     watch_rows = {w.get("ticker"): w for w in (watch or {}).get("watchlist") or []}
-    tickers = sorted({s.get("ticker") for s in (signals or {}).get("signals") or []} | set(watch_rows))
+    debate_rows = debate_doc.get("by_ticker") or {}
+    position_rows = {p.get("ticker"): p for p in (portfolio_state or {}).get("positions") or []}
+    tickers = sorted({s.get("ticker") for s in (signals or {}).get("signals") or []}
+                     | set(watch_rows) | set(position_rows))
     for ticker in tickers:
-        out[f"tickers/{ticker}.json"] = build_ticker(signals, ticker, watch_rows.get(ticker))
+        out[f"tickers/{ticker}.json"] = build_ticker(signals, ticker, watch_rows.get(ticker),
+                                                     debate_rows.get(ticker), position_rows.get(ticker))
 
     allow = set(rules.get("allow", []))
     public = {name: filter_public(payload, allow) for name, payload in out.items()}
@@ -529,6 +672,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--params-history", default="data/params_history.json")
     ap.add_argument("--pilot", default="data/ledger/pilot_eval.json")
     ap.add_argument("--veto", default=str(DEFAULT_VETO))
+    ap.add_argument("--debate-reports", default="data/debate_reports.json")
+    ap.add_argument("--debate-comparison", default="data/ledger/debate_comparison.json")
+    ap.add_argument("--health", default="data/health.json")
+    ap.add_argument("--notifications", default="data/notifications_latest.json")
     ap.add_argument("--out", default="web/data")
     ap.add_argument("--allowlist", default=str(DEFAULT_ALLOWLIST))
     args = ap.parse_args(argv)
@@ -547,7 +694,11 @@ def main(argv: list[str] | None = None) -> int:
                 params=_load_yaml(Path(args.params)),
                 veto=_load_yaml(Path(args.veto)),
                 params_history=_load(Path(args.params_history)),
-                pilot_eval=_load(Path(args.pilot)))
+                pilot_eval=_load(Path(args.pilot)),
+                debate_reports=_load(Path(args.debate_reports)),
+                debate_comparison=_load(Path(args.debate_comparison)),
+                health=_load(Path(args.health)),
+                notifications=_load(Path(args.notifications)))
     root = Path(args.out)
     for name, payload in out.items():
         p = root / name

@@ -16,6 +16,10 @@ const CORE_FILES = [
   "ledger/portfolio.json",
   "radar/13f.json",
   "config.json",
+  // Phase 4 — 없으면(토론 0건·첫 배포) null 로 두고 "없음" 상태를 그린다.
+  "debate.json",
+  "health.json",
+  "notifications.json",
 ];
 
 const ROUTES = ["today", "ticker", "ledger", "radar"];
@@ -29,6 +33,23 @@ const STATUS_LABEL = {
 const REGIME_LABEL = { risk_on: "위험 선호(Risk-On)", neutral: "중립(Neutral)", risk_off: "위험 회피(Risk-Off)" };
 const NEWS_LABEL = { not_read: "뉴스 미판독", insufficient_evidence: "뉴스 근거 부족", read_done: "뉴스 판독 완료" };
 const DECISION_LABEL = { BUY: "매수", SELL: "매도", WATCH: "관찰" };
+const STANCE_LABEL = { buy: "매수", hold: "보유", sell: "매도", avoid: "회피" };
+const TRIM_LABEL = { none: "분할익절 전", iv_high: "IV_high 1/3 익절", rsi: "RSI 1/3 익절", trailing: "잔여 트레일링" };
+const TRANCHE_STATUS = {
+  filled: { text: "체결", cls: "ok" },
+  pending: { text: "대기", cls: "info" },
+  invalid: { text: "무효", cls: "warn" },
+  cancelled: { text: "취소", cls: "bad" },
+  rejected: { text: "거절", cls: "warn" },
+};
+const BADGE_CLASS = {
+  "토론 완료": "ok",
+  "토론 없음": "info",
+  "정족수 미달": "warn",
+  "지연 도착": "warn",
+  "산식과 다름(보류 권고)": "warn",
+  "무효(발행 전 완료)": "bad",
+};
 
 const state = { core: {}, tickers: [], ticker: null, route: "today", sampleMode: false, bound: false };
 
@@ -239,6 +260,42 @@ function renderFreshness(meta) {
   host.append(...rows);
 }
 
+function renderNotifyBanner(notif, debate, today) {
+  const host = clear($("notify-banner"));
+  const events = (notif && notif.new) || [];
+  const signals = (today && today.signals) || [];
+  const covered = (debate && debate.by_ticker) || {};
+  const candidates = signals.filter((sig) => {
+    const row = covered[sig.ticker];
+    if (row && row.signal_id && sig.signal_id && row.signal_id !== sig.signal_id) return false;
+    return row ? false : (sig.decision === "BUY" || sig.decision === "WATCH");
+  });
+  if (candidates.length) {
+    // 3.11.8 — 후보가 있는데 토론이 없으면 붙일 수 있는 창(발행 ~ 주문 마감)을 알려 준다.
+    host.append(el("div", { class: "banner is-warn" }, [
+      el("strong", { text: "PC/Cloud 토론 실행 권장" }),
+      el("span", { class: "tiny", text:
+        ` 후보 ${candidates.length}건(${candidates.slice(0, 4).map((c) => c.ticker).join(" · ")})에 토론이 없습니다 — `
+        + "신호 발행 뒤 ~ 주문 마감 전에 끝나야 그 결정에 붙습니다." }),
+    ]));
+  }
+  if (events.length) {
+    host.append(el("div", { class: "banner " + (events.some((e) => e.severity === "bad") ? "is-bad" : "is-warn") }, [
+      el("strong", { text: `새 알림 ${events.length}건` }),
+      el("span", { class: "tiny", text: notif.n_suppressed ? ` · 중복 억제 ${notif.n_suppressed}건` : "" }),
+    ]));
+    const list = el("div", { class: "notify-list" });
+    events.slice(0, 5).forEach((e) => {
+      list.append(el("div", { class: "notify-item" }, [
+        el("div", {}, [el("span", { text: e.message_ko || e.label_ko || "" }),
+          el("p", { class: "tiny", text: `${e.sent_at ? fmtKo(e.sent_at) : ""} ${e.ticker || ""}`.trim() })]),
+        badge(e.label_ko || e.type, e.severity === "bad" ? "bad" : (e.severity === "warn" ? "warn" : "info")),
+      ]));
+    });
+    host.append(list);
+  }
+}
+
 function renderRegime(meta) {
   const host = clear($("regime-banner"));
   if (!meta || !meta.regime) {
@@ -269,6 +326,13 @@ function signalNumbers(sig) {
   return el("div", { class: "sig-nums" }, items);
 }
 
+function debateBadgeFor(sig) {
+  const debate = state.core && state.core.debate;
+  const row = debate && debate.by_ticker ? debate.by_ticker[sig.ticker] : null;
+  if (!row || (row.signal_id && sig.signal_id && row.signal_id !== sig.signal_id)) return null;
+  return row;
+}
+
 function signalCard(sig) {
   const decision = sig.decision || sig.type;
   const typeCls = decision === "BUY" ? "type-buy" : decision === "SELL" ? "type-sell" : "type-watch";
@@ -290,6 +354,11 @@ function signalCard(sig) {
   // v1.3.3 02: 같은 날 입력·세션이 달라 다시 확정된 발행이면 회차와 대체 대상을 보여 준다.
   if (isNum(sig.revision) && sig.revision > 1) {
     foot.push(badge(`재발행 ${sig.revision}회차${sig.supersedes ? ` · ${sig.supersedes} 대체` : ""}`, "info"));
+  }
+  const debateRow = debateBadgeFor(sig);
+  if (debateRow) {
+    // 3.11.8 — 화면 기본 등급은 정량 그대로, 토론은 배지로만.
+    foot.push(badge(debateRow.badge, BADGE_CLASS[debateRow.badge] || "info"));
   }
   foot.push(el("span", { class: "tiny", text: `근거 ${(sig.evidence || []).length}건` }));
   foot.push(el("span", { class: "tiny", text: `발행 ${fmtKo(sig.signal_published_at)}`
@@ -610,18 +679,139 @@ function riskBlock(sig, tickerDoc) {
   return host;
 }
 
-function debateBlock(tickerDoc, ticker) {
-  const debate = tickerDoc && tickerDoc.debate;
-  if (debate) {
-    return el("div", { class: "stack" }, [
-      el("p", { class: "tiny", text: "토론 리포트가 연결됐습니다 — 정량 등급과 토론 등급을 병기합니다(3.11.8)." }),
-    ]);
-  }
-  return el("div", { class: "stack" }, [
-    el("p", { class: "empty", text: (tickerDoc && tickerDoc.debate_note_ko) ||
-      `토론 없음 — PC에서 \`python codex_debate/run_debate.py --tickers ${ticker}\` 로 돌릴 수 있습니다.` }),
-    el("p", { class: "tiny", text: "토론은 행동이 갈릴 때만 별도 줄로 표시하고, 화면 기본 등급은 바꾸지 않습니다(자동 하향 OFF)." }),
+function round1List(row) {
+  const rows = (row.round1 || []).filter((r) => isNum(r.score));
+  if (!rows.length) return emptyState("1R 점수 없음 — 스키마 검증을 통과하지 못했습니다.");
+  return el("div", {}, rows.map((r) => el("div", { class: "skill-row" }, [
+    el("span", {}, [el("strong", { text: r.skill || "—" }),
+      el("span", { class: "tiny", text: ` ${STANCE_LABEL[r.stance] || r.stance || ""}` })]),
+    el("span", { class: `skill-score ${r.score >= 0 ? "pos" : "neg"}`,
+      text: `${r.score > 0 ? "+" : ""}${fmtNum(r.score, 0)}` }),
+    el("p", { class: "tiny", text: (r.reasons || []).join(" · ") || "근거 요약 없음" }),
+    r.quote_verified === true ? badge("인용 검증", "ok") : (r.quote_sha256_count ? badge("해시 확인", "info") : null),
+  ])));
+}
+
+function round2List(row) {
+  const rows = (row.round2 || []).filter((r) => isNum(r.score));
+  if (!rows.length) return emptyState("2R 반박 없음 — 합의로 끝났습니다.");
+  const scores = {};
+  (row.round1 || []).forEach((r) => { scores[r.skill] = r.score; });
+  return el("div", {}, rows.map((r) => el("div", { class: "skill-row" }, [
+    el("span", {}, [el("strong", { text: r.skill || "—" }),
+      r.changed ? badge("입장 변경", "warn") : null]),
+    el("span", { class: "skill-score", text: isNum(scores[r.skill]) && isNum(r.score)
+      ? `${scores[r.skill] > 0 ? "+" : ""}${fmtNum(scores[r.skill], 0)} → ${r.score > 0 ? "+" : ""}${fmtNum(r.score, 0)}`
+      : fmtNum(r.score, 0) }),
+    el("p", { class: "tiny", text: (r.rebuttals || []).map((x) => `${x.target_skill}: ${x.point}`).join(" · ") || "반박 요약 없음" }),
+    null,
+  ])));
+}
+
+function round3Block(row) {
+  const guard = (row.round3 || {}).guard || {};
+  const chair = (row.round3 || {}).chair || {};
+  const vetoCodes = guard.veto_codes || [];
+  return el("div", {}, [
+    el("p", { class: "tiny" }, [badge(chair.conflict ? "의견 갈림" : "합의", chair.conflict ? "warn" : "ok"),
+      el("span", { text: `  구조적 리스크 ${isNum(guard.structural_risk) ? fmtNum(guard.structural_risk, 0) : "—"}` })]),
+    el("p", { class: "tiny", text: `리스크 가드 Veto: ${vetoCodes.length ? vetoCodes.join(" · ") : "없음"}` }),
+    chair.one_line_ko ? el("p", { class: "sig-why", text: chair.one_line_ko }) : emptyState("의장 한 줄 권고 없음"),
+    el("p", { class: "tiny", text: `권고 등급 ${chair.grade_recommendation || "—"} · 정량 ${row.quant_grade || "—"}` }),
+    (chair.consensus || []).length ? el("p", { class: "tiny", text: `합의: ${chair.consensus.join(" · ")}` }) : null,
+    (chair.dissent || []).length ? el("p", { class: "tiny", text: `이견: ${chair.dissent.join(" · ")}` }) : null,
+    el("p", { class: "tiny", text: `분할가 참조 ${(chair.entry_plan_refs || []).map((v) => fmtMoney(v)).join(" · ") || "—"}` }),
   ]);
+}
+
+function debateBlock(tickerDoc) {
+  const row = tickerDoc && tickerDoc.debate;
+  const host = el("div", { class: "stack" });
+  if (!row) {
+    host.append(el("p", { class: "empty", text: (tickerDoc && tickerDoc.debate_note_ko) ||
+      "토론 없음 — PC에서 `python codex_debate/run_debate.py --tickers ...` 로 돌릴 수 있습니다." }));
+    host.append(el("p", { class: "tiny", text:
+      "토론은 행동이 갈릴 때만 별도 줄로 표시하고, 화면 기본 등급은 바꾸지 않습니다(자동 하향 OFF)." }));
+    return host;
+  }
+  const validation = row.validation || {};
+  host.append(el("p", {}, [badge(row.badge, BADGE_CLASS[row.badge] || "info"),
+    row.news_state ? badge(NEWS_LABEL[row.news_state] || row.news_state,
+      row.news_state === "read_done" ? "ok" : (row.news_state === "insufficient_evidence" ? "warn" : "info")) : null,
+    el("span", { class: "tiny", text: `  완료 ${fmtKo(row.completed_at)} · 주문 마감 ${fmtKo(row.order_cutoff_at)}` })]));
+  if (row.news_state === "insufficient_evidence") {
+    host.append(el("p", { class: "note-box", text:
+      "뉴스 근거 부족 — 신뢰도 상한 C·매수 등급 상한 WATCH 로 반영됩니다(3.6·3.10)." }));
+  }
+  if (row.quant_grade !== row.display_grade) {
+    host.append(el("p", { class: "tiny" }, [badge(`정량 ${row.quant_grade} · 토론 ${row.display_grade}`, "warn")]));
+  }
+  if (row.badge === "지연 도착") {
+    host.append(el("p", { class: "note-box", text:
+      "주문 마감 뒤에 끝난 토론입니다 — 그날 결정에는 붙이지 않고 다음 스냅샷의 입력으로만 둡니다(4.8.4)." }));
+  }
+  if (row.reasons && row.reasons.length) {
+    host.append(el("p", { class: "tiny", text: `편입 판정: ${row.reasons.join(" · ")}` }));
+  }
+  host.append(el("div", { class: "debate-rounds" }, [
+    el("div", { class: "debate-col" }, [el("h3", { text: "1R 독립 판단" }), round1List(row)]),
+    el("div", { class: "debate-col" }, [el("h3", { text: "2R 반박" }), round2List(row)]),
+    el("div", { class: "debate-col" }, [el("h3", { text: "3R 리스크·결론" }), round3Block(row)]),
+  ]));
+  host.append(el("p", { class: "tiny", text:
+    `인용 원문은 공개하지 않습니다 — 해시 검증 배지만(검증 ${validation.quotes_checked ?? 0}건, 폐기 ${validation.quotes_dropped ?? 0}건).` }));
+  host.append(el("p", { class: "tiny", text:
+    "토론은 신뢰도 등급을 올리지 않습니다 — 등급은 데이터·근거·표본의 함수입니다(3.10)." }));
+  return host;
+}
+
+function positionBlock(tickerDoc) {
+  const position = tickerDoc && tickerDoc.position;
+  const host = el("div", { class: "stack" });
+  if (!position) {
+    host.append(emptyState("이 종목은 모의 계좌에 없습니다 — 1차 체결 전이거나 이미 청산됐습니다."));
+    host.append(el("p", { class: "tiny", text: "분할·익절 상태는 체결 뒤 공개 계좌 스냅샷에만 비중·상태로 실립니다." }));
+    return host;
+  }
+  const tranches = position.tranches || [];
+  host.append(el("div", { class: "tranche-row" }, [
+    el("strong", { text: "분할" }),
+    el("div", { class: "stack" }, tranches.map((t) => {
+      const meta = TRANCHE_STATUS[t.status] || { text: t.status || "—", cls: "info" };
+      const width = Math.max(4, Math.min(100, (Number(t.weight) || 0) * 100 / 0.4));
+      return el("div", {}, [
+        el("div", { class: "chip-row" }, [
+          el("span", { class: "sig-ticker tranche-chip", text: `${t.tranche}차` }),
+          badge(meta.text, meta.cls),
+          el("span", { class: "tiny num", text: t.price_ref ? fmtMoney(t.price_ref) : "—" }),
+          el("span", { class: "tiny", text: `비중 ${fmtPct(t.weight)}` }),
+          t.filled_at ? el("span", { class: "tiny", text: `체결 ${t.filled_at}` }) : null,
+          t.cancelled_by ? badge(`취소 ${t.cancelled_by}`, "bad") : null,
+        ]),
+        el("div", { class: "tranche-bar", role: "img", "aria-label": `${t.tranche}차 비중 ${fmtPct(t.weight)}` },
+          [el("span", { style: `width:${width}%` })]),
+        t.note ? el("p", { class: "tiny", text: t.note }) : null,
+      ]);
+    })),
+  ]));
+  host.append(el("p", { class: "note-box", text:
+    "3차 지정가가 초기 손절가보다 낮으면 무효입니다 — 손절로 다 팔고 같은 봉에서 다시 열리지 않게 하기 위해서입니다(3.5)." }));
+  const trailing = position.trailing || {};
+  host.append(el("div", { class: "metric-grid" }, [
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "손절 거리" }),
+      el("div", { class: "metric-value", text: fmtPct(position.stop_distance) })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "손절가 대비 여력" }),
+      el("div", { class: "metric-value", text: fmtPct(position.stop_headroom_pct) }),
+      el("p", { class: "tiny", text: `손절가 ${fmtMoney(position.stop_price)}` })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "트레일링" }),
+      el("div", { class: "metric-value", text: trailing.active ? "작동" : "대기" }),
+      el("p", { class: "tiny", text: `최고가 대비 ${fmtPct(trailing.high_gain_pct)}` })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "분할익절 단계" }),
+      el("div", { class: "metric-value", text: TRIM_LABEL[position.trim_stage] || position.trim_stage || "—" }),
+      el("p", { class: "tiny", text: (position.trim_done || []).length ? `완료 ${position.trim_done.join(" · ")}` : "아직 없음" })]),
+  ]));
+  if (position.last_event_ko) host.append(el("p", { class: "tiny", text: `최근: ${position.last_event_ko}` }));
+  return host;
 }
 
 function renderTicker(tickerDoc) {
@@ -665,8 +855,9 @@ function renderTicker(tickerDoc) {
   const chart = el("section", { class: "card" }, [el("h2", { text: "④ 차트 (1년 주 1회 정규화)" }), svgChart(tickerDoc.chart)]);
   const news = el("section", { class: "card" }, [el("h2", { text: "⑤ 뉴스 판독" }), newsBlock(sig)]);
   const risk = el("section", { class: "card" }, [el("h2", { text: "⑥ 리스크 가드 · 근거 원문" }), riskBlock(sig, tickerDoc)]);
-  const debate = el("section", { class: "card" }, [el("h2", { text: "⑦ 찬반 토론" }), debateBlock(tickerDoc, tickerDoc.ticker)]);
-  host.append(header, bars, band, chart, news, risk, debate);
+  const debate = el("section", { class: "card" }, [el("h2", { text: "⑦ 찬반 토론 (1R → 2R → 3R)" }), debateBlock(tickerDoc)]);
+  const position = el("section", { class: "card" }, [el("h2", { text: "⑧ 보유 · 분할 · 익절" }), positionBlock(tickerDoc)]);
+  host.append(header, bars, band, chart, news, risk, debate, position);
 }
 
 /* ────────────────────────── 성적표 ────────────────────────── */
@@ -831,27 +1022,132 @@ function renderParams(summary) {
   host.append(el("p", { class: "tiny", text: "파라미터 변경은 PR 로만 반영한다(4.3 가드2)." }));
 }
 
-function renderDebateEffect(summary) {
-  const host = clear($("debate-effect"));
-  const eff = (summary && summary.debate_effect) || { pairs: 0, net_pp: null, verdict: "표본 0건 — 판정 보류" };
-  const pairs = eff.pairs || 0;
-  if (pairs < 30) {
-    host.append(el("p", { class: "mos", text: `표본 ${pairs}건 — 판정 보류` }));
-    host.append(el("p", { class: "tiny", text: "행동이 갈린 페어 30건·N_eff 15 이상이 되어야 판정합니다(4.8.2)." }));
-    return;
-  }
-  host.append(el("p", { class: "mos", text: `순효과 ${fmtNum(eff.net_pp, 2)}%p` }));
-  host.append(el("p", { class: "tiny", text: `페어 ${pairs}건 · ${eff.verdict || ""}` }));
+function verdictClass(verdict) {
+  if (verdict === "토론 유효") return "ok";
+  if (verdict === "토론 역효과") return "bad";
+  return "warn";
 }
 
-function renderLedger(summary, portfolio, records, pilotEval) {
+function renderDebateEffect(debate) {
+  const host = clear($("debate-effect"));
+  const comparison = (debate && debate.comparison) || {};
+  const pairs = Number(comparison.n_graded_pairs ?? comparison.divergent_pairs ?? 0);
+  const nEff = Number(comparison.n_eff ?? 0);
+  const enabled = comparison.auto_downgrade_enabled === true;
+  const verdict = comparison.verdict || "표본 부족 — 판단 보류";
+
+  host.append(el("p", {}, [badge(`자동 하향 ${enabled ? "ON" : "OFF"}`, enabled ? "warn" : "info"),
+    el("span", { class: "tiny", text: " · 기본값은 false — 검증 전에는 표시·기록만 바꿉니다(3.11.8)" })]));
+
+  if (pairs < 30 || nEff < 15) {
+    // 작은 표본의 숫자를 자신 있게 보여 주는 것이 가장 위험하다(5.4)
+    host.append(el("p", { class: "big-verdict warn", text: `표본 ${pairs}건 — 판정 보류` }));
+    host.append(el("p", { class: "tiny", text:
+      `행동이 갈린 페어 30건·N_eff 15 이상이 되어야 판정합니다(현재 N_eff ${nEff}).` }));
+    if (comparison.note_ko) host.append(el("p", { class: "tiny", text: comparison.note_ko }));
+    host.append(el("p", { class: "note-box", text:
+      "표본이 쌓이기 전에는 회피 손실·놓친 수익을 결론으로 읽지 않습니다. 지금 보이는 값은 기록일 뿐입니다." }));
+    return;
+  }
+
+  host.append(el("p", { class: `big-verdict ${verdictClass(verdict)}`, text: verdict }));
+  host.append(el("div", { class: "metric-grid" }, [
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "행동 갈린 페어" }),
+      el("div", { class: "metric-value", text: `${pairs}건` }),
+      el("p", { class: "tiny", text: `동일 행동 ${comparison.same_action_pairs ?? 0}건` })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "유효 표본 N_eff" }),
+      el("div", { class: "metric-value", text: `${nEff}` }),
+      el("p", { class: "tiny", text: "63거래일 클러스터" })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "회피 손실" }),
+      el("div", { class: "metric-value", text: ppText(comparison.avoided_loss_pp) }),
+      el("p", { class: "tiny", text: "안 산 게 옳았던 몫" })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "놓친 수익" }),
+      el("div", { class: "metric-value", text: ppText(-Math.abs(Number(comparison.missed_gain_pp) || 0)) }),
+      el("p", { class: "tiny", text: "안 산 게 손해였던 몫" })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "순효과(비용 후)" }),
+      el("div", { class: "metric-value", text: ppText(comparison.net_after_cost_pp) }),
+      el("p", { class: "tiny", text: `기준 +0.20%p · 2분기 연속` })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "회피 정확도" }),
+      el("div", { class: "metric-value", text: fmtPct(comparison.avoidance_accuracy, 0) }),
+      el("p", { class: "tiny", text: "보류 중 주가 하락 비율" })]),
+  ]));
+  const dd = comparison.drawdown || {};
+  host.append(el("p", { class: "tiny", text:
+    `방어력 · 최악 5% MDD quant ${fmtPct(dd.quant_tail_5pct)} / 토론 ${fmtPct(dd.debate_tail_5pct)} · `
+    + `${dd.defense_improved ? "개선" : "개선 없음"}` }));
+  const quarters = comparison.quarters || [];
+  if (quarters.length) {
+    host.append(el("table", {}, [
+      el("caption", { text: "분기별 판정 — 사전에 못 박은 기준으로만 읽는다(4.8.2)" }),
+      el("thead", {}, [el("tr", {}, [el("th", { text: "분기" }), el("th", { class: "num", text: "페어" }),
+        el("th", { class: "num", text: "비용 후" }), el("th", { text: "판정" })])]),
+      el("tbody", {}, quarters.map((q) => el("tr", {}, [
+        el("td", { text: q.quarter || "—" }),
+        el("td", { class: "num", text: `${q.n_graded ?? 0}` }),
+        el("td", { class: "num", text: ppText(q.net_after_cost != null ? q.net_after_cost * 100 : null) }),
+        el("td", { class: "wrap", text: q.verdict || "—" }),
+      ]))),
+    ]));
+  }
+}
+
+function ppText(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
+  const num = Number(value);
+  return `${num > 0 ? "+" : ""}${num.toFixed(2)}%p`;
+}
+
+function renderLivePositions(portfolio, health) {
+  const host = clear($("live-positions"));
+  const positions = (portfolio && portfolio.positions) || [];
+  const h = health || {};
+  host.append(el("p", { class: "tiny", text:
+    `보유 ${positions.length}종목 · 분할 대기 ${h.tranches_pending ?? 0}건 · 손절 ${h.stop_count ?? 0}건 · `
+    + `분할익절 ${h.trim_count ?? 0}건 · 손절 후 재진입 차단 ${h.stop_reentry_blocked_count ?? 0}건` }));
+  if (!positions.length) {
+    host.append(emptyState("모의 계좌에 보유 종목이 없습니다 — 1차 체결 전이면 정상입니다."));
+    host.append(el("p", { class: "tiny", text:
+      `현금 비중 ${fmtPct(portfolio && portfolio.cash_pct)} · 투자 비중 ${fmtPct(portfolio && portfolio.invested_pct)}` }));
+    return;
+  }
+  const table = el("table", {}, [
+    el("caption", { text: "1·2·3차 분할 · 손절 여력 · 분할익절 단계" }),
+    el("thead", {}, [el("tr", {}, [el("th", { text: "종목" }), el("th", { text: "분할" }),
+      el("th", { class: "num", text: "비중" }), el("th", { class: "num", text: "손절 여력" }),
+      el("th", { text: "익절" })])]),
+    el("tbody", {}, positions.map((p) => {
+      const chips = (p.tranches || []).map((t) => {
+        const meta = TRANCHE_STATUS[t.status] || { text: t.status, cls: "info" };
+        return el("span", { class: "tiny", text: `${t.tranche}차 ${meta.text}${t.cancelled_by ? `(${t.cancelled_by})` : ""} ` });
+      });
+      return el("tr", {}, [
+        el("td", { class: "wrap" }, [el("button", {
+          type: "button", class: "linkish", text: p.ticker,
+          onclick: () => setRoute("ticker", p.ticker),
+        })]),
+        el("td", { class: "wrap" }, chips),
+        el("td", { class: "num", text: fmtPct(p.weight) }),
+        el("td", { class: "num", text: fmtPct(p.stop_headroom_pct) }),
+        el("td", { class: "tiny wrap", text: TRIM_LABEL[p.trim_stage] || p.trim_stage || "—" }),
+      ]);
+    })),
+  ]);
+  host.append(table);
+  if ((h.blocked_reentries || []).length) {
+    host.append(el("p", { class: "tiny", text:
+      `최근 차단: ${h.blocked_reentries.slice(0, 3).map((b) => `${b.ticker} ${b.tranche}차(${b.cancelled_by})`).join(" · ")}` }));
+  }
+}
+
+function renderLedger(summary, portfolio, records, pilotEval, debate, health) {
   renderHoldout(summary);
   renderFolds(summary);
   renderStrategy(summary, portfolio);
   renderPilot(summary, pilotEval);
   renderHistory(summary, records);
   renderParams(summary);
-  renderDebateEffect(summary);
+  renderDebateEffect(debate);
+  renderLivePositions(portfolio, health);
 }
 
 /* ────────────────────────── 레이더 ────────────────────────── */
@@ -1012,14 +1308,17 @@ function fillTickerSelect(today, watch) {
 /* ────────────────────────── 시작 ────────────────────────── */
 async function boot() {
   const results = await Promise.all(CORE_FILES.map(loadJson));
-  const [meta, today, folds, watch, summary, records, portfolio, radar, config] = results;
-  state.core = { meta, today, folds, watch, summary, records, portfolio, radar, config, foldsOnly: folds };
+  const [meta, today, folds, watch, summary, records, portfolio, radar, config,
+    debate, health, notif] = results;
+  state.core = { meta, today, folds, watch, summary, records, portfolio, radar, config,
+    debate, health, notif, foldsOnly: folds };
 
   renderStatus(meta);
   renderFreshness(meta);
+  renderNotifyBanner(notif, debate, today);
   renderRegime(meta);
   renderToday(today, config);
-  renderLedger(summary, portfolio, records, (summary && summary.pilot) || null);
+  renderLedger(summary, portfolio, records, (summary && summary.pilot) || null, debate, health);
   renderRadar(radar, watch, config, today);
   fillTickerSelect(today, watch);
 

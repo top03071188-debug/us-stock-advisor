@@ -169,6 +169,17 @@ def confidence_grade(evidence: list[dict], news_state: str) -> str:
     return "C"
 
 
+CONFIDENCE_RANK = {"A": 3, "B": 2, "C": 1}
+
+
+def worse_confidence(*grades: str) -> str:
+    """토론은 신뢰도를 **올리지 않는다**(3.10) — 더 낮은 등급만 남긴다."""
+    values = [g for g in grades if g]
+    if not values:
+        return "C"
+    return min(values, key=lambda g: CONFIDENCE_RANK.get(g, 0))
+
+
 def earnings_days(filings: list[dict], as_of: date) -> int | None:
     """8-K Item 2.02 이력으로 다음 실적까지 남은 거래일을 추정한다(V01 입력)."""
     dates = []
@@ -219,6 +230,7 @@ class TickerView:
     valuation_detail: dict | None = None
     iv_band_basis: str | None = None
     split_factor: float = 1.0
+    news_state_base: str = "not_read"          # 토론 반영 전 상태 — 신뢰도 승격 금지(3.10)
     v_penalties: float = 0.0                   # v1.3.2: DCF 민감도 −4 · 역사 백분위 괴리 −10
     ev_ebit_percentile: float | None = None    # 10년 EV/EBIT 백분위(0~100) → S1 과열
 
@@ -234,7 +246,17 @@ def _num(value) -> float | None:
     return out if np.isfinite(out) and out > 0 else None
 
 
-def build_views(data: dict, as_of: date) -> list[TickerView]:
+def _debate_news_state(base: str, debate_row: dict) -> str:
+    """토론이 읽어 준 뉴스 상태를 반영한다 — 근거 부족은 내리고, 판독 완료는 미판독일 때만."""
+    value = debate_row.get("news_state")
+    if value == "insufficient_evidence":
+        return "insufficient_evidence"
+    if value == "read_done" and base == "not_read":
+        return "read_done"
+    return base
+
+
+def build_views(data: dict, as_of: date, debate: dict | None = None) -> list[TickerView]:
     """데이터셋 → 종목별 지표·가치·점수(신호 판단의 입력)."""
     views: list[TickerView] = []
     panels = data["panels"]
@@ -283,7 +305,8 @@ def build_views(data: dict, as_of: date) -> list[TickerView]:
             g = row.get("g")
             if g is None and (row.get("peg") is not None or row.get("revenue_cagr") is not None):
                 g = growth_score(row.get("peg"), row.get("revenue_cagr")).get("g")
-        news_state = row.get("news_state") or "not_read"
+        news_state_base = row.get("news_state") or "not_read"
+        news_state = _debate_news_state(news_state_base, (debate or {}).get(ticker) or {})
         filings = (data.get("filings") or {}).get(ticker, [])
         news = (data.get("news") or {}).get(ticker, [])
         evidence = evidence_items(ticker, filings, news, row, news_state, as_of.isoformat(), vdetail)
@@ -304,6 +327,7 @@ def build_views(data: dict, as_of: date) -> list[TickerView]:
             iv_low=iv_low, iv_median=iv_median, iv_high=iv_high, margin=margin,
             q=round(float(q), 2), v=v, g=None if g is None else round(float(g), 2),
             news_state=news_state, evidence=evidence, filings=filings, news=news,
+            news_state_base=news_state_base,
             valuation_suspended=bool(sec["valuation_suspended"]),
             suspended_reason=sec["reason"], structure=structure,
             valuation_detail=vdetail, iv_band_basis=band_basis, split_factor=split_factor,
@@ -323,9 +347,13 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
                   code_commit: str, snapshot_id: str, status: str,
                   three_times: dict, held: list[dict] | None = None,
                   sector_weights: dict | None = None, source: str | None = None,
-                  inputs_hash: str | None = None) -> dict:
-    """수집 스냅샷 → `quant_signals` 본문(레저 요약은 호출자가 붙인다)."""
-    views = build_views(data, as_of)
+                  inputs_hash: str | None = None, debate: dict | None = None) -> dict:
+    """수집 스냅샷 → `quant_signals` 본문(레저 요약은 호출자가 붙인다).
+
+    `debate` 는 편입 자격을 통과한 토론 요약(`{ticker: {...}}`)이다. 토론은 **뉴스 상태와
+    구조적 리스크만** 건드리고 신뢰도 등급을 올리지 않는다(3.10 · 3.11.8).
+    """
+    views = build_views(data, as_of, debate)
     regime = classify_regime(data.get("macro"), data.get("macro_previous"))
     held = held or []
     held_tickers = {h["ticker"] for h in held}
@@ -361,6 +389,13 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             evidence=view.evidence,
         )
         veto = veto_check(veto_in)
+        deb = (debate or {}).get(view.ticker) or {}
+        structural_risk = 10.0
+        if deb.get("structural_risk") is not None:
+            try:
+                structural_risk = max(0.0, min(100.0, float(deb["structural_risk"])))
+            except (TypeError, ValueError):
+                structural_risk = 10.0
         ctx = EntryContext(
             ticker=view.ticker,
             raw_close=ind["raw_close"],
@@ -380,7 +415,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             q=view.q,
             v=view.v,
             g=view.g,
-            structural_risk=10.0,
+            structural_risk=structural_risk,
             in_watchlist=view.ticker not in held_tickers,
             held=view.ticker in held_tickers,
             valuation_suspended=view.valuation_suspended,
@@ -443,8 +478,9 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         if evaluation.get("grade") in ("NONE", None):
             continue
 
-        # 신뢰도 등급 + 분할 계획
-        conf = confidence_grade(view.evidence, view.news_state)
+        # 신뢰도 등급 + 분할 계획 — 토론이 붙어도 등급은 **내려가기만** 한다(3.10)
+        conf = worse_confidence(confidence_grade(view.evidence, view.news_state),
+                                confidence_grade(view.evidence, view.news_state_base))
         buy = evaluation.get("signal") == "BUY"
         plan = None
         if buy:

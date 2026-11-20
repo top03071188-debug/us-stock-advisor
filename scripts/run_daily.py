@@ -33,11 +33,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from engine.backtest.holdout import window_for  # noqa: E402
 from engine.backtest.snapshot import inputs_fingerprint, make_snapshot  # noqa: E402
+from engine.decide.macro import classify_regime  # noqa: E402
 from engine.decide.pipeline import build_payload, load_params  # noqa: E402
+from engine.ledger import debate as debate_mod  # noqa: E402
 from engine.ledger import live  # noqa: E402
 from engine.ledger.pilot import evaluate_pilot, write_pilot_eval  # noqa: E402
 from engine.ledger.record import (RecordError, append_immutable, attach_target_session,  # noqa: E402
                                   load_records, resolve_release)
+from scripts import notify  # noqa: E402
 from engine.models import QuantSignalSchemaError, validate_quant_signals  # noqa: E402
 from engine.utils.dates import (KST, data_cutoff_at, order_cutoff_at, signal_published_at,  # noqa: E402
                                 target_session_for)
@@ -53,6 +56,11 @@ WATCHLIST = Path("data/watchlist/current.json")
 RADAR = Path("data/radar/13f.json")
 FOLDS = Path("data/walkforward/folds/summary.json")
 LIMITS = Path("data/pipeline_limits.json")
+DEBATE_REPORTS = debate_mod.REPORTS_PATH
+DEBATE_EVENTS = debate_mod.EVENTS_DIR
+DEBATE_COMPARISON = debate_mod.COMPARISON_PATH
+HEALTH = live.HEALTH_PATH
+NOTIFICATIONS = Path("data/notifications_latest.json")
 
 
 def _iso(value: datetime) -> str:
@@ -196,15 +204,17 @@ def ensure_folds(as_of: date) -> dict:
 
 
 def ledger_view(records: list[dict], executions: dict, panels: dict, as_of: date,
-                reanchors: dict | None = None) -> tuple[dict, dict]:
-    """체결 재생 → (모의 계좌 공개 상태, 종목별 보유)"""
-    state = live.replay(records, executions, reanchors)
-    public = live.mark(state, panels, as_of, executions, records)
-    holdings = {t: {"ticker": t, "shares": p["qty"], "avg_cost": p["avg_price"],
-                    "stop_price": p["stop_price"], "trailing_high": p["avg_price"],
-                    "initial_stop": p["stop_price"]}
-                for t, p in state["positions"].items()}
-    return public, holdings
+                reanchors: dict | None = None, params: dict | None = None,
+                forced_exits: dict | None = None) -> tuple[dict, dict, dict]:
+    """1차 체결 재생 + **2·3차 분할·손절·분할익절 정산** → (공개 상태, 보유, 정산 결과).
+
+    1차만 보던 `replay`/`mark` 는 그대로 두고(호환), 실시간 운영은 정산 결과를 쓴다 —
+    수량은 메모리에서만 다루고 커밋 JSON 에는 비중·상태만 남긴다(2.2.3).
+    """
+    settlement = live.settle_positions(records, executions, reanchors, panels, as_of, params,
+                                       forced_exits=forced_exits)
+    public = live.mark_positions(settlement, panels, as_of)
+    return public, settlement["holdings"], settlement
 
 
 def run(args) -> int:
@@ -250,14 +260,24 @@ def run(args) -> int:
         live.write_reanchor(event, EXECUTIONS)
         reanchors[event["signal_id"]] = event
 
-    portfolio_before, held_before = ledger_view(records, executions, panels, as_of, reanchors)
+    portfolio_before, held_before, settlement_before = ledger_view(
+        records, executions, panels, as_of, reanchors, params)
     watch = ({r["ticker"] for r in (watchlist_payload or {}).get("watchlist") or []}
              if watchlist_payload else None)
     n_universe_before = len(data.get("universe") or [])
     if watch is not None:
         data["universe"] = [r for r in data["universe"] if r["ticker"] in watch or r["ticker"] in held_before]
 
-    # 2) 발행 시각 — **수집·정산이 끝난 지금**. 실행 시작 시각으로 잡지 않는다(감사 01-b).
+    # 1-b) 토론 편입 — 편입 자격을 통과한 리포트만 이 결정의 트랙에 붙는다(3.11.8).
+    regime_view = classify_regime(data.get("macro"), data.get("macro_previous"))
+    debate_doc = debate_mod.load_reports(DEBATE_REPORTS)
+    debate_result = debate_mod.reconcile_debates(
+        debate_doc, records, executions, event_dir=DEBATE_EVENTS, params=params,
+        regime=regime_view.regime, as_of=as_of)
+    debate_by_ticker = {view.get("ticker"): view for view in debate_result["by_signal"].values()
+                        if view.get("eligible") and view.get("ticker")}
+
+    # 2) 발행 시각 — **수집·정산이 끝난 지금**. 실행 시각으로 잡지 않는다(감사 01-b).
     #    `run_started_at`(배치 시작)과 `signal_published_at`(결과 확정 직전)은 다른 값이다.
     times = publish_times(as_of, args.mode)
 
@@ -328,7 +348,7 @@ def run(args) -> int:
         data, as_of=as_of, mode=args.mode, params=params, params_version=params_version,
         code_commit=commit, snapshot_id=snapshot_id, status=status, three_times=times,
         held=list(held_before.values()), sector_weights=portfolio_before.get("sector_weights") or {},
-        source=data.get("source"), inputs_hash=inputs_hash or None,
+        source=data.get("source"), inputs_hash=inputs_hash or None, debate=debate_by_ticker,
     )
     payload["diagnostics"] = diag
     payload["watchlist_source"] = watchlist_filter["source"]
@@ -369,9 +389,11 @@ def run(args) -> int:
     if duplicated:
         payload["diagnostics"]["record_duplicates"] = duplicated
 
-    # 5) 계좌·채점·파일럿 요약
+    # 5) 계좌 — S3/S5/EXIT 판정이 있으면 같은 봉에서 전량 청산 + 잔여 분할 취소(3.5)
+    forced_exits = _forced_exits(payload.get("position_checks") or [])
     records = load_records(RECORDS)
-    portfolio_public, held_after = ledger_view(records, executions, panels, as_of, reanchors)
+    portfolio_public, held_after, settlement_final = ledger_view(
+        records, executions, panels, as_of, reanchors, params, forced_exits=forced_exits)
     live.append_portfolio_history(portfolio_public, PORTFOLIO)
     first_entry = _first_entry_session(executions)
     portfolio_public["avg_exposure"] = live.avg_exposure_from_history(
@@ -396,6 +418,30 @@ def run(args) -> int:
     summary["graded_sample"] = graded[:20]
     summary["settlement"] = {k: settlement[k] for k in ("settled", "pending")}
 
+    # 5-b) 토론 A/B 비교 → 자동 하향 판정 → 이력(params_history) · 비교 JSON
+    regime_lookup = {str(r.get("signal_id")): regime_view.regime for r in records
+                     if str(r.get("as_of")) == as_of.isoformat()}
+    comparison = debate_mod.compute_debate_comparison(
+        debate_result["by_signal"], records, executions, panels, as_of, params=params,
+        regime_lookup=regime_lookup)
+    comparison["counts"] = {"reports": debate_result["n_reports"],
+                             "eligible": debate_result["n_eligible"],
+                             "late": debate_result["n_late"],
+                             "invalid": debate_result["n_invalid"]}
+    auto_eval = debate_mod.evaluate_auto_downgrade_eligibility(comparison, history)
+    debate_mod.record_auto_downgrade_evaluation(PARAMS_HISTORY, comparison, params_version)
+    debate_mod.write_comparison(comparison, DEBATE_COMPARISON)
+    _write_json(Path("data/ledger/debate_summary.json"), {
+        k: debate_result[k] for k in ("schema_version", "as_of", "generated_at",
+                                      "auto_downgrade_enabled", "n_reports", "n_eligible",
+                                      "n_late", "n_invalid", "by_signal")
+    } | {"auto_downgrade": auto_eval})
+    summary["debate_effect"] = debate_mod.comparison_summary(comparison)
+    summary["debate"] = {"status": "ok" if debate_result["n_reports"] else "none",
+                         "generated_at": debate_result["generated_at"],
+                         "counts": comparison["counts"],
+                         "auto_downgrade": auto_eval}
+
     payload["ledger_summary"] = summary
     payload["target_session"] = times["target_session"]
     payload["signal_published_planned_at"] = _iso(times["signal_published_planned_at"])
@@ -405,9 +451,21 @@ def run(args) -> int:
         "invested_pct": portfolio_public["invested_pct"],
         "avg_exposure": portfolio_public.get("avg_exposure"),
         "equity_index": portfolio_public.get("equity_index"),
+        # 분할·익절 상세는 `data/ledger/portfolio/state.json` 에만 넣는다 —
+        # `quant_signals.json` 의 portfolio 는 계약 스키마가 좁게 고정돼 있다(부록 B).
         "positions": [{"ticker": p["ticker"], "weight": p["weight"], "sector": p["sector"],
                        "opened_at": p["opened_at"]} for p in portfolio_public["positions"]],
     }
+    payload["debate"] = {"status": summary["debate"]["status"],
+                         "generated_at": summary["debate"]["generated_at"],
+                         "counts": summary["debate"]["counts"],
+                         "divergent_pairs": comparison["divergent_pairs"],
+                         "verdict": comparison["verdict"],
+                         "auto_downgrade_enabled": auto_eval["current"]}
+    payload["health"] = {"stop_reentry_blocked_count":
+                         settlement_final["health"]["stop_reentry_blocked_count"],
+                         "positions_open": settlement_final["health"]["positions_open"],
+                         "tranches_pending": settlement_final["health"]["tranches_pending"]}
     payload["pilot_eval"] = pilot_summary_of(pilot)
     payload["prices_as_of"] = _price_as_of(panels)
     _write_json(Path("data/walkforward/stress.json"), stress_payload())
@@ -422,6 +480,12 @@ def run(args) -> int:
         "note_ko": "13F 수집 이전 — 레이더는 비어 있는 것이 정상이다(weekly-screen 이 채운다).",
     })
     _write_json(LIMITS, _limits(data, as_of))
+    live.write_health(settlement_final["health"], as_of, status=status,
+                      degraded=diag.get("degraded"),
+                      extra={"forced_exits": forced_exits,
+                             "cash_pct": portfolio_public["cash_pct"],
+                             "data_status": status,
+                             "last_run_at": _iso(run_started_at)})
 
     # 7) 계약 검증 → 실패하면 이전 파일을 유지한다(2.2.2)
     #    발행 지연도 정직하게 남긴다 — 확정 시각이 주문 마감을 넘겼는지(01-b).
@@ -437,6 +501,17 @@ def run(args) -> int:
                     {"errors": exc.errors[:50], "as_of": as_of.isoformat()})
         print(json.dumps({"status": "rejected", "errors": exc.errors[:8]}, ensure_ascii=False), file=sys.stderr)
         return 1
+
+    # 8) 알림 — 중복 0건(같은 signal_id·event_key 는 다시 보내지 않는다)
+    notification = notify.evaluate_notifications(
+        payload, log_path=notify.DEFAULT_LOG, out_path=NOTIFICATIONS,
+        debate=debate_result, health=settlement_final["health"])
+    payload["notifications"] = {"n_new": notification["n_new"],
+                                "n_suppressed": notification["n_suppressed"],
+                                "events": [{k: e.get(k) for k in ("event_key", "type", "severity",
+                                                                  "message_ko", "ticker", "signal_id")}
+                                           for e in notification["new"]]}
+    summary["notifications"] = payload["notifications"]
 
     _write_json(SIGNALS, payload)
     if not args.no_redact:
@@ -462,8 +537,25 @@ def run(args) -> int:
             "cash_pct": portfolio_public["cash_pct"], "invested_pct": portfolio_public["invested_pct"],
             "n_positions": portfolio_public["n_positions"]},
         "pilot": pilot["verdict"], "degraded": diag.get("degraded"),
+        "debate": {"reports": debate_result["n_reports"], "eligible": debate_result["n_eligible"],
+                   "late": debate_result["n_late"], "invalid": debate_result["n_invalid"],
+                   "divergent_pairs": comparison["divergent_pairs"],
+                   "auto_downgrade_enabled": auto_eval["current"]},
+        "notifications": {"new": notification["n_new"], "suppressed": notification["n_suppressed"]},
     }, ensure_ascii=False))
     return 0
+
+
+def _forced_exits(checks: list[dict]) -> dict[str, str]:
+    """S1~S5/EXIT 판정 → `{ticker: "S3"|"S5"|"EXIT"}` — 같은 봉에서 잔여 분할을 취소한다(3.5)."""
+    out: dict[str, str] = {}
+    for check in checks or []:
+        if not check.get("cancel_pending_tranches"):
+            continue
+        triggers = check.get("triggers") or {}
+        reason = "S3" if triggers.get("S3") else ("S5" if triggers.get("S5") else "EXIT")
+        out[str(check.get("ticker"))] = reason
+    return out
 
 
 def holdout_status_for(as_of: date) -> dict:
