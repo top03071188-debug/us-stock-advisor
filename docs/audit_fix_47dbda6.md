@@ -382,3 +382,34 @@ V_final             = clamp(V − v_penalties, 0, 100)
 - **−10 감점이 22종목 중 21종목에 적용**됐다. 모델 IV(DCF·EPV·Graham 중앙값)가 시장의 10년 배수보다 구조적으로 낮아
   괴리가 20%를 넘기 때문이다(ADBE 76%, GOOGL 56%). 규칙대로의 결과이고, 임계(20%)는 `config/params_v001.yaml`에서
   조정 가능한 값으로 남겼다. HON만 이력 부족으로 감점 0이다.
+
+### 8.6 실배치 · 실사이트 (2026-11-20 13:38 KST)
+
+| 항목 | 값 |
+|---|---|
+| 커밋 | `365b712` (feat(valuation) v1.3.2) |
+| `ci` | [44675649182](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44675649182) **success** (Lint·390 테스트·scope·공개 빌드 가드) |
+| `deploy` | [44675649248](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44675649248) **success** |
+| `daily-postclose` | [44675727239](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44675727239) **success** — report 1m41s + deploy 13s (report 04:38:09–04:39:50Z) |
+| Actions 커밋 | `194e0f4` (`data: quant signals 2026-11-20`) — 로컬 `git pull --ff-only origin main` 로 동기화 |
+| `signal_published_at` | `2026-11-20T04:38:32Z` (13:38 KST) · `ingest.lag_seconds` 399분(마감 후 수집) |
+| 신호 / 워치리스트 | 관찰 **7** · 차단 0 · 워치리스트 **22** (편입·편출 0) |
+
+**실데이터 새 필드(요약)**
+
+| 종목 | V | 감점 | 10년 EV/EBIT 백분위 | `iv_hist_ev_ebit` | 괴리 | `dcf_sensitivity` |
+|---|---|---|---|---|---|---|
+| GOOGL | 0.0 | −10 | 58.7 (중앙 24.0배) | $171.78 (IV $60.79) | 65% | 0.0 |
+| ADBE | **3.36** | −10 | 1.65 (중앙 43.2배) | $673.02 (IV $158.66) | 76% | 0.11 |
+| CSCO | 0.0 | −10 | 89.3 | $50.65 | 65% | 0.24 |
+| NVDA | 0.0 | −10 | 6.6 | $75.90 | 78% | 0.28 |
+| WMT(워치) | 0.0 | −10 | **96.7** | — | — | — |
+
+- `v_penalty_dcf`(−4)는 이번 배치에서 **0건** — DCF 민감도 최대가 NVDA 0.28로 임계 0.40 미만이었다.
+- **S1 과열(밸류)** 은 KO 90.1 · WMT 96.7 · CSCO 89.3 처럼 90 근처·초과 종목에서 이제 실제로 계산된다(보유 시 발동).
+
+**실사이트** `https://top03071188-debug.github.io/us-stock-advisor/?_cb=20261120T0442` (브라우저 실측 13:40 KST)
+
+- `오늘`: `데이터 정상` · `발행 13:38 · 예정 07:02 · 마감 07:00` · `수집 지연 399분` · 레짐 Risk-On 1.00 · 카드 7장 · 차단 없음.
+- `종목` → GOOGL ③ 밸류에이션 밴드에 새 줄: **“감점 근거 · DCF 민감도 ±0% (허용 ±40% 이내) · 10년 EV/EBIT 백분위 59 (10년 중앙 24.0배) · 역사적 EV/EBIT 대비 IV 괴리 65% → 감점 −10 · V 감점 합계 −10”**.
+- 스크린샷: `downloads/phase3-screenshots/v132-today-2026-11-20.png`, `downloads/phase3-screenshots/v132-ticker-GOOGL-2026-11-20.png`.

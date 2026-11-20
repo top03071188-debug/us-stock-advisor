@@ -514,3 +514,15 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
   **S1 과열(밸류) ≥ 90** 경로가 이제 실제로 발동한다(이전엔 단위 불일치로 절대 발동하지 않았다).
 - 감점 −10은 22종목 중 21종목에 적용됐다 — 모델 IV가 10년 시장 배수보다 구조적으로 낮아 괴리가 20%를 넘는다
   (ADBE 76%, GOOGL 56%). 규칙 그대로의 결과이며 임계는 파라미터로 조정 가능하다.
+
+### 14.4 실배치 (2026-11-20 13:38 KST)
+
+- `ci` [44675649182](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44675649182) **success** → `daily-postclose`
+  [44675727239](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44675727239) **success**(report 1m41s + deploy 13s),
+  Actions 커밋 `194e0f4` → `git pull --ff-only origin main` 동기화.
+- `signal_published_at 2026-11-20T04:38:32Z`(13:38 KST) · `status normal` · 관찰 7 · 차단 0 · 워치리스트 22(편입·편출 0).
+- GOOGL: V 0.0 · 감점 −10 · 백분위 **58.7**(중앙 24.0배) · `iv_hist_ev_ebit` $171.78 vs IV $60.79(괴리 65%) · `dcf_sensitivity` 0.0.
+  ADBE: V **3.36** · 감점 −10 · 백분위 **1.65**(중앙 43.2배) · 괴리 76% · 민감도 0.11.
+- `v_penalty_dcf`(−4) 0건(최대 NVDA 0.28 < 0.40). S1 백분위 90 이상: KO 90.1 · WMT 96.7.
+- 실사이트 스크린샷: `downloads/phase3-screenshots/v132-today-2026-11-20.png`,
+  `downloads/phase3-screenshots/v132-ticker-GOOGL-2026-11-20.png`.
