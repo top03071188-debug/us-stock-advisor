@@ -106,6 +106,14 @@ function fmtKo(iso, withTime = true) {
   return new Intl.DateTimeFormat("ko-KR", opts).format(d);
 }
 
+function ruleMap(config) {
+  const map = {};
+  ((config && config.groups) || []).forEach((group) => {
+    (group.items || []).forEach((item) => { map[item.key] = item.value; });
+  });
+  return map;
+}
+
 function passMark(pass) {
   if (pass === true) return el("span", { class: "good", text: "✓ 통과" });
   if (pass === false) return el("span", { class: "bad", text: "✗ 미달" });
@@ -167,7 +175,7 @@ function renderFreshness(meta) {
     ]),
   ];
   if (meta && meta.note_ko) rows.push(el("p", { class: "tiny", text: meta.note_ko }));
-  if (meta && meta.source) {
+  if (meta && meta.source && meta.source !== "none") {
     rows.push(el("p", { class: "tiny", text: `데이터 출처: ${meta.source === "fixtures" ? "픽스처(합성)" : meta.source}` }));
   }
   if (state.sampleMode) {
@@ -281,15 +289,15 @@ function renderToday(today, config) {
   }
 
   const rulesHost = clear($("today-rules"));
-  const gates = (config && config.entry_gates) || {};
-  const margins = gates.margin_of_safety || {};
+  const rules = ruleMap(config);
+  const val = (key) => (rules[key] === undefined ? "—" : rules[key]);
   rulesHost.append(el("div", { class: "kv" }, [
     el("dt", { text: "안전마진" }),
-    el("dd", { class: "num", text: `Risk-On ${fmtPct(margins.risk_on)} · Neutral ${fmtPct(margins.neutral)} · Risk-Off ${fmtPct(margins.risk_off)}` }),
+    el("dd", { class: "num", text: `Risk-On ${val("margin_risk_on")} · Neutral ${val("margin_neutral")} · Risk-Off ${val("margin_risk_off")}` }),
     el("dt", { text: "타이밍" }),
-    el("dd", { class: "num", text: `T ≥ ${fmtNum(gates.timing_min, 0)} · 눌림 조건 ${gates.dip_conditions_required || "—"}개` }),
+    el("dd", { class: "num", text: `T ≥ ${val("timing_min")} · 눌림 조건 ${val("dip_conditions_required")}개` }),
     el("dt", { text: "등급" }),
-    el("dd", { class: "num", text: `STRONG_BUY ${(config && config.grades && config.grades.strong_buy) || "—"} · BUY ${(config && config.grades && config.grades.buy) || "—"} · WATCH ${(config && config.grades && config.grades.watch) || "—"}` }),
+    el("dd", { class: "num", text: `STRONG_BUY ${val("strong_buy")} · BUY ${val("buy")} · WATCH ${val("watch")}` }),
     el("dt", { text: "파라미터" }),
     el("dd", { text: (config && config.params_version) || "—" }),
   ]));
@@ -768,26 +776,29 @@ function renderRadar(radar, watch, config, today) {
   calHost.append(emptyState("실적·공시 캘린더는 8-K Item 2.02 이력으로 추정하지만 아직 화면에 연결하지 않았습니다(정직 표기)."));
 
   const rulesHost = clear($("rules"));
-  const gates = (config && config.entry_gates) || {};
-  const exit = (config && config.exit) || {};
-  rulesHost.append(el("div", { class: "kv" }, [
-    el("dt", { text: "파라미터" }),
-    el("dd", { text: (config && config.params_version) || "—" }),
-    el("dt", { text: "안전마진" }),
-    el("dd", { class: "num", text: `RO ${fmtPct((gates.margin_of_safety || {}).risk_on)} / N ${fmtPct((gates.margin_of_safety || {}).neutral)} / ROff ${fmtPct((gates.margin_of_safety || {}).risk_off)}` }),
-    el("dt", { text: "청산 임계" }),
-    el("dd", { class: "num", text: `exit_score ${fmtNum(exit.exit_score, 0)} · trim ${fmtNum(exit.trim_score, 0)}` }),
-    el("dt", { text: "리스크" }),
-    el("dd", { class: "num", text: `1회 ${fmtPct((config && config.risk && config.risk.risk_per_trade), 2)} · 종목 ${fmtPct((config && config.risk && config.risk.max_position), 0)} · 섹터 ${fmtPct((config && config.risk && config.risk.max_sector), 0)}` }),
-  ]));
+  const groups = (config && config.groups) || [];
+  if (!groups.length) {
+    rulesHost.append(emptyState("규칙 요약 없음 — config/params_v001.yaml 을 읽지 못했습니다."));
+  }
+  groups.forEach((group) => {
+    rulesHost.append(el("h3", { class: "tiny", text: group.name }));
+    rulesHost.append(el("table", {}, [
+      el("caption", { text: `${group.name} — 현재 파라미터 (${(config && config.params_version) || "—"})` }),
+      el("tbody", {}, (group.items || []).map((item) => el("tr", {}, [
+        el("td", { class: "wrap", text: item.label_ko || item.key }),
+        el("td", { class: "num", text: item.value === undefined ? "—" : String(item.value) }),
+      ]))),
+    ]));
+  });
   const vetoRules = (config && config.veto_rules) || [];
   if (vetoRules.length) {
+    rulesHost.append(el("h3", { class: "tiny", text: "리스크 가드 12종 (고정)" }));
     rulesHost.append(el("table", {}, [
-      el("caption", { text: "리스크 가드 12종 (고정)" }),
+      el("caption", { text: "Veto 코드 — 발동해도 신호를 지우지 않고 사유를 남긴다" }),
       el("thead", {}, [el("tr", {}, [el("th", { text: "코드" }), el("th", { text: "이름" }), el("th", { text: "차단 사유" })])]),
       el("tbody", {}, vetoRules.map((v) => el("tr", {}, [
-        el("td", { text: v.code }), el("td", { class: "tiny wrap", text: v.name }),
-        el("td", { class: "tiny wrap", text: v.message_ko }),
+        el("td", { text: v.code }), el("td", { class: "tiny wrap", text: v.name || "" }),
+        el("td", { class: "tiny wrap", text: v.message_ko || "" }),
       ]))),
     ]));
   }

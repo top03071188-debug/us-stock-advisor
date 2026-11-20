@@ -224,6 +224,10 @@ allow:
   - scaling
   - universe
   - veto_rules
+  - groups
+  - message_ko
+  - release_ko
+  - value
   - window_months
   - holdout_start
   - holdout_end

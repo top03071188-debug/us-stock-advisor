@@ -257,20 +257,98 @@ def build_portfolio(signals: dict | None, state: dict | None) -> dict:
     }
 
 
+def _pct(value) -> str:
+    if value is None:
+        return "—"
+    try:
+        return f"{float(value) * 100:.0f}%"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def _num(value) -> str:
+    return "—" if value is None else f"{value}"
+
+
+def _rule(key: str, label: str, value: str) -> dict:
+    return {"key": key, "label_ko": label, "value": value}
+
+
 def build_config(params: dict | None, veto: dict | None) -> dict:
+    """화면의 '현재 규칙' — 값은 **문자열로 렌더**해서 공개 필드를 좁게 유지한다.
+
+    파라미터 dict 를 그대로 내보내면 수십 개의 내부 키가 공개 목록에 필요해진다.
+    화면이 보여 줄 것만 `{key, label_ko, value}` 행으로 만들어 허용 목록을 작게 유지한다.
+    """
     params = params or {}
     veto = veto or {}
+    weights = params.get("entry_weights") or {}
+    gates = params.get("entry_gates") or {}
+    margins = gates.get("margin_of_safety") or {}
+    grades = params.get("grades") or {}
+    exit_cfg = params.get("exit") or {}
+    risk = params.get("risk") or {}
+    scaling = params.get("scaling") or {}
+    universe = params.get("universe") or {}
+
+    tranches = scaling.get("entry") or [0.40, 0.30, 0.30]
+    drops = scaling.get("entry_drops") or [0.0, -0.07, -0.14]
+    groups = [
+        {"name": "매수 가중치", "items": [
+            _rule("quality", "품질 Q", _pct(weights.get("quality"))),
+            _rule("valuation", "가치 V", _pct(weights.get("valuation"))),
+            _rule("timing", "타이밍 T", _pct(weights.get("timing"))),
+            _rule("macro", "거시 M", _pct(weights.get("macro"))),
+            _rule("growth", "성장 G", _pct(weights.get("growth"))),
+        ]},
+        {"name": "진입 임계", "items": [
+            _rule("margin_risk_on", "안전마진 · Risk-On", _pct(margins.get("risk_on"))),
+            _rule("margin_neutral", "안전마진 · Neutral", _pct(margins.get("neutral"))),
+            _rule("margin_risk_off", "안전마진 · Risk-Off", _pct(margins.get("risk_off"))),
+            _rule("timing_min", "타이밍 최소 T", _num(gates.get("timing_min"))),
+            _rule("dip_conditions_required", "눌림 조건 개수", _num(gates.get("dip_conditions_required"))),
+            _rule("rsi_buy", "RSI 매수 기준", _num(gates.get("rsi_buy"))),
+            _rule("dma50_deviation", "50일선 이격", _pct(gates.get("dma50_deviation"))),
+            _rule("dma200_mult", "200일선 하한 배수", _num(gates.get("dma200_mult"))),
+            _rule("structural_risk_block", "구조적 리스크 차단", _num(gates.get("structural_risk_block"))),
+        ]},
+        {"name": "등급 컷", "items": [
+            _rule("strong_buy", "STRONG_BUY", _num(grades.get("strong_buy"))),
+            _rule("buy", "BUY", _num(grades.get("buy"))),
+            _rule("watch", "WATCH", _num(grades.get("watch"))),
+        ]},
+        {"name": "청산", "items": [
+            _rule("margin_overheat", "안전마진 과열", _pct(exit_cfg.get("margin_overheat"))),
+            _rule("rsi_overheat", "RSI 과열", _num(exit_cfg.get("rsi_overheat"))),
+            _rule("pe_percentile", "밸류 백분위 상한", _pct(exit_cfg.get("pe_percentile"))),
+            _rule("exit_score", "exit_score 청산", _num(exit_cfg.get("exit_score"))),
+            _rule("trim_score", "exit_score 축소", _num(exit_cfg.get("trim_score"))),
+        ]},
+        {"name": "리스크", "items": [
+            _rule("risk_per_trade", "1회 계획 손실", _pct(risk.get("risk_per_trade"))),
+            _rule("max_position", "종목 상한", _pct(risk.get("max_position"))),
+            _rule("max_sector", "섹터 상한", _pct(risk.get("max_sector"))),
+            _rule("cash_min", "최소 현금", _pct(risk.get("cash_min"))),
+            _rule("cash_min_risk_off", "최소 현금 · Risk-Off", _pct(risk.get("cash_min_risk_off"))),
+            _rule("stop_atr_mult", "ATR 배수(손절)", _num(risk.get("stop_atr_mult"))),
+            _rule("stop_max", "손절 최대", _pct(risk.get("stop_max"))),
+        ]},
+        {"name": "분할", "items": [
+            _rule("tranches", "1·2·3차 비중", " / ".join(_pct(t) for t in tranches)),
+            _rule("tranche_drops", "2·3차 지정가 하락", " / ".join(_pct(d) for d in drops)),
+        ]},
+        {"name": "유니버스", "items": [
+            _rule("index", "지수", str(universe.get("index") or "—")),
+            _rule("min_market_cap_usd", "최소 시총", f"${float(universe.get('min_market_cap_usd') or 0):,.0f}"),
+            _rule("min_adv20_usd", "최소 20일 거래대금", f"${float(universe.get('min_adv20_usd') or 0):,.0f}"),
+            _rule("watchlist_max", "워치리스트 상한", _num(universe.get("watchlist_max"))),
+        ]},
+    ]
     rules = [{k: r.get(k) for k in ("code", "name", "group", "message_ko")} for r in veto.get("rules") or []]
     return {
         "params_version": params.get("version"),
         "created_at": params.get("created_at"),
-        "entry_weights": params.get("entry_weights"),
-        "entry_gates": params.get("entry_gates"),
-        "grades": params.get("grades"),
-        "exit": params.get("exit"),
-        "risk": params.get("risk"),
-        "scaling": params.get("scaling"),
-        "universe": params.get("universe"),
+        "groups": groups,
         "veto_rules": rules,
         "note_ko": "화면의 '현재 규칙' — 보정은 분기 PR 로만 반영한다.",
     }

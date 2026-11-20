@@ -604,6 +604,7 @@
     {
       "ticker": "FIXC",
       "reason": "V01",
+      "message_ko": "실적 발표 임박 — 신규 매수 보류",
       "grade": "WATCH"
     }
   ],
