@@ -14,7 +14,7 @@
 | 포지션 사이징·재검증 | `engine/decide/sizing.py` | `atr_pct = atr14_sadj/close_sadj` → `min(3×atr_pct, 20%)`, 계획 손실 ≤ 0.75%, 단일 5%·섹터 25%, 2·3차 직전 축소/거절 |
 | 모의 포트폴리오 | `engine/ledger/portfolio.py` | 현금·수량 추적, 개장 경매 범위 체결, 손절 먼저·잔여 주문 즉시 취소, 분할·배당, 트레일링, 분할익절 |
 | 폴드 실행기 | `engine/backtest/runner.py` | 시나리오(일별 봉 + 장 전 주문 + 기업행동) → 모의 계좌, 입력은 읽기 전용(복사본 실행) |
-| 성과 리포트 | `engine/backtest/report.py` | CAGR·MDD·Sharpe·Sortino·Calmar·회전율·평균 노출도·승률·손익비, 슬리피지 0/5/10/20bp |
+| 성과 리포트 | `engine/backtest/report.py` | CAGR·MDD·Sharpe·Sortino·Calmar·회전율·평균 노출도·승률·손익비, 슬리피지 0/5/10/20bp, 기간별 채택/보류 표(6M 보류 표기) |
 | 발행 기록·체결 이벤트 | `engine/ledger/record.py` | 발행 레코드 불변(체결가 **비움**), `execution_event`·`plan_reanchor`·`debate_events` 분리, append-only |
 | 채점 | `engine/ledger/grade.py` | 1주 5td / 1개월 21 / 3개월 63 / 6개월 126, Agreement `0.40D+0.25B+0.15DD+0.20T`, 밴드 `base`·성과 `fill`, `maturity_date < holdout_start` |
 | 데이터 계약 | `schemas/quant_signals.schema.json`, `engine/schema.py`, `engine/models.py` | 스키마 검증 + 세 시각 순서 + 발행 레코드 체결가 금지 + 공개 금지 필드 차단 |
@@ -27,10 +27,10 @@
 
 ```text
 $ .venv/bin/python -m pytest -m "not network"
-203 passed, 4 deselected in 1.43s
+205 passed, 4 deselected in 1.70s
 ```
 
-Phase 1의 90개는 그대로 통과하고 **113개를 추가**했다(모두 신규 파일).
+Phase 1의 90개는 그대로 통과하고 **115개를 추가**했다(모두 신규 파일).
 
 | 파일 | 개수 | 검사 |
 |---|---|---|
@@ -38,7 +38,7 @@ Phase 1의 90개는 그대로 통과하고 **113개를 추가**했다(모두 신
 | `tests/test_decide_signals.py` | 23 | B0~B6, 등급·상한(G≤0·뉴스 근거 부족), 가치평가 보류 업종, 분할 계획·3차 무효, S1~S5, **편출 보유 종목 추적** |
 | `tests/test_veto_regime.py` | 30 | Veto 12종 발동·예외(5.02 원문 확인, 분할 공시), 그룹 요약, 레짐 3종·미검증·극단 플래그·조정치 |
 | `tests/test_ledger.py` | 17 | 발행 레코드 체결가 없음, 세 시각 순서, append-only, 체결·재고정·토론 이벤트, 4기간 채점, 홀드아웃 절단, 밴드 기준 |
-| `tests/test_report.py` | 7 | CAGR·MDD·Sharpe·조정치, 벤치마크 비교, 슬리피지 0/5/10/20bp, **신호 0건 폴드 completed**, 파일 산출 |
+| `tests/test_report.py` | 9 | CAGR·MDD·Sharpe·조정치, 벤치마크 비교, 슬리피지 0/5/10/20bp, **신호 0건 폴드 completed**, 기간별 채택/보류 표(6M 보류), 파일 산출 |
 | `tests/test_quant_signals_schema.py` | 15 | 스키마 필수필드·enum·타입, 세 시각, `execution_event` null, 잠정가, 금지 필드, 중복 id, 0건 정상 |
 
 ### Phase 2 DoD 8항목 대응
@@ -58,7 +58,9 @@ Phase 1의 90개는 그대로 통과하고 **113개를 추가**했다(모두 신
 
 ```text
 $ .venv/bin/python scripts/run_walkforward.py --today 2026-11-19 --plan-only
-{"counts": {"1m": 4, "3m": 3, "6m": 2}, "blocked": ["6m"], "holdout_start": "2026-08-19"}
+{"counts": {"1m": 4, "3m": 3, "6m": 2}, "blocked": ["6m"], "holdout_start": "2026-08-19",
+ "calibration_table": [{"horizon": "1m", "calibration": "calibrate"}, {"horizon": "3m", "calibration": "calibrate"},
+                       {"horizon": "6m", "calibration": "deferred", "note": "6m 보정 보류 — 적격 폴드 2/3 …"}]}
 
 $ .venv/bin/python scripts/run_walkforward.py --portfolio-demo
 {"portfolio_demo": {"signals": 6, "status": "completed",

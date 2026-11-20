@@ -118,6 +118,29 @@ def cost_sensitivity(run, bps_values: tuple[int, ...] = COST_SENSITIVITY_BPS, **
     return out
 
 
+def fold_calibration_table(summary: dict) -> list[dict]:
+    """폴드 요약(1M/3M/6M) → 기간별 채택/보류 표. 6개월은 적격 폴드 3개 미만이면 **보류**다(4.2.7)."""
+    rows: list[dict] = []
+    for name, h in (summary.get("horizons") or {}).items():
+        count = int(h.get("count", 0))
+        min_folds = int(h.get("min_folds", 3))
+        ok = bool(h.get("sufficient", count >= min_folds))
+        rows.append({
+            "horizon": name,
+            "horizon_td": h.get("horizon_td"),
+            "eligible_folds": count,
+            "eligible_fold_ids": list(h.get("eligible_folds") or []),
+            "min_folds": min_folds,
+            "calibration": "calibrate" if ok else "deferred",
+            "note": None if ok else (
+                f"{name} 보정 보류 — 적격 폴드 {count}/{min_folds}. "
+                + ("보정 창을 15개월 이상으로 늘려 적격 폴드 3개를 확보한 뒤 연다(4.2.1)."
+                   if name == "6m" else "표본이 부족하다.")
+            ),
+        })
+    return rows
+
+
 @dataclass
 class FoldReport:
     fold_id: str
@@ -129,6 +152,7 @@ class FoldReport:
     portfolio: dict | None
     cost_sensitivity: dict
     notes: list[str]
+    calibration: str | None = None
 
     def as_dict(self) -> dict:
         return {
@@ -141,12 +165,14 @@ class FoldReport:
             "portfolio": self.portfolio,
             "cost_sensitivity": self.cost_sensitivity,
             "notes": self.notes,
+            "calibration": self.calibration,
         }
 
 
 def fold_report(fold_id: str, horizon: str, signals: list[dict], portfolio=None,
                 benchmark_curve: list[dict] | None = None,
-                sensitivity: dict | None = None, notes: list[str] | None = None) -> dict:
+                sensitivity: dict | None = None, notes: list[str] | None = None,
+                calibration: str | None = None) -> dict:
     """폴드 리포트 1건. 신호 0건이어도 `completed` 로 기록한다(실패 아님)."""
     notes = list(notes or [])
     if portfolio is not None and not hasattr(portfolio, "equity_curve"):
@@ -170,6 +196,7 @@ def fold_report(fold_id: str, horizon: str, signals: list[dict], portfolio=None,
         },
         cost_sensitivity=sensitivity or {},
         notes=notes,
+        calibration=calibration,
     )
     return report.as_dict()
 

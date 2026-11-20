@@ -92,3 +92,22 @@ def test_metrics_exposure_and_turnover_bounded():
     m = strategy_metrics(result.equity_curve, result.trades, initial_cash=result.params["initial_cash"])
     assert 0.0 <= m["avg_exposure"] <= 1.0
     assert m["turnover"] is None or m["turnover"] >= 0
+
+
+def test_fold_calibration_table_marks_six_month_deferred():
+    from engine.backtest.report import fold_calibration_table
+    summary = {"horizons": {
+        "1m": {"horizon_td": 21, "count": 4, "min_folds": 3, "sufficient": True, "eligible_folds": ["F1"]},
+        "3m": {"horizon_td": 63, "count": 3, "min_folds": 3, "sufficient": True, "eligible_folds": []},
+        "6m": {"horizon_td": 126, "count": 2, "min_folds": 3, "sufficient": False, "eligible_folds": ["F1", "F2"]},
+    }}
+    rows = fold_calibration_table(summary)
+    by_horizon = {r["horizon"]: r for r in rows}
+    assert by_horizon["1m"]["calibration"] == "calibrate"
+    assert by_horizon["6m"]["calibration"] == "deferred"
+    assert "6m 보정 보류" in by_horizon["6m"]["note"]
+
+
+def test_fold_report_carries_calibration_status():
+    report = fold_report("F0", "6m", [], portfolio=None, calibration="deferred")
+    assert report["calibration"] == "deferred"

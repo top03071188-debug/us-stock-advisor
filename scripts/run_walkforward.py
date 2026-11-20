@@ -23,8 +23,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from engine.backtest.demo import build_demo_scenario  # noqa: E402
-from engine.backtest.report import (COST_SENSITIVITY_BPS, cost_sensitivity, fold_report,  # noqa: E402
-                                    write_fold_portfolio, write_fold_report)
+from engine.backtest.report import (COST_SENSITIVITY_BPS, cost_sensitivity, fold_calibration_table,  # noqa: E402
+                                    fold_report, write_fold_portfolio, write_fold_report)
 from engine.backtest.runner import run_scenario  # noqa: E402
 from engine.backtest.walk_forward import plan_and_attempts, write_fold_output  # noqa: E402
 
@@ -43,6 +43,7 @@ def write_plan(args) -> int:
         "holdout_start": plan["summary"]["holdout_start"],
         "counts": {k: v["count"] for k, v in plan["summary"]["horizons"].items()},
         "blocked": plan["summary"]["blocked"],
+        "calibration_table": fold_calibration_table(plan["summary"]),
         **paths,
     }, ensure_ascii=False))
     return 0
