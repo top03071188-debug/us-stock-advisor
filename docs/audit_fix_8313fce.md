@@ -173,6 +173,66 @@
 
 ---
 
-## 5. 배포 · 실사이트 검증
+## 5. 배포 · 실사이트 검증 (2026-11-20)
 
-(이 절은 커밋·CI·`daily-postclose`·실사이트 확인 뒤 채운다 — 아래 배포 기록 참조)
+### 5.1 커밋
+
+| 커밋 | 내용 |
+|---|---|
+| `76b0105` | 감사 01~10 수정 통합 + 실데이터 재스크린 + `docs/audit_fix_8313fce.md` |
+| `c982e37` | (Actions 커밋) `daily-postclose` 가 만든 `data/quant_signals.json`·`records.jsonl`·`pilot_eval.json` |
+| `675a72d` | 공개 계층: `target_band`(기준 봉)·`dcf_dropped` 배관 + 재스크린 |
+| `ef1945c` · `a84dac3` · `67f0861` | 원장 회차 열 표시·`app.js` 캐시 버전(`v133-audit2`) |
+
+### 5.2 워크플로
+
+| 워크플로 | run | 결과 |
+|---|---|---|
+| `ci` | [44684226984](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44684226984) | **success** (lint·446 테스트·scope guard·public build guard 전 스텝) |
+| `deploy` | [44684226931](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44684226931) | **success** |
+| `daily-postclose`(수동) | [44684325521](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44684325521) | **success** — report 1m35s + deploy 10s, 원장·아카이브·커밋·Pages 전 스텝 |
+| `ci` · `deploy`(675a72d) | [44684972689](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44684972689) · [44684972639](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44684972639) | success · success |
+| `ci` · `deploy`(ef1945c) | 44685175774 · 44685175883 | success · success |
+| `ci` · `deploy`(a84dac3) | 44685352820 · 44685352704 | success · success |
+| `ci` · `deploy`(67f0861) | 44685571973 · 44685571930 | success · success |
+
+`.github/workflows/*` 는 **한 줄도 수정하지 않았다**. 비공개 아카이브 업로드 스텝은 `snapshot_2026-11-20_<short>`
+asset 을 sha256 대조 후 올렸고(성공), 공개 저장소 릴리스는 **0건**(`gh release list` 빈 응답)이다.
+
+### 5.3 배포본 데이터 검증 (`git pull --ff-only` 후 커밋된 파일)
+
+- **01**: `ingest.policy = cutoff_vintage_point_query` · `vintage 2026-11-18` · `series_dropped []` ·
+  `data_cutoff_at 2026-11-19T22:00:00Z` ≤ `signal_published_at 2026-11-20T05:57:49Z` < `order_cutoff_at 14:25Z`,
+  `run_started_at 05:56:42Z` → 발행까지 67초, `publish_lag_seconds 2.7`, `published_after_order_cutoff false`,
+  레짐 `risk_on`·`verified true`·`inputs_missing []`, `wacc_risk_free{source: FRED:DGS10, value: 0.051, fallback: false}`.
+- **02**: 7건 전부 `…-WATCH-002` + `supersedes …-001`, `record_skips` 없음. 화면 `quant_signals.json` 의 `signals` 7건이
+  원장 최신 발행본과 `signal_id`·`signal_published_at` 까지 일치(SH-1 표 확인).
+- **05·06**: GOOGL `growth_clipped_to_zero true`(원 −5.35%) · `wacc_sensitivity 0.1076` · `terminal_g 0.0391` ·
+  `ev_ebit_samples 121`/`years 9`/`window 2016-11-21~2026-11-19`; ADBE `0.3816`/`0.1556`; NVDA·ADBE·CAT 는 클립 아님.
+  CSCO `growth 0.0`(원 −0.33%) → `dcf_sensitivity 0.0`·`wacc_sensitivity 0.1767` 로 대체.
+- **09**: 7건 모두 `target_band.base_bar_date 2026-11-19`(META 11-18)·`return_base "base_price"`.
+
+### 5.4 실사이트 (`https://top03071188-debug.github.io/us-stock-advisor/`)
+
+- **오늘 탭**: "배치 시작 11. 20. 14:56 · 발행까지 0분 · 입력 지문 1de0cf16880a" 줄과 신호 카드마다
+  **"재발행 2회차 · 2026-11-20-MSFT-WATCH-001 대체"** 배지가 뜨고, "주문 마감 후 발행" 배지는 발행이 마감 전이라
+  나오지 않는다(조건대로). 레짐·차단 0건·관찰 7 정상 렌더, 콘솔/렌더 깨짐 없음(6개 데이터 파일이 모두 화면에 반영).
+  스크린샷: `downloads/phase3-screenshots/audit-8313fce-today.png`
+- **종목 상세(GOOGL)**: ③ 에
+  `감점 근거 · 성장률 0% 하한 적용 (원 CAGR -5.3%) · WACC ±1%p 민감도 ±11% · 10년 EV/EBIT 백분위 36 (10년 중앙 29.2배)
+  [표본 121개 · 9개년 2016-11-21~2026-11-19] · 역사적 EV/EBIT 대비 IV 괴리 -71% → 감점 −10 · V 감점 합계 −10 · 감점 전 V 0.0`
+  과 `목표 밴드 $198.46~$235.56 · 기준 봉 2026-11-19 종가 $272.66 (base_price 고정)` 이 보인다.
+  스크린샷: `downloads/phase3-screenshots/audit-8313fce-ticker.png`
+- **HON(추가 확인)**: `감점 근거 · 유효 FCFF 4년 → 5년 DCF 폐기(EPV·Graham 만) · 신뢰도 C ·
+  10년 EV/EBIT 백분위 보류 — 유효 이력 3년 미만 [표본 22개 · 2개년 2025-03-03~2026-11-19]` — 05 가드 사유가 화면에 설명된다.
+- **성적표(원장) 탭**: 신호 이력에 새 **회차** 열이 생겨 `1회차` / `재발행 2회차 (MSFT-WATCH-001 대체)` 로 구분된다.
+  홀드아웃 잠금(2026-08-20~2026-11-19, 다음 개봉 2027-01-01) · 1M/3M 보정 가능 · 6M 보류 표시 정상.
+  스크린샷: `downloads/phase3-screenshots/audit-8313fce-ledger.png`
+
+### 5.5 남은 주의점
+
+- `deploy.yml` 의 `paths` 에 `config/public_allowlist.yaml` 이 없다 — 허용 목록만 바꿈 커밋은 배포를 트리거하지 않는다
+  (이번에는 `web/**` 변경이 함께 있어 배포됐다). 앞으로 허용 목록만 고치는 경우 `workflow_dispatch` 로 `deploy` 를 돌려야 한다.
+- `web/app.js` 는 캐시 버전 쿼리(`?v=v133-audit2`)로 갱신한다 — 앞으로 `app.js` 를 고치면 `index.html` 의 버전도 함께 올린다.
+- `daily-postclose.yml` 상단 주석("Phase 1에는 schedule 을 꺼 두었다")은 낡았다. 워크플로 파일은 이번 범위에서 수정 금지라
+  그대로 두었고, 실제 상태는 `docs/phase3_verification.md` §9 에 적었다.
