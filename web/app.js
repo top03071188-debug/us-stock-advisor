@@ -582,7 +582,7 @@ function renderFolds(summary) {
       const ok = h.sufficient !== false;
       return el("tr", {}, [
         el("td", { text: `${name.toUpperCase()} (${h.horizon_td || "—"}거래일)` }),
-        el("td", { class: "num", text: `${isNum(h.count) ? h.count : 0}/${h.min_folds || 3}` }),
+        el("td", { class: "num", text: `${isNum(h.count) ? h.count : 0}개 (기준 ${h.min_folds || 3})` }),
         el("td", {}, [ok ? el("span", { class: "good", text: "보정 가능" }) : el("span", { class: "deferred", text: "보정 보류" })]),
         el("td", { class: "tiny wrap", text: (h.eligible_folds || []).join(" · ") || "—" }),
       ]);

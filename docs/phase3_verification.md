@@ -321,7 +321,52 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
 
 ---
 
-## 10. 남은 후속 작업
+## 10. 배포 검증 (GitHub Actions · Pages 실사이트)
+
+`main` 브랜치 커밋 이력(작성자 `김영서` (GitHub noreply 주소로 커밋)):
+
+| 커밋 | 내용 |
+|---|---|
+| `96d85e9` | Phase 3 본 구현(엔진 6종·스크립트 4종·대시보드 v1·테스트 50개) |
+| `70fa1cb` | 현재 규칙을 허용 목록 친화 행(`groups`)으로 내보내 값이 비지 않게 |
+| `317cc0c` | 정적 자산 캐시 버전(`?v=`) + `meta.source` 없음 표기 정리 |
+| `4e9225c` | 폴드 표(1m/3m/6m)·파일럿 4지표·파라미터 버전이 필터에 지워지던 문제 |
+| `58ea47d` | N_eff 정수 표기·작은 비율 소수 표기·관찰 카드 분할가 숨김 |
+| `37a8127` | 차트 높이 고정 + 공시 표 접수일 머리글 정렬 |
+| `feabf32` | 성적표 하위 블록을 카드 중첩 대신 구획으로 |
+| `8614714` | 문단 기본 여백이 행 높이를 부풀리던 문제 |
+| `1449e5b` | 첫 배치 전에도 폴드·홀드아웃·파일럿·파라미터 이력이 채워지도록 폴백 |
+
+| 실행 | run ID | 결론 |
+|---|---|---|
+| `ci` (`96d85e9`) | [44654033579](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44654033579) | success |
+| `deploy` (`96d85e9`) | [44654033607](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44654033607) | success |
+| `ci` (`1449e5b`) | [44655932990](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44655932990) | success |
+| `deploy` (`1449e5b`) | [44655934824](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44655934824) | success |
+
+실사이트 `https://top03071188-debug.github.io/us-stock-advisor/` 확인(브라우저 실측):
+
+- HTML·`app.js`·`styles.css`·`data/*.json`·`sample-data/*.json` 모두 **200**.
+- 4탭 전부 렌더: 오늘(신선도·레짐 배너, 신호 카드 4장, 차단 1건, 현재 규칙),
+  종목(FIXA 7블록 — 대가 막대·IV 밴드·SVG 차트·뉴스·공시 표·invalidation·토론 빈 카드),
+  성적표(폴드 1M 4개·3M 3개·6M 2개 **보정 보류**, 홀드아웃 잠금 "다음 개봉 2027-01-01",
+  정확도/전략 분리, 파일럿 4지표 ✓/✗/—, 파라미터 이력, 토론 효과 "표본 0건 — 판정 보류"),
+  레이더(45일 워터마크·13F 빈 정상·워치리스트 편입 5건 사유·현재 규칙 8표 + Veto 12종).
+- 콘솔 예외 없음(렌더 실패 시 상단 배지가 "데이터 오류"로 바뀌는 경로가 동작하지 않음).
+- 데스크톱(≥900px) 좌측 사이드바 + 중앙 정렬, 모바일은 하단 고정 탭.
+- 스크린샷: `browser/today-first-run-2026-11-20-103938.png`(첫 배치 대기),
+  `browser/today-sample-2026-11-20-103956.png`(샘플 오늘),
+  `browser/ticker-detail-2026-11-20-104007.png`·`browser/ticker-detail-2-2026-11-20-104017.png`(종목 7블록),
+  `browser/ledger-2026-11-20-104154.png`(성적표).
+
+> 배포는 `deploy.yml`(사람 푸시 트리거)이 수행했고 **데이터 생성 워크플로는 아직 돌지 않았다**.
+> `daily-postclose` 는 `workflow_dispatch` 로 수동 실행할 수 있다:
+> `gh workflow run daily-postclose -R top03071188-debug/us-stock-advisor`
+> (Secret 미등록 시 가격 수집이 실패해 `degraded` 로 끝나고 전일 데이터가 유지된다.)
+
+---
+
+## 11. 남은 후속 작업
 
 1. `daily-postclose.yml` 의 `schedule` 주석 해제(워크플로 권한 필요) → 2주 무인 실행 관찰.
 2. `premarket.yml`·`weekly-screen.yml`·`quarterly-walkforward.yml`·`semiannual-extended.yml` 추가(§5 초안).
