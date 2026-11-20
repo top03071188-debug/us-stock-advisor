@@ -619,6 +619,14 @@ function renderStrategy(summary, portfolio) {
   ], null));
 }
 
+function metricValue(metric) {
+  if (!isNum(metric.value)) return "—";
+  const key = String(metric.key || "");
+  if (key === "n_eff") return String(Math.round(metric.value));
+  if (key === "tail_loss") return fmtPct(metric.value);
+  return fmtNum(metric.value, 3);
+}
+
 function renderPilot(summary, pilotEval) {
   const host = clear($("pilot"));
   const pilot = (summary && summary.pilot) || {};
@@ -638,7 +646,7 @@ function renderPilot(summary, pilotEval) {
       el("th", { text: "기준" }), el("th", { text: "판정" })])]),
     el("tbody", {}, metrics.map((m) => el("tr", {}, [
       el("td", { class: "wrap", text: m.label_ko || m.key }),
-      el("td", { class: "num", text: isNum(m.value) ? (String(m.key).includes("loss") || String(m.key) === "tail_loss" ? fmtPct(m.value) : fmtNum(m.value, 3)) : "—" }),
+      el("td", { class: "num", text: metricValue(m) }),
       el("td", { class: "tiny", text: m.threshold || "—" }),
       el("td", {}, [passMark(m.pass)]),
     ]))),

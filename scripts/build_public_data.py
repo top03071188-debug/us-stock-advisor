@@ -262,9 +262,10 @@ def _pct(value) -> str:
     if value is None:
         return "—"
     try:
-        return f"{float(value) * 100:.0f}%"
+        num = float(value) * 100
     except (TypeError, ValueError):
         return str(value)
+    return f"{num:.2f}%".replace(".00%", "%") if abs(num) < 1 else f"{num:.0f}%"
 
 
 def _num(value) -> str:

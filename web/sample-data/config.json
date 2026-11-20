@@ -138,7 +138,7 @@
         {
           "key": "risk_per_trade",
           "label_ko": "1회 계획 손실",
-          "value": "1%"
+          "value": "0.75%"
         },
         {
           "key": "max_position",
