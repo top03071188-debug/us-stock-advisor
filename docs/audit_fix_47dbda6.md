@@ -180,7 +180,8 @@ $ .venv/bin/python -m ruff check engine scripts tests
 All checks passed!
 
 $ .venv/bin/python scripts/validate_outputs.py
-{"ok": true, ...  "watchlist": {"n": 22}}          # 스키마·3시각 순서·체결가 null·금지 필드 부재 통과
+{"ok": true, "signals": {"n_signals": 7, "n_blocked": 0, "status": "normal", ...},
+ "pilot": {"verdict": "보류", "n_eff": 0}, "watchlist": {"n": 22}}   # 스키마·3시각 순서·체결가 null·금지 필드 부재 통과
 
 $ git add … && .venv/bin/python scripts/check_commit_scope.py --staged
 (문제 0건)
@@ -234,7 +235,8 @@ R03·R05·R06 반영 후 1층 스크리너를 실데이터로 다시 돌린 결�
 **랭킹(상위)** — GOOGL 63.669 / ADBE 62.500 / META 60.735 / NVDA 58.770 / MSFT 54.387 / DIS 49.300 / CSCO 48.840 …
 
 **주의할 관찰 2가지(회귀 아님, 기록)**
-1. **전 22종목 V=0.00** — 모델 IV가 현재가보다 낮다는 판정이다. 예: GOOGL `IV_median $69.07`(`EPV 69.07 / Graham 90.86 / DCF 60.26`, `median_method epv`, 밴드 `58.71~79.43`) vs 현재가 **$272.66** → 안전마진 −294%. 그래서 이번 주 2층 BUY 신호는 자연히 0건이다. 규칙을 완화하지 않았다(§6.1).
+1. **전 22종목 V=0.00** — 모델 IV가 현재가보다 낮다는 판정이다. 예: GOOGL `IV_median $60.79`(`EPV 60.79 / Graham 90.86 / DCF 51.09`, `median_method epv`, 밴드 `51.67~69.91`, `wacc_valuation 10.64%`) vs 현재가 **$272.66** → 안전마진 **−348.5%**. 그래서 이번 주 2층 BUY 신호는 자연히 0건이다. 규칙을 완화하지 않았다(§6.1).
+   - 참고: 로컬 오프라인 재계산(β=1.15·rf=4.37% 가정)에서는 IV $69.07이 나왔다. 라이브는 가격 회귀 β로 `wacc_valuation 10.64%`를 써서 **$60.79**다. 화면·문서의 기준값은 **실행 산출물($60.79)** 이다.
 2. **GOOGL G 점수 39.36 → 91.97** — PEG가 `2.134`(FY 순이익 ÷ 매출 CAGR)에서 `1.197`(TTM EPS 19.27 ÷ 매출 CAGR 11.82% 폴백)로 바뀐 결과다. `peg_growth_basis`로 폴백임을 화면에 표시한다.
 3. `data/watchlist/history.jsonl`은 **`as_of` 당 1행 멱등**으로 바꿨다(같은 날 재실행 시 앞선 행 대체). `data/watchlist/current.json`의 `metrics`에는 `wacc_qc`와 `wacc_valuation`이 함께 남는다(§3.3 관련 후속 확인 항목).
 
@@ -259,7 +261,47 @@ R03·R05·R06 반영 후 1층 스크리너를 실데이터로 다시 돌린 결�
 
 ---
 
-## 7. 재현 방법
+## 7. Actions · 실사이트 검증 (2026-11-20 13:0x KST)
+
+| 항목 | 값 |
+|---|---|
+| 통합 커밋 | `44da6ca` (R01~R11 + 통합 3건 + 재스크린 데이터 + 문서) |
+| `ci` run | [44671788223](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44671788223) **success** — Lint · 오프라인 테스트 · scope 가드 · 공개 빌드 가드 전 스텝 성공 |
+| `daily-postclose` run | [44671878797](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44671878797) **success** — report(1m44s) + deploy(9s) 전 스텝 성공 |
+| 후속 수정 커밋 | `666ed4a`(파일럿 문구 모순 제거) → `ci` [44672238173](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44672238173) **success**, `daily-postclose` [44672331459](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44672331459) **success**(report + deploy) |
+| Actions 커밋 | `a1f4cef`, `7b863e7` (`data: quant signals 2026-11-20`) — 로컬 `git pull --ff-only`로 동기화 |
+
+**동기화한 실데이터(`data/quant_signals.json`, 7b863e7)**
+
+| 항목 | 값 |
+|---|---|
+| `status` / `mode` / `source` | `normal` / `postclose` / `live` |
+| `signal_published_at` | **`2026-11-20T04:08:24Z`** (13:08 KST, 실제 실행 시각) |
+| `signal_published_planned_at` | `2026-11-19T22:02:11Z` (07:02 KST 계획값, 화면에 `· 예정`으로 병기) |
+| `data_cutoff_at` / `order_cutoff_at` | `2026-11-19T22:00:00Z` / `2026-11-20T14:25:00Z` |
+| `target_session` | **`2026-11-20`** (발행 뒤 마감이 남은 세션) |
+| `ingest` | `lag_seconds 22131.4`(약 369분) · `after_cutoff true` · `inputs_ingested_at 04:08:51Z` → 화면 배너 `수집 지연 369분(마감 후 수집)` |
+| 레짐 | `risk_on` · `verified true` · 투표 `real_rate/t10y2y/credit risk_on · volatility/dollar neutral` · 배수 1.00 |
+| 신호 | 매수 0 · 매도 0 · **관찰 7**(MSFT·NVDA·ADBE·CSCO·GOOGL·META·CAT), 차단 0 |
+| GOOGL | 점수 65.78 · IV `60.79` DCF 51.09/EPV 60.79/Graham 90.86 · 밴드 `51.67~69.91` · `iv_band_basis bear_bull` · 문구 “IV 대비 349% 프리미엄(안전마진 -349%)” · `target_band.defensive true` · 근거 10-K `0001652044-26-000018`(filed 2026-02-05) + 10-Q `0001652044-26-000084`(`role: reference`) |
+| `pilot_eval.json` | `n_records 7` · `n_eligible 0` · `n_eff 0` · `verdict 보류` · `cash_equivalent 0.0`(평균 노출 0.0 혼합 대비, WATCH 부풀리기 해소) |
+| 모의 계좌 | `cash_pct 1.0` · `invested_pct 0.0` · `avg_exposure 0.0` · 보유 0 |
+| 아카이브 | 비공개 `us-stock-advisor-archive` Release `snapshots-2026`에 `snapshot_2026-11-20_5058a21f4561.tgz`(2,548,448B) / `…_27c9e9b5e1ab.tgz` 업로드 — 입력 전체를 담아 크기가 1.16MB → 2.5MB로 커졌다 |
+| `summary.json` | `data/ledger/summary.json`은 만들지 않는다(계약상 `web/data/ledger/summary.json`, 23.5KB — 빌드 산출물·gitignore). `quant_signals.ledger_summary`에 같은 값이 커밋된다 |
+
+**실사이트** `https://top03071188-debug.github.io/us-stock-advisor/?_cb=20261120T0410` (브라우저 실측 13:10 KST)
+
+- `오늘`: `데이터 정상` · `발행 11. 20. 13:08 · 예정 11. 20. 07:02 · 마감 11. 20. 07:00` · **`수집 지연 369분(마감 후 수집) · 수집 11. 20. 13:08`** · `시장 레짐: 위험 선호(Risk-On) 포지션 배수 1.00 · 검증됨` · 신호 카드 7장(각 카드에 `발행 13:08 · 예정 07:02 · 주문 2026. 11. 20.`) · `차단된 종목 없음`.
+- `종목` → GOOGL: 7블록 전부 렌더(결론·대가별 점수·IV 밴드 $51.67~$69.91·주 1회 차트·뉴스 5건·공시 표 5행·invalidation `$327.18`·토론 빈 카드). 콘솔 예외·빈 영역 없음.
+- `성적표`: 홀드아웃 잠금(다음 개봉 2027-01-01) · 폴드 1M 4/3M 3/6M 2(보류) · 파일럿 `판정: 보류` `유효 표본 0 · 발행 신호 7건 (체결·만기 0건)` · 유사 현금비중 `0.000 · 평균 노출 0.0 혼합 대비`(모순 문구 제거 확인) · 신호 이력 7건.
+- `레이더`: 워치리스트 변동 `+NVDA · +TSLA · +WMT`, 보류 업종 6, 규칙 표·Veto 12종 정상.
+
+**스크린샷**(`downloads/phase3-screenshots/`)
+- `r01r11-today-2026-11-20.png` — 오늘 탭(수집 지연 배너 포함)
+- `r01r11-ticker-GOOGL-2026-11-20.png` — 종목 상세 · GOOGL
+- `r01r11-ledger-pilot-2026-11-20.png` — 성적표 · 파일럿 4지표
+
+## 8. 재현 방법
 
 ```bash
 cd repos/us-stock-advisor
