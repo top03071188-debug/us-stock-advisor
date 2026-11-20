@@ -336,6 +336,7 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
 | `feabf32` | 성적표 하위 블록을 카드 중첩 대신 구획으로 |
 | `8614714` | 문단 기본 여백이 행 높이를 부풀리던 문제 |
 | `1449e5b` | 첫 배치 전에도 폴드·홀드아웃·파일럿·파라미터 이력이 채워지도록 폴백 |
+| `aff8466` | 배포·실사이트 검증 기록 + 폴드 개수 표기(`4개 (기준 3)`) |
 
 | 실행 | run ID | 결론 |
 |---|---|---|
@@ -343,6 +344,8 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
 | `deploy` (`96d85e9`) | [44654033607](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44654033607) | success |
 | `ci` (`1449e5b`) | [44655932990](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44655932990) | success |
 | `deploy` (`1449e5b`) | [44655934824](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44655934824) | success |
+| `ci` (`aff8466`) | [44656218015](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44656218015) | success |
+| `deploy` (`aff8466`) | [44656217985](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44656217985) | success |
 
 실사이트 `https://top03071188-debug.github.io/us-stock-advisor/` 확인(브라우저 실측):
 
@@ -357,7 +360,7 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
 - 스크린샷: `browser/today-first-run-2026-11-20-103938.png`(첫 배치 대기),
   `browser/today-sample-2026-11-20-103956.png`(샘플 오늘),
   `browser/ticker-detail-2026-11-20-104007.png`·`browser/ticker-detail-2-2026-11-20-104017.png`(종목 7블록),
-  `browser/ledger-2026-11-20-104154.png`(성적표).
+  `browser/ledger-2026-11-20-104154.png`·`browser/ledger-real-initial-2026-11-20-104909.png`(성적표).
 
 > 배포는 `deploy.yml`(사람 푸시 트리거)이 수행했고 **데이터 생성 워크플로는 아직 돌지 않았다**.
 > `daily-postclose` 는 `workflow_dispatch` 로 수동 실행할 수 있다:
