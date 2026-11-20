@@ -357,15 +357,19 @@ def test_ui_surfaces_data_status_and_bundle_mismatch():
 
 
 def test_debate_pr_workflow_template_checks_whole_pr_and_guards_paths():
-    """P1-2: PR 전체 경로 검사 + 리포트 PR 경로 가드(템플릿)."""
+    """P1-2: PR 전체 경로 검사 + 리포트 PR 경로 가드(템플릿·웹 등록본)."""
     text = (ROOT / "codex_debate" / "workflows" / "debate-validate.yml").read_text(encoding="utf-8")
     assert "git diff --name-only" in text
     assert "check_commit_scope.py --paths" in text
     assert "data/debate_reports.json" in text and "data/debate/manifest.json" in text
     assert ".github/workflows/" in text and "config/params" in text
     assert "fetch-depth: 0" in text
-    # 템플릿은 .github/workflows 를 **쓰지 않는다**(토큰 권한 없음)
-    assert not (ROOT / ".github" / "workflows" / "debate-validate.yml").exists()
+    # 등록본(.github/workflows/debate-validate.yml)은 CLI 토큰으로 push 할 수 없어(workflows 권한 없음)
+    # GitHub 웹에서 등록한다(docs/codex_debate_guide.md §10). 등록본은 템플릿과 **같은 내용**이어야 한다 —
+    # 한쪽만 고치면 실제로 도는 검사와 템플릿이 어긋난다(드리프트 방지).
+    registered = ROOT / ".github" / "workflows" / "debate-validate.yml"
+    assert registered.exists(), "웹 등록본 .github/workflows/debate-validate.yml 이 없다"
+    assert registered.read_text(encoding="utf-8") == text
 
 
 # ── 6. Phase 4 잔여 배선(P0-3 · 2·3차/섹터 캡/취소 이벤트) ─────────────────────
