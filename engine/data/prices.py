@@ -5,6 +5,9 @@
 - `Adj Close` 는 분할+배당 = `total_return_adj`.
 - `raw_as_traded` = `sadj × split_factor`(t 이후 분할비율의 누적곱)로 복원하고, 직접 소스가 있으면 대조한다.
 - `available_at` = 그 봉의 NYSE 마감(16:00 ET → UTC).
+- **과거 컷오프**는 행만 자르지 않는다(`PricePanel.as_of_cutoff`): 컷오프 **이후** 발생한 분할을
+  가격 기준에서 제거해 다시 기준화한다. Yahoo `Close` 는 오늘 기준 조정값이라 그대로 자르면
+  그 시점에 알 수 없었던 분할이 기준에 남고, `split_events` 는 잘려 빈 배열이 된다(감사 09-a).
 
 ATR 비율은 반드시 같은 기준에서 만든다: `atr_pct = atr14_sadj / close_sadj` (v1.3.1).
 """
@@ -43,8 +46,28 @@ class PricePanel:
         return PriceSeries(ticker=self.ticker, kind=kind, frame=self.frame)
 
     def as_of(self, decision_at: datetime) -> "PricePanel":
+        """`available_at <= decision_at` 행만 남긴다(분할 기준 재정규화 없음)."""
         mask = pd.to_datetime(self.frame["available_at"], utc=True) <= decision_at
         return PricePanel(self.ticker, self.frame.loc[mask].copy(), dict(self.issues))
+
+    def as_of_cutoff(self, decision_at: datetime, splits: pd.Series | dict | None = None) -> "PricePanel":
+        """과거 컷오프 시점의 **가격 기준으로 재기준화(re-basing)** 한 패널.
+
+        컷오프 이후 발생한 분할을 제거한다 — Yahoo `Close` 는 **오늘 기준** 분할 조정값이라,
+        과거 컷오프에서 그대로 자르면 "그 시점에 알 수 없었던 분할" 이 가격 기준에 남는다
+        (raw=100·sadj=50·split_factor=2 인데 분할 이벤트는 잘려 `[]` — 감사 09).
+        컷오프 이후 분할비율의 곱 `r` 로 `sadj_*`·`adj_close` 를 곱하고 `split_factor` 를 `r` 로
+        나누면 `raw = sadj × split_factor` 는 그대로 유지되면서, 컷오프 봉의 `split_factor` 는 1 이 된다.
+        """
+        cut = self.as_of(decision_at)
+        if splits is None or cut.frame.empty:
+            return cut
+        stamp = pd.Timestamp(decision_at)
+        cutoff_date = stamp.tz_convert("America/New_York").date() if stamp.tzinfo is not None else stamp.date()
+        ratio = future_split_ratio(splits, cutoff_date)
+        if abs(ratio - 1.0) <= 1e-12:
+            return cut
+        return PricePanel(self.ticker, rebase_frame(cut.frame, ratio), dict(cut.issues))
 
     def last_close(self, on_or_before: date, kind: PriceKind = PriceKind.raw_as_traded) -> float | None:
         sub = self.frame.loc[self.frame.index <= on_or_before]
@@ -60,6 +83,45 @@ def _to_date_index(df: pd.DataFrame) -> pd.DataFrame:
         idx = idx.tz_convert("America/New_York").normalize().tz_localize(None)
     out.index = idx
     out.index.name = "date"
+    return out
+
+
+def _split_series(splits: pd.Series | dict | None) -> pd.Series:
+    """분할 이력 → 날짜 인덱스(시간대 없음)의 정렬된 Series."""
+    if splits is None or len(splits) == 0:
+        return pd.Series(dtype=float)
+    sp = splits.copy() if isinstance(splits, pd.Series) else pd.Series(splits)
+    sp.index = pd.to_datetime(sp.index).tz_localize(None) if getattr(sp.index, "tz", None) else pd.to_datetime(sp.index)
+    return sp.sort_index()
+
+
+def future_split_ratio(splits: pd.Series | dict | None, cutoff: date) -> float:
+    """`cutoff` **이후** ex-date 인 분할비율의 곱 — 컷오프 기준으로 되돌릴 때 곱하는 값(없으면 1.0)."""
+    sp = _split_series(splits)
+    ratio = 1.0
+    for ex_date, value in sp.items():
+        if value is None or not np.isfinite(value) or float(value) <= 0:
+            continue
+        if ex_date.date() > cutoff:
+            ratio *= float(value)
+    return float(ratio)
+
+
+def rebase_frame(frame: pd.DataFrame, ratio: float) -> pd.DataFrame:
+    """컷오프 이후 분할 `ratio` 를 제거한 프레임 — `sadj`·`adj_close` 는 곱하고 계수는 나눈다.
+
+    `raw_*` 는 다시 계산해 `raw == sadj × split_factor` 를 유지한다(값 자체는 달라지지 않는다).
+    """
+    out = frame.copy()
+    if abs(ratio - 1.0) <= 1e-12 or out.empty:
+        return out
+    for col in ("sadj_open", "sadj_high", "sadj_low", "sadj_close", "adj_close"):
+        if col in out.columns:
+            out[col] = out[col].astype(float) * ratio
+    out["split_factor"] = out["split_factor"].astype(float) / ratio
+    for dst in ("open", "high", "low", "close"):
+        if f"sadj_{dst}" in out.columns:
+            out[f"raw_{dst}"] = out[f"sadj_{dst}"] * out["split_factor"]
     return out
 
 

@@ -54,16 +54,22 @@ def test_collects_ten_years_but_scores_five(googl):
 
 
 def test_googl_operating_nwc_excludes_cash_and_marketable(googl):
-    """2025 Δ(CA−CL)=+28,704 는 현금·시장성 증권이 만든 변화 — 영업 ΔNWC 는 −2,482 다."""
+    """2025 Δ(CA−CL)=+28,704 는 현금·시장성 증권이 만든 변화 — 영업 ΔNWC 는 −1,485 다.
+
+    v1.3.3 08-a: 유동부채에서 **단기금융부채(유동성장기부채 1,996)** 를 빼므로 NWC 가 그만큼 크다
+    (−23,550 → −21,554). 차입금 증감이 영업 FCFF 를 흔들지 않게 하기 위해서다.
+    """
     f, diag, _ = googl
     assert diag["marketable_securities"][0] == pytest.approx(96_135.0)
-    assert f.operating_nwc[0] == pytest.approx(-23_550.0)      # 206,038−30,708−96,135−102,745
-    assert f.delta_nwc[0] == pytest.approx(-2_482.0, abs=1.0)
+    assert f.operating_nwc[0] == pytest.approx(-21_554.0)      # 206,038−30,708−96,135−102,745+1,996
+    assert f.delta_nwc[0] == pytest.approx(-1_485.0, abs=1.0)
     # 현금·시장성만 바뀌면 영업 NWC 는 그대로다(금융항목 제외 확인)
     ca, cl = [23_550.0 * 0 + 100.0], [0.0]
     assert operating_nwc([500.0], [200.0], [100.0], [50.0]) == [150.0]
     assert operating_nwc([650.0], [200.0], [250.0], [50.0]) == [150.0]   # 현금 +150, CA +150
     assert operating_nwc(ca, cl, [0.0], [0.0]) == [100.0]
+    # 단기차입 +100 은 영업 유동부채가 아니다 — NWC 가 변하지 않는다(v1.3.3 08-a)
+    assert operating_nwc([500.0], [300.0], [100.0], [50.0], [100.0]) == [150.0]
 
 
 def test_nwc_cap_uses_same_units():
@@ -80,9 +86,9 @@ def test_googl_normalized_fcff_and_nopat(googl):
     f, diag, _ = googl
     mult, det = valuation_multiplier(f, PRICE, "Information Technology", 1.0, 0.0437)
     assert mult is not None
-    # 최신 연도 EBIT 만 쓰면 FCFF 40,538 — 5년 중앙값은 48,265 다
-    assert det["fcff_years"][0] == pytest.approx(40_537.95, abs=0.1)
-    assert det["fcff_normalized"] == pytest.approx(48_265.02, abs=0.1)
+    # 최신 연도 EBIT 만 쓰면 FCFF 39,541 — 5년 중앙값은 49,264 다
+    assert det["fcff_years"][0] == pytest.approx(39_540.95, abs=0.1)
+    assert det["fcff_normalized"] == pytest.approx(49_264.02, abs=0.1)
     assert det["fcff_normalized"] == pytest.approx(float(np.median(det["fcff_years"])))
     assert det["ebit_normalized"] == pytest.approx(84_293.0)                 # 5년 중앙값
     assert det["nopat_normalized"] == pytest.approx(70_789.26, abs=0.1)      # × (1−0.1602)

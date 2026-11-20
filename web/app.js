@@ -206,6 +206,20 @@ function renderFreshness(meta) {
   if (meta && meta.note_ko) rows.push(el("p", { class: "tiny", text: meta.note_ko }));
   const ingest = ingestHint(meta && meta.ingest);
   if (ingest) rows.push(el("p", { class: "tiny", text: ingest }));
+  // v1.3.3 01-b: 배치 시작 시각과 발행 시각을 따로 보여 준다 — 수집이 오래 걸린 날을 숨기지 않는다.
+  if (meta && (meta.run_started_at || isNum(meta.publish_lag_seconds))) {
+    const lag = isNum(meta.publish_lag_seconds) ? Math.round(Number(meta.publish_lag_seconds) / 60) : null;
+    rows.push(el("p", { class: "tiny", text: `배치 시작 ${fmtKo(meta.run_started_at)}`
+      + (lag === null ? "" : ` · 발행까지 ${lag}분`)
+      + (meta.inputs_hash ? ` · 입력 지문 ${String(meta.inputs_hash).replace("sha256:", "").slice(0, 12)}` : "") }));
+  }
+  if (meta && meta.published_after_order_cutoff === true) {
+    rows.push(el("p", { class: "tiny" }, [badge("주문 마감 후 발행", "warn"),
+      el("span", { text: ` 이 신호는 주문 마감(${fmtKo(meta.order_cutoff_at)}) 뒤에 확정됐습니다 — 대상 세션 ${meta.target_session || "—"}.` })]));
+  }
+  if (meta && meta.wacc_risk_free && meta.wacc_risk_free.fallback === true) {
+    rows.push(el("p", { class: "tiny", text: "WACC 무위험금리: 마감 빈티지에서 DGS10 미확보 — 기본값으로 계산했습니다(01)." }));
+  }
   if (meta && meta.source && meta.source !== "none") {
     rows.push(el("p", { class: "tiny", text: `데이터 출처: ${meta.source === "fixtures" ? "픽스처(합성)" : meta.source}` }));
   }
@@ -273,6 +287,10 @@ function signalCard(sig) {
     foot.push(el("span", { class: "tiny", text: `분할 1차 ${fmtMoney(entry.price_ref)}` }));
   }
   if (sig.sizing_note_ko) foot.push(el("span", { class: "tiny", text: sig.sizing_note_ko }));
+  // v1.3.3 02: 같은 날 입력·세션이 달라 다시 확정된 발행이면 회차와 대체 대상을 보여 준다.
+  if (isNum(sig.revision) && sig.revision > 1) {
+    foot.push(badge(`재발행 ${sig.revision}회차${sig.supersedes ? ` · ${sig.supersedes} 대체` : ""}`, "info"));
+  }
   foot.push(el("span", { class: "tiny", text: `근거 ${(sig.evidence || []).length}건` }));
   foot.push(el("span", { class: "tiny", text: `발행 ${fmtKo(sig.signal_published_at)}`
     + plannedHint(sig.signal_published_planned_at, sig.signal_published_at)
@@ -363,8 +381,12 @@ function investorBars(scores, conflict) {
 
 function valuationBand(valuation) {
   const v = valuation || {};
+  const notes = valuationPenaltyNotes(v);
   if (!isNum(v.iv_low) || !isNum(v.iv_high) || !isNum(v.price)) {
-    return emptyState("밸류에이션 밴드 없음 — 가치평가 보류 업종이거나 IV 계산 불가(3.2.1).");
+    return el("div", { class: "stack" }, [
+      emptyState("밸류에이션 밴드 없음 — 가치평가 보류 업종이거나 IV 계산 불가(3.2.1)."),
+      notes,
+    ].filter(Boolean));
   }
   const lo = Math.min(v.iv_low, v.price);
   const hi = Math.max(v.iv_high, v.price);
@@ -386,32 +408,69 @@ function valuationBand(valuation) {
       el("span", { text: `IV_high ${fmtMoney(v.iv_high)}` }),
     ]),
     el("p", { class: "tiny", text: `현재가 ${fmtMoney(v.price)} (raw_as_traded) · IV 는 USD/share` }),
-    valuationPenaltyNotes(v),
+    notes,
   ]);
 }
 
-/* v1.3.2 — V 감점 내역: DCF 민감도(−4) · 10년 EV/EBIT 백분위 · 역사적 괴리(−10) */
+/* v1.3.3 — V 근거: 성장률 0% 클립의 WACC 민감도 · EV/EBIT 표본 품질 · 감점 전 V */
+function evEbitReasonKo(reason) {
+  if (!reason) return null;
+  if (reason === "insufficient_history") return "유효 이력 3년 미만";
+  if (reason === "current_bar_after_cutoff") return "마지막 봉이 결정 시점 뒤";
+  if (reason.startsWith("current_")) return "최신 공시 재무가 무효(부채·현금·주식수 결측 또는 EBIT≤0)";
+  return reason;
+}
+
 function valuationPenaltyNotes(v) {
   const items = [];
+  const meaningful = isNum(v.dcf_sensitivity) || Boolean(v.dcf_dropped) || isNum(v.ev_ebit_percentile)
+    || Boolean(v.ev_ebit_reason) || (isNum(v.v_penalty_hist) && v.v_penalty_hist > 0) || isNum(v.v_raw);
+  if (!meaningful) return null;
   if (isNum(v.dcf_sensitivity)) {
-    items.push(`DCF 민감도 ±${(v.dcf_sensitivity * 100).toFixed(0)}%`
-      + (isNum(v.v_penalty_dcf) && v.v_penalty_dcf > 0 ? ` → 신뢰도 C · 감점 −${v.v_penalty_dcf}` : " (허용 ±40% 이내)"));
+    if (isNum(v.v_penalty_dcf) && v.v_penalty_dcf > 0) {
+      items.push(`DCF 민감도 ±${(v.dcf_sensitivity * 100).toFixed(0)}%`
+        + ` → 신뢰도 C · 감점 −${v.v_penalty_dcf}`);
+    } else if (v.growth_clipped_to_zero || v.growth_basis === "unavailable") {
+      // 성장률이 0 으로 잘리면(또는 CAGR 산출 불가면) bear==bull 이라 "±0%"가 통과처럼 읽힜다 — 다른 축으로 보여 준다.
+      const raw = isNum(v.growth_raw_cagr) ? ` (원 CAGR ${(v.growth_raw_cagr * 100).toFixed(1)}%)` : "";
+      const head = v.growth_clipped_to_zero ? "성장률 0% 하한 적용" : "성장률 산출 불가(FCFF CAGR 없음)";
+      const wacc = isNum(v.wacc_sensitivity)
+        ? `WACC ±1%p 민감도 ±${(v.wacc_sensitivity * 100).toFixed(0)}%`
+        : "WACC 민감도 계산 불가";
+      items.push(`${head}${raw} · ${wacc}`);
+    } else {
+      items.push(`DCF 민감도 ±${(v.dcf_sensitivity * 100).toFixed(0)}% (허용 ±40% 이내)`);
+    }
+  } else if (v.dcf_dropped === "SHORT_HISTORY") {
+    const years = isNum(v.effective_fcff_years) ? `유효 FCFF ${v.effective_fcff_years}년` : "유효 FCFF 5년 미만";
+    items.push(`${years} → 5년 DCF 폐기(EPV·Graham 만) · 신뢰도 ${v.v_confidence || "C"}`);
   } else if (v.dcf_dropped) {
     items.push(`DCF 폐기(${v.dcf_dropped}) → 신뢰도 ${v.v_confidence || "C"}`);
   }
+  const span = v.ev_ebit_window ? ` ${v.ev_ebit_window}` : "";
+  const sampleNote = [
+    isNum(v.ev_ebit_samples) ? `표본 ${v.ev_ebit_samples}개` : null,
+    isNum(v.ev_ebit_years) ? `${v.ev_ebit_years}개년` : null,
+  ].filter(Boolean).join(" · ");
   if (isNum(v.ev_ebit_percentile)) {
     items.push(`10년 EV/EBIT 백분위 ${v.ev_ebit_percentile.toFixed(0)}`
       + (isNum(v.ev_ebit_median_10y) ? ` (10년 중앙 ${v.ev_ebit_median_10y.toFixed(1)}배)` : "")
+      + (sampleNote ? ` [${sampleNote}${span}]` : "")
       + (v.ev_ebit_percentile >= 90 ? " · 과열 구간(S1)" : ""));
   } else {
-    items.push("10년 EV/EBIT 백분위 계산 불가(이력 부족)");
+    const why = evEbitReasonKo(v.ev_ebit_reason) || "이력 부족";
+    items.push(`10년 EV/EBIT 백분위 보류 — ${why}`
+      + (sampleNote ? ` [${sampleNote}${span}]` : ""));
   }
   if (isNum(v.v_penalty_hist) && v.v_penalty_hist > 0) {
-    items.push(`역사적 EV/EBIT 대비 IV 괴리 ${isNum(v.hist_divergence) ? (v.hist_divergence * 100).toFixed(0) + "%" : "20%+"}`
-      + ` → 감점 −${v.v_penalty_hist}`);
+    const div = isNum(v.hist_divergence_signed)
+      ? `${v.hist_divergence_signed > 0 ? "+" : ""}${(v.hist_divergence_signed * 100).toFixed(0)}%`
+      : (isNum(v.hist_divergence) ? `${(v.hist_divergence * 100).toFixed(0)}%` : "20%+");
+    items.push(`역사적 EV/EBIT 대비 IV 괴리 ${div} → 감점 −${v.v_penalty_hist}`);
   }
   const total = isNum(v.v_penalties) ? v.v_penalties : 0;
-  items.push(`V 감점 합계 −${total}${total === 0 ? " (감점 없음)" : ""}`);
+  const raw = isNum(v.v_raw) ? ` · 감점 전 V ${v.v_raw.toFixed(1)}` : "";
+  items.push(`V 감점 합계 −${total}${total === 0 ? " (감점 없음)" : ""}${raw}`);
   return el("p", { class: "tiny", text: `감점 근거 · ${items.join(" · ")}` });
 }
 
@@ -594,7 +653,15 @@ function renderTicker(tickerDoc) {
   ]);
 
   const bars = el("section", { class: "card" }, [el("h2", { text: "② 대가별 점수" }), investorBars((sig && sig.investor_scores) || {}, sig && sig.conflict)]);
-  const band = el("section", { class: "card" }, [el("h2", { text: "③ 밸류에이션 밴드" }), valuationBand(sig && sig.valuation)]);
+  // 신호 레코드의 valuation 이 우선이고, 없는 키는 워치리스트 근거(valuation_quality)로 채운다.
+  const valuation = { ...((tickerDoc.valuation_quality) || {}), ...((sig && sig.valuation) || {}) };
+  const bandNotes = [];
+  if (sig && sig.target_band && sig.target_band.base_bar_date) {
+    // v1.3.3 09-d: 채점 기준 봉을 발행 시점에 고정했다는 사실을 화면에 남긴다(나중 종가로 갈아타지 않는다).
+    bandNotes.push(el("p", { class: "tiny", text: `목표 밴드 ${fmtMoney(sig.target_band.lo)}~${fmtMoney(sig.target_band.hi)}`
+      + ` · 기준 봉 ${sig.target_band.base_bar_date} 종가 ${fmtMoney(sig.target_band.base_price)} (base_price 고정)` }));
+  }
+  const band = el("section", { class: "card" }, [el("h2", { text: "③ 밸류에이션 밴드" }), valuationBand(valuation), ...bandNotes]);
   const chart = el("section", { class: "card" }, [el("h2", { text: "④ 차트 (1년 주 1회 정규화)" }), svgChart(tickerDoc.chart)]);
   const news = el("section", { class: "card" }, [el("h2", { text: "⑤ 뉴스 판독" }), newsBlock(sig)]);
   const risk = el("section", { class: "card" }, [el("h2", { text: "⑥ 리스크 가드 · 근거 원문" }), riskBlock(sig, tickerDoc)]);
@@ -731,12 +798,15 @@ function renderHistory(summary, records) {
   const body = (rows.length ? rows : all).slice(0, 50).map((r) => el("tr", {}, [
     el("td", { class: "num", text: String(r.as_of || (r.signal_id || "").slice(0, 10)) }),
     el("td", { text: r.ticker || "—" }),
+    el("td", { text: isNum(r.revision) && r.revision > 1
+      ? `재발행 ${r.revision}회차${r.supersedes ? ` (${String(r.supersedes).slice(0, 10)}… 대체)` : ""}` : "1회차" }),
     el("td", { text: r.action || (r.quant_intent === "pending_buy" ? "체결 대기" : r.quant_intent === "no_action" ? "관찰" : (r.action || "—")) }),
     el("td", { class: "num", text: isNum(r.excess) ? fmtSignedPct(r.excess) : "—" }),
   ]));
   host.append(el("table", {}, [
     el("caption", { text: `최근 ${body.length}건 · 초과수익은 SPY 대비 3개월` }),
     el("thead", {}, [el("tr", {}, [el("th", { text: "발행일" }), el("th", { text: "티커" }),
+      el("th", { text: "회차" }),
       el("th", { text: "행동" }), el("th", { class: "num", text: "3M 초과" })])]),
     el("tbody", {}, body),
   ]));

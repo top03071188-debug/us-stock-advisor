@@ -322,7 +322,8 @@ def _last_return(panel) -> float | None:
 def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_version: str,
                   code_commit: str, snapshot_id: str, status: str,
                   three_times: dict, held: list[dict] | None = None,
-                  sector_weights: dict | None = None, source: str | None = None) -> dict:
+                  sector_weights: dict | None = None, source: str | None = None,
+                  inputs_hash: str | None = None) -> dict:
     """수집 스냅샷 → `quant_signals` 본문(레저 요약은 호출자가 붙인다)."""
     views = build_views(data, as_of)
     regime = classify_regime(data.get("macro"), data.get("macro_previous"))
@@ -391,8 +392,18 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         evaluation = evaluate_entry(ctx, regime=regime, params=params)
         watchlist.append({
             "ticker": view.ticker, "sector": view.sector, "q": view.q, "v": view.v, "g": view.g,
+            "v_raw": None if view.margin is None else round(v_score(view.margin, 0.0), 2),
+            "margin": _f(view.margin),
             "v_penalties": round(float((view.valuation_detail or {}).get("v_penalties") or 0.0), 2),
             "ev_ebit_percentile": (view.valuation_detail or {}).get("ev_ebit_percentile"),
+            # v1.3.3 06: 표본 품질(개수·연수·실제 범위·사유)을 워치리스트 행에도 같이 낸다.
+            "ev_ebit_samples": (view.valuation_detail or {}).get("ev_ebit_samples"),
+            "ev_ebit_years": (view.valuation_detail or {}).get("ev_ebit_years"),
+            "ev_ebit_window": (view.valuation_detail or {}).get("ev_ebit_window"),
+            "ev_ebit_reason": (view.valuation_detail or {}).get("ev_ebit_reason"),
+            "hist_divergence_signed": _f((view.valuation_detail or {}).get("hist_divergence_signed")),
+            "growth_clipped_to_zero": (view.valuation_detail or {}).get("growth_clipped_to_zero"),
+            "wacc_sensitivity": _f((view.valuation_detail or {}).get("wacc_sensitivity")),
             "rank_score": None if (view.v is None or view.g is None) else round(
                 0.5 * view.q + 0.3 * float(view.v) + 0.2 * float(view.g), 3),
             "valuation_suspended": view.valuation_suspended,
@@ -448,6 +459,10 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         else:
             sizing_note = "주문 범위 밖 — 관찰만(3.4.4)"
         band = target_band(iv_median=view.iv_median or ind["raw_close"] * 1.2, price=ind["raw_close"])
+        # 채점의 기준 봉을 **발행 시점에 함께 고정**한다 — 나중에 알게 되는 `as_of` 당일 종가를
+        # 기준으로 삼으면 밴드(`base_price`)와 수익률(`r_base`)이 다른 봉을 가리킨다(감사 09-d).
+        band["return_base"] = "base_price"
+        band["base_bar_date"] = last_bar.isoformat() if hasattr(last_bar, "isoformat") else last_bar
         record = publish_record(
             signal_id=f"{as_of.isoformat()}-{view.ticker}-{('BUY' if buy else 'WATCH')}-001",
             ticker=view.ticker,
@@ -458,6 +473,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             data_cutoff_at=three_times["data_cutoff_at"],
             signal_published_at=three_times["signal_published_at"],
             order_cutoff_at=three_times["order_cutoff_at"],
+            target_session=three_times.get("target_session"),
             generated_price=ind["raw_close"],
             target_band=band,
             expected_mdd=expected_mdd(view.structure.get("daily_vol_60d")),
@@ -474,6 +490,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             invalidation={"price": round(float(ind["dma200"] or ind["sadj_close"]) * 0.97, 2),
                           "reason": "200일선 −3% 이탈 + ROIC<WACC"} if ind.get("dma200") else None,
             quant_intent="pending_buy" if (buy and plan and plan.get("placeable")) else "no_action",
+            inputs_hash=inputs_hash,
         )
         record["trade_grade"] = evaluation.get("grade")
         record["components"] = evaluation.get("components")
@@ -502,6 +519,24 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             "iv_hist_ev_ebit": _f(detail.get("iv_hist_ev_ebit")),
             "hist_divergence": _f(detail.get("hist_divergence")),
             "dcf_dropped": detail.get("dcf_dropped"),
+            # ── v1.3.3 (트랙 B 04·05·06·08) 배관 ──────────────────────────────────────────
+            # 화면·JSON 이 "왜 이 V 인가"를 보여 줄 수 있게 감점 전 V·원시 값·표본 품질을 레코드까지 넘긴다.
+            "v_raw": None if view.margin is None else round(v_score(view.margin, 0.0), 2),
+            "growth_raw_cagr": _f(detail.get("growth_raw_cagr")),
+            "growth_clipped_to_zero": detail.get("growth_clipped_to_zero"),
+            "effective_fcff_years": detail.get("effective_fcff_years"),
+            "normalization_method": detail.get("normalization_method"),
+            "wacc_sensitivity": _f(detail.get("wacc_sensitivity")),
+            "terminal_g_sensitivity": _f(detail.get("terminal_g_sensitivity")),
+            "rate_sensitivity": _f(detail.get("rate_sensitivity")),
+            "hist_divergence_signed": _f(detail.get("hist_divergence_signed")),
+            "ev_ebit_current": _f(detail.get("ev_ebit_current")),
+            "ev_ebit_samples": detail.get("ev_ebit_samples"),
+            "ev_ebit_years": detail.get("ev_ebit_years"),
+            "ev_ebit_window": detail.get("ev_ebit_window"),
+            "ev_ebit_reason": detail.get("ev_ebit_reason"),
+            "minority_interest": _f(detail.get("minority_interest")),
+            "debt_reporting": detail.get("debt_reporting"),
         }
         record["news_state"] = view.news_state
         record["news"] = [{"headline": n.get("headline"), "source": n.get("source"),

@@ -2,7 +2,9 @@
 """scripts/run_walkforward.py — 폴드 계획 + Phase 2 전략 성과·포트폴리오 리포트.
 
 1) `--plan-only` (Phase 1): 폴드 표(`data/walkforward/folds/summary.json`)와
-   `data/calibration/attempts.json` 만 만든다.
+   `data/calibration/attempts.json` 만 만든다. 이 파일은 **날짜 계획**이므로 `action` 은
+   `"planned"`(또는 `"deferred"`)다 — 보정을 돌렸다는 뜻의 `"calibrate"` 가 아니다(감사 10).
+   `sufficient` 판정은 `--min-folds` 를 존중한다.
 2) `--portfolio-demo` (Phase 2): 수집 데이터가 없어도 `신호 → 분할 계획 → 장 전 주문 →
    모의 계좌 → 전략 지표 → 슬리피지 0/5/10/20bp 민감도` 전 경로를 재현한다.
    결과는 `out/walkforward/demo/` 에 쓴다(gitignore — 보유·수량 필드가 들어간다).
@@ -41,7 +43,9 @@ def write_plan(args) -> int:
     print(json.dumps({
         "today": today.isoformat(),
         "holdout_start": plan["summary"]["holdout_start"],
+        "min_folds": args.min_folds,
         "counts": {k: v["count"] for k, v in plan["summary"]["horizons"].items()},
+        "actions": {a["horizon"]: a["action"] for a in plan["attempts"]["attempts"]},
         "blocked": plan["summary"]["blocked"],
         "calibration_table": fold_calibration_table(plan["summary"]),
         **paths,

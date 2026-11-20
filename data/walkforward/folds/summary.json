@@ -1,7 +1,7 @@
 {
-  "as_of": "2026-11-19",
-  "holdout_start": "2026-08-19",
-  "holdout_end": "2026-11-18",
+  "as_of": "2026-11-20",
+  "holdout_start": "2026-08-20",
+  "holdout_end": "2026-11-19",
   "window_months": 12,
   "horizons": {
     "1m": {
@@ -9,23 +9,14 @@
       "eligible_folds": [
         "F1",
         "F2",
-        "F3",
-        "F4"
+        "F3"
       ],
-      "count": 4,
+      "count": 3,
       "min_folds": 3,
       "sufficient": true,
       "folds": [
         {
           "fold_id": "F1",
-          "start": "2025-08-19",
-          "maturity": "2025-09-18",
-          "eligible": true,
-          "truncated": false,
-          "observed_days": 21
-        },
-        {
-          "fold_id": "F2",
           "start": "2025-11-19",
           "maturity": "2025-12-19",
           "eligible": true,
@@ -33,7 +24,7 @@
           "observed_days": 21
         },
         {
-          "fold_id": "F3",
+          "fold_id": "F2",
           "start": "2026-02-19",
           "maturity": "2026-03-20",
           "eligible": true,
@@ -41,12 +32,20 @@
           "observed_days": 21
         },
         {
-          "fold_id": "F4",
+          "fold_id": "F3",
           "start": "2026-05-19",
           "maturity": "2026-06-18",
           "eligible": true,
           "truncated": false,
           "observed_days": 21
+        },
+        {
+          "fold_id": "F4",
+          "start": "2026-08-19",
+          "maturity": "2026-09-18",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0
         }
       ]
     },
@@ -63,14 +62,6 @@
       "folds": [
         {
           "fold_id": "F1",
-          "start": "2025-08-19",
-          "maturity": "2025-11-17",
-          "eligible": true,
-          "truncated": false,
-          "observed_days": 63
-        },
-        {
-          "fold_id": "F2",
           "start": "2025-11-19",
           "maturity": "2026-02-23",
           "eligible": true,
@@ -78,7 +69,7 @@
           "observed_days": 63
         },
         {
-          "fold_id": "F3",
+          "fold_id": "F2",
           "start": "2026-02-19",
           "maturity": "2026-05-20",
           "eligible": true,
@@ -86,35 +77,34 @@
           "observed_days": 63
         },
         {
-          "fold_id": "F4",
+          "fold_id": "F3",
           "start": "2026-05-19",
           "maturity": "2026-08-19",
+          "eligible": true,
+          "truncated": false,
+          "observed_days": 63
+        },
+        {
+          "fold_id": "F4",
+          "start": "2026-08-19",
+          "maturity": "2026-11-17",
           "eligible": false,
           "truncated": true,
-          "observed_days": 62
+          "observed_days": 0
         }
       ]
     },
     "6m": {
       "horizon_td": 126,
       "eligible_folds": [
-        "F1",
-        "F2"
+        "F1"
       ],
-      "count": 2,
+      "count": 1,
       "min_folds": 3,
       "sufficient": false,
       "folds": [
         {
           "fold_id": "F1",
-          "start": "2025-08-19",
-          "maturity": "2026-02-19",
-          "eligible": true,
-          "truncated": false,
-          "observed_days": 126
-        },
-        {
-          "fold_id": "F2",
           "start": "2025-11-19",
           "maturity": "2026-05-22",
           "eligible": true,
@@ -122,20 +112,28 @@
           "observed_days": 126
         },
         {
-          "fold_id": "F3",
+          "fold_id": "F2",
           "start": "2026-02-19",
           "maturity": "2026-08-20",
           "eligible": false,
           "truncated": true,
-          "observed_days": 124
+          "observed_days": 125
         },
         {
-          "fold_id": "F4",
+          "fold_id": "F3",
           "start": "2026-05-19",
           "maturity": "2026-11-17",
           "eligible": false,
           "truncated": true,
-          "observed_days": 62
+          "observed_days": 63
+        },
+        {
+          "fold_id": "F4",
+          "start": "2026-08-19",
+          "maturity": "2027-02-19",
+          "eligible": false,
+          "truncated": true,
+          "observed_days": 0
         }
       ]
     }

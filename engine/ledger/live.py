@@ -30,7 +30,7 @@ import pandas as pd
 
 from engine.backtest.execution import EntryBand, band_from_dict, opening_fill
 from engine.ledger import grade as grade_mod
-from engine.ledger.record import EXECUTION_EVENTS, execution_event, reanchor_event
+from engine.ledger.record import EXECUTION_EVENTS, execution_event, reanchor_event, superseded_ids
 
 INITIAL_CASH = 1_000_000.0
 SLIPPAGE_BPS = 10.0
@@ -130,9 +130,14 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
     reanchors: list[dict] = []
     pending: list[dict] = []
     settled: list[dict] = []
+    superseded = superseded_ids(records)
     for record in records:
         sid = str(record.get("signal_id"))
         if sid in executions:
+            continue
+        if sid in superseded:
+            # 같은 날 재실행으로 새 회차가 확정된 이전 발행본 — 체결하지 않는다(중복 매수 방지, 감사 02).
+            settled.append({"signal_id": sid, "event": "superseded", "reason": "SUPERSEDED_BY_NEWER_RELEASE"})
             continue
         intent = record.get("quant_intent")
         if intent != "pending_buy":
@@ -416,10 +421,13 @@ def grade_all(records: list[dict], executions: dict[str, dict], panels: dict, as
 
     hz = horizons or grade_mod.HORIZONS_TD
     graded: list[dict] = []
+    superseded = superseded_ids(records)
     for record in records:
         ticker = record.get("ticker")
         sid = str(record.get("signal_id"))
         execution = executions.get(sid)
+        if sid in superseded and not execution:
+            continue            # 대체된 회차(체결 없음) — 최신 발행본만 채점한다
         track = (execution or {}).get("quant_track") or {}
         fill = track.get("fill_price")
         signal_day = date.fromisoformat(str(record["as_of"])[:10])

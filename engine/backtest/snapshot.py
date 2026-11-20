@@ -188,6 +188,28 @@ def make_snapshot(root: str | Path, decision_at: datetime, frames: dict[str, pd.
     return Snapshot(root=root, decision_at=decision_at, as_of=as_of, snapshot_id=sid, files=files, manifest=manifest)
 
 
+def inputs_fingerprint(frames: dict[str, pd.DataFrame], inputs: dict, decision_at: datetime,
+                       params_version: str | None = None) -> str:
+    """판단 입력의 **지문** — 발행 시각이 아니라 입력·컷오프·파라미터의 해시.
+
+    같은 지문으로 다시 돌린 실행은 **같은 발행**이고(중복 → 기존 발행본을 그대로 배포),
+    지문이 다르면 새 회차다(감사 02 — `signal_id` 충돌 대신 회차 접미사).
+    `snapshot_id` 와 달리 실행 시각·발행 시각이 들어가지 않아 재실행에서도 안정된다.
+    """
+    frame_hashes = {
+        name: sha256_bytes(_canonical_csv(as_of_frame(df, decision_at)))
+        for name, df in sorted(frames.items())
+    }
+    payload = {
+        "cutoff": pd.Timestamp(decision_at).tz_convert("UTC").isoformat()
+        if pd.Timestamp(decision_at).tzinfo is not None else pd.Timestamp(decision_at).isoformat(),
+        "params_version": params_version,
+        "frames": frame_hashes,
+        "inputs": sha256_bytes(canonical_json_bytes(inputs)),
+    }
+    return sha256_bytes(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8"))
+
+
 def snapshot_id_of(manifest: dict) -> str:
     base = {k: v for k, v in manifest.items() if k not in ("snapshot_id", "created_at")}
     payload = json.dumps(base, sort_keys=True, ensure_ascii=False).encode("utf-8")

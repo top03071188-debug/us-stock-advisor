@@ -40,7 +40,11 @@ def _write_json(path: Path, payload) -> None:
 
 
 def build_candidates(data: dict) -> list[Candidate]:
-    """데이터셋 → 1층 후보. 안전마진은 IV 중앙값과 현재가로 계산한다."""
+    """데이터셋 → 1층 후보. 안전마진은 IV 중앙값과 현재가로 계산한다.
+
+    v1.3.3 04: 워치리스트 **모든 행**에 감점 전 V·부호 있는 괴리·EV/EBIT 표본 품질·성장률 근거를 남긴다.
+    값은 `valuation_inputs`(=`valuation_multiplier` 의 상세)에서 먼저 읽고, 없으면 유니버스 행을 본다.
+    """
     out: list[Candidate] = []
     for row in data.get("universe") or []:
         ticker = row["ticker"]
@@ -53,7 +57,18 @@ def build_candidates(data: dict) -> list[Candidate]:
         last = frame.iloc[-1]
         price = float(last["raw_close"])
         sadj = float(last["sadj_close"])
+        raw_detail = (data.get("valuation_inputs") or {}).get(ticker)
+        detail = dict(raw_detail) if isinstance(raw_detail, dict) else {}   # 픽스처는 ValuationInputs 를 직접 넣는다
+
+        def pick(key: str, default=None):
+            value = detail.get(key)
+            if value is None:
+                value = row.get(key)
+            return default if value is None else value
+
         mult = row.get("iv_mult")
+        if mult is None:
+            mult = detail.get("iv_mult")
         margin = None
         if mult is not None and not classify_sector(row.get("sector"))["valuation_suspended"]:
             iv = sadj * float(mult)
@@ -61,6 +76,21 @@ def build_candidates(data: dict) -> list[Candidate]:
         adv = row.get("adv20_usd")
         if adv is None and "volume" in panel.frame:
             adv = float((panel.frame["raw_close"] * panel.frame["volume"]).tail(20).mean())
+
+        def _f(key: str) -> float | None:
+            value = pick(key)
+            try:
+                return float(value) if value is not None else None
+            except (TypeError, ValueError):
+                return None
+
+        def _i(key: str) -> int | None:
+            value = pick(key)
+            try:
+                return int(value) if value is not None else None
+            except (TypeError, ValueError):
+                return None
+
         out.append(Candidate(
             ticker=ticker,
             sector=row.get("sector") or "",
@@ -72,9 +102,24 @@ def build_candidates(data: dict) -> list[Candidate]:
             xbrl_completeness=float(row.get("xbrl_completeness") if row.get("xbrl_completeness") is not None else 1.0),
             fundamentals=(data.get("fundamentals") or {}).get(ticker),
             margin=margin,
-            v_penalties=float(row.get("v_penalties") or 0.0),
-            ev_ebit_percentile=(float(row["ev_ebit_percentile"])
-                                if row.get("ev_ebit_percentile") is not None else None),
+            v_penalties=float(pick("v_penalties", 0.0) or 0.0),
+            hist_divergence_signed=_f("hist_divergence_signed"),
+            ev_ebit_percentile=_f("ev_ebit_percentile"),
+            ev_ebit_current=_f("ev_ebit_current"),
+            ev_ebit_median_10y=_f("ev_ebit_median_10y"),
+            ev_ebit_samples=_i("ev_ebit_samples"),
+            ev_ebit_years=_i("ev_ebit_years"),
+            ev_ebit_window=pick("ev_ebit_window"),
+            ev_ebit_reason=pick("ev_ebit_reason"),
+            growth=_f("growth"),
+            growth_raw_cagr=_f("growth_raw_cagr"),
+            growth_clipped_to_zero=(None if pick("growth_clipped_to_zero") is None
+                                    else bool(pick("growth_clipped_to_zero"))),
+            effective_fcff_years=_i("effective_fcff_years"),
+            normalization_method=pick("normalization_method"),
+            dcf_sensitivity=_f("dcf_sensitivity"),
+            wacc_sensitivity=_f("wacc_sensitivity"),
+            terminal_g_sensitivity=_f("terminal_g_sensitivity"),
             peg=row.get("peg"),
             revenue_cagr=row.get("revenue_cagr"),
         ))

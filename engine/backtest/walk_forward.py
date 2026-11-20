@@ -4,7 +4,8 @@
 - 채점 기간은 **거래일**(1M 21 / 3M 63 / 6M 126).
 - `maturity_date < holdout_start` 인 폴드만 보정 코퍼스에 넣는다.
 - 경계에서 잘린 폴드는 `truncated: true` + `observed_days` 로 **참고용**만.
-- 적격 폴드가 `min_folds`(3) 미만인 기간은 보정 보류 → `attempts.json` 에 사유를 남긴다.
+- 적격 폴드가 `min_folds`(기본 3, `--min-folds` 로 변경) 미만인 기간은 보정 보류 → `attempts.json` 에 사유를 남긴다.
+- `--plan-only` 의 `attempts.json` 은 **날짜 계획**이므로 `action: "planned"` 다(`"calibrate"` 아님).
 """
 
 from __future__ import annotations
@@ -138,25 +139,36 @@ def summarize_fold(fold: Fold, graded: list[dict], universe_verified: bool) -> F
 
 
 def plan_and_attempts(today: date, min_folds: int = 3) -> dict:
-    """폴드 요약 + 보정 시도 기록(`calibration/attempts.json`). 6M 미달이면 보류 사유."""
-    summary = fold_summary(today)
+    """폴드 요약 + **보정 계획** 기록(`calibration/attempts.json`). 6M 미달이면 보류 사유.
+
+    `--plan-only` 는 날짜 계획만 만든다 — `action` 은 `"calibrate"`(보정을 돌렸다는 뜻)가 아니라
+    **`"planned"`** 이다. `sufficient` 도 `min_folds`(CLI `--min-folds`)를 존중한다 — 예전에는 `>= 3`
+    하드코딩으로 `--min-folds 5` 를 줘도 4·3폴드 구간이 `calibrate` 로 찍혔다(감사 10).
+    """
+    min_folds = int(min_folds)
+    summary = fold_summary(today, min_folds=min_folds)
     attempts = {
         "as_of": today.isoformat(),
         "holdout_start": summary["holdout_start"],
+        "kind": "plan",
+        "min_folds": min_folds,
         "attempts": [],
     }
     for name, h in summary["horizons"].items():
+        sufficient = bool(h["sufficient"])
         attempts["attempts"].append({
             "horizon": name,
             "horizon_td": h["horizon_td"],
             "eligible_folds": h["eligible_folds"],
             "count": h["count"],
             "min_folds": min_folds,
-            "action": "calibrate" if h["sufficient"] else "deferred",
-            "reason": None if h["sufficient"] else "INSUFFICIENT_ELIGIBLE_FOLDS",
-            "note": None if h["sufficient"] else (
-                "6개월 보정은 보정 창을 15개월 이상으로 늘려 적격 폴드 3개를 확보한 뒤 연다(4.2.1)."
-                if name == "6m" else "적격 폴드가 3개 미만이다."
+            "sufficient": sufficient,
+            "action": "planned" if sufficient else "deferred",
+            "reason": None if sufficient else "INSUFFICIENT_ELIGIBLE_FOLDS",
+            "note": None if sufficient else (
+                f"적격 폴드 {h['count']}/{min_folds} — "
+                + ("보정 창을 15개월 이상으로 늘려 적격 폴드 3개를 확보한 뒤 연다(4.2.1)."
+                   if name == "6m" else "표본이 부족하다.")
             ),
         })
     return {"summary": summary, "attempts": attempts}

@@ -244,7 +244,7 @@ def test_grade_record_keeps_band_on_base_price():
     h = graded["horizons"]["1m"]
     signal_close = float(data[0]["close"])
     assert h["return_basis"] == "total_return_adj"
-    assert h["entry_tr_source"] == "entry_session_tr_open"
+    assert h["entry_tr_source"] == "fill_price_tr_normalized"   # 시가 대신 **체결가**를 총수익 기준으로 환산(감사 09-b)
     assert h["entry"] == pytest.approx(415.10)                       # 표시용 체결가(raw)
     assert h["return"] == pytest.approx(h["end_price"] / h["entry_tr"] - 1, abs=1e-6)
     assert h["return_base"] == pytest.approx(h["end_price"] / signal_close - 1, abs=1e-6)

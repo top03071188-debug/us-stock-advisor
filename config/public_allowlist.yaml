@@ -51,8 +51,25 @@ allow:
   - ev_ebit_samples
   - ev_ebit_years
   - ev_ebit_window
+  - ev_ebit_reason
   - iv_hist_ev_ebit
   - hist_divergence
+  # v1.3.3: 감점 전 V·부호 있는 괴리·성장률 클립 근거·민감도(전부 파생 지표)
+  - v_raw
+  - hist_divergence_signed
+  - growth
+  - growth_raw_cagr
+  - growth_clipped_to_zero
+  - effective_fcff_years
+  - normalization_method
+  - dcf_dropped
+  - wacc_sensitivity
+  - terminal_g_sensitivity
+  - rate_sensitivity
+  - ev_ebit_overheated
+  - minority_interest
+  - debt_reporting
+  - valuation_quality
   # 요약·메타데이터
   - thesis_ko
   - one_line_ko
@@ -143,6 +160,27 @@ allow:
   - lag_seconds
   - after_cutoff
   - inputs_ingested_at
+  # v1.3.3 01: 마감 빈티지 점조회 정책과 빈티지·버린 시리즈를 화면/JSON 에서 확인할 수 있게
+  - policy
+  - vintage
+  - series_dropped
+  - cutoff_filter
+  - available_at_source
+  - replay
+  - wacc_risk_free
+  - fallback
+  # v1.3.3 통합 경계: 배치 시작/발행 시각 분리(01-b) · 발행 회차(02) · 채점 기준 봉(09-d) · 시총 출처(09-b)
+  - run_started_at
+  - publish_lag_seconds
+  - published_after_order_cutoff
+  - inputs_hash
+  - revision
+  - supersedes
+  - base_bar_date
+  - return_base
+  - market_cap_source
+  - market_cap_basis
+  - snapshot
   # 방어 목표(gap ≤ 0) 표시(4.7.1)
   - defensive
   # 파일럿: 유효 표본과 발행 신호 수를 함께 표기한다(R11)

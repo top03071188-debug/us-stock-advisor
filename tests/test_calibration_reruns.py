@@ -34,7 +34,7 @@ def test_calibration_reruns_folds():
     calls: list[dict] = []
     runner = evaluator(fold_scores=lambda lifted: [63.0, 63.0, 63.0] if lifted else [60.0, 60.0, 60.0],
                        calls=calls)
-    record = calibrate(runner, BASE, min_folds=3)
+    record = calibrate(runner, BASE, min_folds=3, stress_pass=lambda _params: True)
     assert len(calls) == 1 + len(neighbors(BASE)), "후보마다 폴드를 재실행하지 않았다"
     assert record["n_folds"] == 3
     assert record["accepted"] is True
@@ -49,14 +49,23 @@ def test_calibration_reruns_folds():
 
 def test_calibration_rejects_when_no_candidate_improves():
     runner = evaluator(fold_scores=lambda _lifted: [60.0, 60.0, 60.0])
-    record = calibrate(runner, BASE, min_folds=3)
+    record = calibrate(runner, BASE, min_folds=3, stress_pass=lambda _params: True)
     assert record["accepted"] is False
     assert record["reason"].startswith("GAIN_TOO_SMALL")
 
 
+def test_calibration_requires_stress_pass():
+    """`stress_pass` 미제공은 **통과가 아니다** — None 을 True 로 바꾸지 않는다(감사 10)."""
+    runner = evaluator(fold_scores=lambda lifted: [63.0, 63.0, 63.0] if lifted else [60.0, 60.0, 60.0])
+    record = calibrate(runner, BASE, min_folds=3)
+    assert record["accepted"] is False
+    assert record["reason"] == "STRESS_NOT_PROVIDED"
+    assert record["stress_pass"] is False
+
+
 def test_calibration_defers_with_insufficient_folds():
     runner = evaluator(fold_scores=lambda _lifted: [60.0])
-    record = calibrate(runner, BASE, min_folds=3)
+    record = calibrate(runner, BASE, min_folds=3, stress_pass=lambda _params: True)
     assert record["accepted"] is False
     assert record["reason"] == "INSUFFICIENT_FOLDS"
 
@@ -92,6 +101,6 @@ def test_calibration_rejects_candidate_with_truncated_fold():
                     FoldObservation("F4", 63.0, 0.05, -0.10, eligible=False, truncated=True)]
         return [FoldObservation(f"F{i}", 60.0, 0.05, -0.10) for i in range(1, 4)]
 
-    record = calibrate(runner, BASE, min_folds=3)
+    record = calibrate(runner, BASE, min_folds=3, stress_pass=lambda _params: True)
     assert record["accepted"] is False
     assert any("error" in c for c in record["candidates"])

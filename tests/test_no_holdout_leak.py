@@ -51,7 +51,20 @@ def test_6m_calibration_deferred_with_reason():
     assert acts["6m"]["action"] == "deferred"
     assert acts["6m"]["reason"] == "INSUFFICIENT_ELIGIBLE_FOLDS"
     assert "15개월" in acts["6m"]["note"]
-    assert acts["1m"]["action"] == "calibrate" and acts["3m"]["action"] == "calibrate"
+    # `--plan-only` 는 **날짜 계획**이다 — "calibrate"(보정을 돌렸다)가 아니라 "planned"(감사 10)
+    assert acts["1m"]["action"] == "planned" and acts["3m"]["action"] == "planned"
+    assert acts["1m"]["sufficient"] is True and plan["attempts"]["kind"] == "plan"
+
+
+def test_min_folds_argument_is_respected():
+    """`--min-folds 5` 를 주면 4·3폴드 구간이 계획에서 빠진다 — `>= 3` 하드코딩 금지(감사 10)."""
+    plan = plan_and_attempts(date(2026, 11, 19), min_folds=5)
+    acts = {a["horizon"]: a for a in plan["attempts"]["attempts"]}
+    assert acts["1m"]["count"] == 4 and acts["1m"]["sufficient"] is False
+    assert acts["1m"]["action"] == "deferred"
+    assert acts["3m"]["action"] == "deferred"
+    assert plan["summary"]["horizons"]["1m"]["min_folds"] == 5
+    assert set(plan["summary"]["blocked"]) == {"1m", "3m", "6m"}
 
 
 def test_truncated_fold_cannot_enter_objective():

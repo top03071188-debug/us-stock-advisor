@@ -6,6 +6,13 @@
   `observed_days: 1` 로 조용히 채점되던 결함을 막는다 — 만기 봉이 없으면 `matured: false`.
 - 수익률·벤치마크는 **`total_return_adj`**(분할+배당), 밴드 비교는 **`base_price` 기준 수익률**,
   타이밍(`P_min`·`P_max`)은 **`raw_as_traded`** 로 계산한다 — 한 계산 안에서 섞지 않는다(4.2.2).
+- 채점 기준 봉은 **발행 시점에 고정**된다: 밴드는 `base_price`, `r_base` 도 **같은 봉의 종가**
+  (`target_band.base_bar_date`)를 총수익 기준으로 환산해 쓴다 — 나중에 알게 되는 `as_of` 당일
+  종가로 계산하면 한 계산 안에 두 기준이 섞인다(감사 09-d).
+- 실제 체결이 있으면 **체결가를 총수익 기준으로 환산**해 쓴다(`tr_open × fill / raw_open`).
+  예: 시가 $100·체결 $101·이후 불변 → `−0.99%`(예전에는 시가를 써서 0.0%).
+- 체결일이 **만기일 이후(당일 포함)** 이면 채점하지 않는다
+  (`maturity_unreached_or_post_maturity`) — 만기일에 체결된 건을 "1주 수익률"로 채점하던 경로를 막는다(09-c).
 - 초과수익 = `r_i^fill − r_SPY`. 방향 점수 `D` 도 **초과수익**으로 판정한다(4.2.4).
   SPY 가 없으면 `D` 는 `None` 이고 가중치를 재정규화한다(0%로 대체하지 않는다).
 - `maturity_date ≥ holdout_start` 인 폴드는 **적격이 아니다** — `truncated: true` + `observed_days` 로
@@ -25,6 +32,8 @@ from engine.utils.dates import add_trading_days, trading_day_count
 HORIZONS_TD = {"1w": 5, "1m": 21, "3m": 63, "6m": 126}
 GRADE_WEIGHTS = {"A": 1.0, "B": 0.7, "C": 0.3}
 NOTE_NOT_MATURED = "만기 봉 미관측 — 채점 보류"
+NOTE_POST_MATURITY = "체결일이 만기일 이후(또는 관측 기간 0일) — 채점 보류"
+POST_MATURITY_REASON = "maturity_unreached_or_post_maturity"
 
 
 def _normalize_bars(bars: list[dict]) -> pd.DataFrame:
@@ -104,6 +113,32 @@ def realized_mdd(closes: list[float], entry_price: float | None = None) -> float
     return worst
 
 
+def _fill_in_total_return(fill: float, entry_bar) -> tuple[float, str]:
+    """실제 체결가를 **총수익 기준**으로 환산한다(기획서 4.2.4 `r_i^fill = P_end / fill_price − 1`).
+
+    체결은 그 세션 **시가 근처**이므로 `tr_open`(같은 세션 시가의 총수익 기준 값)에
+    `fill / raw_open` 을 곱하면 체결가의 총수익 기준 등가값이 된다. 예: 시가 $100·체결 $101·이후 불변
+    → `tr_entry = tr_open × 1.01` → `−0.99%`(예전에는 시가를 써서 `0.0%`).
+    """
+    if entry_bar is None:
+        return float(fill), "fill_price_raw"
+    raw_open = float(entry_bar.get("raw_open") or 0.0)
+    tr_open = float(entry_bar.get("tr_open") or 0.0)
+    if raw_open > 0 and tr_open > 0:
+        return tr_open * (float(fill) / raw_open), "fill_price_tr_normalized"
+    return float(fill), "fill_price_raw"
+
+
+def _entry_session_of(execution: dict | None, fill: float | None, as_of: date) -> date:
+    """체결 세션(체결 이벤트의 `at` 날짜) — 없으면 신호일(`as_of`)."""
+    if fill is None or not execution or not execution.get("at"):
+        return as_of
+    try:
+        return date.fromisoformat(str(execution["at"])[:10])
+    except ValueError:
+        return as_of
+
+
 def _benchmark_for(horizon_name: str, h: int, benchmark_returns) -> float | None:
     """신호별 벤치마크 — dict(기간별) 또는 float(전 기간 공통) 모두 받는다."""
     if benchmark_returns is None:
@@ -142,14 +177,18 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
     r_lo = float(band["r_lo"]) if "r_lo" in band else band_lo / base - 1.0
     r_hi = float(band["r_hi"]) if "r_hi" in band else band_hi / base - 1.0
     direction = -1 if str(record.get("type", "BUY")).upper().startswith("SELL") else 1
-    entry_session = as_of
-    if fill is not None and execution and execution.get("at"):
-        try:
-            entry_session = date.fromisoformat(str(execution["at"])[:10])
-        except ValueError:
-            entry_session = as_of
+    entry_session = _entry_session_of(execution, fill, as_of)
     last_bar = df["date"].max() if not df.empty else None
     as_of_bar = _row_on(df, as_of)
+    # 기준 봉: 발행 때 고정한 `base_bar_date`(− 없으면 `as_of` 봉). 밴드와 `r_base` 가 같은 봉이다.
+    base_bar_date = band.get("base_bar_date")
+    try:
+        base_day = date.fromisoformat(str(base_bar_date)[:10]) if base_bar_date else None
+    except ValueError:
+        base_day = None
+    base_bar = _row_on(df, base_day, exact=True) if base_day else as_of_bar
+    if base_bar is None:
+        base_bar = as_of_bar
 
     out: dict[str, dict] = {}
     for name, h in horizons.items():
@@ -170,6 +209,17 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
         observed = int(len(win))
         # 만기 봉이 관측됐고, 그 구간의 봉 수가 거래일 정의와 같아야 채점한다.
         complete = bool(last_bar is not None and last_bar >= maturity and observed == h)
+        # 실체결이 만기일 **당일 또는 이후**에 일어난 건은 관측 기간이 0일이라 채점할 수 없다(감사 09-c).
+        if fill is not None and entry_session >= maturity:
+            out[name] = {
+                "horizon_td": h, "maturity": maturity.isoformat(), "eligible": True,
+                "truncated": False, "matured": False, "complete": False,
+                "observed_days": int(observed), "reason": POST_MATURITY_REASON,
+                "post_maturity_fill": True, "entry_session": entry_session.isoformat(),
+                "agreement": None, "return": None, "excess_return": None,
+                "note": NOTE_POST_MATURITY,
+            }
+            continue
         if not complete:
             out[name] = {
                 "horizon_td": h, "maturity": maturity.isoformat(), "eligible": True,
@@ -182,17 +232,14 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
 
         tr_close_end = float(win["tr_close"].iloc[-1])
         raw_end = float(win["raw_close"].iloc[-1])
+        tr_base = float(base_bar["tr_close"]) if base_bar is not None else base
         if fill is not None:
-            entry_bar = _row_on(df, entry_session, exact=True)
-            tr_entry = float(entry_bar["tr_open"]) if entry_bar is not None else None
-            tr_entry_source = "entry_session_tr_open" if tr_entry is not None else "fill_price_raw"
+            tr_entry, tr_entry_source = _fill_in_total_return(float(fill), _row_on(df, entry_session, exact=True))
             if not tr_entry or tr_entry <= 0:
-                tr_entry = entry
+                tr_entry, tr_entry_source = float(fill), "fill_price_raw"
         else:
-            tr_entry = float(as_of_bar["tr_close"]) if as_of_bar is not None else base
-            tr_entry_source = "signal_session_tr_close"
+            tr_entry, tr_entry_source = (tr_base, "base_bar_tr_close") if tr_base > 0 else (base, "base_price_raw")
         r_fill = tr_close_end / tr_entry - 1.0
-        tr_base = float(as_of_bar["tr_close"]) if as_of_bar is not None else base
         r_base = tr_close_end / tr_base - 1.0 if tr_base > 0 else None
         p_min = float(win["raw_low"].min())
         p_max = float(win["raw_high"].max())
@@ -233,6 +280,8 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
             "entry_tr": round(tr_entry, 6),
             "entry_tr_source": tr_entry_source,
             "entry_session": entry_session.isoformat(),
+            "base_bar_date": None if base_bar_date is None else str(base_bar_date)[:10],
+            "base_price": round(base, 6),
             "end_price": round(raw_end, 4),
             "return": round(r_fill, 6),
             "return_base": None if r_base is None else round(r_base, 6),

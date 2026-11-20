@@ -1,14 +1,18 @@
 """engine.data.macro — FRED 거시 수집과 **시점(빈티지) 규칙**.
 
-[고정] 시점 규칙의 두 경로(v1.3.2 R07)
+[고정] 시점 규칙(v1.3.3 — 라이브·재생 **같은 경로**)
 - `D` 는 관측 날짜(`date`)가 아니라 **공개 시점**이다. CPI(관측월 10월 → 11월 중순 발표)를 관측월
   기준으로 쓰면 발표 전에 값을 안 것처럼 재생된다.
-- **라이브**: 빈티지 파라미터 없이 받은 응답은 "오늘 본 최신 빈티지"다. 그래서 모든 행의
-  `available_at` 을 **최초 수집 시각(`first_ingested_at`)** 으로 둔다 — 그 값이 세상에 나온 시각이 아니라
-  **내가 처음 본 시각**이다. 마감 뒤 수집이면 `ingest.lag_seconds`·`after_cutoff` 로 드러낸다.
-- **재생**: `realtime_start = realtime_end = V`(결정일 전날 ET) 점조회만 쓴다. 응답이 스냅샷
-  (`realtime_start` 가 요청 당일) 이면 `MacroVintageError` 로 그 시리즈를 **버린다** — 관측일로 역산해
-  과거 결정에 앞당기지 않는다(2025-02-27 관측치가 2025-03-01 컷오프에 보이던 결함).
+- **모든 실행이 마감 빈티지 점조회**다: `realtime_start = realtime_end = V`(마감일 **ET 전날**).
+  라이브도 같은 점조회를 쓴다 — 배치가 마감보다 늦게 돌아도 **마감 시점에 실제로 확인 가능했던 값만**
+  판단 입력이 된다. 예전 라이브 경로는 `available_at = 최초 수집 시각` 으로 두고 `ref = ingest_at`
+  으로 필터해, 마감 6시간 39분 뒤 수집한 값이 레짐·WACC 무위험금리에 그대로 들어갔다(감사 01:
+  `status: normal`·`regime.verified: true`). 수집 지연은 `ingest`(lag_seconds·after_cutoff) 메타로만
+  남고 판단 입력에서는 빠진다.
+- 응답이 스냅샷(`realtime_start` 가 요청한 빈티지보다 나중) 이면 `MacroVintageError` 로 그 시리즈를
+  **버리고** `inputs_missing` 에 남긴다 — 관측일로 역산해 과거 결정에 앞당기지 않는다.
+- 마감 시각 이후에만 존재하는 값은 `as_of_macro(df, decision_at)` 의 `available_at <= decision_at`
+  필터에서 빠진다(시점 필터는 **언제나 컷오프**다 — 수집 시각이 아니다).
 - 발표 시각을 모르면 **출처 시간대(US/Eastern) 기준 D 의 `23:59:59 ET` 이후 첫 의사결정**부터 쓴다.
 - `classify_regime` 의 3개월 추세·CPI YoY 는 **같은 빈티지 프레임에서 계산**한다(추가 조회 없음).
 """
@@ -78,6 +82,19 @@ def resolve_available_at(
     return first_decision_after(et_day_end(d)), "date_plus_one"
 
 
+def cutoff_vintage(decision_at: datetime) -> str:
+    """마감 시각에 실제로 확인 가능했던 FRED 빈티지 날짜(`YYYY-MM-DD`).
+
+    마감일의 **ET 날짜 하루 전**을 쓴다 — 마감일 당일 발표분은 발표 시각을 알 수 없으므로(FRED 응답에
+    발표 시각이 없다) 통째로 배제하는 것이 보수적이다. 라이브와 재생이 같은 값을 쓴다.
+    """
+    if decision_at.tzinfo is None:
+        raise ValueError("timezone-aware datetime 이 필요하다")
+    ts = pd.Timestamp(decision_at)
+    ts = ts.tz_convert("America/New_York") if ts.tzinfo is not None else ts.tz_localize("UTC")
+    return (ts.date() - timedelta(days=1)).isoformat()
+
+
 def is_snapshot_response(rows: list[dict]) -> bool:
     """`realtime_start` 가 모든 행에서 같고 발표시각 필드가 없으면 **오늘의 스냅샷 응답**이다.
 
@@ -116,8 +133,9 @@ def parse_observations(payload: dict, series_id: str | None = None, *, mode: str
                        vintage: str | None = None) -> pd.DataFrame:
     """FRED `/series/observations` 응답 → 정규화 DataFrame.
 
-    `mode`: `auto`(기본) = 응답 모양으로 판단, `live` = 모든 행 `available_at = 최초 수집 시각`,
-    `replay` = 빈티지 점조회 전용(스냅샷 응답이면 `MacroVintageError`).
+    `mode`: `auto`(기본) = 응답 모양으로 판단, `replay` = 빈티지 점조회 전용(스냅샷 응답이면
+    `MacroVintageError`). `live` 는 저수준 호환 모드다 — `collect_macro` 는 **쓰지 않는다**(v1.3.3부터
+    라이브도 마감 빈티지 점조회를 쓴다).
     """
     rows = payload.get("observations", []) if isinstance(payload, dict) else list(payload)
     mode = str(mode or "auto")

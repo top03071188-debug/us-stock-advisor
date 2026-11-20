@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from datetime import date, datetime
 from pathlib import Path
 
@@ -60,7 +61,7 @@ def publish_record(*, signal_id: str, ticker: str, type: str, grade: str, entry_
                    code_commit: str = "", invalidation: dict | None = None,
                    quant_intent: str = "pending_buy", tranche_weights=TRANCHE_WEIGHTS,
                    tranche_drops=TRANCHE_DROPS, target_session: str | None = None,
-                   signal_published_planned_at=None) -> dict:
+                   signal_published_planned_at=None, inputs_hash: str | None = None) -> dict:
     """발행 시점의 **불변** 레코드. 체결가·손절가는 비어 있다.
 
     `target_session` 은 **실제 발행 시각** 기준 주문 대상 거래일(2.2.2, 3.4.4)이다.
@@ -92,6 +93,10 @@ def publish_record(*, signal_id: str, ticker: str, type: str, grade: str, entry_
     # 방어 목표(gap ≤ 0) 표시는 채점·화면이 함께 읽는 값이다 — 직렬화에서 조용히 떨어뜨리지 않는다(4.7.1).
     if target_band.get("defensive") is not None:
         band["defensive"] = bool(target_band["defensive"])
+    # 채점 기준 봉 고정(감사 09-d) — 밴드와 수익률이 **같은 봉**을 가리키게 한다.
+    band["return_base"] = str(target_band.get("return_base") or "base_price")
+    if target_band.get("base_bar_date") is not None:
+        band["base_bar_date"] = str(target_band["base_bar_date"])[:10]
     record = {
         "schema_version": 1,
         "signal_id": signal_id,
@@ -132,6 +137,10 @@ def publish_record(*, signal_id: str, ticker: str, type: str, grade: str, entry_
         "snapshot_id": snapshot_id,
         "code_commit": code_commit,
     }
+    if inputs_hash:
+        record["inputs_hash"] = str(inputs_hash)
+        record["supersedes"] = None
+        record["revision"] = 1
     assert_publish_record(record)
     return record
 
@@ -289,6 +298,72 @@ def debate_event(*, signal_id: str, snapshot_id: str, report_id: str, intent: st
             "auto_downgrade_applied": bool(auto_downgrade_applied),
         }],
     }
+
+
+#: `{as_of}-{ticker}-{BUY|WATCH}-{회차 3자리}`
+SIGNAL_SEQ_RE = re.compile(r"^(?P<base>.+)-(?P<seq>\d{3})$")
+
+
+def split_signal_id(signal_id: str) -> tuple[str, int]:
+    """`…-001` → (`…`, 1). 접미사가 없으면 (`그대로`, 1)."""
+    match = SIGNAL_SEQ_RE.match(str(signal_id or ""))
+    if not match:
+        return str(signal_id or ""), 1
+    return match.group("base"), int(match.group("seq"))
+
+
+def release_group(record: dict) -> tuple[str, str, str]:
+    """같은 발행 묶음의 키 — `(as_of, ticker, type)`. 회차만 다른 같은 종목·같은 날의 발행."""
+    return (str(record.get("as_of") or ""), str(record.get("ticker") or ""), str(record.get("type") or ""))
+
+
+def release_fingerprint(record: dict) -> tuple:
+    """같은 발행인지 판단하는 **입력 지문** — 발행 시각·스냅샷 경로가 아니라 판단 입력·컷오프·파라미터.
+
+    `inputs_hash`(입력·보유·섹터비중·파라미터의 canonical 해시)가 있으면 그 값이 기준이다.
+    구 레코드처럼 없으면 `(snapshot_id, data_cutoff_at, params_version)` 로 대신한다.
+    """
+    if record.get("inputs_hash"):
+        return ("inputs_hash", str(record["inputs_hash"]))
+    return ("legacy", str(record.get("snapshot_id") or ""),
+            str(record.get("data_cutoff_at") or ""), str(record.get("params_version") or ""))
+
+
+def resolve_release(record: dict, existing: list[dict]) -> dict:
+    """새 발행본의 회차를 정한다 — `append_immutable` 과 충돌하지 않게.
+
+    - 같은 `(as_of, ticker, type)` 의 기존 발행 중 **입력 지문이 같은 것** 이 있으면 그 발행본을 재사용
+      한다(`duplicate=True`, `signal_id` 는 기존 것). 같은 날 같은 입력으로 다시 돌린 재시도다.
+    - 지문이 다르면(입력·컷오프·파라미터가 바뀌어 **새로 확정**된 발행) 다음 회차 접미사(`002`, `003`…)를
+      붙이고 `supersedes` 로 직전 발행본을 가리킨다. ``…-001`` 을 다른 내용으로 덮어쓰지 않는다.
+
+    Returns: `{"signal_id", "revision", "supersedes", "duplicate", "reused_from"}`
+    """
+    group = release_group(record)
+    same = [r for r in existing if release_group(r) == group]
+    fingerprint = release_fingerprint(record)
+    for old in sorted(same, key=lambda r: split_signal_id(str(r.get("signal_id")))[1], reverse=True):
+        if release_fingerprint(old) == fingerprint:
+            return {"signal_id": str(old.get("signal_id")), "revision": int(old.get("revision") or 1),
+                    "supersedes": old.get("supersedes"), "duplicate": True,
+                    "reused_from": str(old.get("signal_id"))}
+    base, _ = split_signal_id(str(record.get("signal_id") or ""))
+    last_seq = max((split_signal_id(str(r.get("signal_id")))[1] for r in same), default=0)
+    revision = last_seq + 1
+    latest = max(same, key=lambda r: split_signal_id(str(r.get("signal_id")))[1]) if same else None
+    return {"signal_id": f"{base}-{revision:03d}", "revision": revision,
+            "supersedes": str(latest.get("signal_id")) if latest is not None else None,
+            "duplicate": False, "reused_from": None}
+
+
+def superseded_ids(records: list[dict]) -> set[str]:
+    """다른 발행본에 `supersedes` 로 대체된 이전 회차 id — 정산·표시에서 제외한다."""
+    out: set[str] = set()
+    for record in records or []:
+        old = record.get("supersedes")
+        if old:
+            out.add(str(old))
+    return out
 
 
 def append_immutable(path: str | Path, record: dict, key: str = "signal_id") -> Path:

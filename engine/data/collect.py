@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from engine.data.macro import DEFAULT_SERIES, FredClient, as_of_macro
+from engine.data.macro import DEFAULT_SERIES, FredClient, as_of_macro, cutoff_vintage
 from engine.data.news import FinnhubClient
 from engine.data.prices import PriceQualityError, build_price_frame
 from engine.data.sec_edgar import SecClient, acceptance_index, parse_submissions
@@ -37,6 +37,7 @@ from engine.data.xbrl_fundamentals import (
     valuation_multiplier,
 )
 from engine.metrics.fundamentals import AnnualFundamentals, qc_wacc
+from engine.utils.dates import KST
 
 DEFAULT_UNIVERSE = Path("config/universe.yaml")
 NEWS_MAX_AGE_HOURS = 48
@@ -64,6 +65,29 @@ def _note(diag: dict, source: str, status: str, detail: str | None = None) -> No
     diag["sources"][source] = {"status": status, "detail": detail}
 
 
+def cutoff_market_cap(panel, fundamentals, fast_info_cap: float | None, *, as_of: date,
+                      today: date | None = None) -> tuple[float | None, str]:
+    """시총 — **컷오프 기준 종가 × 컷오프 기준 주식수**가 우선이다.
+
+    `yfinance fast_info.marketCap` 는 **오늘 값**이라 과거 컷오프 재수집·재생에 쓰면 look-ahead다
+    (감사 09-b). 실시간 라이브(오늘 `as_of`)에서만 fast_info 를 먼저 쓰고, 과거 컷오프는
+    그 시점 `raw_close`(당시 거래가) × 그 시점 주식수(`diluted_shares`)를 쓴다.
+    컷오프 값이 없고 fast_info 만 있으면 값은 쓰되 `fast_info_fallback` 으로 출처를 드러낸다.
+    """
+    today = today or datetime.now(KST).date()
+    live_today = as_of >= today
+    if live_today and fast_info_cap:
+        return float(fast_info_cap), "fast_info_market_cap"
+    if panel is not None and not panel.frame.empty and fundamentals is not None:
+        shares = getattr(fundamentals, "diluted_shares", None) or []
+        value = float(shares[0]) if shares else float("nan")
+        if np.isfinite(value) and value > 0:
+            return float(panel.frame.iloc[-1]["raw_close"]) * value * 1e6, "cutoff_close_x_diluted_shares"
+    if fast_info_cap:
+        return float(fast_info_cap), "fast_info_fallback"
+    return None, "missing"
+
+
 def collect_prices(tickers: list[str], as_of: date, decision_at: datetime, diag: dict,
                    history_years: int = 10) -> dict:
     """yfinance 일봉 → `PricePanel`(3종 가격). 종목 단위 실패는 건너뛰고 사유를 남긴다.
@@ -71,6 +95,9 @@ def collect_prices(tickers: list[str], as_of: date, decision_at: datetime, diag:
     `history_years=10`(≈2,500 거래일) — 5년 이력 게이트(HG-04, `min_history_rows=1260`)를
     실데이터로 충족하면서, 10년 EV/EBIT 백분위·중앙값(v1.3.2)을 계산할 창을 만든다.
     3년 미만 상장 종목은 있는 행만큼만 받아 HG-04 로 탈락하고, 6~9년차 종목은 그 이력으로 계산한다.
+
+    과거 컷오프는 **컷오프 시점 기준으로 재기준화**한 패널을 쓴다(`PricePanel.as_of_cutoff`) —
+    컷오프 이후 분할을 가격 기준에서 제거해 `raw == sadj`·`split_factor == 1` 이 되게 한다(감사 09).
     """
     import yfinance as yf
 
@@ -89,7 +116,7 @@ def collect_prices(tickers: list[str], as_of: date, decision_at: datetime, diag:
                 # Yahoo 가 마지막 봉을 빈 값(NaN)으로 주는 경우가 있다 — 빈 봉은 이력으로 세지 않는다.
                 frame = panel.frame.dropna(subset=["raw_close", "sadj_close"], how="all")
                 panel = type(panel)(ticker, frame, dict(panel.issues))
-                out[ticker] = panel.as_of(decision_at)
+                out[ticker] = panel.as_of_cutoff(decision_at, splits)
                 break
             except Exception as exc:  # noqa: BLE001 — 소스 실패는 파이프라인 실패가 아니다
                 if attempt == 1:
@@ -108,35 +135,31 @@ def collect_macro(decision_at: datetime, diag: dict, mode: str = "live",
                   ) -> tuple[dict, dict]:
     """FRED 11시리즈 → 레짐 입력값 + 약 3개월 전 값. 키가 없으면 `({}, {})`.
 
-    경로를 둘로 나눈다(R07, §2.4.3).
-    - `mode="live"`: 빈티지 파라미터 없이 받은 스냅샷의 모든 행 `available_at = 최초 수집 시각`.
-      실제로 마감 뒤에 받은 값을 "그때 알 수 있었다"고 우기지 않고, `ingest`(lag_seconds·after_cutoff)로
-      드러낸다. 시점 필터는 수집 시각을 기준으로 건다.
-    - `mode="replay"`: `realtime_start = realtime_end = V`(결정일 전날) 점조회만 쓴다. 스냅샷 응답이
-      오면 그 시리즈를 **버리고** `inputs_missing` 에 남긴다 — 관측일로 역산해 앞당기지 않는다.
+    [v1.3.3 — 라이브·재생 같은 경로] **마감(`data_cutoff_at`) 빈티지 점조회**만 쓴다.
+    - 빈티지는 `cutoff_vintage(decision_at)`(마감일 ET 전날)로 고정하고, 응답이 그보다 늦은
+      빈티지(스냅샷)면 그 시리즈를 **버린다** — 마감 뒤에 수집한 값을 "그때 알 수 있었다"고
+      우기지 않는다(감사 01).
+    - 시점 필터는 **언제나 `decision_at`** 이다(`ref = decision_at`). 수집 시각(`ingest_at`)으로
+      필터하면 마감 후 값이 그대로 들어와 레짐·WACC 무위험금리(DGS10)가 샌다.
+    - 수집 지연은 숨기지 않고 `ingest`(`lag_seconds`·`after_cutoff`) 메타로 남긴다.
+    - 확보하지 못한 시리즈는 `excluded`/`macro_missing_series` 에 남기고, 호출자가 `inputs_missing`
+      으로 받아 레짐 `verified: false` 가 된다.
     """
     ingest_at = now or datetime.now(timezone.utc)
     if not os.environ.get("FRED_API_KEY") and client is None:
         _note(diag, "fred", "missing_key", "FRED_API_KEY 없음 — 레짐 미검증(포지션 배수 0.5)")
         return {}, {}
     replay = str(mode) == "replay"
-    vintage = None
-    if replay:
-        decision_et = pd.Timestamp(decision_at)
-        decision_et = decision_et.tz_localize("UTC") if decision_et.tzinfo is None else decision_et
-        vintage = (decision_et.tz_convert("America/New_York").date() - timedelta(days=1)).isoformat()
+    vintage = cutoff_vintage(decision_at)
     try:
         client = client or FredClient()
-        if replay:
-            frames = client.fetch_many(DEFAULT_SERIES, realtime_start=vintage, realtime_end=vintage,
-                                       mode="replay")
-        else:
-            frames = client.fetch_many(DEFAULT_SERIES, mode="live", first_ingested_at=ingest_at)
+        frames = client.fetch_many(DEFAULT_SERIES, realtime_start=vintage, realtime_end=vintage,
+                                   mode="replay")
     except Exception as exc:  # noqa: BLE001
         _note(diag, "fred", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
         return {}, {}
-    # 라이브는 수집 시각, 재생은 결정 시각을 시점 필터로 쓴다(라이브 값은 마감 뒤에 도착했다).
-    ref = ingest_at if not replay else decision_at
+    # 라이브도 재생도 **마감 시각**을 시점 필터로 쓴다(수집 시각이 아니다).
+    ref = decision_at
     values: dict = {}
     previous: dict = {}
     excluded: list[str] = []
@@ -188,21 +211,20 @@ def collect_macro(decision_at: datetime, diag: dict, mode: str = "live",
     _note(diag, "fred", "ok" if values else "degraded", None if values else "유효 시리즈 없음")
     diag["macro_series"] = sorted(frames)
     diag["macro_missing_series"] = sorted(excluded)
-    if not replay:
-        lag = (ingest_at - decision_at).total_seconds()
-        diag["macro_ingest"] = {
-            "data_cutoff_at": decision_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "inputs_ingested_at": ingest_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "lag_seconds": round(lag, 1),
-            "after_cutoff": bool(lag > 0),
-            "available_at_source": "first_ingested_at",
-        }
-    else:
-        diag["macro_ingest"] = {
-            "data_cutoff_at": decision_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "inputs_ingested_at": None, "lag_seconds": None, "after_cutoff": False,
-            "available_at_source": "vintage_point_query", "vintage": vintage,
-        }
+    lag = (ingest_at - decision_at).total_seconds()
+    diag["macro_ingest"] = {
+        "policy": "cutoff_vintage_point_query",
+        "mode": str(mode),
+        "data_cutoff_at": decision_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "inputs_ingested_at": ingest_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "lag_seconds": round(lag, 1),
+        "after_cutoff": bool(lag > 0),
+        "available_at_source": "vintage_point_query",
+        "vintage": vintage,
+        "cutoff_filter": "available_at <= data_cutoff_at",
+        "series_dropped": list(sorted(excluded)),
+        "replay": replay,
+    }
     return values, previous
 
 
@@ -432,11 +454,13 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
 
 
 def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFAULT_UNIVERSE,
-            mode: str = "live", now: datetime | None = None) -> dict:
+            mode: str = "live", now: datetime | None = None,
+            today: date | None = None) -> dict:
     """라이브 데이터셋. `source: live`, 실패 내역은 `diagnostics.degraded` 에 남는다.
 
     `mode` 는 경계 계약(§4.2)의 키워드다 — `run_daily` 는 기본값(`live`)을 그대로 쓴다.
-    거시만 `mode` 에 따라 경로가 갈린다(R07): 라이브는 최초 수집 시각, 재생은 빈티지 점조회.
+    거시는 라이브·재생이 **같은 경로**(마감 빈티지 점조회)를 쓴다(v1.3.3).
+    `today` 는 "오늘" 의 기준일이다(기본: 실제 오늘) — 오늘 실행에서만 fast_info 시총을 허용한다.
     """
     config = load_universe(universe_path)
     rows = list(config.get("tickers") or [])
@@ -466,6 +490,14 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
     sectors = {r["ticker"]: r.get("sector") or "" for r in rows}
     dgs10 = macro.get("dgs10")
     risk_free = (float(dgs10) / 100.0) if dgs10 is not None else None  # FRED 는 %p, WACC 는 소수
+    # WACC 무위험금리의 출처를 남긴다 — 마감 빈티지에서 DGS10 을 못 얻으면 **기본값으로 계산했다**는
+    # 사실이 보여야 한다(감사 01: 레짐·WACC 입력은 마감 이하 값만).
+    diag["wacc_risk_free"] = {
+        "source": "FRED:DGS10" if dgs10 is not None else "default",
+        "value": risk_free,
+        "fallback": dgs10 is None,
+        "note_ko": None if dgs10 is not None else "DGS10 미확보(마감 빈티지) — 무위험금리 기본값으로 계산했다.",
+    }
     fundamentals, valuation = collect_fundamentals(
         tickers, decision_at, diag, panels, panels.get(benchmark), risk_free,
         sectors, client=sec_client, cik_by_ticker=cik_by_ticker, acceptance=acceptance,
@@ -482,9 +514,14 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
         m = meta.get(ticker) or {}
         v = valuation.get(ticker) or {}
         f = fundamentals.get(ticker)
-        market_cap = m.get("market_cap_usd")
-        if not market_cap and f is not None and np.isfinite(f.diluted_shares[0] if f.diluted_shares else np.nan):
-            market_cap = float(panel.frame.iloc[-1]["sadj_close"]) * float(f.diluted_shares[0]) * 1e6
+        market_cap, market_cap_source = cutoff_market_cap(
+            panel, f, m.get("market_cap_usd"), as_of=as_of, today=today)
+        # v1.3.3 04: 안전마진도 **여기서** 한 번 만든다 — 1층(run_screen)과 2층(pipeline)이
+        # 같은 가격 기준(`sadj_close`)·같은 IV 로 계산하게 하려면 유니버스 행에 값이 있어야 한다.
+        iv_median = v.get("iv_median")
+        price_sadj = v.get("price")
+        margin = (None if iv_median is None or price_sadj is None or float(iv_median) <= 0
+                  else (float(iv_median) - float(price_sadj)) / float(iv_median))
         universe.append({
             **row,
             "exchange": m.get("exchange") or "UNKNOWN",
@@ -492,6 +529,7 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
             "adv20_usd": float((panel.frame["raw_close"] * panel.frame["volume"]).tail(20).mean())
             if "volume" in panel.frame else None,
             "market_cap_usd": market_cap,
+            "market_cap_source": market_cap_source,
             "iv_mult": v.get("iv_mult"),
             "iv_median": v.get("iv_median"),
             "iv_low": v.get("iv_low"),
@@ -505,15 +543,32 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
             "v_penalty_hist": v.get("v_penalty_hist"),
             "v_confidence": v.get("v_confidence"),
             "v_confidence_reason": v.get("v_confidence_reason"),
+            "margin": margin,
             "dcf_sensitivity": v.get("dcf_sensitivity"),
             "ev_ebit_percentile": v.get("ev_ebit_percentile"),
             "ev_ebit_median_10y": v.get("ev_ebit_median_10y"),
+            "ev_ebit_current": v.get("ev_ebit_current"),
             "iv_hist_ev_ebit": v.get("iv_hist_ev_ebit"),
+            # v1.3.3 04·06: 부호 있는 괴리·EV/EBIT 표본 품질·성장률 클립 근거
+            "hist_divergence_signed": v.get("hist_divergence_signed"),
+            "ev_ebit_samples": v.get("ev_ebit_samples"),
+            "ev_ebit_years": v.get("ev_ebit_years"),
+            "ev_ebit_window": v.get("ev_ebit_window"),
+            "ev_ebit_reason": v.get("ev_ebit_reason"),
+            "growth_raw_cagr": v.get("growth_raw_cagr"),
+            "growth_clipped_to_zero": v.get("growth_clipped_to_zero"),
+            "effective_fcff_years": v.get("effective_fcff_years"),
+            "normalization_method": v.get("normalization_method"),
+            "wacc_sensitivity": v.get("wacc_sensitivity"),
+            "terminal_g_sensitivity": v.get("terminal_g_sensitivity"),
             "peg": v.get("peg"),
             "revenue_cagr": v.get("revenue_cagr"),
             "xbrl_completeness": v.get("xbrl_completeness", 0.0),
             "beta": v.get("beta"),
         })
+    diag["market_cap_basis"] = (
+        "cutoff_close_x_diluted_shares" if as_of < (today or datetime.now(KST).date())
+        else "fast_info_market_cap")
     return {
         "as_of": as_of.isoformat(),
         "universe": universe,

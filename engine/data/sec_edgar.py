@@ -15,12 +15,14 @@ import os
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Callable
 
 import pandas as pd
 import requests
+
+from engine.utils.dates import sec_conservative_available_at
 
 SEC_DATA = "https://data.sec.gov"
 SEC_ARCHIVES = "https://www.sec.gov/Archives/edgar/data"
@@ -141,6 +143,41 @@ def _norm_dt(value: str | None) -> str | None:
     return ts.tz_convert("UTC").isoformat()
 
 
+def acceptance_available_at(filed: str | date | datetime | None,
+                            acceptance_datetime: datetime | str | None = None) -> datetime | None:
+    """SEC 제출의 `available_at` — 접수 시각이 있으면 그것, 없으면 접수일 **23:59:59 ET**(R06·07).
+
+    같은 날짜 문자열(`filed <= cutoff`)만 비교하면 그날 마감 뒤에 접수된 공시가 그날 결정에 섞인다
+    (§4.2.2 위반). 그래서 접수 시각이 없을 때의 값은 **출처 시간대(미국 동부) 하루의 끝**이고,
+    호출자는 이 값을 `decision_at` 과 **타임스탬프로** 비교해야 한다.
+
+    **정의는 `engine.utils.dates.sec_conservative_available_at` 하나뿐이다**(감사 07 공용 경로) —
+    이 함수는 `filed` 문자열을 날짜로 바꿔 넘기는 얇은 어댑터다. 거시 빈티지 폴백과 같은 규칙
+    (서머타임 자동 반영: EST 05:00Z 다음날 / EDT 04:00Z 다음날)을 쓴다.
+    """
+    d = _as_filed_date(filed)
+    if d is None:
+        return None
+    return sec_conservative_available_at(d, acceptance_datetime)
+
+
+#: 구 이름(하위 호환) — 같은 함수 객체다. 접수 시각이 없을 때의 폴백이라는 뜻으로만 읽힌다.
+acceptance_fallback_available_at = acceptance_available_at
+
+
+def _as_filed_date(filed: str | date | None) -> date | None:
+    if filed is None or filed == "":
+        return None
+    if isinstance(filed, datetime):
+        return filed.date()
+    if isinstance(filed, date):
+        return filed
+    try:
+        return pd.Timestamp(str(filed)).date()
+    except (TypeError, ValueError):
+        return None
+
+
 def acceptance_index(submissions: dict) -> dict[str, datetime]:
     """submissions → `{accn: 접수 시각(UTC)}` — XBRL 재무 행의 `accn` 과 조인한다(R06).
 
@@ -217,8 +254,9 @@ def parse_companyfacts(ticker: str, cik: int, payload: dict,
                 if acceptance:
                     available_at = acceptance
                 else:
-                    ts = pd.Timestamp(filed, tz="America/New_York") + pd.Timedelta(hours=16)
-                    available_at = ts.tz_convert("UTC").isoformat()
+                    # 접수 시각 미확인 → 접수일 23:59:59 ET (하루 끝)로 보수 처리한다.
+                    fallback = acceptance_fallback_available_at(filed)
+                    available_at = fallback.isoformat() if fallback else None
                 rows.append(
                     {
                         "ticker": ticker.upper(),

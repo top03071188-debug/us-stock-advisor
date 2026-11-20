@@ -184,6 +184,38 @@ def et_day_end(d: date) -> datetime:
     return datetime.combine(d, time(23, 59, 59), tzinfo=ET).astimezone(UTC)
 
 
+def sec_conservative_available_at(filed_date: date,
+                                  acceptance_datetime: datetime | str | None = None) -> datetime:
+    """SEC 제출의 **보수적 `available_at`** — 접수 시각이 없으면 미국 동부시간 하루 끝.
+
+    - `acceptance_datetime` 이 있으면 그 값을 UTC 로 읽는다(SEC `acceptanceDateTime` 은
+      `2026-11-19T16:30:00.000Z` 또는 오프셋 표기 `...-05:00`, submissions 의 `acceptance_index`
+      는 이미 `datetime`). 시간대가 없는 문자열은 **ET** 로 본다.
+    - 없으면 `filed_date` 의 **23:59:59 ET** → UTC(EDT 03:59:59Z / EST 04:59:59Z). UTC 23:59:59 로
+      두면 ET 하루가 아직 끝나지 않았는데 통과한다(감사 07: 22:00Z 결정에 접수 22:30Z 공시가 새던 경로).
+
+    **이 함수 하나가 SEC 접수 시각의 단일 공용 경로다** — `engine.data.sec_edgar`
+    (`acceptance_available_at`)와 `engine.data.xbrl_fundamentals`, 거시 빈티지 폴백(`et_day_end`)이
+    모두 여기를 거친다. 날짜 문자열 비교로 통과시키지 않고 최종 `available_at <= cutoff`
+    타임스탬프 비교를 하기 위한 공용 규칙이다.
+    """
+    if isinstance(acceptance_datetime, datetime):
+        ts = acceptance_datetime
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=UTC)
+        return ts.astimezone(UTC)
+    if acceptance_datetime not in (None, ""):
+        text = str(acceptance_datetime).strip()
+        try:
+            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            return et_day_end(filed_date)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=ET)
+        return parsed.astimezone(UTC)
+    return et_day_end(filed_date)
+
+
 def data_cutoff_at(as_of: date, mode: str = "postclose") -> datetime:
     """데이터 마감 시각.
 
@@ -320,8 +352,14 @@ def build_folds(today: date, holdout_months: int = 3, window_months: int = 12,
     return out
 
 
-def fold_summary(today: date, holdout_months: int = 3, window_months: int = 12) -> dict:
-    """`data/walkforward/folds/summary.json` 형태의 요약(1M/3M/6M 적격 폴드 수)."""
+def fold_summary(today: date, holdout_months: int = 3, window_months: int = 12,
+                 min_folds: int = 3) -> dict:
+    """`data/walkforward/folds/summary.json` 형태의 요약(1M/3M/6M 적격 폴드 수).
+
+    `min_folds` 는 호출자(`--min-folds`)가 정한다 — 예전에는 `>= 3` 이 하드코딩돼 `--min-folds 5`
+    를 줘도 4·3폴드 구간이 `sufficient` 로 찍혔다(감사 10).
+    """
+    min_folds = int(min_folds)
     holdout_start = _add_months(today, -holdout_months)
     if not is_trading_day(holdout_start):
         holdout_start = next_trading_day(holdout_start)
@@ -340,8 +378,8 @@ def fold_summary(today: date, holdout_months: int = 3, window_months: int = 12) 
             "horizon_td": h,
             "eligible_folds": [f.fold_id for f in eligible],
             "count": len(eligible),
-            "min_folds": 3,
-            "sufficient": len(eligible) >= 3,
+            "min_folds": min_folds,
+            "sufficient": len(eligible) >= min_folds,
             "folds": [
                 {
                     "fold_id": f.fold_id, "start": f.start.isoformat(),

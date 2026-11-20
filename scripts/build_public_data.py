@@ -92,6 +92,7 @@ def build_meta(signals: dict | None, debate: dict | None) -> dict:
     signals = signals or {}
     regime = signals.get("regime") or {}
     source = signals.get("source")
+    diagnostics = signals.get("diagnostics") or {}
     return {
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "params_version": signals.get("params_version"),
@@ -108,6 +109,13 @@ def build_meta(signals: dict | None, debate: dict | None) -> dict:
         "signal_published_planned_at": signals.get("signal_published_planned_at"),
         "order_cutoff_at": signals.get("order_cutoff_at"),
         "target_session": signals.get("target_session"),
+        # v1.3.3 01-b: 배치 **시작** 시각과 발행 시각은 다른 값이다 — 화면이 둘을 같이 보여 준다.
+        "run_started_at": signals.get("run_started_at"),
+        "publish_lag_seconds": signals.get("publish_lag_seconds"),
+        "published_after_order_cutoff": signals.get("published_after_order_cutoff"),
+        "inputs_hash": signals.get("inputs_hash"),
+        # 01: WACC 무위험금리가 FRED 실값인지 기본값 대체인지
+        "wacc_risk_free": diagnostics.get("wacc_risk_free"),
         "as_of": signals.get("as_of"),
         "prices_as_of": signals.get("prices_as_of"),
         "debate_generated_at": (debate or {}).get("generated_at"),
@@ -125,6 +133,8 @@ SIGNAL_PUBLIC_FIELDS = (
     "signal_id", "ticker", "type", "trade_grade", "grade", "entry_score", "decision",
     "as_of", "data_cutoff_at", "signal_published_at", "signal_published_planned_at",
     "order_cutoff_at", "target_session", "generated_price",
+    # v1.3.3 02: 같은 날 재발행이면 회차와 "무엇을 대체했는지"를 화면에 함께 보여 준다.
+    "revision", "supersedes",
     "quant_intent", "thesis_ko", "valuation", "indicators", "investor_scores", "components",
     "conflict", "news_state", "position", "target_band", "expected_mdd", "invalidation",
     "gate_summary", "sizing_note_ko", "params_version", "snapshot_id", "track", "veto",
@@ -178,6 +188,10 @@ def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = Non
         "as_of": signals.get("as_of"),
         "status": signals.get("status"),
         "watchlist": {k: (watch_row or {}).get(k) for k in ("ticker", "sector", "q", "v", "g", "rank_score")},
+        # v1.3.3 04·06: 신호가 없는 종목에서도 밸류에이션 근거(감점 전 V·표본 품질)를 볼 수 있게 한다.
+        "valuation_quality": {k: (watch_row or {}).get(k) for k in WATCH_ROW_FIELDS
+                              if k not in ("ticker", "sector", "q", "g", "rank_score",
+                                           "valuation_suspended")},
         "signal": record,
         "last_signal": None if record else "이 종목에 오늘 새 신호 없음 — 아래 지표·차트는 유지됩니다.",
         "chart": chart,
@@ -283,6 +297,8 @@ def build_records(signals: dict | None, records: list[dict] | None) -> dict:
             "target_band": record.get("target_band"), "position": record.get("position"),
             "params_version": record.get("params_version"),
             "signal_published_at": record.get("signal_published_at"),
+            # v1.3.3 02: 발행 회차·대체 대상 — 원장 탭에서 "같은 날 몇 번째 발행인지"를 보여 준다.
+            "revision": record.get("revision"), "supersedes": record.get("supersedes"),
         })
     return {"as_of": signals.get("as_of"), "count": len(rows), "records": rows}
 
@@ -422,14 +438,24 @@ def build_radar(radar: dict | None) -> dict:
     }
 
 
+#: 워치리스트 행에서 공개하는 필드 — v1.3.3 04: 감점 전 V·원시 안전마진·괴리 부호·EV/EBIT 표본 품질까지.
+WATCH_ROW_FIELDS = (
+    "ticker", "sector", "q", "v", "v_raw", "margin", "g", "rank_score",
+    "v_penalties", "hist_divergence_signed",
+    "ev_ebit_percentile", "ev_ebit_current", "ev_ebit_median_10y", "ev_ebit_samples",
+    "ev_ebit_years", "ev_ebit_window", "ev_ebit_reason",
+    "growth", "growth_raw_cagr", "growth_clipped_to_zero", "effective_fcff_years",
+    "normalization_method", "dcf_sensitivity", "wacc_sensitivity", "terminal_g_sensitivity",
+    "valuation_suspended",
+)
+
+
 def build_watchlist(watch: dict | None) -> dict:
     watch = watch or {}
     return {
         "as_of": watch.get("as_of"),
         "count": watch.get("count", len(watch.get("watchlist") or [])),
-        "watchlist": [{k: w.get(k) for k in ("ticker", "sector", "q", "v", "g", "rank_score",
-                                             "v_penalties", "ev_ebit_percentile",
-                                             "valuation_suspended")}
+        "watchlist": [{k: w.get(k) for k in WATCH_ROW_FIELDS}
                       for w in watch.get("watchlist") or []],
         "entered": [{k: e.get(k) for k in ("ticker", "sector", "rank_score", "reason_ko")}
                     for e in watch.get("entered") or []],

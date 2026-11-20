@@ -9,7 +9,11 @@
   (사이트가 빈 화면이 되지 않게 — 기획서 2.7).
 - 산출물: `data/quant_signals.json`, `data/ledger/records.jsonl`(발행 의도),
   `data/ledger/executions/{signal_id}.json`(체결 이벤트), `data/ledger/portfolio/state.json`(비중만),
-  `data/ledger/pilot_eval.json`, `data/params_history.json`, `data/snapshots/{as_of}/`(아카이브 원본).
+  `data/ledger/pilot_eval.json`, `data/params_history.json`, `data/snapshots/{as_of}/`(아카이브 원본 —
+  같은 날 입력이 바뀌면 `{as_of}-r2` 로 보존).
+- 발행 시각은 **결과가 확정되는 실제 시각**(`signal_published_at`)이고, 배치 시작 시각은
+  `run_started_at` 으로 따로 남긴다. 같은 입력 지문(`inputs_hash`)의 재실행은 **원장의 발행본을
+  그대로 배포**하고, 입력이 바뀐 발행은 회차 접미사(`-002`…)와 `supersedes` 로 남긴다(감사 01·02).
 
     python scripts/run_daily.py --mode postclose --offline --as-of 2026-11-20 --root .
 """
@@ -17,6 +21,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import subprocess
@@ -27,12 +32,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from engine.backtest.holdout import window_for  # noqa: E402
-from engine.backtest.snapshot import make_snapshot  # noqa: E402
+from engine.backtest.snapshot import inputs_fingerprint, make_snapshot  # noqa: E402
 from engine.decide.pipeline import build_payload, load_params  # noqa: E402
 from engine.ledger import live  # noqa: E402
 from engine.ledger.pilot import evaluate_pilot, write_pilot_eval  # noqa: E402
 from engine.ledger.record import (RecordError, append_immutable, attach_target_session,  # noqa: E402
-                                  load_records)
+                                  load_records, resolve_release)
 from engine.models import QuantSignalSchemaError, validate_quant_signals  # noqa: E402
 from engine.utils.dates import (KST, data_cutoff_at, order_cutoff_at, signal_published_at,  # noqa: E402
                                 target_session_for)
@@ -77,17 +82,18 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def three_times(as_of: date, mode: str, now: datetime | None = None) -> dict:
+def publish_times(as_of: date, mode: str, published_at: datetime | None = None) -> dict:
     """`data_cutoff_at ≤ signal_published_at < order_cutoff_at` — 세 시각을 따로 계산한다(2.2.2).
 
-    `signal_published_at` 은 **실제 발행 시각**이고, 주문 대상 세션은 그 시각 이후 주문 마감이
-    아직 오지 않은 가장 이른 NYSE 세션이다(`target_session`). 실행이 늦어 마감을 넘겼으면
-    다음 세션으로 넘긴다 — 계획 시각으로 검사하면 늦은 실행이 "제때 발행된 것처럼" 통과한다.
-    과거 `as_of` 를 다시 돌리는 백필은 계획 시각을 발행 시각으로 쓴다(마감 전 실행 가정).
+    `signal_published_at` 은 **결과 JSON 이 확정되는 실제 시각**이다. 배치 **시작 시각**으로 잡으면
+    수집이 20분 걸리는 날 "14:10Z 발행"이라고 우기면서 이미 끝난 주문 마감의 세션을 가리킨다
+    (감사 01-b). 그래서 수집·정산이 끝난 뒤 호출자가 **발행 직전 시각**을 넘긴다.
+    대상 세션(`target_session`)은 그 시각 이후 주문 마감이 아직 오지 않은 가장 이른 NYSE 세션이다.
+    과거 `as_of` 백필은 계획 시각을 발행 시각으로 쓴다(마감 전 실행 가정).
     """
     cutoff = data_cutoff_at(as_of, mode)
     planned = signal_published_at(cutoff)
-    actual = (now if now is not None else datetime.now(timezone.utc)).replace(microsecond=0)
+    actual = (published_at if published_at is not None else datetime.now(timezone.utc)).replace(microsecond=0)
     if actual < planned:
         actual = planned
     session = target_session_for(actual)
@@ -100,6 +106,46 @@ def three_times(as_of: date, mode: str, now: datetime | None = None) -> dict:
             "signal_published_planned_at": planned, "order_cutoff_at": _iso(order),
             "target_session": session.isoformat(),
             "_cutoff": cutoff}
+
+
+def three_times(as_of: date, mode: str, now: datetime | None = None) -> dict:
+    """구 이름 호환 — `publish_times(as_of, mode, published_at=now)` 와 같다."""
+    return publish_times(as_of, mode, published_at=now)
+
+
+def ensure_snapshot(root: Path, *, as_of: date, cutoff: datetime, frames: dict, inputs: dict,
+                    extra: dict, inputs_hash: str) -> tuple[str, str]:
+    """스냅샷을 고정한다 — 같은 입력 지문이면 **다시 쓰지 않고 재사용**한다.
+
+    - 같은 날 재실행으로 입력이 같으면 기존 `data/snapshots/{as_of}` 를 그대로 쓰고 `snapshot_id`
+      도 유지한다(화면과 원장이 같은 스냅샷을 가리키게).
+    - 입력이 달라 **새로 확정**된 발행이면 `{as_of}-r2`, `-r3` … 로 **이전 스냅샷을 덮어쓰지 않고**
+      보존한다(append-only 아카이브의 원본이 사라지지 않게).
+    Returns: (`snapshot_id`, `"reused"|"created"`)
+    """
+    day = as_of.isoformat()
+
+    def _existing_match(path: Path) -> str | None:
+        manifest = _read_json(path / "manifest.json") or {}
+        if (manifest.get("extra") or {}).get("inputs_hash") == inputs_hash:
+            return str(manifest.get("snapshot_id") or "")
+        return None
+
+    base = root / day
+    if base.exists():
+        reused = _existing_match(base)
+        if reused:
+            return reused, "reused"
+        n = 2
+        while (root / f"{day}-r{n}").exists():
+            reused = _existing_match(root / f"{day}-r{n}")
+            if reused:
+                return reused, "reused"
+            n += 1
+        base = root / f"{day}-r{n}"
+    snap = make_snapshot(base, cutoff, frames, as_of=day, inputs=inputs,
+                         extra={**extra, "inputs_hash": inputs_hash})
+    return snap.snapshot_id, "created"
 
 
 def load_dataset(args, as_of: date, cutoff: datetime) -> dict:
@@ -166,8 +212,8 @@ def run(args) -> int:
     if root != Path.cwd():
         os.chdir(root)
     as_of = date.fromisoformat(args.as_of) if args.as_of else datetime.now(KST).date()
-    times = three_times(as_of, args.mode)
-    cutoff = times.pop("_cutoff")
+    run_started_at = datetime.now(timezone.utc).replace(microsecond=0)
+    cutoff = data_cutoff_at(as_of, args.mode)
     params = load_params(Path(args.params))
     params_version = str(params.get("version") or "params_v001")
     commit = _git_commit()
@@ -191,24 +237,7 @@ def run(args) -> int:
                           "degraded": diag.get("degraded")}, ensure_ascii=False))
         return 0
 
-    # 1) 스냅샷(아카이브 원본) — manifest 해시가 snapshot_id
-    #    가격뿐 아니라 **판단 입력 전체**(`panels` 제외)를 canonical JSON 으로 넣는다(R10a).
-    frames = {f"prices_{ticker}": panel.frame for ticker, panel in sorted(panels.items())}
-    inputs = {k: v for k, v in data.items() if k != "panels"}
-    try:
-        snap = make_snapshot(SNAPSHOTS / as_of.isoformat(), cutoff, frames,
-                             as_of=as_of.isoformat(), inputs=inputs,
-                             extra={"mode": args.mode, "source": data.get("source"),
-                                    "params_version": params_version, "code_commit": commit,
-                                    "target_session": times["target_session"],
-                                    "cutoff_rule": "available_at <= decision_at"})
-        snapshot_id = snap.snapshot_id
-    except Exception as exc:  # noqa: BLE001 — 스냅샷 실패는 신호 발행을 막지 않는다
-        snapshot_id = "sha256:" + "0" * 64
-        diag["snapshot_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
-    short = snapshot_id.replace("sha256:", "")[:12]
-
-    # 2) Ledger — 대상 세션 의도 정산(시가 확정분만) + 체결 이벤트 append
+    # 1) Ledger — 대상 세션 의도 정산(시가 확정분만) + 체결 이벤트 append
     records = load_records(RECORDS)
     executions = live.load_executions(EXECUTIONS)
     reanchors = live.load_reanchors(EXECUTIONS)
@@ -224,10 +253,74 @@ def run(args) -> int:
     portfolio_before, held_before = ledger_view(records, executions, panels, as_of, reanchors)
     watch = ({r["ticker"] for r in (watchlist_payload or {}).get("watchlist") or []}
              if watchlist_payload else None)
+    n_universe_before = len(data.get("universe") or [])
     if watch is not None:
         data["universe"] = [r for r in data["universe"] if r["ticker"] in watch or r["ticker"] in held_before]
 
-    # 3) 신호 발행
+    # 2) 발행 시각 — **수집·정산이 끝난 지금**. 실행 시작 시각으로 잡지 않는다(감사 01-b).
+    #    `run_started_at`(배치 시작)과 `signal_published_at`(결과 확정 직전)은 다른 값이다.
+    times = publish_times(as_of, args.mode)
+
+    # 3) 판단 입력 확정 — 워치리스트 필터·보유·섹터 비중·target_session 까지 끝난 상태를 고정한다(감사 02-b).
+    #    스냅샷은 이 **최종 입력**으로 만들고(입력 지문 기준), 재생은 같은 값을 그대로 읽는다.
+    frames = {f"prices_{ticker}": panel.frame for ticker, panel in sorted(panels.items())}
+    inputs = {k: v for k, v in data.items() if k != "panels"}
+    held = list(held_before.values())
+    sector_weights = portfolio_before.get("sector_weights") or {}
+    watchlist_filter = {
+        "source": "data/watchlist/current.json" if watch is not None else "universe(주간 스크린 전)",
+        "n_before": int(n_universe_before),
+        "n_after": len(data.get("universe") or []),
+    }
+    fingerprint_inputs = {
+        **inputs,
+        "held": held,
+        "sector_weights": sector_weights,
+        "params": params,
+        "watchlist_filter": watchlist_filter,
+        # 주문 대상 세션이 다르면 같은 데이터라도 **다른 발행**이다(늦은 재실행 → 새 회차).
+        "target_session": times["target_session"],
+    }
+    try:
+        inputs_hash = inputs_fingerprint(frames, fingerprint_inputs, cutoff, params_version)
+    except Exception as exc:  # noqa: BLE001 — 지문 실패가 발행을 막지는 않는다(회차는 001 고정)
+        inputs_hash = ""
+        diag["inputs_hash_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
+
+    data["decision"] = {
+        "mode": args.mode,
+        "run_started_at": _iso(run_started_at),
+        "data_cutoff_at": times["data_cutoff_at"],
+        "signal_published_at": times["signal_published_at"],
+        "signal_published_planned_at": _iso(times["signal_published_planned_at"]),
+        "order_cutoff_at": times["order_cutoff_at"],
+        "target_session": times["target_session"],
+        "held": [{k: h.get(k) for k in ("ticker", "sector", "stop_price", "trailing_high", "initial_stop")}
+                 for h in held],
+        "sector_weights": sector_weights,
+        "watchlist_filter": watchlist_filter,
+        "params": params,
+        "params_version": params_version,
+        "code_commit": commit,
+        "inputs_hash": inputs_hash,
+        "cutoff_rule": "available_at <= decision_at",
+    }
+    snapshot_inputs = {k: v for k, v in data.items() if k != "panels"}
+    try:
+        snapshot_id, snapshot_state = ensure_snapshot(
+            SNAPSHOTS, as_of=as_of, cutoff=cutoff, frames=frames, inputs=snapshot_inputs,
+            extra={"mode": args.mode, "source": data.get("source"),
+                   "params_version": params_version, "code_commit": commit,
+                   "target_session": times["target_session"],
+                   "cutoff_rule": "available_at <= decision_at"},
+            inputs_hash=inputs_hash)
+    except Exception as exc:  # noqa: BLE001 — 스냅샷 실패는 신호 발행을 막지 않는다
+        snapshot_id, snapshot_state = "sha256:" + "0" * 64, "failed"
+        diag["snapshot_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
+    diag["snapshot"] = {"id": snapshot_id, "state": snapshot_state, "inputs_hash": inputs_hash}
+    short = snapshot_id.replace("sha256:", "")[:12]
+
+    # 4) 신호 발행
     status = "normal" if not diag.get("degraded") else "degraded"
     if data.get("source") in ("fixtures", "sample"):
         status = "sample"
@@ -235,23 +328,46 @@ def run(args) -> int:
         data, as_of=as_of, mode=args.mode, params=params, params_version=params_version,
         code_commit=commit, snapshot_id=snapshot_id, status=status, three_times=times,
         held=list(held_before.values()), sector_weights=portfolio_before.get("sector_weights") or {},
-        source=data.get("source"),
+        source=data.get("source"), inputs_hash=inputs_hash or None,
     )
     payload["diagnostics"] = diag
-    payload["watchlist_source"] = "data/watchlist/current.json" if watch is not None else "universe(주간 스크린 전)"
+    payload["watchlist_source"] = watchlist_filter["source"]
+    payload["run_started_at"] = _iso(run_started_at)
+    payload["inputs_hash"] = inputs_hash
 
-    # 4) 발행 레코드 append (불변) — 같은 signal_id 재실행은 건너뛴다
-    appended, skipped = [], []
+    # 4) 발행 회차 확정 → append → **원장에 기록된 발행본 그대로 배포**(감사 02)
+    appended, skipped, duplicated, deployed = [], [], [], []
     for record in payload["signals"]:
         try:
             attach_target_session(record, times["target_session"],
                                   times.get("signal_published_planned_at"))
-            append_immutable(RECORDS, record)
-            appended.append(record["signal_id"])
         except RecordError as exc:
             skipped.append({"signal_id": record["signal_id"], "reason": str(exc)[:120]})
+            continue
+        release = resolve_release(record, records)
+        record["signal_id"] = release["signal_id"]
+        record["revision"] = int(release["revision"])
+        record["supersedes"] = release["supersedes"]
+        if release["duplicate"]:
+            # 같은 입력 지문의 재실행 — 이미 기록된 발행본을 그대로 배포한다(화면 == 원장).
+            prior = next((r for r in records if str(r.get("signal_id")) == release["signal_id"]), None)
+            if prior is not None:
+                duplicated.append({"signal_id": release["signal_id"], "reused_from": release["reused_from"]})
+                deployed.append(copy.deepcopy(prior))
+                continue
+        try:
+            append_immutable(RECORDS, record)
+        except RecordError as exc:
+            skipped.append({"signal_id": record["signal_id"], "reason": str(exc)[:120]})
+            continue
+        records.append(record)
+        appended.append(record["signal_id"])
+        deployed.append(record)
+    payload["signals"] = deployed
     if skipped:
         payload["diagnostics"]["record_skips"] = skipped
+    if duplicated:
+        payload["diagnostics"]["record_duplicates"] = duplicated
 
     # 5) 계좌·채점·파일럿 요약
     records = load_records(RECORDS)
@@ -308,6 +424,12 @@ def run(args) -> int:
     _write_json(LIMITS, _limits(data, as_of))
 
     # 7) 계약 검증 → 실패하면 이전 파일을 유지한다(2.2.2)
+    #    발행 지연도 정직하게 남긴다 — 확정 시각이 주문 마감을 넘겼는지(01-b).
+    written_at = datetime.now(timezone.utc)
+    published = datetime.fromisoformat(str(payload["signal_published_at"]).replace("Z", "+00:00"))
+    order_cutoff = datetime.fromisoformat(str(payload["order_cutoff_at"]).replace("Z", "+00:00"))
+    payload["publish_lag_seconds"] = round((written_at - published).total_seconds(), 1)
+    payload["published_after_order_cutoff"] = bool(written_at >= order_cutoff)
     try:
         validate_quant_signals(payload)
     except QuantSignalSchemaError as exc:

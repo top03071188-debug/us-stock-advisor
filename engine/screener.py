@@ -26,9 +26,27 @@ class Candidate:
     xbrl_completeness: float = 1.0
     accounting_flags: list[str] = field(default_factory=list)   # 8-K 4.02·감사의견·상폐통지
     fundamentals: AnnualFundamentals | None = None
-    margin: float | None = None            # 안전마진(B3 기준, sadj 가격)
+    margin: float | None = None            # 안전마진(B3 기준, sadj 가격) — **원시값**
     v_penalties: float = 0.0               # v1.3.2: DCF 민감도 −4 · 역사 백분위 괴리 −10
+    # ── v1.3.3 04: 감점 전 V·부호 있는 괴리·표본 품질을 함께 보관한다(화면·JSON 검증용) ──
+    v_raw: float | None = None             # 감점 전 V 점수(안전마진만)
+    hist_divergence_signed: float | None = None   # (모델 IV − 역사 IV)/역사 IV — 부호 유지
     ev_ebit_percentile: float | None = None  # 10년 EV/EBIT 백분위(0~100)
+    ev_ebit_current: float | None = None
+    ev_ebit_median_10y: float | None = None
+    ev_ebit_samples: int | None = None
+    ev_ebit_years: int | None = None
+    ev_ebit_window: str | None = None
+    ev_ebit_reason: str | None = None
+    # ── v1.3.3 05: 성장률 클립·유효 연수·민감도 ──
+    growth: float | None = None
+    growth_raw_cagr: float | None = None
+    growth_clipped_to_zero: bool | None = None
+    effective_fcff_years: int | None = None
+    normalization_method: str | None = None
+    dcf_sensitivity: float | None = None
+    wacc_sensitivity: float | None = None
+    terminal_g_sensitivity: float | None = None
     peg: float | None = None
     revenue_cagr: float | None = None
     roic_wacc_2q_negative: bool = False
@@ -67,11 +85,17 @@ def hard_gates(c: Candidate, *, min_market_cap=1e10, min_adv=3e7, min_price=5.0,
 
 
 def score_candidate(c: Candidate) -> dict:
-    """Q·V·G 와 정렬 점수. 가치평가 보류 업종은 V 없이 표시한다."""
+    """Q·V·G 와 정렬 점수. 가치평가 보류 업종은 V 없이 표시한다.
+
+    v1.3.3 04: **감점 전 V(`v_raw`)·원시 안전마진·부호 있는 괴리·EV/EBIT 표본 품질**을 같이 남긴다.
+    V 점수식과 감점은 v1.3.2 그대로다(사용자 결정) — 바뀐 것은 "보이는 정도"다.
+    """
     sec = classify_sector(c.sector)
     q = quality_score(c.fundamentals) if c.fundamentals else {"q": 0.0, "parts": {}, "metrics": {}}
     v = None
+    v_raw = None
     if not sec["valuation_suspended"] and c.margin is not None:
+        v_raw = round(v_score(c.margin, 0.0), 2)
         v = round(v_score(c.margin, c.v_penalties), 2)
     g = growth_score(c.peg, c.revenue_cagr) if not sec["valuation_suspended"] else {"g": None}
     rank = None
@@ -82,8 +106,25 @@ def score_candidate(c: Candidate) -> dict:
         "sector": c.sector,
         "q": round(q["q"], 2),
         "v": v,
+        "v_raw": v_raw,
+        "margin": None if c.margin is None else round(float(c.margin), 6),
         "v_penalties": round(float(c.v_penalties or 0.0), 2),
+        "hist_divergence_signed": c.hist_divergence_signed,
         "ev_ebit_percentile": c.ev_ebit_percentile,
+        "ev_ebit_current": c.ev_ebit_current,
+        "ev_ebit_median_10y": c.ev_ebit_median_10y,
+        "ev_ebit_samples": c.ev_ebit_samples,
+        "ev_ebit_years": c.ev_ebit_years,
+        "ev_ebit_window": c.ev_ebit_window,
+        "ev_ebit_reason": c.ev_ebit_reason,
+        "growth": c.growth,
+        "growth_raw_cagr": c.growth_raw_cagr,
+        "growth_clipped_to_zero": c.growth_clipped_to_zero,
+        "effective_fcff_years": c.effective_fcff_years,
+        "normalization_method": c.normalization_method,
+        "dcf_sensitivity": c.dcf_sensitivity,
+        "wacc_sensitivity": c.wacc_sensitivity,
+        "terminal_g_sensitivity": c.terminal_g_sensitivity,
         "g": g.get("g"),
         "rank_score": rank,
         "parts": q["parts"],
