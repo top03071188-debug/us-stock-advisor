@@ -471,7 +471,7 @@ function riskBlock(sig, tickerDoc) {
   if (filings.length) {
     const table = el("table", {}, [
       el("caption", { text: "최근 공시 (filed_date = 접수 시각 기준)" }),
-      el("thead", {}, [el("tr", {}, [el("th", { text: "양식" }), el("th", { text: "접수일" }),
+      el("thead", {}, [el("tr", {}, [el("th", { text: "양식" }), el("th", { class: "num", text: "접수일" }),
         el("th", { text: "Item" }), el("th", { text: "원문" })])]),
       el("tbody", {}, filings.map((f) => el("tr", {}, [
         el("td", { text: f.form || "—" }),
