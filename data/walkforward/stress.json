@@ -1,0 +1,80 @@
+{
+  "windows": [
+    {
+      "key": "2022_rate_hike",
+      "label": "2022 금리인상 하락장",
+      "start": "2022-01-03",
+      "end": "2022-10-14",
+      "checks": "Risk-Off 전환 속도, 신규 매수 중단, 손절 작동",
+      "criteria_ko": "전략 MDD ≤ SPY MDD + 5%p, V06 발동 확인",
+      "universe_verified": false,
+      "macro_signals_available": 4
+    },
+    {
+      "key": "2020_covid",
+      "label": "2020 COVID 급락",
+      "start": "2020-02-19",
+      "end": "2020-04-30",
+      "checks": "급락 후 반등 국면에서 매수 재개 타이밍",
+      "criteria_ko": "급락 중 신규 매수 0건, 반등 후 신호 재개",
+      "universe_verified": false,
+      "macro_signals_available": 4
+    },
+    {
+      "key": "2018q4",
+      "label": "2018 4분기",
+      "start": "2018-10-01",
+      "end": "2018-12-24",
+      "checks": "금리·변동성 상승 초기 대응",
+      "criteria_ko": "손실 신호 비율 < 60%",
+      "universe_verified": false,
+      "macro_signals_available": 4
+    }
+  ],
+  "universe_verified": false,
+  "missing_inputs": [
+    "universe_history",
+    "delisted_securities"
+  ],
+  "note_ko": "미확보: universe_history, delisted_securities — 5년·스트레스 결과는 게이트 통과로 쓰지 않는다.",
+  "results": [
+    {
+      "key": "2022_rate_hike",
+      "label": "2022 금리인상 하락장",
+      "start": "2022-01-03",
+      "end": "2022-10-14",
+      "verified": false,
+      "universe_verified": false,
+      "pass": null,
+      "metrics": {},
+      "reason_ko": "미검증 — 과거 구성종목·상장폐지 데이터(universe_history·delisted_securities) 미확보"
+    },
+    {
+      "key": "2020_covid",
+      "label": "2020 COVID 급락",
+      "start": "2020-02-19",
+      "end": "2020-04-30",
+      "verified": false,
+      "universe_verified": false,
+      "pass": null,
+      "metrics": {},
+      "reason_ko": "미검증 — 과거 구성종목·상장폐지 데이터(universe_history·delisted_securities) 미확보"
+    },
+    {
+      "key": "2018q4",
+      "label": "2018 4분기",
+      "start": "2018-10-01",
+      "end": "2018-12-24",
+      "verified": false,
+      "universe_verified": false,
+      "pass": null,
+      "metrics": {},
+      "reason_ko": "미검증 — 과거 구성종목·상장폐지 데이터(universe_history·delisted_securities) 미확보"
+    }
+  ],
+  "verified_all": false,
+  "stress_pass": null,
+  "gate_passed": false,
+  "n_verified": 0,
+  "n_windows": 3
+}

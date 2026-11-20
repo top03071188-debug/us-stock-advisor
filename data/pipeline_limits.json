@@ -1,0 +1,40 @@
+{
+  "as_of": "2026-11-20",
+  "source": "live",
+  "universe": {
+    "mode": "bootstrap_subset",
+    "universe_verified": false,
+    "note_ko": "지수 구성종목 시계열(universe_history) 미확보 — 생존편향 있음(상한 추정)"
+  },
+  "sources": {
+    "yfinance": {
+      "status": "ok",
+      "detail": null
+    },
+    "fred": {
+      "status": "ok",
+      "detail": null
+    },
+    "sec": {
+      "status": "ok",
+      "detail": null
+    },
+    "finnhub": {
+      "status": "ok",
+      "detail": null
+    },
+    "yfinance_meta": {
+      "status": "ok",
+      "detail": "시총 결측 0/43"
+    },
+    "sec_xbrl": {
+      "status": "ok",
+      "detail": "연차 재무 42/43, 실패: XOM:no_annual"
+    }
+  },
+  "degraded": [],
+  "notes": [
+    "부분집합·픽스처 결과는 전략 성과의 증거가 아니다(기획서 4.4·8.1).",
+    "13F 는 레이더 전용이며 신호에 쓰지 않는다."
+  ]
+}

@@ -1,20 +1,96 @@
 {
   "schema_version": 1,
-  "as_of": null,
-  "generated_at": null,
-  "n_pairs": 0,
-  "pairs": [],
-  "counts": {
-    "same_action": 0,
-    "downgraded": 0,
-    "upgraded": 0,
-    "vetoed": 0
+  "as_of": "2026-11-20",
+  "generated_at": "2026-11-20T07:47:58.934453Z",
+  "horizon_td": 63,
+  "auto_downgrade_enabled": false,
+  "divergent_pairs": 0,
+  "same_action_pairs": 0,
+  "n_graded_pairs": 0,
+  "n_eff": 0,
+  "avoided_loss": 0,
+  "missed_gain": 0,
+  "net": 0,
+  "cost": 0,
+  "net_after_cost": 0,
+  "avoided_loss_pp": 0.0,
+  "missed_gain_pp": 0.0,
+  "net_pp": 0.0,
+  "net_after_cost_pp": 0.0,
+  "avoidance_accuracy": null,
+  "drawdown": {
+    "quant_mean_mdd": null,
+    "quant_tail_5pct": null,
+    "quant_mdd": 0.0,
+    "debate_mdd": 0.0,
+    "debate_mean_mdd": 0.0,
+    "debate_tail_5pct": 0.0,
+    "defense_improved": false
   },
-  "quant_only_vs_debate": {
+  "accounts": {
+    "quant_only": {
+      "initial_cash": 100000.0,
+      "final_equity": 100000.0,
+      "total_return": 0.0,
+      "mdd": 0.0,
+      "n_trades": 0,
+      "n_candidates": 0,
+      "equity_curve": []
+    },
+    "codex_debated": {
+      "initial_cash": 100000.0,
+      "final_equity": 100000.0,
+      "total_return": 0.0,
+      "mdd": 0.0,
+      "n_trades": 0,
+      "n_candidates": 0,
+      "equity_curve": []
+    }
+  },
+  "account_rules": {
+    "initial_cash": 100000.0,
+    "costs": {
+      "slippage": 10.0,
+      "commission": 2.0,
+      "fx": 5.0
+    },
+    "horizon_td": 63,
+    "policy_versions": [
+      "params_v001"
+    ]
+  },
+  "R_quant": 0.0,
+  "R_debated": 0.0,
+  "policy_diff_pp": 0.0,
+  "quant_mdd": 0.0,
+  "debate_mdd": 0.0,
+  "pair_summary": {
+    "pairs": 0,
     "n_graded": 0,
-    "accuracy_quant_only": null,
-    "accuracy_with_debate": null,
-    "note_ko": "토론 비교 표본 없음"
+    "n_eff": 0,
+    "avoided_loss": 0,
+    "missed_gain": 0,
+    "pair_net": 0,
+    "pair_net_pp": 0.0,
+    "avoided_loss_usd": 0.0,
+    "missed_gain_usd": 0.0,
+    "pair_net_usd": 0.0,
+    "avoidance_accuracy": null,
+    "note_ko": "행동이 갈린 페어의 손익이다 — 계좌 순자산 차이(policy_diff_pp)와 다른 값이다(4.8)."
   },
-  "note_ko": "Codex 토론(data/debate_reports.json)이 아직 한 번도 푸시되지 않아 비교 기록이 비어 있는 것이 정상입니다."
+  "pairs": [],
+  "by_regime": {},
+  "quarters": [],
+  "consecutive_quarters": 0,
+  "verdict": "표본 부족 — 판단 보류",
+  "verdict_ko": "표본 부족 — 판단 보류",
+  "note_ko": "토론 비교 표본 없음 — 행동이 갈린 페어가 아직 없다(토론 0건이면 정상).",
+  "counts": {
+    "reports": 0,
+    "eligible": 0,
+    "late": 0,
+    "invalid": 0,
+    "retroactive_dropped": 0
+  },
+  "retroactive_dropped": 0
 }

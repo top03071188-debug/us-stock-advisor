@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-11-20",
+  "generated_at": "2026-11-20T07:47:56.303510Z",
+  "auto_downgrade_enabled": false,
+  "n_reports": 0,
+  "n_eligible": 0,
+  "n_late": 0,
+  "n_invalid": 0,
+  "by_signal": {},
+  "auto_downgrade": {
+    "current": false,
+    "recommend_enable": false,
+    "eligible": false,
+    "verdict": "표본 부족 — 판단 보류",
+    "pairs": 0,
+    "n_eff": 0,
+    "basis": "account_policy_diff",
+    "policy_diff_pp": 0.0,
+    "net_after_cost": 0,
+    "net_after_cost_pp": 0.0,
+    "quant_mdd": 0.0,
+    "debate_mdd": 0.0,
+    "defense_improved": false,
+    "same_policy_version": true,
+    "policy_versions": [],
+    "consecutive_quarters": 0,
+    "quarters": [],
+    "reasons_ko": [
+      "행동 갈린 페어 0건 < 30건",
+      "유효 표본 N_eff 0 < 15",
+      "계좌 순자산 차이 +0.00%p < +0.20%p",
+      "MDD 절댓값 개선 없음(정량 0.0000 vs 토론 0.0000)",
+      "기준 충족 분기 0개 < 2개 연속"
+    ],
+    "history_versions": [
+      "params_v001"
+    ],
+    "note_ko": "정책 효과는 두 계좌의 순자산 차이로, 원인은 페어 손익으로 판단한다(4.8). 자동 하향은 이 판정을 통과해도 사람이 PR 로 켠다 — 기본값은 false."
+  }
+}

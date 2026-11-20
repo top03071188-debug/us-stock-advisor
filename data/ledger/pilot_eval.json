@@ -2,7 +2,7 @@
   "schema_version": 1,
   "as_of": "2026-11-20",
   "horizon": "3m",
-  "n_records": 14,
+  "n_records": 21,
   "n_eligible": 0,
   "n_graded": 0,
   "n_eff": 0,
@@ -13,7 +13,7 @@
       "value": 0,
       "threshold": "≥ 15",
       "pass": false,
-      "note_ko": "체결·3개월 만기 0개(발행 신호 14건 중 유효 0건)"
+      "note_ko": "체결·3개월 만기 0개(발행 신호 21건 중 유효 0건)"
     },
     {
       "key": "net_after_cost",
@@ -21,7 +21,7 @@
       "value": null,
       "threshold": "> 0",
       "pass": null,
-      "note_ko": "유효 표본 0건 — 계산 불가"
+      "note_ko": "유효 표본 0건 — 계산 불가(비용 0원)"
     },
     {
       "key": "cash_equivalent",
@@ -49,5 +49,16 @@
     "commission": 2.0,
     "fx": 5.0
   },
+  "cost_applied": 0.0,
+  "cost_breakdown": {
+    "entry_slippage_bps": 0.0,
+    "exit_slippage_bps": 10.0,
+    "commission_bps": 4.0,
+    "fx_bps": 10.0,
+    "total_bps": 24.0,
+    "total": 0.0024,
+    "entry_slippage_in_fill": true
+  },
+  "cost_note_ko": "진입 슬리피지는 체결가에 이미 포함 — 청산 슬리피지·왕복 수수료·환전만 뺀다(P1-3). 유효 표본 0건이면 비용을 부과하지 않는다.",
   "note_ko": "55점·승률 52% 는 참고치다 — 게이트는 이 4지표로만 판단한다."
 }

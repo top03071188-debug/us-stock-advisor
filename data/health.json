@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-11-20",
+  "generated_at": "2026-11-20T07:47:58.938040Z",
+  "status": "normal",
+  "degraded": [],
+  "positions_open": 0,
+  "tranches_filled": 0,
+  "tranches_pending": 0,
+  "stop_count": 0,
+  "trim_count": 0,
+  "stop_reentry_blocked_count": 0,
+  "blocked_reentries": [],
+  "note_ko": "손절 직후 재진입 차단 건수는 같은 봉에서 취소된 2·3차 주문 수다(3.5).",
+  "forced_exits": {},
+  "cash_pct": 1.0,
+  "order_cancellations_count": 7,
+  "order_cancellations": [
+    {
+      "signal_id": "2026-11-20-ADBE-WATCH-001",
+      "ticker": "ADBE",
+      "target_session": "2026-11-20",
+      "cancelled_by": "WATCH_OR_BLOCKED",
+      "superseded_by": "2026-11-20-ADBE-WATCH-002",
+      "at": "2026-11-20T14:20:00Z",
+      "frozen_at": null
+    },
+    {
+      "signal_id": "2026-11-20-GOOGL-WATCH-001",
+      "ticker": "GOOGL",
+      "target_session": "2026-11-20",
+      "cancelled_by": "WATCH_OR_BLOCKED",
+      "superseded_by": "2026-11-20-GOOGL-WATCH-002",
+      "at": "2026-11-20T14:20:00Z",
+      "frozen_at": null
+    },
+    {
+      "signal_id": "2026-11-20-MSFT-WATCH-001",
+      "ticker": "MSFT",
+      "target_session": "2026-11-20",
+      "cancelled_by": "WATCH_OR_BLOCKED",
+      "superseded_by": "2026-11-20-MSFT-WATCH-002",
+      "at": "2026-11-20T14:20:00Z",
+      "frozen_at": null
+    },
+    {
+      "signal_id": "2026-11-20-NVDA-WATCH-001",
+      "ticker": "NVDA",
+      "target_session": "2026-11-20",
+      "cancelled_by": "WATCH_OR_BLOCKED",
+      "superseded_by": "2026-11-20-NVDA-WATCH-002",
+      "at": "2026-11-20T14:20:00Z",
+      "frozen_at": null
+    },
+    {
+      "signal_id": "2026-11-20-CSCO-WATCH-001",
+      "ticker": "CSCO",
+      "target_session": "2026-11-20",
+      "cancelled_by": "WATCH_OR_BLOCKED",
+      "superseded_by": "2026-11-20-CSCO-WATCH-002",
+      "at": "2026-11-20T14:20:00Z",
+      "frozen_at": null
+    },
+    {
+      "signal_id": "2026-11-20-META-WATCH-001",
+      "ticker": "META",
+      "target_session": "2026-11-20",
+      "cancelled_by": "WATCH_OR_BLOCKED",
+      "superseded_by": "2026-11-20-META-WATCH-002",
+      "at": "2026-11-20T14:20:00Z",
+      "frozen_at": null
+    },
+    {
+      "signal_id": "2026-11-20-CAT-WATCH-001",
+      "ticker": "CAT",
+      "target_session": "2026-11-20",
+      "cancelled_by": "WATCH_OR_BLOCKED",
+      "superseded_by": "2026-11-20-CAT-WATCH-002",
+      "at": "2026-11-20T14:20:00Z",
+      "frozen_at": null
+    }
+  ],
+  "data_status": "ok",
+  "last_run_at": "2026-11-20T07:47:00Z",
+  "last_attempt_at": "2026-11-20T07:47:58Z",
+  "last_success_at": "2026-11-20T07:47:58Z",
+  "data_cutoff_at": "2026-11-19T22:00:00Z",
+  "target_session": "2026-11-20",
+  "outage_id": null,
+  "reason": null
+}
