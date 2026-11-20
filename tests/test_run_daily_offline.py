@@ -207,3 +207,65 @@ def test_redaction_runs_inside_pipeline(workdir, monkeypatch):
     proc = subprocess.run([sys.executable, "scripts/redact_quotes.py", "--check",
                            "data/quant_signals.json"], capture_output=True, text=True, check=False)
     assert proc.returncode == 0, proc.stderr
+
+
+# ── 감사 11: 실행 결과 출력(워크플로 분기 근거) ─────────────────────────
+def _gh_output() -> dict:
+    lines = Path("gh_output.txt").read_text(encoding="utf-8").splitlines()
+    return dict(line.split("=", 1) for line in lines if "=" in line)
+
+
+def test_github_output_carries_run_outcome_and_snapshot_state(workdir, monkeypatch):
+    assert _run_daily(monkeypatch) == 0
+    gh = _gh_output()
+    assert gh["run_outcome"] == "normal"
+    assert gh["status_written"] == "true"
+    assert gh["snapshot_created"] == "true"
+    assert gh["snapshot_state"] in ("created", "reused")
+    assert gh["data_status"] == "ok"
+    assert gh["snapshot_id_short"] and len(gh["snapshot_id_short"]) == 12
+
+
+def test_outage_run_marks_snapshot_missing_and_keeps_state_publication(workdir, monkeypatch):
+    """장애 실행: 종료 0 · 스냅샷 없음 · health·알림은 남는다(감사 11)."""
+    def empty_dataset(args, as_of, cutoff):  # noqa: ARG001
+        return {"as_of": as_of.isoformat(), "universe": [], "panels": {}, "macro": {},
+                "macro_previous": {}, "filings": {}, "news": {}, "fundamentals": {},
+                "valuation_inputs": {}, "source": "live",
+                "diagnostics": {"mode": "live", "degraded": ["collect:ConnectionError"],
+                                "sources": {"collect": {"status": "failed"}}}}
+
+    monkeypatch.setattr(run_daily, "load_dataset", empty_dataset)
+    assert _run_daily(monkeypatch, LATER) == 0
+    gh = _gh_output()
+    assert gh["run_outcome"] == "outage"
+    assert gh["status_written"] == "true"
+    assert gh["snapshot_created"] == "false"
+    assert gh["snapshot_state"] == "missing"
+    assert gh["data_status"] == "outage" and gh["outage_id"].startswith("outage-")
+    assert not Path("data/snapshots").exists()
+    assert Path("data/health.json").exists()
+
+    # 다음 단계(아카이브)가 스냅샷 부재로 배치를 끝내지 않는다 — 종료 코드 3
+    assert archive_snapshot.main(["package", "--source", "data/snapshots",
+                                  "--out", "dist_archive", "--name", "snapshot_x"]) == 3
+
+
+def test_notifications_carry_execution_status(workdir, monkeypatch):
+    """§10⑥ — 정상 실행에서 `notifications_latest.json` 의 `data_status` 가 `ok` 다."""
+    assert _run_daily(monkeypatch) == 0
+    doc = json.loads(Path("data/notifications_latest.json").read_text(encoding="utf-8"))
+    assert doc["data_status"] == "ok"
+    assert doc["outage_id"] is None
+    health = json.loads(Path("data/health.json").read_text(encoding="utf-8"))
+    assert health["data_status"] == "ok"
+
+    # 상태부를 하나도 넘기지 않는 단독 호출도 **모르는 값을 ok 로 꾸미지 않는다**
+    from scripts import notify
+
+    summary = notify.evaluate_notifications({"as_of": AS_OF, "signals": []}, log_path="n.json",
+                                            out_path=None, channels=[notify.ConsoleChannel()])
+    assert summary["data_status"] is None
+    assert notify.data_status_of("normal") == "ok"
+    assert notify.data_status_of("stale") == "degraded"
+    assert notify.data_status_of("outage") == "outage"

@@ -24,8 +24,10 @@ from codex_debate.context import (
     INVESTOR_SKILLS,
     MAX_QUOTE_CHARS,
     NEWS_WINDOW_HOURS,
+    QUARANTINE_REASONS,
     VETO_CODES,
     context_numbers,
+    field_numbers,
     load_schema,
     normalize_text,
     prompt_hash,
@@ -63,7 +65,8 @@ MIN_VALID_SKILLS = 3
 DROP_RATE_LIMIT = 0.30
 UNKNOWN_RATIO_LIMIT = 0.50
 #: 격리로 지울 수 있는 인젝션 범위 — 이 범위면 그 기사만 빼고 판단을 계속한다(2단계 격리).
-QUARANTINE_SCOPES: tuple[str, ...] = ("prompt_injection_body", "prompt_injection_headline", "news_body")
+#: 본문·헤드라인뿐 아니라 `source`·`url` 메타데이터로 위장한 지시문도 **그 기사만** 뺄 수 있다.
+QUARANTINE_SCOPES: tuple[str, ...] = QUARANTINE_REASONS + ("news_body",)
 #: 무결성을 보장할 수 없는 범위 — 이 때만 `NEWS_INJECTION`(V11) 으로 종목 전체를 차단한다.
 INTEGRITY_SCOPES: tuple[str, ...] = (INTEGRITY_NON_NEWS, "non_news", "integrity")
 
@@ -83,6 +86,19 @@ def injection_blocks(ctx: dict | None) -> bool:
     if scope in QUARANTINE_SCOPES:
         return False
     return bool(ctx.get("injection_detected"))
+
+
+def integrity_compromised(ctx: dict | None) -> bool:
+    """V11 **사전 중단** 판정 — 무결성 훼손이면 Codex 를 부르지 않는다(P-3 정책).
+
+    기사 본문·헤드라인·source·url 격리는 "그 기사만 빼기"로 판단을 계속할 수 있지만,
+    공시·13F·자유 서술 같은 뉴스 밖 필드에 지시문이 침투한 경우는 컨텍스트에서 지울 수 없다.
+    그 상태로 10콜을 돌리면 모델이 지시문을 읽고 예산도 쓴다 — 호출 전에 종료한다(감사 08 · P-3).
+    """
+    ctx = ctx or {}
+    if ctx.get("injection_integrity_compromised"):
+        return True
+    return str(ctx.get("injection_scope") or "") in INTEGRITY_SCOPES
 
 
 def resume_key(ctx: dict, *, prompt_version: str | None = None,
@@ -437,7 +453,22 @@ def validate_round2(payload: Any, ctx: dict, expected_skill: str | None = None) 
                     counts["numbers_rejected"] = counts.get("numbers_rejected", 0) + 1
                     reasons.append(f"ref_not_in_context:{target}")
                     continue
-            elif ref not in field_names:
+            elif ref in field_names:
+                # 필드 이름을 댄 참조는 **그 필드의 단위**로만 본다 — `PEG 3.5` 를 `350%` 라고
+                # 우기거나 다른 필드의 숫자를 빌려 오는 경로를 막는다(감사 08-d).
+                field_allowed = field_numbers(ctx, ref)
+                if not field_allowed:
+                    reasons.append(f"ref_field_has_no_number:{target}")
+                    continue
+                numbers_in_ref = NUMBER_RE.findall(ref)
+                bad = [n for n in numbers_in_ref
+                       if _to_float(n) is None or not is_allowed_number(_to_float(n), field_allowed)]
+                if bad:
+                    counts["numbers_checked"] = counts.get("numbers_checked", 0) + len(numbers_in_ref)
+                    counts["numbers_rejected"] = counts.get("numbers_rejected", 0) + len(bad)
+                    reasons.append(f"ref_not_in_context:{target}")
+                    continue
+            else:
                 bodies = [item.get("body_excerpt_1500") or "" for item in ctx.get("news") or []]
                 if not any(ref in normalize_text(body) for body in bodies):
                     counts["quotes_dropped"] = counts.get("quotes_dropped", 0) + 1
@@ -613,17 +644,31 @@ def eight_k_risk_score(filings: Iterable[dict] | None) -> float:
 
 def articles_in_window(ctx: dict) -> int:
     """데이터 마감 기준 48시간 안에 발행된 기사 수(시각을 모르면 입력으로 센다)."""
+    return len(valid_articles_in_window(ctx))
+
+
+def valid_articles_in_window(ctx: dict) -> list[str]:
+    """컨텍스트가 모델에게 넘긴 **48h 유효 기사 전체 집합**(ID).
+
+    판독 분모는 모델이 제출한 ID 수가 아니라 이것이다 — 10건을 주고 2건만 읽고 왔으면
+    폐기율은 80%이고 `read_done` 이 아니다(감사 08-a). `published_at` 이 없으면 유효로 센다
+    (모델에 전달된 기사이므로 판독 대상이다).
+    """
     cutoff = _parse_iso(ctx.get("data_cutoff_at"))
     news = ctx.get("news") or []
-    if cutoff is None:
-        return len(news)
-    start = cutoff.timestamp() - NEWS_WINDOW_HOURS * 3600
-    count = 0
+    ids: list[str] = []
     for item in news:
+        news_id = str(item.get("id") or "")
+        if not news_id:
+            continue
+        if cutoff is None:
+            ids.append(news_id)
+            continue
         published = _parse_iso(item.get("published_at"))
+        start = cutoff.timestamp() - NEWS_WINDOW_HOURS * 3600
         if published is None or start <= published.timestamp() <= cutoff.timestamp() + 1:
-            count += 1
-    return count
+            ids.append(news_id)
+    return ids
 
 
 def _round1_news(round1: Iterable[Validated] | None) -> tuple[set[str], set[str], dict[str, dict]]:
@@ -655,14 +700,20 @@ def evaluate_news_state(
     items_in: int | None = None,
     items_kept: int | None = None,
 ) -> dict:
-    """세 상태(`not_read` / `insufficient_evidence` / `read_done`)를 **겹치지 않게** 판정한다."""
-    articles = articles_in_window(ctx)
+    """세 상태(`not_read` / `insufficient_evidence` / `read_done`)를 **겹치지 않게** 판정한다.
+
+    분모(`items_in`)는 **컨텍스트가 넘긴 48h 유효 기사 전체**다(`valid_articles_in_window`).
+    모델이 제출한 ID 수를 분모로 쓰면 10건 중 2건만 읽고도 폐기율 0% `read_done` 이 나온다.
+    """
+    valid_ids = valid_articles_in_window(ctx)
+    articles = len(valid_ids)
     ids_in, ids_dropped, kept = _round1_news(round1)
     verified = {news_id for news_id, slot in kept.items() if slot["verified"]}
     if items_in is None:
-        items_in = len(ids_in | verified)
+        # 분모는 **컨텍스트가 전달한 48h 유효 기사 전체**다. 창 밖 기사를 읽었더라도 분모에 넣지 않는다.
+        items_in = len(valid_ids)
     if items_kept is None:
-        items_kept = len(verified)
+        items_kept = len(verified & set(valid_ids)) if valid_ids else len(verified)
     items_dropped = max(0, items_in - items_kept)
     drop_rate = (items_dropped / items_in) if items_in else 0.0
     unknown = sum(1 for news_id in verified
@@ -737,12 +788,15 @@ def assemble_validated(
     news_state: dict | None = None,
     validated_at: str | datetime | None = None,
     model_version: str | None = None,
+    blocked_before_calls: bool = False,
 ) -> dict:
     """검증된 라운드 결과를 `data/debate_reports.json` 의 리포트 1건으로 조립한다.
 
     `validated_at` 은 **편입 프로세스가 그 바이트를 실제로 검증한 시각**이다(감사 P0-2).
     보고서가 스스로 적는 `completed_at` 과 다를 수 있고, 마감 뒤에 검증된 결과는
     `late=True` 가 되어 그날 결정에 붙지 않는다.
+
+    `blocked_before_calls=True` 는 V11 사전 중단(P-3) — Codex 를 부르지 않은 리포트다.
     """
     r1 = [x for x in (round1 or [])]
     r2 = [x for x in (round2 or [])]
@@ -755,6 +809,9 @@ def assemble_validated(
         status = status_override
     elif len(valid1) < min_valid_skills:
         status = "quorum_failed"
+    elif r2 and not valid2:
+        # 2R 호출이 전부 실패했다 — 1R·정족수는 넘었어도 "완주"가 아니다(감사 09).
+        status = "partial"
     elif not guard_ok or not chair_ok:
         status = "failed"
     else:
@@ -821,6 +878,21 @@ def assemble_validated(
     skills_in = len(r1) + (1 if guard is not None else 0) + (1 if chair is not None else 0)
     skills_kept = len(valid1) + (1 if guard_ok else 0) + (1 if chair_ok else 0)
 
+    # 재개·감사용 **라운드 상태 스냅샷** — 저장된 검증 상태(ok·사유·카운트·플래그)를 그대로 남긴다.
+    # 복원할 때 `ok=True` 로 일괄 되살리면 실패한 라운드가 통과로 둔갑한다(감사 09-3).
+    def _state_of(result: Validated | None) -> dict | None:
+        if result is None:
+            return None
+        return {"ok": bool(result.ok), "reasons": list(result.reasons)[:8],
+                "counts": dict(result.counts or {}), "flags": dict(result.flags or {})}
+
+    round_state = {
+        "round1": [_state_of(x) for x in r1],
+        "round2": [_state_of(x) for x in r2],
+        "guard": _state_of(guard),
+        "chair": _state_of(chair),
+    }
+
     as_of = str(ctx.get("as_of") or "")
     report = {
         "report_id": f"{as_of}-{ticker or ctx.get('ticker')}-debate-{int(report_seq):02d}",
@@ -857,9 +929,16 @@ def assemble_validated(
             "resume_key": resume_key(ctx, model_version=model_version),
             "injection_scope": ctx.get("injection_scope"),
             "injection_blocking": injection_blocks(ctx),
-            "excluded_news": [{"id": item.get("id"), "reason": item.get("reason"),
-                                "patterns": list(item.get("patterns") or [])[:4]}
+            "blocked_before_calls": bool(blocked_before_calls),
+            "blocked_reason": ("V11_INTEGRITY_PRE_CALL" if blocked_before_calls else None),
+            # 격리 목록 — 원문·source·url 없이 **기사 ID·본문 해시·사유 코드**만(감사 08).
+            "excluded_news": [{"article_id": item.get("article_id") or item.get("id"),
+                                "content_sha256": item.get("content_sha256") or item.get("content_hash"),
+                                "reason_code": item.get("reason_code") or item.get("reason")}
                                for item in (ctx.get("excluded_news") or [])[:10]],
+            # 기사 해시 영수증 — 컨텍스트가 모델에 넘긴 유효 기사 전수.
+            "article_receipts": article_receipts(ctx),
+            "round_state": round_state,
         },
         "quant_grade": quant_grade,
         "display_grade": display_grade,
@@ -878,7 +957,58 @@ def assemble_validated(
         report["intent"] = "no_action" if blocking else quant_intent
         report["auto_downgrade_applied"] = False
         report["round3"] = {"guard": None, "chair": None}
+    # [감사 02 · 08] 보고서 **바이트 영수증** — 검증 뒤에 손으로 고쳐 쓴 리포트와 구분한다.
+    # 트랙 1(`engine/ledger/debate.py`)은 이 값을 그대로 대조하면 된다(공유 계약).
+    report["validation"]["report_sha256"] = report_receipt_sha256(report)
     return report
+
+
+def article_receipts(ctx: dict) -> list[dict]:
+    """모델에 전달한 유효 기사의 **해시 영수증**(`article_id`·`content_sha256`).
+
+    나중에 같은 `report_id` 로 "그때 읽은 그 기사인가"를 대조할 수 있게 한다.
+    """
+    receipts: list[dict] = []
+    for item in ctx.get("news") or []:
+        news_id = str(item.get("id") or "")
+        if not news_id:
+            continue
+        receipts.append({"article_id": news_id,
+                         "content_sha256": item.get("content_sha256") or item.get("content_hash")})
+    return receipts
+
+
+#: 영수증 계산에서 빼는 필드 — 자식 해시라서 넣으면 순환하고, 검증 대상을 바꾸면 무한 재계산이 된다.
+RECEIPT_EXCLUDED_FIELDS: tuple[str, ...] = ("report_sha256",)
+
+
+def report_receipt_payload(report: dict) -> dict:
+    """영수증 해시 대상 — **보고서 정규 JSON**에서 `validation.report_sha256` 만 빼낸 사본."""
+    payload = json.loads(json.dumps(report, ensure_ascii=False, default=str))
+    validation = payload.get("validation")
+    if isinstance(validation, dict):
+        for key in RECEIPT_EXCLUDED_FIELDS:
+            validation.pop(key, None)
+    return payload
+
+
+def report_receipt_sha256(report: dict) -> str:
+    """보고서 정규 JSON 의 SHA-256 — `validation.report_sha256` 에 적는 값(공유 계약).
+
+    정규화: `json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))`
+    (공백 없는 키 정렬 JSON). 같은 함수로 다시 계산해 대조하면 된다.
+    """
+    payload = report_receipt_payload(report)
+    blob = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def verify_report_receipt(report: dict) -> bool:
+    """적힌 영수증이 지금 내용과 일치하는가 — 필드가 없으면 `False`(검증 불가)."""
+    stamped = str(((report or {}).get("validation") or {}).get("report_sha256") or "")
+    if not stamped:
+        return False
+    return stamped == report_receipt_sha256(report)
 
 
 def validate_and_assemble(
@@ -938,6 +1068,9 @@ def _validate_report(rep: dict, auto_downgrade_enabled: bool) -> list[str]:
         errors.append(f"{rid}: status=complete 인데 의장 결과가 없다")
     if int(rep.get("validation", {}).get("skills_kept", 0)) < MIN_VALID_SKILLS and rep.get("status") == "complete":
         errors.append(f"{rid}: 정족수 미달인데 status=complete")
+    stamped = str((rep.get("validation") or {}).get("report_sha256") or "")
+    if stamped and not verify_report_receipt(rep):
+        errors.append(f"{rid}: validation.report_sha256 가 현재 내용과 다르다 (검증 뒤 편집됨)")
     for entry in rep.get("round1") or []:
         for read in entry.get("news_read") or []:
             if "quote" in read:

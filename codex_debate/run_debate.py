@@ -7,6 +7,8 @@ git pull --ff-only (실패하면 시작하지 않는다)
 ```
 
 - 호출 예산: 1회 80콜 · 1일 120콜. 초과하면 그 실행을 멈추고 `status: stopped_by_limit` 로 저장한다.
+  사용량은 **콜 직후마다** 체크포인트로 적는다(중단·동시 실행에도 차감이 남는다).
+- V11 무결성 훼손(`injection_integrity_compromised`)이면 **Codex 를 부르기 전에** 그 종목을 접는다(P-3).
 - `--resume`: 같은 `as_of` 의 `partial`/`stopped_by_limit` 리포트를 이어서 2R/3R 부터 진행한다.
 - `--no-git`/`--no-push`: Codex Cloud PR 모드·테스트용(커밋·푸시를 하지 않는다).
 """
@@ -18,6 +20,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -47,6 +50,7 @@ from codex_debate.executors import (  # noqa: E402
 from codex_debate.validate import (  # noqa: E402
     Validated,
     assemble_validated,
+    integrity_compromised,
     resume_key,
     validate_round_output,
     validate_reports_file,
@@ -88,12 +92,15 @@ def resolve_deadline(cfg: "RunConfig", quant_signals: dict | None = None) -> dat
 
     토론이 주문 마감을 넘겨 끝나면 그 결정에 붙지 못한다(`late`). 그래서 **시작 전에** 전체 한도를
     정해 두고, 넘으면 남은 종목을 포기하며 그때까지의 라운드만 저장한다.
+
+    `--deadline` 문자열을 해석할 수 없으면 **무제한(제한 없음)으로 되돌리지 않고** `ValueError` 로 막는다 —
+    오타 하나로 마감이 사라지면 늦은 결정이 정상처럼 저장된다(감사 09-4).
     """
     if cfg.deadline_at:
         try:
             parsed = datetime.fromisoformat(str(cfg.deadline_at).replace("Z", "+00:00"))
-        except ValueError:
-            return None
+        except ValueError as exc:
+            raise ValueError(f"--deadline 을 해석할 수 없다: {cfg.deadline_at!r} (ISO8601 예: 2026-11-20T13:00:00Z)") from exc
         return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
     cutoff = (quant_signals or {}).get("order_cutoff_at")
     if not cutoff:
@@ -113,6 +120,8 @@ class RunSummary:
     done: list[str] = field(default_factory=list)
     failed: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
+    #: V11 무결성 훼손으로 **호출 전에** 접은 종목(P-3).
+    blocked: list[str] = field(default_factory=list)
     calls: int = 0
     reports_path: str = str(DEFAULT_REPORTS)
     errors: list[str] = field(default_factory=list)
@@ -122,6 +131,7 @@ class RunSummary:
     def to_dict(self) -> dict:
         return {
             "status": self.status, "done": self.done, "failed": self.failed, "skipped": self.skipped,
+            "blocked": self.blocked,
             "calls": self.calls, "reports_path": self.reports_path, "errors": self.errors,
             "committed": self.committed, "deadline_at": self.deadline_at,
         }
@@ -146,6 +156,18 @@ class CallBudget:
 
 
 # ── 사용량 원장 ───────────────────────────────────────────────────────────
+def reload_signals(path: str | Path, fallback: dict | None = None) -> dict:
+    """pull 뒤 신호 파일을 **다시 읽는다** — 파일이 없으면 받은 값을 그대로 쓴다(네트워크·테스트)."""
+    p = Path(path)
+    if not p.exists():
+        return dict(fallback or {})
+    try:
+        doc = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return dict(fallback or {})
+    return doc if isinstance(doc, dict) else dict(fallback or {})
+
+
 def load_daily_usage(path: str | Path) -> dict[str, int]:
     p = Path(path)
     if not p.exists():
@@ -158,9 +180,17 @@ def load_daily_usage(path: str | Path) -> dict[str, int]:
 
 
 def save_daily_usage(path: str | Path, usage: dict[str, int]) -> None:
+    """일일 사용량을 **원자적으로** 쓴다 — 1R 4콜이 동시에 체크포인트를 찍어도 반쯤 쓰인 파일이 없다."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(usage, ensure_ascii=False, indent=2), encoding="utf-8")
+    fd, tmp = tempfile.mkstemp(prefix=p.name + ".", suffix=".tmp", dir=str(p.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(usage, ensure_ascii=False, indent=2))
+        os.replace(tmp, p)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 # ── git ──────────────────────────────────────────────────────────────────
@@ -181,12 +211,28 @@ def commit_and_push(
     push: bool = True,
     cwd: str | Path | None = None,
 ) -> bool:
-    """검증을 통과한 리포트만 커밋한다. 커밋할 변경이 없으면 False."""
-    subprocess.run(["git", "add", *[str(p) for p in paths]], check=True, cwd=cwd)
-    staged = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=cwd)
-    if staged.returncode == 0:
+    """검증을 통과한 리포트만 커밋한다. 커밋할 변경이 없으면 False.
+
+    [감사 10] `git commit` 은 **이미 스테이징된 다른 파일까지** 함께 삼킨다. 그래서 경로를 지정한
+    `git commit --only -- <paths>` 로 커밋해, 다른 작업이 올려 둔 인덱스를 건드리지 않는다
+    (인덱스 사전 검증도 한다 — 우리 경로 밖의 파일이 섞이면 실패로 끝난다).
+    """
+    targets = [str(p) for p in paths]
+    subprocess.run(["git", "add", "--", *targets], check=True, cwd=cwd)
+    ours = subprocess.run(["git", "diff", "--cached", "--name-only", "--", *targets],
+                          capture_output=True, text=True, cwd=cwd, check=True)
+    staged_ours = {line.strip() for line in (ours.stdout or "").splitlines() if line.strip()}
+    if not staged_ours:
         return False
-    subprocess.run(["git", "commit", "-m", message], check=True, cwd=cwd)
+    subprocess.run(["git", "commit", "--only", "-m", message, "--", *targets], check=True, cwd=cwd)
+    committed = subprocess.run(["git", "show", "--pretty=format:", "--name-only", "HEAD"],
+                               capture_output=True, text=True, cwd=cwd, check=True)
+    names = {line.strip() for line in (committed.stdout or "").splitlines() if line.strip()}
+    unexpected = names - staged_ours
+    if unexpected:
+        raise subprocess.CalledProcessError(
+            1, ["git", "commit", "--only"],
+            output=f"커밋에 허용 밖 파일이 섞였다: {sorted(unexpected)}")
     if push:
         subprocess.run(["git", "push"], check=True, cwd=cwd)
     return True
@@ -229,6 +275,7 @@ def _call_skill(
     skill: str,
     context: dict,
     state: dict,
+    deadline: datetime | None = None,
 ) -> Validated:
     schema = load_schema(round_name)
     skill_body = load_skill(skill)
@@ -254,6 +301,7 @@ def _call_skill(
         context_payload=context,
         out_name=f"{round_name}_{skill}.json",
         budget=budget.consume,
+        deadline=deadline,
     )
     if result.status == "limit":
         raise RunLimitReached(result.error or "사용량 한도")
@@ -273,12 +321,21 @@ def _run_ticker(
     budget: CallBudget,
     cfg: RunConfig,
     state: dict,
+    deadline: datetime | None = None,
+    on_call: Callable[[], None] | None = None,
 ) -> dict:
     """1R → 2R → 3R 을 수행한다. 정족수 미달이면 3R 을 건너뛴다(등급 권고 미적용)."""
+
+    def call(round_name: str, skill: str) -> Validated:
+        result = _call_skill(executor, budget, round_name, skill, context, state, deadline=deadline)
+        if on_call is not None:
+            on_call()  # 콜 직후 예산 체크포인트 — 프로세스가 죽어도 차감이 남는다(감사 09-4)
+        return result
+
     have1 = {v.data["skill"] for v in state.get("round1") or [] if v.ok and v.data}
     missing1 = [skill for skill in INVESTOR_SKILLS if skill not in have1]
     gathered1, error1 = _parallel([
-        (lambda s=skill: _call_skill(executor, budget, "round1", s, context, state)) for skill in missing1
+        (lambda s=skill: call("round1", s)) for skill in missing1
     ])
     state["round1"] = list(state.get("round1") or []) + gathered1
     if error1 is not None:
@@ -290,7 +347,7 @@ def _run_ticker(
     have2 = {v.data["skill"] for v in state.get("round2") or [] if v.ok and v.data}
     targets = [v.data["skill"] for v in valid1 if v.data["skill"] not in have2]
     gathered2, error2 = _parallel([
-        (lambda s=skill: _call_skill(executor, budget, "round2", s, context, state)) for skill in targets
+        (lambda s=skill: call("round2", s)) for skill in targets
     ])
     state["round2"] = list(state.get("round2") or []) + gathered2
     if error2 is not None:
@@ -298,10 +355,10 @@ def _run_ticker(
 
     guard = state.get("guard")
     if not (guard and guard.ok and guard.data):
-        state["guard"] = _call_skill(executor, budget, "round3_guard", "risk_guard", context, state)
+        state["guard"] = call("round3_guard", "risk_guard")
     chair = state.get("chair")
     if not (chair and chair.ok and chair.data):
-        state["chair"] = _call_skill(executor, budget, "round3_chair", "committee_chair", context, state)
+        state["chair"] = call("round3_chair", "committee_chair")
     return state
 
 
@@ -368,16 +425,34 @@ def _report_seq(doc: dict, ticker: str, as_of: str, reuse: dict | None = None) -
 
 
 def _initial_state(report: dict | None) -> dict:
+    """이어 돌릴 리포트의 라운드 상태 복원 — **저장된 검증 상태·카운트 그대로** 쓴다.
+
+    예전에는 데이터가 있으면 `ok=True` 로 되살렸다. 그러면 1R 에서 스키마검사로 떨어진 출력이
+    통과로 둔갑해 정족수·리포트 상태가 실제와 달라졌다(감사 09-3).
+    저장된 상태(`validation.round_state`)가 없는 리포트는 **이어받지 않는다** — 모르면 다시 돌린다.
+    """
     if not report:
         return {"round1": [], "round2": [], "guard": None, "chair": None}
     round3 = report.get("round3") or {}
-    guard = round3.get("guard")
-    chair = round3.get("chair")
+    states = (report.get("validation") or {}).get("round_state") or {}
+
+    def restore(kind: str, data: dict | None, slot: dict | None) -> Validated | None:
+        if not data or not isinstance(slot, dict) or not slot:
+            return None
+        return Validated(kind, data, bool(slot.get("ok")), list(slot.get("reasons") or []),
+                         dict(slot.get("counts") or {}), dict(slot.get("flags") or {}))
+
+    round1_states = states.get("round1") or []
+    round2_states = states.get("round2") or []
+    round1 = [restore("round1", entry, round1_states[i] if i < len(round1_states) else None)
+              for i, entry in enumerate(report.get("round1") or [])]
+    round2 = [restore("round2", entry, round2_states[i] if i < len(round2_states) else None)
+              for i, entry in enumerate(report.get("round2") or [])]
     return {
-        "round1": [Validated("round1", entry, True) for entry in report.get("round1") or []],
-        "round2": [Validated("round2", entry, True) for entry in report.get("round2") or []],
-        "guard": Validated("round3_guard", guard, True) if guard else None,
-        "chair": Validated("round3_chair", chair, True) if chair else None,
+        "round1": [v for v in round1 if v is not None],
+        "round2": [v for v in round2 if v is not None],
+        "guard": restore("round3_guard", round3.get("guard"), states.get("guard")),
+        "chair": restore("round3_chair", round3.get("chair"), states.get("chair")),
     }
 
 
@@ -391,6 +466,7 @@ def _save_report(
     *,
     status_override: str | None = None,
     seq: int = 1,
+    blocked_before_calls: bool = False,
 ) -> dict:
     report = assemble_validated(
         context,
@@ -407,6 +483,7 @@ def _save_report(
         # 검증 시각 — 이 프로세스가 결과를 받아 검증한 순간. `completed_at`(모델 자기 신고)과 별개다.
         validated_at=_now_iso(),
         model_version=cfg.model,
+        blocked_before_calls=blocked_before_calls,
     )
     upsert_report(doc, report)
     write_reports_doc(path, doc, signals, context, cfg)
@@ -433,17 +510,25 @@ def run_debate(
     """토론 1회 실행. 예산·한도·검증에 따라 멈추고 `RunSummary` 로 결과를 남긴다."""
     cfg = cfg or RunConfig()
     summary = RunSummary(status="complete", reports_path=str(cfg.reports_path))
+    if pull:
+        # [감사 09-2] **먼저** 원격을 당긴다 — 대상 선정·컨텍스트가 pull 전 파일로 정해지면
+        # 방금 올라온 신호를 놓치고, 반대로 퇴근한 신호를 토론한다.
+        git_pull_or_abort(cwd)
+        quant_signals = reload_signals(cfg.signals_path, quant_signals)
     as_of = str(quant_signals.get("as_of") or "")
     targets = select_targets(quant_signals, tickers=tickers, top=top, max_tickers=cfg.max_tickers)
     if not targets:
         summary.status = "no_targets"
         return summary
 
-    if pull:
-        git_pull_or_abort(cwd)
-
     usage = load_daily_usage(cfg.usage_path)
     budget = CallBudget(cfg.max_calls_per_run, cfg.max_calls_per_day, used_day=int(usage.get(as_of, 0) or 0))
+
+    def checkpoint_usage() -> None:
+        """콜 하나가 끝날 때마다 일일 사용량을 적는다 — 마지막에 한 번만 쓰면 중단 시 차감이 사라진다."""
+        usage[as_of] = budget.used_day
+        save_daily_usage(cfg.usage_path, usage)
+
     doc = load_reports_doc(cfg.reports_path, quant_signals)
     deadline = resolve_deadline(cfg, quant_signals)
     summary.deadline_at = deadline.isoformat() if deadline else None
@@ -477,19 +562,31 @@ def run_debate(
             radar=radar,
         )
         if reuse is not None:
-            # 재개 키(signal_id + snapshot_id + context_hash + prompt_version + model_version)가
-            # 다르면 입력이 바뀐 것이다 — 이전 라운드를 재사용하지 않고 새로 시작한다(감사 P1-1).
-            stored = str((reuse.get("validation") or {}).get("resume_key") or "")
-            if stored and stored != resume_key(context, model_version=cfg.model):
+            # 재개 키(signal_id + snapshot_id + context_hash + prompt_hash + model)가
+            # **비어 있지 않고 정확히 같을 때만** 이어간다. 키가 없는 구 리포트는 무엇을 이어받는지
+            # 알 수 없으므로 처음부터 다시 돈다(감사 09-3).
+            stored = str((reuse.get("validation") or {}).get("resume_key") or "").strip()
+            if not stored or stored != resume_key(context, model_version=cfg.model):
                 reuse = None
         seq = _report_seq(doc, ticker, as_of, reuse)
         state = _initial_state(reuse)
         if dry_run:
             summary.done.append(ticker)
             continue
+        if integrity_compromised(context):
+            # P-3: 무결성 훼손이면 **Codex 를 부르기 전에** V11 차단 상태로 접는다 —
+            # 10콜을 돌리면 모델이 지시문을 그대로 읽고 예산도 쓴다(감사 08 · 정책 P-3).
+            report = _save_report(doc, cfg.reports_path, cfg, quant_signals, context, state,
+                                  status_override="failed", seq=seq, blocked_before_calls=True)
+            summary.failed.append(ticker)
+            summary.errors.append(f"{ticker}: V11 무결성 훼손 — 호출 전 종료")
+            summary.blocked.append(ticker)
+            summary.status = "blocked_injection"
+            continue
         save_context(context, cfg.context_dir)
         try:
-            state = _run_ticker(context, executor, budget, cfg, state)
+            state = _run_ticker(context, executor, budget, cfg, state, deadline=deadline,
+                                on_call=checkpoint_usage)
         except RunLimitReached as exc:
             _save_report(doc, cfg.reports_path, cfg, quant_signals, context, state,
                          status_override="stopped_by_limit", seq=seq)
@@ -508,19 +605,21 @@ def run_debate(
         report = _save_report(doc, cfg.reports_path, cfg, quant_signals, context, state, seq=seq)
         if report["status"] in ("complete", "partial"):
             summary.done.append(ticker)
+            if report["status"] == "partial" and summary.status == "complete":
+                # 2R 전멸 등으로 완주하지 못한 리포트 — 파일에는 partial 로 적혔고 실행 요약도 같다.
+                summary.status = "partial"
         else:
             summary.failed.append(ticker)
 
     summary.calls = executor.calls
-    usage[as_of] = budget.used_day
-    save_daily_usage(cfg.usage_path, usage)
+    checkpoint_usage()
 
     if dry_run:
         summary.status = "dry_run"
         return summary
 
     if summary.status == "stopped_by_deadline" and not summary.done and not summary.failed:
-        # 마감 때문에 **아무 종목도 시작하지 못했다** — 리포트 파일이 없으니 파일 검증은 건너뜀다.
+        # 마감 때문에 **아무 종목도 시작하지 못했다** — 리포트 파일이 없으니 파일 검증은 건너뛴다.
         return summary
 
     errors = validate_reports_file(cfg.reports_path, auto_downgrade_enabled=cfg.auto_downgrade_enabled)
@@ -529,11 +628,14 @@ def run_debate(
         summary.errors.extend(errors[:10])
         return summary
 
+    if summary.blocked and summary.done and summary.status == "blocked_injection":
+        summary.status = "partial"
     if summary.failed and summary.status == "complete":
         summary.status = "partial"
 
-    if summary.done and (pull or push):
-        message = f"debate: {','.join(summary.done)} @ {as_of}" if summary.done else f"debate: partial @ {as_of}"
+    if (summary.done or summary.blocked) and (pull or push):
+        message = (f"debate: {','.join(summary.done)} @ {as_of}" if summary.done
+                   else f"debate: blocked by V11 @ {as_of}")
         try:
             summary.committed = commit_and_push([cfg.reports_path], message, push=push, cwd=cwd)
         except subprocess.CalledProcessError as exc:
@@ -583,6 +685,15 @@ def _split_tickers(value: str | None) -> list[str] | None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    try:
+        return _main(args)
+    except ValueError as exc:
+        # `--deadline` 형식 오류 같은 **설정 오류** — 무제한으로 되돌아가지 않고 분명히 실패한다.
+        print(f"설정 오류: {exc}", file=sys.stderr)
+        return 2
+
+
+def _main(args: argparse.Namespace) -> int:
     signals_path = Path(args.signals)
     if not signals_path.exists():
         print(f"신호 파일이 없다: {signals_path}", file=sys.stderr)
@@ -612,6 +723,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
 
     if args.dry_run:
+        # [감사 09-2] 대상·컨텍스트는 **pull 뒤 파일**로 정한다 — 미리보기도 실행과 같은 순서를 따른다.
+        if not args.no_git:
+            git_pull_or_abort(None)
+            quant_signals = reload_signals(signals_path, quant_signals)
         targets = select_targets(quant_signals, tickers=_split_tickers(args.tickers), top=args.top,
                                  max_tickers=cfg.max_tickers)
         deadline = resolve_deadline(cfg, quant_signals)
@@ -644,15 +759,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
     if summary.status in ("complete", "partial", "no_targets", "dry_run"):
         return 0
-    if summary.status in ("stopped_by_limit", "stopped_by_deadline", "auth_expired", "executor_unavailable"):
+    if summary.status in ("stopped_by_limit", "stopped_by_deadline", "auth_expired", "executor_unavailable",
+                          "blocked_injection"):
         return 3
     return 2
 
 
 __all__ = [
     "CALLS_PER_TICKER", "CallBudget", "RunConfig", "RunSummary", "build_parser", "commit_and_push",
-    "git_pull_or_abort", "load_daily_usage", "load_reports_doc", "main", "resolve_deadline", "run_debate",
-    "save_daily_usage", "upsert_report", "write_reports_doc",
+    "git_pull_or_abort", "load_daily_usage", "load_reports_doc", "main", "reload_signals", "resolve_deadline",
+    "run_debate", "save_daily_usage", "upsert_report", "write_reports_doc",
 ]
 
 if __name__ == "__main__":  # pragma: no cover

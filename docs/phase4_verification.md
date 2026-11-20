@@ -162,10 +162,21 @@ Phase 4 관련 170건:
 (트랙 B: 실행 상태·발행 세트·토론 리스크 분리·페어/정책 효과 / 이번 배선: 주문 취소 4키).
 `deny_keys`·`deny_paths`·`deny_patterns` 는 **한 항목도 바꾸지 않았다**.
 
-### 4.4 워크플로 불변
+### 4.4 워크플로 등록 상태
 
-`.github/workflows/*` 는 수정·추가·스테이징 **0건**(토큰 권한 없음). `codex_debate/workflows/debate-validate.yml` 은
-**템플릿**(사람이 GitHub 웹에서 추가)이며, PR 전체 경로를 검사하고 `.github/workflows/`·`config/params*` 변경을 가드한다.
+`.github/workflows/*` 는 **CLI 토큰으로 push 하지 않는다**(`workflows` 권한 없음 → 403). 운영 워크플로 4종
+(`ci.yml`·`daily-postclose.yml`·`deploy.yml`·`debate-validate.yml`)은 **GitHub 웹 업로드**로 갱신하고, 저장소에는
+같은 내용의 사본(`codex_debate/workflows/debate-validate.yml`)을 둔다. 두 사본이 어긋나면 테스트가 실패한다
+(`test_debate_pr_workflow_uses_base_branch_verifier`).
+
+현재 운영 상태(2026-11-20 기준):
+
+| 파일 | 상태 | 하는 일 |
+|---|---|---|
+| `ci.yml` | **등록·가동** | 테스트·ruff·전체 범위 가드. PR 은 **기본 브랜치의 검증기**로 검사(감사 10) |
+| `daily-postclose.yml` | **등록·가동** | 계획 스케줄 일일 배치. `run_outcome`/`snapshot_created` 로 단계를 나누고 장애에도 상태를 커밋·배포(감사 11) |
+| `deploy.yml` | **등록·가동** | Pages 빌드·배포. `deploy_manifest.json`(파일별 sha256) 무결성 검사 후 업로드(감사 12) |
+| `debate-validate.yml` | **등록·가동** | 리포트 PR 검증. PR 이 건드린 **전체 경로**를 공개 범위 가드로 검사하고 리포트 PR 경로를 가드 |
 
 ## 4.5 커밋 가드의 스키마 예외(한 곳)
 

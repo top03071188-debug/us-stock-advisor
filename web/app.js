@@ -51,7 +51,8 @@ const BADGE_CLASS = {
   "무효(발행 전 완료)": "bad",
 };
 
-const state = { core: {}, tickers: [], ticker: null, route: "today", sampleMode: false, bound: false };
+const state = { core: {}, tickers: [], ticker: null, route: "today", sampleMode: false, bound: false,
+  bundle: null };
 
 /* ────────────────────────── 공용 ────────────────────────── */
 const $ = (id) => document.getElementById(id);
@@ -285,31 +286,34 @@ function renderDataStatus(meta, health) {
   host.append(el("div", { class: `banner ${info.cls}` }, [
     el("strong", { text: info.text }),
     el("span", { class: "tiny", text: status === "outage"
-      ? ` · 직전 정상 신호 ${meta && meta.as_of ? `${meta.as_of} 기준` : "그대로"} 표시 · 마지막 성공 ${fmtKo(success)}`
+      ? ` · 직전 정상 신호 ${meta && meta.as_of ? `${meta.as_of} 기준` : "그대로"} 표시 · `
+        + (success ? `마지막 성공 ${fmtKo(success)}` : "이전 정상 배치 없음")
       : ` · 마지막 시도 ${fmtKo(attempt)}` }),
   ]));
   // `last_attempt_at`(이번 시도)과 `last_success_at`(마지막 성공)은 **다른 값**이다 — 둘을 나란히 보여 준다.
+  // 첫 장애 실행이면 `last_success_at` 이 `null` 이다 — “배치가 한 번도 성공한 적 없다”를 숨기지 않는다.
   host.append(el("p", { class: "tiny", text:
-    `시도 ${fmtKo(attempt)} · 성공 ${fmtKo(success)} · 마감 ${fmtKo(h.data_cutoff_at || (meta && meta.data_cutoff_at))}`
+    `시도 ${fmtKo(attempt)} · 성공 ${success ? fmtKo(success) : "이전 정상 배치 없음"} · `
+    + `마감 ${fmtKo(h.data_cutoff_at || (meta && meta.data_cutoff_at))}`
     + (h.target_session ? ` · 대상 세션 ${h.target_session}` : "")
     + (outageId ? ` · 장애 ${outageId}` : "") }));
 }
 
-/* ── 발행 세트(P2-1) — 서비스워커 캐시가 같은 세트인지 확인한다 ───────────────── */
+/* ── 발행 세트(P2-1 · 감사 12) — 매니페스트로 세트 **전체**를 검증하고 한 번에 전환한다 ── */
 function shortBundle(bundle) {
   if (!bundle) return "—";
   const [, snap] = String(bundle).split("|");
   return String(snap || bundle).replace("sha256:", "").slice(0, 12);
 }
 
-function postToServiceWorker(message) {
+function postToServiceWorker(message, timeoutMs = 1500) {
   return new Promise((resolve) => {
     if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) {
       resolve(null);
       return;
     }
     const channel = new MessageChannel();
-    const timer = setTimeout(() => resolve(null), 1500);
+    const timer = setTimeout(() => resolve(null), timeoutMs);
     channel.port1.onmessage = (event) => {
       clearTimeout(timer);
       resolve(event.data || null);
@@ -332,31 +336,78 @@ async function registerServiceWorker() {
   }
 }
 
-async function syncBundleSet(meta) {
+/** 파일 목록 → `{name: parsed}` — 파싱 실패한 파일은 null 로 둔다(화면이 "없음"을 그린다). */
+function parseFiles(files) {
+  const docs = {};
+  (files || []).forEach((file) => {
+    try {
+      docs[file.name] = JSON.parse(file.text);
+    } catch (err) {
+      docs[file.name] = null;
+    }
+  });
+  return docs;
+}
+
+function renderBundle(info) {
   const host = clear($("bundle-banner"));
-  const bundle = (meta && meta.bundle_version) || null;
-  const reply = await postToServiceWorker({ type: "set-bundle-version", bundle_version: bundle });
-  if (!reply) {
+  if (info && info.source === "sample") return;   // 샘플 화면에는 발행 세트 배너가 없다
+  const bundle = (info && info.bundle_version) || null;
+  if (!info || info.source === "direct") {
     host.append(el("p", { class: "tiny", text:
       `발행 세트 ${shortBundle(bundle)} · 오프라인 열람은 새로고침 뒤에 준비됩니다` }));
     return;
   }
-  if (reply.mismatch) {
+  if (info.mismatch) {
     host.append(el("div", { class: "banner is-warn" }, [
       el("strong", { text: "이전/혼합 세트" }),
       el("span", { class: "tiny", text:
-        ` 캐시된 세트(${shortBundle(reply.previous_bundle_version)})와 현재 발행 세트(${shortBundle(bundle)})가 다릅니다 — 새로고침하면 지금 세트로 맞춥니다.` }),
+        ` 캐시된 세트(${shortBundle(info.previous)})와 현재 발행 세트(${shortBundle(bundle)})가 달랐습니다 —`
+        + " 이번 화면은 검증된 새 세트로 맞췄습니다." }),
     ]));
     return;
   }
-  if (reply.last_served === "cache") {
+  if (info.source === "cache") {
     host.append(el("div", { class: "banner is-warn" }, [
       el("strong", { text: "오프라인 — 캐시된 세트 표시 중" }),
-      el("span", { class: "tiny", text: ` 세트 ${shortBundle(reply.bundle_version || bundle)} · 연결되면 새로고침하세요.` }),
+      el("span", { class: "tiny", text: ` 세트 ${shortBundle(bundle)} · 연결되면 새로고침하세요.` }),
     ]));
     return;
   }
-  host.append(el("p", { class: "tiny", text: `발행 세트 ${shortBundle(bundle)} · 오프라인 열람 준비됨` }));
+  host.append(el("p", { class: "tiny", text:
+    `발행 세트 ${shortBundle(bundle)} · 오프라인 열람 준비됨(${info.count || 0}개 파일 해시 검증)` }));
+}
+
+/**
+ * 발행 세트 적재 — `deploy_manifest.json` 의 **핵심 세트 전체**를 받아 검증한 뒤에만 화면에 쓴다.
+ * 실패하면 ① 직전 완전한 세트(서비스워커 캐시) ② 직접 fetch 순으로 내려간다.
+ */
+async function loadPublicSet() {
+  const prepared = await postToServiceWorker({ type: "prepare-set" }, 9000);
+  if (prepared && prepared.ok && Array.isArray(prepared.files) && prepared.files.length) {
+    return {
+      docs: parseFiles(prepared.files),
+      info: { source: "network", bundle_version: prepared.bundle_version,
+        previous: prepared.previous_bundle_version, mismatch: prepared.mismatch,
+        count: prepared.file_count },
+    };
+  }
+  const cached = await postToServiceWorker({ type: "read-set" }, 3000);
+  if (cached && cached.ok && Array.isArray(cached.files) && cached.files.length) {
+    return {
+      docs: parseFiles(cached.files),
+      info: { source: "cache", bundle_version: cached.bundle_version,
+        count: cached.files.length },
+    };
+  }
+  const results = await Promise.all(CORE_FILES.map(loadJson));
+  return { docs: coreDocs(results), info: { source: "direct" } };
+}
+
+function coreDocs(results) {
+  const docs = {};
+  CORE_FILES.forEach((name, index) => { docs[name] = results[index] || null; });
+  return docs;
 }
 
 function renderNotifyBanner(notif, debate, today) {  const host = clear($("notify-banner"));
@@ -449,14 +500,14 @@ function signalCard(sig) {
     foot.push(el("span", { class: "tiny", text: `분할 1차 ${fmtMoney(entry.price_ref)}` }));
   }
   if (sig.sizing_note_ko) foot.push(el("span", { class: "tiny", text: sig.sizing_note_ko }));
-  // v1.3.3 02: 같은 날 입력·세션이 달라 다시 확정된 발행이면 회차와 대체 대상을 보여 준다.
-  if (isNum(sig.revision) && sig.revision > 1) {
-    foot.push(badge(`재발행 ${sig.revision}회차${sig.supersedes ? ` · ${sig.supersedes} 대체` : ""}`, "info"));
-  }
+  // v1.3.3 02: 회차는 **(as_of, ticker) 단위**다 — 같은 날 다른 종목의 2회차와 뜻이 다르므로 “종목별”을 붙인다.
+  const revision = isNum(sig.revision) ? Number(sig.revision) : 1;
+  foot.push(badge(`종목별 ${revision}회차${sig.supersedes ? ` · ${sig.supersedes} 대체` : ""}`, "info"));
   const debateRow = debateBadgeFor(sig);
   if (debateRow) {
     // 3.11.8 — 화면 기본 등급은 정량 그대로, 토론은 배지로만.
-    foot.push(badge(debateRow.badge, BADGE_CLASS[debateRow.badge] || "info"));
+    // 원장 편입 이벤트가 아직 없는 리포트(02)는 배지가 비어 있다 — 빈 배지 대신 이유를 보여 준다.
+    foot.push(badge(debateRow.badge || "토론 편입 미확정", BADGE_CLASS[debateRow.badge] || "info"));
   }
   foot.push(el("span", { class: "tiny", text: `근거 ${(sig.evidence || []).length}건` }));
   foot.push(el("span", { class: "tiny", text: `발행 ${fmtKo(sig.signal_published_at)}`
@@ -768,10 +819,15 @@ function riskBlock(sig, tickerDoc) {
     host.append(el("p", { class: "tiny", text: `이 신호가 틀릴 조건: ${fmtMoney(invalidation.price)} 이탈 — ${invalidation.reason || ""}` }));
   }
   if (check) {
+    const verdict = String(check.verdict || "");
+    const trim = verdict === "TRIM";
     host.append(el("div", { class: "row" }, [
-      el("div", {}, [el("strong", { text: `보유 점검: ${check.verdict}` }),
-        el("p", { class: "tiny", text: `exit_score ${fmtNum(check.exit_score, 1)} · S1~S5 는 매일 다시 계산합니다(3.2.5)` })]),
-      check.verdict === "EXIT" ? badge("청산 신호", "bad") : badge("유지", "ok"),
+      el("div", {}, [el("strong", { text: `보유 점검: ${verdict}` }),
+        el("p", { class: "tiny", text: `exit_score ${fmtNum(check.exit_score, 1)} · S1~S5 는 매일 다시 계산합니다(3.2.5)` }),
+        trim ? el("p", { class: "tiny", text:
+          "exit_score 60~74 = 1/3 익절(TRIM) 구간입니다 — 분할익절 단계를 올려 고정 기준 수량의 1/3 을 팔니다(3.5)." }) : null]),
+      verdict === "EXIT" ? badge("청산 신호", "bad")
+        : (trim ? badge("1/3 익절(TRIM)", "warn") : badge("유지", "ok")),
     ]));
   }
   return host;
@@ -1087,15 +1143,15 @@ function renderHistory(summary, records) {
   const body = (rows.length ? rows : all).slice(0, 50).map((r) => el("tr", {}, [
     el("td", { class: "num", text: String(r.as_of || (r.signal_id || "").slice(0, 10)) }),
     el("td", { text: r.ticker || "—" }),
-    el("td", { text: isNum(r.revision) && r.revision > 1
-      ? `재발행 ${r.revision}회차${r.supersedes ? ` (${String(r.supersedes).slice(11)} 대체)` : ""}` : "1회차" }),
+    el("td", { text: `종목별 ${isNum(r.revision) ? Number(r.revision) : 1}회차`
+      + (isNum(r.revision) && r.revision > 1 && r.supersedes ? ` (${String(r.supersedes).slice(11)} 대체)` : "") }),
     el("td", { text: r.action || (r.quant_intent === "pending_buy" ? "체결 대기" : r.quant_intent === "no_action" ? "관찰" : (r.action || "—")) }),
     el("td", { class: "num", text: isNum(r.excess) ? fmtSignedPct(r.excess) : "—" }),
   ]));
   host.append(el("table", {}, [
     el("caption", { text: `최근 ${body.length}건 · 초과수익은 SPY 대비 3개월` }),
     el("thead", {}, [el("tr", {}, [el("th", { text: "발행일" }), el("th", { text: "티커" }),
-      el("th", { text: "회차" }),
+      el("th", { text: "종목별 회차" }),
       el("th", { text: "행동" }), el("th", { class: "num", text: "3M 초과" })])]),
     el("tbody", {}, body),
   ]));
@@ -1243,7 +1299,17 @@ function renderLivePositions(portfolio, health) {
   const h = health || {};
   host.append(el("p", { class: "tiny", text:
     `보유 ${positions.length}종목 · 분할 대기 ${h.tranches_pending ?? 0}건 · 손절 ${h.stop_count ?? 0}건 · `
-    + `분할익절 ${h.trim_count ?? 0}건 · 손절 후 재진입 차단 ${h.stop_reentry_blocked_count ?? 0}건` }));
+    + `1/3 익절(TRIM) ${h.trim_count ?? 0}건` }));
+  // 두 카운터는 **다른 사건**이다(원장 `live.write_health` 계약) — 합치지 않는다.
+  host.append(el("p", { class: "tiny", text:
+    `손절 후 재진입 차단 ${h.stop_reentry_blocked_count ?? 0}건(손절이 난 종목·세션의 신규 1차 진입 차단) · `
+    + `같은 봉 분할 취소 ${h.tranche_cancel_count ?? 0}건(잔여 2·3차 주문 취소)` }));
+  const forced = h.forced_exits || {};
+  const forcedRows = Object.keys(forced).map((ticker) => `${ticker} ${forced[ticker]}`);
+  if (forcedRows.length) {
+    host.append(el("p", { class: "tiny", text:
+      `강제 청산·익절 판정: ${forcedRows.join(" · ")}(TRIM 은 1/3 익절 주문으로 원장에 남습니다)` }));
+  }
   if (!positions.length) {
     host.append(emptyState("모의 계좌에 보유 종목이 없습니다 — 1차 체결 전이면 정상입니다."));
     host.append(el("p", { class: "tiny", text:
@@ -1448,11 +1514,29 @@ function fillTickerSelect(today, watch) {
 
 /* ────────────────────────── 시작 ────────────────────────── */
 async function boot() {
-  const results = await Promise.all(CORE_FILES.map(loadJson));
-  const [meta, today, folds, watch, summary, records, portfolio, radar, config,
-    debate, health, notif] = results;
+  // 샘플 화면은 저장소의 sample-data 로 열고, 실데이터는 **검증된 발행 세트**로 연다(감사 12).
+  const loaded = state.sampleMode
+    ? { docs: coreDocs(await Promise.all(CORE_FILES.map(loadJson))), info: { source: "sample" } }
+    : await loadPublicSet();
+  const docs = loaded.docs || {};
+  const { meta, today, folds, watch, summary, records, portfolio, radar, config,
+    debate, health, notif } = {
+    meta: docs["meta.json"],
+    today: docs["signals/today.json"],
+    folds: docs["folds.json"],
+    watch: docs["watchlist.json"],
+    summary: docs["ledger/summary.json"],
+    records: docs["ledger/records.json"],
+    portfolio: docs["ledger/portfolio.json"],
+    radar: docs["radar/13f.json"],
+    config: docs["config.json"],
+    debate: docs["debate.json"],
+    health: docs["health.json"],
+    notif: docs["notifications.json"],
+  };
   state.core = { meta, today, folds, watch, summary, records, portfolio, radar, config,
     debate, health, notif, foldsOnly: folds };
+  state.bundle = loaded.info || null;
 
   renderStatus(meta);
   renderFreshness(meta);
@@ -1463,7 +1547,7 @@ async function boot() {
   renderLedger(summary, portfolio, records, (summary && summary.pilot) || null, debate, health);
   renderRadar(radar, watch, config, today);
   fillTickerSelect(today, watch);
-  syncBundleSet(meta);
+  renderBundle(loaded.info || { source: "direct", bundle_version: meta && meta.bundle_version });
 
   if (!state.bound) {
     state.bound = true;

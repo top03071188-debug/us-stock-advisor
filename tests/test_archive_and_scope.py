@@ -92,6 +92,40 @@ def test_yaml_uses_view_assets_and_no_skip_existing():
     assert "check-asset" in wf
 
 
+UPLOADS = ROOT.parents[1] / "scratch" / "workflows_upload"
+
+
+def test_package_without_snapshot_exits_cleanly(tmp_path):
+    """감사 11: 스냅샷이 없으면 스택 트레이스가 아니라 **종료 코드 3** 과 한 줄 메시지다."""
+    rc = arch.main(["package", "--source", str(tmp_path / "missing"),
+                    "--out", str(tmp_path / "dist"), "--name", "snapshot_x"])
+    assert rc == arch.EXIT_SNAPSHOT_MISSING == 3
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert arch.main(["package", "--source", str(empty), "--out", str(tmp_path / "dist"),
+                      "--name", "snapshot_x"]) == 3
+
+
+def test_prepared_daily_workflow_branches_on_run_outputs():
+    """감사 11: 준비본 워크플로가 `snapshot_created` 로 아카이브를 가르고, 장애에도 상태를 배포한다."""
+    prepared = UPLOADS / "daily-postclose.yml"
+    if not prepared.exists():
+        pytest.skip("준비본 워크플로가 없다(통합 단계에서 등록)")
+    text = prepared.read_text(encoding="utf-8")
+    assert "steps.pipeline.outputs.snapshot_created == 'true'" in text
+    for key in ("run_outcome", "status_written", "snapshot_created", "snapshot_state"):
+        assert key in text, f"워크플로가 '{key}' 를 읽지 않는다"
+    # 장애 실행도 상태 발행(health·알림·Pages 빌드)이 이어진다
+    assert "continue-on-error: true" in text
+    assert "data/health.json" in text and "build_public_data.py" in text
+    # 아카이브 업로드는 여전히 clobber/skip-existing 없이
+    upload_lines = [ln.split("#", 1)[0] for ln in text.splitlines()
+                    if "gh release upload" in ln and not ln.strip().startswith("#")]
+    assert upload_lines and all("--clobber" not in ln and "--skip-existing" not in ln
+                                for ln in upload_lines)
+    assert "check-asset" in text and "--json assets" in text
+
+
 # ── redact ──────────────────────────────────────────────────────────────
 def test_redact_quotes_replaces_text_with_hash(tmp_path):
     payload = {"signals": [{"ticker": "MSFT", "evidence": [

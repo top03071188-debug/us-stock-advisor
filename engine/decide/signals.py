@@ -22,6 +22,15 @@ from engine.metrics.valuation import EV_EBIT_PERCENTILE_HOT
 GRADE_ORDER = {"NONE": 0, "WATCH": 1, "BUY": 2, "STRONG_BUY": 3}
 NEWS_STATES = ("not_read", "insufficient_evidence", "read_done")
 
+#: 판단을 **바꾸는** 정량 입력 — 검증된 뉴스·공시 상태와 코드가 계산한 지표·점수뿐이다.
+QUANT_DECISION_FIELDS: tuple[str, ...] = (
+    "q", "v", "g", "structural_risk", "news_state", "evidence", "vetoes",
+    "rsi14", "pct_b", "dma50", "dma200", "dma200_slope", "dma20_sigma", "atr_pct",
+    "iv_median", "iv_high", "ev_ebit_percentile", "roic_wacc_2q_negative", "rel_strength_pctile",
+)
+#: 토론이 주는 것 — **권고**일 뿐 게이트 입력이 아니다(기획서 3.10 "토론은 등급을 올리지 않는다").
+DEBATE_ADVICE_FIELDS: tuple[str, ...] = ("debate_advice",)
+
 
 def _clip01(x: float) -> float:
     return max(0.0, min(1.0, float(x)))
@@ -165,6 +174,9 @@ class EntryContext:
     evidence: list[dict] = field(default_factory=list)
     vetoes: list[dict] = field(default_factory=list)
     invalidation: dict | None = None
+    #: 토론 **권고**(의장 권고·보류·발산 여부). 참고로만 기록하고 B0~B6·S1~S5 는 읽지 않는다.
+    #: 판단을 바꾸는 것은 `news_state`(검증된 뉴스·공시 상태) 하나뿐이다(감사 07).
+    debate_advice: dict | None = None
 
     def dev50(self) -> float | None:
         if self.dma50_deviation is not None:
@@ -275,6 +287,8 @@ def evaluate_entry(ctx: EntryContext, regime="neutral", params: dict | None = No
         "veto": ctx.vetoes,
         "structural_risk": ctx.structural_risk,
         "valuation_suspended": False,
+        # 토론 권고는 **결과에 실어 보내기만** 한다 — 위 게이트·등급 계산에는 들어가지 않는다.
+        "debate_advice": dict(ctx.debate_advice) if isinstance(ctx.debate_advice, dict) else None,
     }
 
 

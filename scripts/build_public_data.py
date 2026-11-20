@@ -14,14 +14,18 @@
 
 산출물(5.7)
     meta.json · signals/today.json · tickers/{TICKER}.json · ledger/summary.json ·
-    ledger/records.json · ledger/portfolio.json · radar/13f.json · config.json
+    ledger/records.json · ledger/portfolio.json · radar/13f.json · health.json ·
+    debate.json · notifications.json · config.json · **deploy_manifest.json**
     (+ 하위 호환: folds.json, watchlist.json)
     `data/debate_reports.json` 이 없으면 `debate/*` 를 만들지 않는다(화면은 "토론 없음").
+    `deploy_manifest.json` 은 모든 공개 파일의 sha256 과 통합 `bundle_version` 을 담는다 —
+    서비스워커가 이 세트 전체를 받아 검증한 뒤 **원자적으로** 전환한다(감사 12).
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -58,11 +62,20 @@ def _allowed(key: str, allow: set[str]) -> bool:
     return key in allow or key in STRUCTURAL_KEYS
 
 
-def filter_public(obj, allow: set[str]):
+#: 키가 **데이터 이름**(티커·섹터·채널)인 사전 — 그 키는 공개 허용 목록의 필드명이 아니다.
+#  감싸는 키만 허용 목록에 있으면 안쪽 키는 값으로 통과시킨다. 금지 키 검사(`assert_no_forbidden`)는
+#  이 안쪽 키까지 계속 보므로 `{"by_ticker": {"quote": …}}` 같은 누출은 그대로 막힌다.
+STRUCTURAL_MAPS = {"by_ticker", "sector_weights", "forced_exits", "sector_counts", "channels",
+                  "by_regime", "counts_by_sector"}
+
+
+def filter_public(obj, allow: set[str], parent: str | None = None):
     if isinstance(obj, dict):
-        return {k: filter_public(v, allow) for k, v in obj.items() if _allowed(k, allow)}
+        keep_keys = parent in STRUCTURAL_MAPS
+        return {k: filter_public(v, allow, k) for k, v in obj.items()
+                if keep_keys or _allowed(k, allow)}
     if isinstance(obj, list):
-        return [filter_public(v, allow) for v in obj]
+        return [filter_public(v, allow, parent) for v in obj]
     return obj
 
 
@@ -93,9 +106,10 @@ def _json_size(obj) -> int:
 
 # ────────────────────────────── 각 파일 ──────────────────────────────
 def bundle_version(signals: dict | None) -> str | None:
-    """발행 세트 식별자 = `inputs_hash` + `snapshot_id`(P2-1).
+    """입력 지문 버전 — `inputs_hash` + `snapshot_id`(P2-1).
 
-    서비스워커가 같은 세트만 캐시하고, 세트가 바뀌면 "이전/혼합 세트" 배지를 띄우는 기준이다.
+    **잠정값**이다. 발행 세트 버전은 `attach_bundle()` 이 **모든 공개 파일 해시**로 다시 만든다 —
+    health·토론·알림만 바뀐 배포도 고유 버전을 가져야 하기 때문이다(감사 12).
     """
     signals = signals or {}
     inputs_hash = str(signals.get("inputs_hash") or "")
@@ -590,13 +604,80 @@ def _as_date(value):
         return None
 
 
+def load_debate_events(event_dir: str | Path | None = "data/ledger/debate_events") -> dict[str, dict]:
+    """원장이 확정한 편입 이벤트(`debate_events/{signal_id}.json`)를 읽는다(02)."""
+    if event_dir is None:
+        return {}
+    return debate_mod.load_events(event_dir)
+
+
+def _latest_event(events: list[dict], report_id: str | None = None) -> dict | None:
+    """같은 신호의 이벤트 중 최신 — 같은 `report_id` 가 있으면 그것을 우선한다."""
+    if not events:
+        return None
+    if report_id:
+        matched = [e for e in events if str(e.get("report_id")) == str(report_id)]
+        if matched:
+            return max(matched, key=lambda e: str(e.get("recorded_at") or ""))
+    return max(events, key=lambda e: str(e.get("recorded_at") or e.get("completed_at") or ""))
+
+
+def _event_el(event: dict) -> dict:
+    """이벤트 → `public_report` 의 자격 인자(`el`). 자격을 **다시 계산하지 않는다**."""
+    return {"eligible": bool(event.get("eligible")), "late": bool(event.get("late")),
+            "invalid": bool(event.get("invalid")), "reasons": list(event.get("reasons") or []),
+            "report_validated_at": event.get("report_validated_at"),
+            "frozen_at": event.get("frozen_at"), "order_cutoff_at": event.get("order_cutoff_at"),
+            "signal_observed_at": event.get("signal_observed_at")}
+
+
+def _event_actions(event: dict) -> dict:
+    """이벤트 → `public_report` 의 행동 인자(`actions`)."""
+    return {"quant_grade": event.get("quant_grade"), "recommendation": event.get("recommendation"),
+            "quant_action": event.get("quant_action"), "debate_action": event.get("debate_action"),
+            "divergent": bool(event.get("divergent")),
+            "auto_downgrade_applied": bool(event.get("auto_downgrade_applied")),
+            "veto_codes": list(event.get("veto_codes") or [])}
+
+
 def build_debate(reports_doc: dict | None, records: list[dict] | None,
-                 comparison: dict | None, params: dict | None, as_of: str | None) -> dict:
-    """`web/data/debate.json` — 토론 0건이어도 **항상 만든다**(화면은 '토론 없음'을 읽는다, 5.7)."""
+                 comparison: dict | None, params: dict | None, as_of: str | None, *,
+                 debate_events: dict | None = None) -> dict:
+    """`web/data/debate.json` — 토론 0건이어도 **항상 만든다**(화면은 '토론 없음'을 읽는다, 5.7).
+
+    [02 · 감사 02] 예전에는 `reconcile_debates(doc, records, {}, ...)` 로 **빈 체결 목록**으로 편입을
+    다시 계산했다 — 그렇게 하면 `ATTACHED_AFTER_FILL` 이 원리적으로 작동하지 않고, Pages 의 편입
+    판정이 원장과 달라진다. 지금은 원장이 `debate_events` 에 남긴 **확정 결과를 그대로** 쓰고,
+    리포트 본문(1R·2R·3R)만 `data/debate_reports.json` 에서 가져와 붙인다.
+    이벤트가 없는 리포트는 자격을 추정하지 않고 `badge: null` 로 **표시만** 한다.
+    """
     doc = reports_doc or {}
-    result = debate_mod.reconcile_debates(doc, records or [], {}, params=params, write=False,
-                                          as_of=_as_date(as_of) if as_of else None)
-    rows = list((result.get("by_signal") or {}).values())
+    reports = debate_mod.reports_of(doc)
+    events = debate_events if debate_events is not None else {}
+    rows: list[dict] = []
+    n_eligible = n_late = n_invalid = 0
+    missing_events = 0
+    for report in reports:
+        sid = str(report.get("signal_id") or "")
+        doc_row = events.get(sid) or {}
+        event = _latest_event(list(doc_row.get("events") or []), report.get("report_id"))
+        if event is None:
+            missing_events += 1
+            row = debate_mod.public_report(report, {}, {})
+            row.update({"badge": None, "eligible": None, "late": None, "invalid": None,
+                        "track": None, "reasons": ["LEDGER_EVENT_MISSING"]})
+            rows.append(row)
+            continue
+        el = _event_el(event)
+        actions = _event_actions(event)
+        row = debate_mod.public_report(report, el, actions)
+        if el["late"]:
+            n_late += 1
+        if el["invalid"]:
+            n_invalid += 1
+        if el["eligible"]:
+            n_eligible += 1
+        rows.append(row)
     rows.sort(key=lambda r: (str(r.get("completed_at") or ""), str(r.get("signal_id") or "")),
               reverse=True)
     by_ticker: dict[str, dict] = {}
@@ -613,20 +694,25 @@ def build_debate(reports_doc: dict | None, records: list[dict] | None,
     # `policy_diff_pp` 는 **계좌 순자산 차이**다. 산출 주체는 비교 모듈이고, 없으면 None 으로 둔다
     # (페어 손익으로 대신 채우지 않는다 — 그게 감사 P1-3 이 지적한 혼합이다).
     summary["policy_diff_pp"] = source.get("policy_diff_pp")
+    notes = []
+    if not rows:
+        notes.append("토론을 아직 한 번도 돌리지 않았습니다 — 표시가 비어 있는 것이 정상입니다.")
+    if missing_events:
+        notes.append(f"원장 편입 이벤트가 없는 리포트 {missing_events}건은 자격을 다시 계산하지 않고"
+                     " 표시만 합니다(다음 배치가 확정합니다).")
     return {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "as_of": as_of,
         "status": "ok" if rows else "none",
-        "counts": {"reports": result.get("n_reports", 0), "eligible": result.get("n_eligible", 0),
-                   "late": result.get("n_late", 0), "invalid": result.get("n_invalid", 0)},
+        "counts": {"reports": len(reports), "eligible": n_eligible, "late": n_late,
+                   "invalid": n_invalid, "ledger_confirmed": len(reports) - missing_events},
         "auto_downgrade_enabled": bool(((params or {}).get("debate") or {}).get(
             "auto_downgrade_enabled", False)),
         "comparison": summary,
         "reports": rows,
         "by_ticker": by_ticker,
-        "note_ko": (None if rows else
-                    "토론을 아직 한 번도 돌리지 않았습니다 — 표시가 비어 있는 것이 정상입니다."),
+        "note_ko": " ".join(notes) or None,
     }
 
 
@@ -657,7 +743,11 @@ def build_health(health: dict | None, signals: dict | None = None) -> dict:
         "stop_count": health.get("stop_count", 0),
         "trim_count": health.get("trim_count", 0),
         "stop_reentry_blocked_count": health.get("stop_reentry_blocked_count", 0),
+        # 트랙 1(v1.3.5): 신규 1차 진입 차단 수와 같은 봉 2·3차 취소 수를 **따로** 센다(3.5).
+        "tranche_cancel_count": health.get("tranche_cancel_count", 0),
+        "pending_exit_count": health.get("pending_exit_count", 0),
         "blocked_reentries": (health.get("blocked_reentries") or [])[:20],
+        "cancelled_tranches": (health.get("cancelled_tranches") or [])[:20],
         # 동결 전 WATCH·차단으로 취소된 1차 주문(P0-3) — 원장 색인·감사 근거를 화면에도 남긴다.
         "order_cancellations_count": health.get("order_cancellations_count", 0),
         "order_cancellations": (health.get("order_cancellations") or [])[:20],
@@ -678,6 +768,9 @@ def build_notifications(doc: dict | None) -> dict:
         "schema_version": 1,
         "generated_at": doc.get("generated_at"),
         "as_of": doc.get("as_of"),
+        # §10⑥: 알림 요약도 실행 상태를 함께 보여 준다(장애 시 화면이 판단 보류를 알 수 있게).
+        "data_status": data_status_of(doc.get("data_status")),
+        "outage_id": doc.get("outage_id"),
         "n_events": doc.get("n_events", 0),
         "n_new": doc.get("n_new", 0),
         "n_suppressed": doc.get("n_suppressed", 0),
@@ -687,15 +780,78 @@ def build_notifications(doc: dict | None) -> dict:
     }
 
 
+def dumps(payload) -> str:
+    """파일로 나가는 **정확한 문자열** — 해시가 이 바이트와 일치해야 한다."""
+    return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def _serialize(payload) -> bytes:
+    return dumps(payload).encode("utf-8")
+
+
+#: 매니페스트에 반드시 들어가는 핵심 공개 파일 — 서비스원커가 먼저 받는 세트다.
+CORE_PUBLIC_FILES = ("meta.json", "signals/today.json", "health.json", "debate.json",
+                     "notifications.json", "ledger/summary.json", "ledger/records.json",
+                     "ledger/portfolio.json", "radar/13f.json", "config.json")
+MANIFEST_NAME = "deploy_manifest.json"
+
+
+def files_version(files: dict[str, bytes]) -> str:
+    """**모든 공개 파일 해시**로 만든 세트 버전(감사 12).
+
+    `inputs_hash|snapshot_id` 만 쓰면 health·토론·알림만 바뀐 배포가 같은 버전을 가져
+    서비스원커가 새 세트로 전환하지 않는다. 파일 목록·순서가 달라지면 다른 버전이 된다.
+    """
+    digest = hashlib.sha256()
+    for name in sorted(files):
+        digest.update(name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(files[name]).digest())
+    return "sha256:" + digest.hexdigest()[:40]
+
+
+def attach_bundle(public: dict, signals: dict | None) -> dict:
+    """파일 해시 → 통합 `bundle_version` → `deploy_manifest.json`(감사 12).
+
+    두 단계인 이유: `meta.json`·`health.json` 도 버전을 담으므로, 버전을 심은 뒤의 바이트로 해시를
+    다시 계산해야 매니페스트가 **실제 파일**과 맞는다. 버전 계산 시점에는 그 필드를 `None` 으로 둔다.
+    """
+    if not public:
+        return public
+    stamped = ["meta.json", "health.json"]
+    for name in stamped:
+        if isinstance(public.get(name), dict):
+            public[name]["bundle_version"] = None
+    version = files_version({name: _serialize(payload) for name, payload in public.items()})
+    for name in stamped:
+        if isinstance(public.get(name), dict):
+            public[name]["bundle_version"] = version
+    final = {name: _serialize(payload) for name, payload in public.items()}
+    manifest = {
+        "schema_version": 1,
+        "bundle_version": version,
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "as_of": (signals or {}).get("as_of"),
+        "snapshot_id": (signals or {}).get("snapshot_id"),
+        "inputs_hash": (signals or {}).get("inputs_hash"),
+        "files": {name: {"sha256": hashlib.sha256(data).hexdigest(), "size": len(data)}
+                  for name, data in sorted(final.items())},
+        "note_ko": "모든 핵심 공개 파일의 해시로 만든 발행 세트 — 서비스원커가 이 세트만 캐시한다.",
+    }
+    public[MANIFEST_NAME] = manifest
+    return public
+
+
 def build(signals: dict | None, folds: dict | None, records: list[dict] | None, rules: dict,
           *, radar: dict | None = None, portfolio_state: dict | None = None,
           watch: dict | None = None, params: dict | None = None, veto: dict | None = None,
           params_history: list[dict] | None = None, pilot_eval: dict | None = None,
           debate_reports: dict | None = None, debate_comparison: dict | None = None,
-          health: dict | None = None, notifications: dict | None = None) -> dict:
+          health: dict | None = None, notifications: dict | None = None,
+          debate_events: dict | None = None) -> dict:
     out: dict[str, dict] = {}
     debate_doc = build_debate(debate_reports, records, debate_comparison, params,
-                              (signals or {}).get("as_of"))
+                              (signals or {}).get("as_of"), debate_events=debate_events)
     out["meta.json"] = build_meta(signals, debate_reports, debate_comparison, health)
     out["signals/today.json"] = build_today(signals)
     out["ledger/summary.json"] = build_ledger(signals, records, portfolio_state, folds=folds,
@@ -721,6 +877,9 @@ def build(signals: dict | None, folds: dict | None, records: list[dict] | None, 
 
     allow = set(rules.get("allow", []))
     public = {name: filter_public(payload, allow) for name, payload in out.items()}
+    # 발행 세트 버전·매니페스트는 **필터 뒤**에 만든다 — `files` 사전의 키가 파일 이름이라
+    # 공개 허용 목록 필터를 태우면 지워진다.
+    public = attach_bundle(public, signals)
     for name, payload in public.items():
         assert_no_forbidden(payload, rules, name)
         size = _json_size(payload)
@@ -762,6 +921,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--veto", default=str(DEFAULT_VETO))
     ap.add_argument("--debate-reports", default="data/debate_reports.json")
     ap.add_argument("--debate-comparison", default="data/ledger/debate_comparison.json")
+    ap.add_argument("--debate-events", default="data/ledger/debate_events",
+                    help="원장이 확정한 편입 이벤트 폴더(02 — 편입을 다시 계산하지 않는다)")
     ap.add_argument("--health", default="data/health.json")
     ap.add_argument("--notifications", default="data/notifications_latest.json")
     ap.add_argument("--out", default="web/data")
@@ -786,13 +947,15 @@ def main(argv: list[str] | None = None) -> int:
                 debate_reports=_load(Path(args.debate_reports)),
                 debate_comparison=_load(Path(args.debate_comparison)),
                 health=_load(Path(args.health)),
-                notifications=_load(Path(args.notifications)))
+                notifications=_load(Path(args.notifications)),
+                debate_events=load_debate_events(Path(args.debate_events)))
     root = Path(args.out)
     for name, payload in out.items():
         p = root / name
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        p.write_text(dumps(payload), encoding="utf-8")
     print(json.dumps({"written": [str(root / n) for n in out],
+                      "bundle_version": (out.get(MANIFEST_NAME) or {}).get("bundle_version"),
                       "signals_status": (signals or {}).get("status", "missing")}, ensure_ascii=False))
     return 0
 

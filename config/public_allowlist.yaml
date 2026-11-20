@@ -500,6 +500,32 @@ allow:
   - superseded_by
   - frozen_at
 
+  # ── 발행 세트 매니페스트(P2-1 · 감사 12) ────────────────────────────────
+  # `web/data/deploy_manifest.json` 은 **파일 이름·해시·크기**만 담는다(원문·계좌 정보 없음).
+  # 통합 `bundle_version` 이 모든 핵심 공개 파일의 해시에서 나오므로 health·토론·알림만
+  # 바뀐 배포도 고유 버전을 갖는다.
+  - files
+  - sha256
+  - size
+  - deploy_manifest
+  # 실행 결과(GITHUB_OUTPUT·진단) — 값은 상태 이름과 시각뿐이다.
+  - run_outcome
+  - status_written
+  - snapshot_created
+  - snapshot_state
+  - trim_orders
+  - trim_pending
+  # 트랙 1(v1.3.5) 원장 건강 지표 — 건수·상태뿐(수량·평단 없음)
+  - tranche_cancel_count
+  - pending_exit_count
+  - cancelled_tranches
+  - ratio
+  - cancel_kind
+  - freeze_deadline_at
+  - session
+  - lock
+  - expected_fill_day
+
 deny_keys:                       # 하나라도 있으면 커밋·배포 실패 [고정]
   - quote
   - evidence_quote
@@ -536,6 +562,13 @@ deny_paths:                      # 커밋 금지 경로(부분 일치)
   - data/cache/
   - local/
   - .env
+
+# `deny_paths` 의 **정확한 예외** — 경로가 이 목록과 같을 때만 금지가 풀린다.
+# `data/debate/` 는 로컬 원문·컨텍스트 보관소라 통째로 금지하지만, 그 폴더의 `manifest.json` 은
+# "무엇을 보관 중인지"만 적은 공개 가능 메타데이터다(감사 10 — 워크플로 허용 목록과의 모순 정리).
+# `data/debate/**` 의 다른 파일은 계속 차단된다.
+allow_paths:
+  - data/debate/manifest.json
 
 deny_patterns:                   # 값 안에서 탐지할 패턴(이메일·토큰류)
   - "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"

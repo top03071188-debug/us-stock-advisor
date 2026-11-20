@@ -69,6 +69,35 @@ def _event(kind: str, key: str, message: str, **extra) -> dict:
     return payload
 
 
+def data_status_of(*values) -> str | None:
+    """실행 상태를 공개 계약(`ok` | `degraded` | `outage`)으로 정규화한다(§10⑥).
+
+    `run_daily` 가 **정산 health**(`positions_open`·`tranche*`·`stop_*` 뿐)만 넘기면
+    `health.get("data_status")` 가 `None` 이 되어 `notifications_latest.json` 의 `data_status` 가
+    비었다(감사 §10⑥). 그래서 실제 실행 상태가 담긴 곳을 차례로 본다:
+    `health.data_status` → `payload.health.data_status` → `payload.status`.
+    알 수 없는 값이면 `None`(모르는 것을 정상으로 꾸미지 않는다).
+    """
+    for value in values:
+        text = str(value or "").strip().lower()
+        if text in ("ok", "normal", "complete", "sample"):
+            return "ok"
+        if text in ("degraded", "stale", "partial"):
+            return "degraded"
+        if text in ("outage", "failed", "down"):
+            return "outage"
+    return None
+
+
+def resolve_data_status(health: dict | None, payload: dict | None) -> str | None:
+    """알림·요약이 쓰는 실행 상태 — **health 가 우선**, 없으면 페이로드의 상태부."""
+    health = health or {}
+    payload = payload or {}
+    embedded = payload.get("health") or {}
+    return data_status_of(health.get("data_status"), embedded.get("data_status"),
+                          health.get("status"), payload.get("status"))
+
+
 # ────────────────────────────── 감지 ──────────────────────────────
 def collect_events(payload: dict, *, debate: dict | None = None, health: dict | None = None,
                    outage_id: str | None = None) -> list[dict]:
@@ -78,8 +107,7 @@ def collect_events(payload: dict, *, debate: dict | None = None, health: dict | 
     events: list[dict] = []
 
     # 장애 알림은 `outage_id` 로 묶는다 — 같은 장애를 매 시간 다시 알리지 않는다(P2-1).
-    data_status = str((health or {}).get("data_status") or (payload.get("health") or {}).get("data_status")
-                      or "")
+    data_status = resolve_data_status(health, payload) or ""
     if data_status == "outage":
         oid = outage_id or str((health or {}).get("outage_id") or f"outage:{as_of}")
         last_success = (health or {}).get("last_success_at")
@@ -338,7 +366,10 @@ def evaluate_notifications(payload: dict, *, log_path: str | Path = DEFAULT_LOG,
         "schema_version": SCHEMA_VERSION,
         "generated_at": _iso(at),
         "as_of": (payload or {}).get("as_of"),
-        "data_status": (health or {}).get("data_status"),
+        # §10⑥ — 정산 health 만 넘어와도 실행 상태가 비지 않게 한다.
+        "data_status": resolve_data_status(health, payload),
+        "outage_id": ((health or {}).get("outage_id") or (payload or {}).get("health", {}).get("outage_id")
+                      or outage_id),
         "n_events": len(events),
         "n_new": len([r for r in sent if not r.get("retried")]) if not dry_run else 0,
         "n_suppressed": len(suppressed) + (len(sent) if dry_run else 0),

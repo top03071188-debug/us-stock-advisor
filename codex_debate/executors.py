@@ -15,6 +15,8 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
+import threading
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -38,8 +40,6 @@ AUTH_MARKERS: tuple[str, ...] = (
 
 class ExecutorError(RuntimeError):
     """실행기 공통 오류."""
-
-
 class ExecutorUnavailable(ExecutorError):
     """CLI 미설치·API 키 없음 — 이 경로로는 실행할 수 없다."""
 
@@ -52,6 +52,10 @@ class AuthExpired(ExecutorError):
     """로그인 만료 — 아무것도 push 하지 않고 안내한다."""
 
 
+class JsonParseError(ValueError):
+    """모델 출력이 **단일 JSON 객체**가 아니다(여러 객체·배열·중복 키·NaN 등)."""
+
+
 @dataclass
 class CallResult:
     payload: dict | None
@@ -61,15 +65,59 @@ class CallResult:
     raw: str = ""
 
 
+def _reject_constant(name: str) -> None:
+    """`NaN`·`Infinity` 는 JSON 이 아니다 — 통과시키지 않는다."""
+    raise JsonParseError(f"허용되지 않는 상수: {name}")
+
+
+def _pairs_no_duplicates(pairs: list[tuple[str, Any]]) -> dict:
+    seen: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in seen:
+            raise JsonParseError(f"중복 키: {key}")
+        seen[key] = value
+    return seen
+
+
+def _strict_loads(text: str) -> Any:
+    """단일 JSON 값만 허용하는 파서 — 상수·중복 키를 거부한다."""
+    decoder = json.JSONDecoder(object_pairs_hook=_pairs_no_duplicates,
+                              parse_constant=_reject_constant)
+    value, end = decoder.raw_decode(text, 0)
+    if text[end:].strip():
+        raise JsonParseError(f"JSON 객체 뒤에 추가 내용이 있다: {text[end:].strip()[:40]!r}")
+    return value
+
+
 def _strip_fences(text: str) -> str:
-    body = text.strip()
+    """단일 JSON 객체(또는 **하나의** ```json 펜스)만 꺼낸다.
+
+    예전에는 첫 `{` ~ 마지막 `}` 를 무조건 잘라 배열·설명 혼입·다중 객체를 한 객체처럼 읽었다.
+    지금은 형식이 어긋나면 `JsonParseError` 로 거부한다(감사 09).
+    """
+    body = (text or "").strip()
+    if not body:
+        raise JsonParseError("빈 출력")
     if body.startswith("```"):
-        body = body.split("\n", 1)[1] if "\n" in body else body
-        if body.rstrip().endswith("```"):
-            body = body.rstrip()[:-3]
-    start, end = body.find("{"), body.rfind("}")
-    if start >= 0 and end > start:
-        return body[start:end + 1]
+        head, newline, rest = body.partition("\n")
+        lang = head[3:].strip().lower()
+        if lang not in ("", "json"):
+            raise JsonParseError(f"지원하지 않는 코드 펜스: {lang}")
+        if not newline:
+            raise JsonParseError("코드 펜스 형식 오류")
+        closing = rest.rfind("```")
+        if closing < 0:
+            raise JsonParseError("코드 펜스가 닫히지 않았다")
+        if rest[closing + 3:].strip():
+            raise JsonParseError("코드 펜스 뒤에 내용이 있다")
+        inner = rest[:closing].strip()
+        if "```" in inner:
+            raise JsonParseError("코드 펜스가 여러 개다")
+        body = inner
+    if not body:
+        raise JsonParseError("빈 출력")
+    if not body.startswith("{"):
+        raise JsonParseError("최상위가 JSON 객체가 아니다")
     return body
 
 
@@ -102,6 +150,7 @@ class BaseExecutor:
         schema: dict,
         context_payload: dict | None,
         out_name: str | None,
+        timeout: float | None = None,
     ) -> tuple[str, str]:
         raise NotImplementedError
 
@@ -110,7 +159,9 @@ class BaseExecutor:
         if not raw or not raw.strip():
             return None, "빈 출력"
         try:
-            payload = json.loads(_strip_fences(raw))
+            payload = _strict_loads(_strip_fences(raw))
+        except JsonParseError as exc:
+            return None, f"JSON 형식 거부: {exc}"
         except json.JSONDecodeError as exc:
             return None, f"JSON 파싱 실패: {exc}"
         if not isinstance(payload, dict):
@@ -119,6 +170,14 @@ class BaseExecutor:
         if errors:
             return None, "; ".join(errors[:5])
         return payload, None
+
+    def _remaining(self, deadline: datetime | None) -> float | None:
+        """남은 시간(초) — 마감이 없으면 `None`(무제한)."""
+        if deadline is None:
+            return None
+        if deadline.tzinfo is None:
+            deadline = deadline.replace(tzinfo=timezone.utc)
+        return (deadline - datetime.now(timezone.utc)).total_seconds()
 
     def run(
         self,
@@ -129,16 +188,24 @@ class BaseExecutor:
         context_payload: dict | None = None,
         out_name: str | None = None,
         budget: Callable[[], None] | None = None,
+        deadline: datetime | None = None,
     ) -> CallResult:
         schema = schema or load_schema(round_name)
         errors: list[str] = []
         parse_failures = 0
         for attempt in range(1, self.max_attempts + 1):
+            # 만감 확인은 **콜 직전마다** — 한 콜이 3회 재시도로 9분을 쓸 수 있으면 마감을 넘긴다.
+            remaining = self._remaining(deadline)
+            if remaining is not None and remaining <= 0:
+                return CallResult(None, attempt, "timeout", "전체 마감 도달 — 콜을 시작하지 않는다")
+            call_timeout = float(self.timeout_s) if remaining is None else max(1.0, min(float(self.timeout_s),
+                                                                                    remaining))
             if budget is not None:
                 budget()
             self.calls += 1
             try:
-                raw, status = self._invoke(round_name, prompt, schema, context_payload, out_name)
+                raw, status = self._invoke(round_name, prompt, schema, context_payload, out_name,
+                                           timeout=call_timeout)
             except subprocess.TimeoutExpired:
                 raw, status = "", "timeout"
             except ExecutorUnavailable as exc:
@@ -157,11 +224,14 @@ class BaseExecutor:
                 errors.append(parse_error or "스키마 불일치")
                 status = "schema_failed"
             elif status == "timeout":
-                errors.append(f"타임아웃({self.timeout_s}s)")
+                errors.append(f"타임아웃({call_timeout:.0f}s)")
             else:
                 errors.append(raw.strip()[:200] or status)
             if attempt < self.max_attempts:
                 self._sleep(self.backoff_s * (2 ** (attempt - 1)))
+                after = self._remaining(deadline)
+                if after is not None and after <= 0:
+                    return CallResult(None, attempt, "timeout", "전체 마감 도달 — 재시도를 중단한다")
         final_status = "schema_failed" if parse_failures else "error"
         return CallResult(None, self.max_attempts, final_status, "; ".join(errors)[:600])
 
@@ -189,6 +259,9 @@ class CodexCliExecutor(BaseExecutor):
         self.extra_args = tuple(extra_args)
         self._runner = runner
         self._which = which
+        #: strict 스키마 파일 병렬 생성 잠금·캐시(라운드명 → (내용, 경로)).
+        self._schema_lock = threading.Lock()
+        self._schema_files: dict[str, tuple[str, Path]] = {}
 
     def _resolve_binary(self) -> str:
         found = self._which(self.binary)
@@ -210,15 +283,36 @@ class CodexCliExecutor(BaseExecutor):
         return None
 
     def strict_schema_file(self, round_name: str, schema: dict) -> Path:
-        """`codex exec` 에 넘길 strict 스키마 파일(받지 않는 검증 키워드 제거)."""
+        """`codex exec` 에 넘길 strict 스키마 파일(받지 않는 검증 키워드 제거).
+
+        1R 4콜이 **병렬로** 부른다. 같은 `.tmp` 이름을 쓰면 한 쓰기가 다른 쓰기의 `replace` 와
+        엮여 `FileNotFoundError` 가 난다(감사 09-1). 그래서 ① 한 프로세스에서 같은 라운드는 한 번만
+        쓰고(메모 캐시) ② 그래도 쓰는 경우에는 **고유 임시 파일 + `os.replace`** 로 원자적으로 바꿔 낸다.
+        """
         path = self.out_dir / f"{round_name}.strict.schema.json"
+        payload = json.dumps(to_strict_schema(schema), ensure_ascii=False, indent=2)
+        with self._schema_lock:
+            cached = self._schema_files.get(round_name)
+            if cached is not None and cached[0] == payload and cached[1].exists():
+                return cached[1]
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_name(path.name + ".tmp")
-        tmp.write_text(json.dumps(to_strict_schema(schema), ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp.replace(path)  # 1R 4콜이 병렬로 써도 반쯤 쓰인 파일을 읽지 않는다
+        fd, tmp_name = tempfile.mkstemp(prefix=f"{round_name}.strict.", suffix=".tmp", dir=str(path.parent))
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(payload)
+            os.replace(tmp_name, path)
+        except BaseException:
+            Path(tmp_name).unlink(missing_ok=True)
+            raise
+        with self._schema_lock:
+            self._schema_files[round_name] = (payload, path)
         return path
 
     def build_command(self, prompt: str, out_path: Path, schema_file: Path) -> list[str]:
+        """argv 에는 **프롬프트를 넣지 않는다** — Windows 32k 인수 한도·cp949 를 피해 stdin 으로 넘긴다.
+
+        `codex exec … -` 는 프롬프트를 표준입력에서 읽는다(감사 09-6).
+        """
         cmd = [
             self._resolve_binary(), "exec",
             "--output-schema", str(schema_file),
@@ -230,26 +324,32 @@ class CodexCliExecutor(BaseExecutor):
         if self.sandbox:
             cmd += ["--sandbox", self.sandbox]
         cmd += list(self.extra_args)
-        cmd += [prompt]
+        cmd += ["-"]
         return cmd
 
     def _invoke(self, round_name: str, prompt: str, schema: dict, context_payload: dict | None,
-                out_name: str | None) -> tuple[str, str]:
+                out_name: str | None, timeout: float | None = None) -> tuple[str, str]:
         out_path = self.out_dir / (out_name or f"{round_name}.json")
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.unlink(missing_ok=True)  # 이전 시도의 출력을 성공으로 오인하지 않는다
         schema_file = self.strict_schema_file(round_name, schema) if schema else schema_path(round_name)
         cmd = self.build_command(prompt, out_path, schema_file)
+        # 프롬프트(컨텍스트 포함)는 표준입력으로, **UTF-8 로 명시**해 넘긴다.
+        stdin_text = prompt if prompt else json.dumps(context_payload or {}, ensure_ascii=False)
         try:
             proc = self._runner(
                 cmd,
-                input=json.dumps(context_payload or {}, ensure_ascii=False),
+                input=stdin_text,
                 capture_output=True,
                 text=True,
-                timeout=self.timeout_s,
+                encoding="utf-8",
+                errors="replace",
+                timeout=self.timeout_s if timeout is None else max(1.0, float(timeout)),
             )
         except OSError as exc:  # 실행 파일이 사라졌거나 권한이 없다
             raise ExecutorUnavailable(f"codex 실행 실패: {exc}") from exc
+        except subprocess.TimeoutExpired:
+            raise
         combined = f"{proc.stdout or ''}\n{proc.stderr or ''}"
         marker = self._status_from_output(combined)
         if marker:
@@ -325,20 +425,21 @@ class OpenAiAdapterExecutor(BaseExecutor):
             self.estimated_out_tokens / 1_000_000
         ) * self.price_out_per_mtok
 
-    def _http_post(self, payload: dict) -> Any:
+    def _http_post(self, payload: dict, timeout: float | None = None) -> Any:
+        limit = self.timeout_s if timeout is None else max(1.0, float(timeout))
         if self._poster is not None:
-            return self._poster(self.base_url, payload, self.timeout_s)
+            return self._poster(self.base_url, payload, limit)
         import requests  # 지역 import — Codex CLI 경로에서 네트워크 의존을 만들지 않는다
 
         return requests.post(
             self.base_url,
             headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
             json=payload,
-            timeout=self.timeout_s,
+            timeout=limit,
         )
 
     def _invoke(self, round_name: str, prompt: str, schema: dict, context_payload: dict | None,
-                out_name: str | None) -> tuple[str, str]:
+                out_name: str | None, timeout: float | None = None) -> tuple[str, str]:
         if self.spent_usd() + self.estimated_cost() > self.max_monthly_usd:
             raise RunLimitReached(f"월 상한 ${self.max_monthly_usd:.2f} 도달 — API 경로를 멈춘다")
         body = {
@@ -353,7 +454,7 @@ class OpenAiAdapterExecutor(BaseExecutor):
             },
         }
         try:
-            resp = self._http_post(body)
+            resp = self._http_post(body, timeout=timeout)
         except Exception as exc:  # noqa: BLE001 — 네트워크 오류는 재시도 대상
             return str(exc), "error"
         status_code = int(getattr(resp, "status_code", 200) or 200)

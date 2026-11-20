@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -35,6 +35,10 @@ PUBLISHED = "2026-05-08T22:02:11Z"      # 금요일 발행 → 대상 세션 202
 COMPLETED = "2026-05-08T23:15:00Z"
 ORDER_CUTOFF = "2026-05-11T14:25:00Z"
 SNAP = "sha256:abc123"
+
+#: `report_of(validated=…)` 의 기본값/누락 표식 — 따뜻한 기본값(완료+1분)과 "필드 없음"을 가른다.
+_AUTO = object()
+_MISSING = object()
 
 
 # ────────────────────────────── 헬퍼 ──────────────────────────────
@@ -97,8 +101,13 @@ def report_of(sid: str = "2026-11-18-AAA-BUY-001", *, ticker: str = "AAA", snaps
               completed: str = COMPLETED, published: str = PUBLISHED,
               order: str = ORDER_CUTOFF, status: str = "complete", recommendation: str = "WATCH",
               intent: str = "pending_hold_cash", vetoes: list | None = None,
-              news_read: bool = True) -> dict:
-    return {
+              news_read: bool = True, validated: object = _AUTO, receipt: bool = True) -> dict:
+    """편입 판정용 보고서 픽스처 — **검증 시각과 바이트 영수증**을 함께 만든다(v1.3.5).
+
+    `validated=_MISSING` 이면 `validation.report_validated_at` 을 넣지 않는다(누락 경로 시험용).
+    영수증은 모든 필드를 채운 **마지막**에 계산해야 하므로 `with_report_receipt` 로 붙인다.
+    """
+    report = {
         "report_id": f"{sid}-debate-01", "ticker": ticker, "signal_id": sid, "snapshot_id": snapshot,
         "as_of": "2026-05-08", "data_cutoff_at": "2026-05-08T22:00:00Z",
         "signal_published_at": published, "order_cutoff_at": order, "completed_at": completed,
@@ -127,6 +136,13 @@ def report_of(sid: str = "2026-11-18-AAA-BUY-001", *, ticker: str = "AAA", snaps
         "quant_grade": "BUY", "display_grade": "BUY", "auto_downgrade_applied": False,
         "track": "codex_debated",
     }
+    stamp = validated
+    if stamp is _AUTO:
+        base = datetime.fromisoformat(completed.replace("Z", "+00:00"))
+        stamp = (base + timedelta(minutes=1)).isoformat().replace("+00:00", "Z")
+    if stamp is not _MISSING and stamp is not None:
+        report["validation"]["report_validated_at"] = str(stamp)
+    return debate_mod.with_report_receipt(report) if receipt else report
 
 
 def fill_of(record: dict, *, price: float = 100.0, weight: float | None = None) -> dict:
@@ -138,13 +154,20 @@ def fill_of(record: dict, *, price: float = 100.0, weight: float | None = None) 
 
 
 def synthetic_comparison(*, pairs: int, n_eff: int, net: float, defense: bool,
-                         quarters: int = 2, per_quarter: int = 30) -> dict:
+                         quarters: int = 2, per_quarter: int = 30,
+                         policy_version: str | None = "params_v001",
+                         policy_diff_pp: float | None = None) -> dict:
+    """자동 하향 판정 픽스처 — v1.3.5 는 **계좌 순자산 차이·인접 분기·정책 버전**을 요구한다."""
+    diff_pp = net * 100.0 if policy_diff_pp is None else policy_diff_pp
     rows = [{"quarter": f"2026Q{n + 1}", "n_graded": per_quarter, "n_eff": max(n_eff, per_quarter),
-             "net_after_cost": net, "drawdown": {"defense_improved": defense},
+             "net_after_cost": net, "policy_diff": {"policy_diff_pp": diff_pp},
+             "policy_version": policy_version,
+             "drawdown": {"defense_improved": defense},
              "verdict": debate_mod.VERDICT_EFFECTIVE}
             for n in range(quarters)]
     return {"schema_version": 1, "n_graded_pairs": pairs, "n_eff": n_eff, "net_after_cost": net,
-            "net_after_cost_pp": round(net * 100, 4),
+            "net_after_cost_pp": round(net * 100, 4), "policy_diff_pp": diff_pp,
+            "quant_mdd": -0.10, "debate_mdd": (-0.08 if defense else -0.20),
             "drawdown": {"defense_improved": defense}, "quarters": rows,
             "auto_downgrade_enabled": False, "verdict": debate_mod.VERDICT_EFFECTIVE}
 
@@ -429,6 +452,7 @@ def test_third_tranche_below_initial_stop_is_armed_for_dma_only():
 
 
 def test_stop_out_cancels_pending_tranches_and_records_health():
+    """S5 손절 → 잔여 2·3차 취소. 취소 수와 **재진입 차단 수는 다른 지표**다(P-1)."""
     record = record_of()
     record["position"]["stop_distance"] = 0.05          # 초기 손절가 95
     prices = [100.0, 101.0, 96.0, 90.0, 92.0] + [92.0] * 10
@@ -438,11 +462,60 @@ def test_stop_out_cancels_pending_tranches_and_records_health():
     cancelled = [r for r in position["tranches"] if r["status"] == "cancelled"]
     assert cancelled, "손절 후 잔여 2·3차 주문이 살아 있다 — 같은 봉 재진입 위험"
     assert all(r["cancelled_by"] == "S5" for r in cancelled)
-    assert result["health"]["stop_reentry_blocked_count"] == len(cancelled)
+    # [v1.3.5 · P-1] 2·3차 취소 수와 손절 재진입 차단 수를 분리한다 — 예전에는 같은 값이었다.
+    assert result["health"]["tranche_cancel_count"] == len(cancelled)
+    assert result["health"]["stop_reentry_blocked_count"] == 0
     assert result["health"]["stop_count"] == 1
+    # 2·3차 취소는 세션 로그에도 남는다
+    assert any(row.get("event") == "cancel_pending" and row.get("cancelled_by") == "S5"
+               for row in result["event_log"])
     # 재진입: 손절 뒤 저가가 2차 지정가(87)까지 내려가도 체결되지 않는다
     assert not any(e.get("event") == "buy_filled" and e.get("tranche", 1) > 1
                    for e in result["events"])
+
+
+def test_stop_reentry_lock_blocks_same_session_first_tranche():
+    """P-1: 손절이 난 (종목, 세션)은 그 세션의 **신규 1차 진입**까지 막는다."""
+    buy = record_of(sid="2026-05-08-AAA-BUY-001")
+    panels = {"AAA": panel_of([100.0, 100.0, 100.0])}
+    as_of = date(2026, 5, 11)
+    blocked = live.settle([buy], {}, panels, as_of,
+                          stop_locks={("AAA", "2026-05-11"): "S5"})
+    assert blocked["stop_reentry_blocked_count"] == 1
+    assert not [e for e in blocked["new_events"]
+                if e["quant_track"]["execution_event"] == "buy_filled"]
+    assert any(row.get("reason") == "STOP_REENTRY_LOCK" for row in blocked["settled"])
+    assert blocked["stop_reentry_blocked"][0]["ticker"] == "AAA"
+    # 잠금 집합은 position_events 의 S5 행에서 파생된다(별도 상태 파일 없음)
+    rows = [{"date": "2026-05-11", "ticker": "AAA", "signal_id": buy["signal_id"],
+             "event": "exit_filled", "reason": "S5", "price": 86.0}]
+    locks = live.stop_reentry_locks(rows)
+    assert locks == [{"ticker": "AAA", "session": "2026-05-11",
+                      "signal_id": buy["signal_id"], "lock": "AAA|2026-05-11"}]
+    assert live.settle([buy], {}, panels, as_of,
+                       stop_locks=live.stop_reentry_locks(rows))["stop_reentry_blocked_count"] == 1
+    # 다른 세션이면 막지 않는다
+    assert live.settle([buy], {}, panels, as_of,
+                       stop_locks=["AAA|2026-05-12"])["stop_reentry_blocked_count"] == 0
+    # 실행기는 세션 로그 경로만 넘기면 된다(잠금은 S5 행에서 파생된다)
+    assert live.settle([buy], {}, panels, as_of, prior_events=rows)["stop_reentry_blocked_count"] == 1
+
+
+def test_health_separates_reentry_blocks_from_tranche_cancels(tmp_path):
+    """`health.json` 이 두 지표를 **다른 이름**으로 싣는다(P-1 · §10)."""
+    path = tmp_path / "health.json"
+    live.write_health({"positions_open": 1, "tranches_filled": 1, "tranches_pending": 0,
+                       "stop_count": 1, "trim_count": 2, "stop_reentry_blocked_count": 1,
+                       "tranche_cancel_count": 2, "pending_exit_count": 0,
+                       "blocked_reentries": [{"ticker": "AAA", "target_session": "2026-05-11"}],
+                       "cancelled_tranches": [{"tranche": 2}, {"tranche": 3}]},
+                      date(2026, 5, 12), path=path)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["stop_reentry_blocked_count"] == 1
+    assert payload["tranche_cancel_count"] == 2
+    assert payload["trim_count"] == 2
+    assert payload["pending_exit_count"] == 0
+    assert "2·3차 주문 수" in payload["note_ko"]
 
 
 def test_forced_exit_on_as_of_day_cancels_tranches():
@@ -566,7 +639,9 @@ def _rules() -> dict:
         return yaml.safe_load(f)
 
 
-def _build(out_dir: Path, *, reports: dict | None = None, records: list[dict] | None = None) -> dict:
+def _build(out_dir: Path, *, reports: dict | None = None, records: list[dict] | None = None,
+           debate_events: dict | None = None) -> dict:
+    """공개 빌드 — 편입 결과는 원장 이벤트(`debate_events`)를 그대로 쓴다(화면이 자격을 다시 계산하지 않는다)."""
     rules = _rules()
     signals = json.loads((ROOT / "data" / "quant_signals.json").read_text(encoding="utf-8"))
     return build_public_data.build(
@@ -577,7 +652,7 @@ def _build(out_dir: Path, *, reports: dict | None = None, records: list[dict] | 
                                    .read_text(encoding="utf-8")),
         watch=json.loads((ROOT / "data" / "watchlist" / "current.json").read_text(encoding="utf-8")),
         params=yaml.safe_load((ROOT / "config" / "params_v001.yaml").read_text(encoding="utf-8")),
-        debate_reports=reports)
+        debate_reports=reports, debate_events=debate_events)
 
 
 def test_public_build_without_any_debate():
@@ -593,13 +668,20 @@ def test_public_build_without_any_debate():
     assert out["meta.json"]["debate_status"] == "none"
 
 
-def test_public_build_carries_debate_card_and_hides_quotes():
+def test_public_build_carries_debate_card_and_hides_quotes(tmp_path):
     records = [record_of()]
-    reports = {"reports": [report_of()]}
-    out = _build(Path("/tmp"), reports=reports, records=records)
+    report = report_of()
+    reports = {"reports": [report]}
+    event_dir = tmp_path / "debate_events"
+    debate_mod.reconcile_debates(reports, records, {}, event_dir=event_dir,
+                                 params={"debate": {"auto_downgrade_enabled": False}},
+                                 as_of=date(2026, 5, 8))
+    events = debate_mod.load_events(event_dir)
+    out = _build(Path("/tmp"), reports=reports, records=records, debate_events=events)
     assert out["debate.json"]["status"] == "ok"
     report = out["debate.json"]["reports"][0]
     assert report["badge"] == debate_mod.BADGE_DIFFERENT
+    assert out["debate.json"]["reports"][0]["eligible"] is True
     assert report["round1"] and report["round3"]["chair"]["one_line_ko"]
     assert report["validation"]["quotes_dropped"] == 0
     text = json.dumps(out, ensure_ascii=False)
@@ -670,9 +752,16 @@ def test_run_daily_end_to_end_with_debate(workdir, monkeypatch):
                        completed=completed, snapshot=buy["snapshot_id"])
     Path("data/debate_reports.json").write_text(
         json.dumps({"schema_version": "1.0", "reports": [report]}, ensure_ascii=False), encoding="utf-8")
-    records_before = Path("data/ledger/records.jsonl").read_bytes()
+    records_before = Path("data/ledger/records.jsonl").read_text(encoding="utf-8").splitlines()
     assert _run(monkeypatch, "2026-11-24") == 0
-    assert Path("data/ledger/records.jsonl").read_bytes() == records_before
+    # 기존 줄은 **한 바이트도 고치지 않는다**(사후 편집 금지). 다만 토론이 붙어 판단 입력이 바뀌면
+    # 파이프라인은 같은 종목·날의 **새 회차(…-002)** 를 append 한다 — 그건 수정이 아니라 새 발행이다.
+    records_after = Path("data/ledger/records.jsonl").read_text(encoding="utf-8").splitlines()
+    assert records_after[:len(records_before)] == records_before, "편입이 기존 발행 레코드를 고쳤다"
+    for line in records_after[len(records_before):]:
+        payload = json.loads(line)
+        assert payload.get("signal_id", "").rsplit("-", 1)[-1] != "001", "기존 회차가 덮어써졌다"
+        assert payload.get("supersedes"), "새 회차가 이전 발행본을 가리키지 않는다" 
     event_path = Path("data/ledger/debate_events") / f"{buy['signal_id']}.json"
     assert event_path.exists(), "편입 자격을 통과한 토론이 이벤트로 남지 않았다"
     comparison = json.loads(Path("data/ledger/debate_comparison.json").read_text(encoding="utf-8"))
@@ -697,7 +786,8 @@ def test_ui_wiring_ids_manifest_and_cache_bust():
     assert missing == [], f"app.js 가 찾는 id 가 index.html 에 없다: {missing}"
     assert ids & {"notify-banner", "debate-effect", "live-positions"}, "Phase 4 위젯 자리가 없다"
     assert 'rel="manifest" href="./manifest.json"' in html
-    assert "app.js?v=phase4-2" in html and "styles.css?v=phase4-2" in html
+    assert re.search(r"app\.js\?v=phase4-\d+", html), "app.js 캐시 버스트가 없다"
+    assert re.search(r"styles\.css\?v=phase4-\d+", html), "styles.css 캐시 버스트가 없다"
     for name in ("debate.json", "health.json", "notifications.json"):
         assert f'"{name}"' in js, f"app.js 가 {name} 을 읽지 않는다"
     manifest = json.loads((ROOT / "web" / "manifest.json").read_text(encoding="utf-8"))
@@ -828,14 +918,20 @@ def test_watch_after_freeze_does_not_cancel_frozen_order():
                                      inputs_hash="hash-late", grade="WATCH")
     records.append(late_watch)
     slots = live.order_slots(records)
-    slot = slots[("AAA", date(2026, 5, 11))]
+    slot = live.get_slot(slots, "AAA", date(2026, 5, 11))
     assert slot["freeze_deadline_at"] == "2026-05-11T13:20:00Z"
     assert slot["frozen_at"] <= slot["freeze_deadline_at"]
+    # 동결된 주문은 BUY-001 이고, 동결 뒤 WATCH 는 held 로만 남는다(당일 슬롯을 덮지 않는다)
+    assert slot["signal_id"] == buy["signal_id"]
+    assert [item["signal_id"] for item in slot["held"]] == [late_watch["signal_id"]]
     out = live.settle(records, {}, {"AAA": panel_of([100.0, 100.0, 100.0])}, date(2026, 5, 11))
-    assert any(e["quant_track"]["execution_event"] == "buy_filled" for e in out["new_events"]), \
-        "동결 뒤 도착한 WATCH 가 이미 동결된 주문을 취소했다"
+    fills = [e for e in out["new_events"] if e["quant_track"]["execution_event"] == "buy_filled"]
+    assert len(fills) == 1, "동결 뒤 도착한 WATCH 가 이미 동결된 주문을 취소·중복 체결했다"
     assert not out["cancellations"]
     assert any(row.get("event") == "superseded_after_freeze" for row in out["settled"])
+    assert [item["signal_id"] for item in out["held"]] == [late_watch["signal_id"]]
+    assert any(row.get("signal_id") == late_watch["signal_id"]
+               and row.get("reason") == "ARRIVED_AFTER_FREEZE" for row in out["pending"])
 
 
 def _with_hash(record: dict, value: str) -> dict:
@@ -853,13 +949,16 @@ def test_validated_after_cutoff_is_late_even_if_completed_before():
     assert el["report_validated_at"] == "2026-05-11T14:26:00Z"
 
 
-@pytest.mark.parametrize("completed, ok", [
-    ("2026-05-11T14:24:59Z", True),     # 마감 1초 전 완료 → 통과
-    ("2026-05-11T14:25:00Z", False),    # 정각 → 마감 도달(late)
-    ("2026-05-11T14:25:01Z", False),    # 1초 뒤
+@pytest.mark.parametrize("completed, validated, ok", [
+    # 완료·검증 모두 마감 1초 전 → 통과
+    ("2026-05-11T14:24:59Z", "2026-05-11T14:24:59Z", True),
+    ("2026-05-11T14:25:00Z", "2026-05-11T14:25:01Z", False),   # 정각 → 마감 도달(late)
+    ("2026-05-11T14:25:01Z", "2026-05-11T14:25:02Z", False),   # 1초 뒤
 ])
-def test_completed_second_before_at_and_after_cutoff(completed, ok):
-    el = _eligibility(report_of(completed=completed), record_of())
+def test_completed_second_before_at_and_after_cutoff(completed, validated, ok):
+    # 동결 경계(–5분)는 P-2 테스트가 따로 본다 — 여기서는 **완료·검증 시각의 마감 경계**만 본다.
+    el = _eligibility(report_of(completed=completed, validated=validated), record_of(),
+                      frozen_at="2026-05-11T14:25:00Z")
     assert el["eligible"] is ok
     assert el["late"] is (not ok)
 
@@ -880,6 +979,7 @@ def test_validation_time_is_read_from_validation_block():
     """트랙 B는 스키마 때문에 `validation.report_validated_at` 에 쓴다 — 그 값도 검증 시각이다."""
     report = report_of(completed="2026-05-11T14:00:00Z")
     report["validation"] = {**report["validation"], "report_validated_at": "2026-05-11T14:30:00Z"}
+    report = debate_mod.with_report_receipt(report)          # 본문을 고쳤으니 영수증도 다시
     el = _eligibility(report, record_of())
     assert el["late"] is True and el["eligible"] is False
     assert "REPORT_VALIDATED_AFTER_ORDER_CUTOFF" in el["reasons"]
@@ -901,7 +1001,7 @@ def test_retroactive_pair_is_rejected_when_fill_precedes_validation():
 
 def test_now_is_used_as_validation_time_when_report_has_no_timestamp():
     record = record_of()
-    late = _eligibility(report_of(completed="2026-05-11T14:00:00Z"), record,
+    late = _eligibility(report_of(completed="2026-05-11T14:00:00Z", validated=_MISSING), record,
                         now=datetime(2026, 5, 11, 14, 45, tzinfo=timezone.utc))
     assert late["late"] is True and late["report_validated_at"] == "2026-05-11T14:45:00Z"
 
@@ -1166,7 +1266,12 @@ def test_end_to_end_policy_accounts_numbers():
 
 
 def test_late_validation_makes_policy_diff_zero():
-    """검증만 마감 후로 옮기면 두 계좌가 같은 주문을 처리해 순효과 0%p, 행동 차이 0건."""
+    """검증만 마감 후로 옮기면 두 계좌가 **같은 주문**을 처리해 순효과 0%p, 행동 차이 0건.
+
+    [v1.3.5 · 중요 04] 토론이 편입되지 않으면 `codex_debated` 도 정량과 같은 행동을 한다 —
+    그래서 계좌 수익률은 둘 다 −0.20%(손절)이고 **차이**만 0 이다. 예전에는 두 계좌 모두 후보가
+    0건이라 수익률까지 0 으로 보였다(보고서 없는 정량 체결 누락과 같은 뿌리).
+    """
     record, execution, view, panel = _e2e_fixture(validated="2026-05-11T14:40:00Z")
     assert view["eligible"] is False
     comp = debate_mod.compute_debate_comparison(
@@ -1175,8 +1280,9 @@ def test_late_validation_makes_policy_diff_zero():
         costs={"slippage": 0.0, "commission": 0.0, "fx": 0.0})
     assert comp["divergent_pairs"] == 0
     assert comp["policy_diff_pp"] == pytest.approx(0.0, abs=1e-9)
-    assert comp["R_quant"] == pytest.approx(0.0, abs=1e-9)
-    assert comp["R_debated"] == pytest.approx(0.0, abs=1e-9)
+    assert comp["R_quant"] == pytest.approx(-0.002, abs=1e-6)
+    assert comp["R_debated"] == pytest.approx(-0.002, abs=1e-6)
+    assert comp["accounts"]["codex_debated"]["n_trades"] == 2      # 진입+청산 1쌍
 
 
 def test_bucket_has_no_hardcoded_debate_mdd():
@@ -1303,3 +1409,611 @@ def test_default_stop_distance_third_tranche_is_not_dead_code():
     third = result["positions"]["AAA"]["tranches"][2]
     assert third["status"] == "pending" and third["trigger"] == "dma200"
     assert third["price_ref"] == pytest.approx(86.0, abs=0.5)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 13. 감사(audit ad73fb0) 회귀 — 트랙 1: 원장·매도·A/B·기획서 v1.3.5
+#     치명 01 · §10 ①②③⑤ · P-1 / 치명 02 · P-2 / 중요 03 · P-5 / 중요 04·05 · P-4 / 중요 06
+# ══════════════════════════════════════════════════════════════════════════════
+from engine.ledger.record import make_blocked_supersede_record  # noqa: E402
+
+BUY_001 = "2026-05-08-AAA-BUY-001"
+
+
+def _buy(sid: str = BUY_001, *, ticker: str = "AAA", published: str = PUBLISHED,
+         order: str = ORDER_CUTOFF, revision: int | None = None,
+         supersedes: str | None = None, inputs_hash: str | None = None,
+         price: float = 100.0, plan_weight: float = 0.05) -> dict:
+    record = record_of(sid=sid, ticker=ticker, price=price, plan_weight=plan_weight)
+    record["signal_published_at"] = published
+    record["order_cutoff_at"] = order
+    if revision is not None:
+        record["revision"] = revision
+    if supersedes is not None:
+        record["supersedes"] = supersedes
+    if inputs_hash is not None:
+        record["inputs_hash"] = inputs_hash
+    return record
+
+
+def _watch(sid: str, *, supersedes: str, published: str, ticker: str = "AAA",
+           order: str = ORDER_CUTOFF) -> dict:
+    watch = record_of(sid=sid, ticker=ticker, grade="WATCH", intent="no_action", price=100.0)
+    watch["signal_published_at"] = published
+    watch["order_cutoff_at"] = order
+    watch["supersedes"] = supersedes
+    watch["revision"] = 2
+    return watch
+
+
+def _fills(out: dict) -> list[dict]:
+    return [e for e in out["new_events"]
+            if (e.get("quant_track") or {}).get("execution_event") == "buy_filled"]
+
+
+# ── 13-1. 치명 01 — 슬롯당 1건 체결 · 동결 뒤 회차 · blocked · revision ─────────
+def _neutral_indicators(monkeypatch):
+    """합성 패널의 RSI·200일선은 상수라 분할익절이 끼어든다 — 지표만 중립으로 고정한다."""
+    monkeypatch.setattr(live, "_indicator_lines",
+                        lambda panel: ({idx.date(): (None, 50.0) for idx in panel.frame.index}
+                                       if panel is not None else {}))
+
+
+def test_slot_fills_once_when_revision_arrives_after_freeze(monkeypatch):
+    """동결(13:20Z) 뒤 도착한 BUY 재발행은 **당일 슬롯을 덮지 않고** 중복 체결도 없다(감사 01-(a))."""
+    _neutral_indicators(monkeypatch)
+    cutoff = "2026-05-11T13:25:00Z"
+    first = _buy(published="2026-05-11T13:00:00Z", order=cutoff, inputs_hash="hash-A")
+    second = _buy(sid="2026-05-08-AAA-BUY-002", published="2026-05-11T13:22:00Z", order=cutoff,
+                  revision=2, supersedes=first["signal_id"], inputs_hash="hash-B")
+    panels = {"AAA": panel_of([100.0, 99.0, 100.0, 99.0, 100.0])}     # RSI 중립(분할익절 없음)
+    slots = live.order_slots([first, second])
+    slot = live.get_slot(slots, "AAA", date(2026, 5, 11))
+    assert slot["signal_id"] == first["signal_id"]           # 동결된 주문은 1차 발행본
+    assert slot["frozen_at"] == "2026-05-11T13:00:00Z"
+    assert slot["freeze_deadline_at"] == "2026-05-11T13:20:00Z"
+    assert [item["signal_id"] for item in slot["held"]] == [second["signal_id"]]
+
+    out = live.settle([first, second], {}, panels, date(2026, 5, 11),
+                      now="2026-05-11T13:30:00Z")
+    fills = _fills(out)
+    assert len(fills) == 1 and fills[0]["signal_id"] == first["signal_id"], \
+        "같은 슬롯·같은 세션에 두 번 체결됐다 — 주문 1건 불변식 위반"
+    assert not out["cancellations"], "동결된 주문이 사후에 취소됐다"
+    assert [item["signal_id"] for item in out["held"]] == [second["signal_id"]]
+    # 보유도 1건분만 — 체결 이벤트와 계좌가 같은 상태를 본다
+    executions = {e["signal_id"]: e for e in out["new_events"]}
+    positions = live.settle_positions([first, second], executions,
+                                      {e["signal_id"]: e for e in out["reanchors"]},
+                                      panels, date(2026, 5, 11), position_events_path=None)
+    assert positions["positions"]["AAA"]["qty"] == pytest.approx(0.05 * 0.40 * 1_000_000 / 100.1,
+                                                                 rel=1e-6)
+    assert live.replay([first, second], executions)["positions"]["AAA"]["qty"] == pytest.approx(
+        positions["positions"]["AAA"]["qty"], rel=1e-6)
+
+
+def test_keep_position_when_buy_is_superseded_after_fill_by_watch(monkeypatch):
+    """1차 체결 뒤(다음 세션) WATCH 로 바뀌어도 **보유는 사라지지 않는다**(감사 01-(b))."""
+    _neutral_indicators(monkeypatch)
+    buy = _buy(published="2026-05-11T13:00:00Z", order="2026-05-11T13:25:00Z")
+    out = live.settle([buy], {}, {"AAA": panel_of([100.0, 99.0, 100.0, 99.0, 100.0])},
+                      date(2026, 5, 11))
+    executions = {e["signal_id"]: e for e in out["new_events"]}
+    # 05-12 에 같은 세션 판단이 WATCH 로 대체된 상황(체결은 이미 05-11 에 있었다)
+    late_watch = _watch("2026-05-08-AAA-WATCH-002", supersedes=buy["signal_id"],
+                        published="2026-05-12T02:00:00Z", order="2026-05-12T13:25:00Z")
+    late_watch["target_session"] = "2026-05-11"
+    records = [buy, late_watch]
+    assert buy["signal_id"] in superseded_ids(records)
+
+    result = live.settle_positions(records, executions, {},
+                                   {"AAA": panel_of([100.0, 99.0, 100.0, 99.0, 100.0])},
+                                   date(2026, 5, 12), position_events_path=None)
+    assert result["holdings"], "동결 뒤 WATCH 전환으로 체결분 보유가 사라졌다"
+    assert result["positions"]["AAA"]["qty"] == pytest.approx(0.02 * 1_000_000 / 100.1, rel=1e-9)
+    assert result["cash"] == pytest.approx(980_000.0, rel=1e-9)
+
+
+def test_blocked_supersede_record_prevents_same_day_buy_fill():
+    """아침 BUY 가 같은 날 차단되면 **차단 레코드**가 그 BUY 를 대체해 체결되지 않는다(감사 01-(d))."""
+    buy = _buy(published="2026-05-08T22:02:11Z")
+    blocked = make_blocked_supersede_record(
+        [buy], blocked={"ticker": "AAA", "reason": "V06", "codes": ["V06"], "grade": "BUY"},
+        prior=buy,
+        times={"data_cutoff_at": "2026-05-08T22:00:00Z",
+               "signal_published_at": "2026-05-08T23:40:00Z",
+               "order_cutoff_at": ORDER_CUTOFF, "target_session": "2026-05-11"},
+        as_of="2026-05-08", inputs_hash="hash-blocked", params_version="params_v001",
+        snapshot_id=SNAP, code_commit="deadbee", mode="postclose")
+    assert blocked["quant_intent"] == "no_action"
+    assert blocked["blocked"] is True and blocked["supersede_only"] is True
+    assert blocked["blocked_reason"] == "V06" and blocked["blocked_codes"] == ["V06"]
+    assert blocked["supersedes"] == buy["signal_id"]
+    assert blocked["revision"] == buy["revision"] + 1
+    assert blocked["blocked"] in (True,) and blocked["release_kind"] == "BLOCKED"
+
+    records = [buy, blocked]
+    out = live.settle(records, {}, {"AAA": panel_of([100.0, 100.0, 100.0])}, date(2026, 5, 11))
+    assert not _fills(out), "차단된 BUY 가 시가에 체결됐다"
+    assert out["cancellations"] and out["cancellations"][0]["signal_id"] == buy["signal_id"]
+    assert out["cancellations"][0]["cancel_kind"] == "BLOCKED"
+
+
+def test_same_batch_block_prevents_the_open_fill():
+    """같은 배치의 차단은 레코드 append 순서와 무관하게 **그날 시가 체결을 막는다**(치명 01)."""
+    buy = _buy(published="2026-05-08T22:02:11Z")
+    panels = {"AAA": panel_of([100.0, 99.0, 100.0, 99.0, 100.0])}
+    out = live.settle([buy], {}, panels, date(2026, 5, 11), blocked={"AAA": "V06"})
+    assert not _fills(out), "같은 배치에서 차단된 종목이 시가에 체결됐다"
+    assert any(row.get("reason") == "BLOCKED" and row.get("blocked_reason") == "V06"
+               for row in out["settled"])
+    assert out["new_events"] and out["new_events"][0]["quant_track"]["execution_event"] == "no_action"
+
+
+def test_revision_is_recorded_on_first_release_and_every_revision():
+    """`-001` 을 포함한 모든 레코드에 `revision` 이 **정수**로 있다(감사 §10③ · 추가 14#3)."""
+    first = _buy()
+    assert first["revision"] == 1 and isinstance(first["revision"], int)
+    assert first["supersedes"] is None
+    watch = superseding_release([first], ticker="AAA", as_of="2026-05-08", type="WATCH",
+                                data_cutoff_at="2026-05-08T22:00:00Z",
+                                signal_published_at="2026-05-08T23:40:00Z",
+                                order_cutoff_at=ORDER_CUTOFF, target_session="2026-05-11",
+                                inputs_hash="hash-w", grade="WATCH")
+    assert watch["revision"] == 2 and watch["supersedes"] == first["signal_id"]
+    blocked = make_blocked_supersede_record([first, watch], prior=watch,
+                                           blocked={"ticker": "AAA", "reason": "V01"},
+                                           as_of="2026-05-08", times={"data_cutoff_at": "2026-05-08T22:00:00Z",
+                                                                      "signal_published_at": "2026-05-08T23:50:00Z",
+                                                                      "order_cutoff_at": ORDER_CUTOFF,
+                                                                      "target_session": "2026-05-11"})
+    assert blocked["revision"] == 3 and blocked["supersedes"] == watch["signal_id"]
+
+
+# ── 13-2. §10 ①②③⑤ — 취소 시각·계보·회차 의미·오탐 취소 ───────────────────────
+def test_cancel_event_uses_real_supersede_time_not_freeze_deadline():
+    """취소 `at` 은 **실제 대체 발행 시각**이고 동결 마감은 참고 필드다(감사 §10①)."""
+    buy = _buy(published="2026-05-08T22:02:11Z")
+    watch = _watch("2026-05-08-AAA-WATCH-002", supersedes=buy["signal_id"],
+                   published="2026-05-08T23:40:00Z")
+    out = live.settle([buy, watch], {}, {"AAA": panel_of([100.0, 100.0])}, date(2026, 5, 11))
+    cancel = out["cancellations"][0]
+    assert cancel["at"] == "2026-05-08T23:40:00Z", \
+        "취소 시각이 동결 마감(14:20Z)으로 덮였다 — 사후 검증에 쓸 수 없다"
+    assert cancel["freeze_deadline_at"] == "2026-05-11T14:20:00Z"
+    assert cancel["frozen_at"] is not None, "슬롯 동결 시각이 비어 있다"
+    assert cancel["cancelled_by"] == "WATCH_OR_BLOCKED" and cancel["cancel_kind"] == "WATCH"
+
+
+def test_cancellations_cover_every_revision_transition():
+    """`-001→-002`, `-002→-003` 전환마다 취소가 남는다(감사 §10②)."""
+    cutoff = "2026-05-11T13:25:00Z"
+    first = _buy(published="2026-05-11T13:00:00Z", order=cutoff)
+    second = _buy(sid="2026-05-08-AAA-BUY-002", published="2026-05-11T13:05:00Z",
+                  order=cutoff, revision=2, supersedes=first["signal_id"])
+    third = _watch("2026-05-08-AAA-WATCH-003", supersedes=second["signal_id"],
+                   published="2026-05-11T13:10:00Z", order=cutoff)
+    third["revision"] = 3
+    out = live.settle([first, second, third], {}, {"AAA": panel_of([100.0, 100.0])},
+                      date(2026, 5, 11))
+    assert [c["signal_id"] for c in out["cancellations"]] == [first["signal_id"], second["signal_id"]]
+    assert [c["at"] for c in out["cancellations"]] == ["2026-05-11T13:05:00Z", "2026-05-11T13:10:00Z"]
+    assert out["cancellations"][0]["cancel_kind"] == "BUY"
+    assert out["cancellations"][1]["cancel_kind"] == "WATCH"
+    assert not _fills(out)
+
+
+def test_watch_only_reissues_never_emit_cancel_pending():
+    """주문이 없던 WATCH 재발행은 취소가 아니라 회차 무효화다(감사 §10⑤ · 오탐 제거)."""
+    watch1 = _watch("2026-05-08-AAA-WATCH-001", supersedes="", published="2026-05-08T22:02:11Z")
+    watch1["supersedes"] = None
+    watch1["revision"] = 1
+    watch2 = _watch("2026-05-08-AAA-WATCH-002", supersedes=watch1["signal_id"],
+                    published="2026-05-08T23:40:00Z")
+    out = live.settle([watch1, watch2], {}, {"AAA": panel_of([100.0, 100.0])}, date(2026, 5, 11))
+    assert out["cancellations"] == [], "주문이 없던 WATCH 재발행이 '주문 취소'로 집계됐다"
+    assert any(row.get("event") == "superseded" and row.get("reason") == "INTENT_SUPERSEDED"
+               for row in out["settled"])
+    assert not out["new_events"]
+    # 같은 회차가 정말 주문(pending_buy)이면 취소가 남는다 — 두 경우가 갈린다
+    buy = _buy(published="2026-05-08T22:02:11Z")
+    buy_watch = _watch("2026-05-08-AAA-WATCH-002", supersedes=buy["signal_id"],
+                       published="2026-05-08T23:40:00Z")
+    assert live.settle([buy, buy_watch], {}, {"AAA": panel_of([100.0])},
+                       date(2026, 5, 11))["cancellations"], "미체결 BUY 취소가 사라졌다"
+
+
+# ── 13-3. 치명 02 + P-2 — 시각 계약·영수증·동결 정각 ──────────────────────────
+def test_freeze_boundary_includes_exact_deadline(monkeypatch):
+    """동결 정각은 **편입**, 1초 뒤는 late — 기획서의 두 문장을 이 규칙 하나로 고정한다(P-2)."""
+    at_freeze = _eligibility(report_of(completed="2026-05-11T14:00:00Z", validated="2026-05-11T14:20:00Z"),
+                             record_of())
+    assert at_freeze["late"] is False and at_freeze["eligible"] is True, \
+        "동결 정각(≤ frozen_at)이 제외됐다 — P-2 결정과 다르다"
+    assert at_freeze["frozen_at"] == "2026-05-11T14:20:00Z"
+    one_second = _eligibility(report_of(completed="2026-05-11T14:00:00Z", validated="2026-05-11T14:20:01Z"),
+                              record_of())
+    assert one_second["late"] is True and one_second["eligible"] is False
+    assert "VALIDATED_AFTER_FREEZE" in one_second["reasons"]
+
+
+def test_report_cannot_claim_validation_after_ledger_received_it():
+    """보고서 자기신고 검증 시각이 **원장 수신 시각보다 늦으면** `now` 로 깎인다(감사 02-(e))."""
+    record = record_of()
+    execution = fill_of(record)                         # 2026-05-11T13:30Z 체결
+    report = report_of(completed="2026-05-11T15:40:00Z", validated="2026-05-11T17:00:00Z")
+    el = _eligibility(report, record, now=datetime(2026, 5, 11, 16, 0, tzinfo=timezone.utc),
+                      execution=execution)
+    assert el["report_validated_at"] == "2026-05-11T16:00:00Z"
+    assert "POSTHOC_VALIDATION" in el["notes"]
+    assert el["late"] is True and el["eligible"] is False       # 16:00 > 동결 14:20
+
+
+def test_validation_after_fill_is_not_attached_retroactively():
+    """검증이 체결보다 늦으면 소급 페어다 — 편입 금지(감사 02-(c))."""
+    record = record_of()
+    execution = fill_of(record)                         # 2026-05-11T13:30Z 체결
+    report = report_of(completed="2026-05-11T15:20:00Z", validated="2026-05-11T15:30:00Z")
+    el = _eligibility(report, record, now=datetime(2026, 5, 11, 16, 0, tzinfo=timezone.utc),
+                      execution=execution)
+    assert el["eligible"] is False and el["invalid"] is True
+    assert "ATTACHED_AFTER_FILL" in el["reasons"]
+    # 체결 전에 검증된 같은 보고서는 통과한다(정상 경로가 살아 있다)
+    early = report_of(completed="2026-05-11T13:00:00Z", validated="2026-05-11T13:05:00Z")
+    assert _eligibility(early, record, now=datetime(2026, 5, 11, 16, 0, tzinfo=timezone.utc),
+                        execution=execution)["eligible"] is True
+
+
+def test_missing_timestamps_are_rejected_in_production_mode():
+    """시각이 빠진 보고서가 여섯 검사를 건너뛰지 못한다 — 프로덕션 경로는 strict(감사 02-(a))."""
+    record = record_of()
+    bare = report_of(validated=_MISSING)
+    result = debate_mod.reconcile_debates({"reports": [bare]}, [record], {},
+                                          event_dir=Path("/tmp/no-events"),
+                                          write=False, as_of=date(2026, 5, 11))
+    assert result["n_eligible"] == 0
+    reasons = result["rejected"][0]["reasons"]
+    assert "MISSING_TIMESTAMPS" in reasons and "REPORT_VALIDATED_AT" in " ".join(reasons)
+    # 단위 호환 경로(strict=False)는 예전처럼 통과한다 — 기존 호출부를 깨지 않는다
+    assert _eligibility(bare, record)["eligible"] is True
+
+
+def test_ledger_order_cutoff_beats_report_self_declared_cutoff():
+    """원장의 마감·동결이 보고서 내부 값보다 항상 우선한다(감사 02)."""
+    record = record_of()                                # 마감 14:25Z · 동결 14:20Z
+    wide = report_of(completed="2026-05-11T15:00:00Z", validated="2026-05-11T15:10:00Z",
+                     order="2026-05-11T16:25:00Z")     # 보고서는 자기 마감을 16:25 로 적었다
+    el = _eligibility(wide, record)
+    assert el["order_cutoff_at"] == "2026-05-11T14:25:00Z"
+    assert el["late"] is True and el["eligible"] is False
+
+
+def test_report_receipt_detects_edited_bytes_and_missing_receipt():
+    """`report_sha256` 영수증 — 바이트가 바뀌면 편입 금지, 프로덕션은 영수증 없는 보고서도 거부."""
+    record = record_of()
+    report = report_of(completed="2026-05-11T13:00:00Z", validated="2026-05-11T13:05:00Z")
+    receipt = debate_mod.compute_report_sha256(report)
+    assert receipt.startswith("sha256:") and len(receipt) == 7 + 64
+
+    ok = _eligibility(report, record, require_receipt=True)
+    assert ok["eligible"] is True and ok["receipt_ok"] is True
+
+    edited = debate_mod.report_receipt(report) is not None
+    tampered = json.loads(json.dumps(report))
+    tampered["round3"]["chair"]["one_line_ko"] = "검증 뒤에 고친 한 줄"
+    assert edited and debate_mod.compute_report_sha256(tampered) != receipt
+    bad = _eligibility(tampered, record, require_receipt=True)
+    assert bad["eligible"] is False and "REPORT_HASH_MISMATCH" in bad["reasons"]
+
+    unsigned = report_of(completed="2026-05-11T13:00:00Z", validated="2026-05-11T13:05:00Z",
+                         receipt=False)
+    assert _eligibility(unsigned, record, require_receipt=True)["reasons"] == ["REPORT_RECEIPT_MISSING"]
+    # 영수증을 다시 붙이면 같은 바이트로 인정된다(영수증 필드는 해시 대상에서 빠진다)
+    resigned = debate_mod.with_report_receipt(unsigned)
+    assert debate_mod.compute_report_sha256(resigned) == debate_mod.compute_report_sha256(unsigned)
+    assert _eligibility(resigned, record, require_receipt=True)["eligible"] is True
+
+
+def test_receipt_hash_matches_the_producer_contract():
+    """원장의 영수증 계산이 **발행 측(Codex)** 과 같은 바이트를 본다 — 한 계약을 두 곳이 구현한다."""
+    from codex_debate.validate import report_receipt_sha256
+
+    report = report_of(completed="2026-05-11T13:00:00Z", validated="2026-05-11T13:05:00Z", receipt=False)
+    assert debate_mod.compute_report_sha256(report) == report_receipt_sha256(report)
+    signed = debate_mod.with_report_receipt(report)
+    assert report_receipt_sha256(signed) == debate_mod.compute_report_sha256(signed)
+    record = record_of()
+    assert _eligibility(signed, record, require_receipt=True)["eligible"] is True
+
+
+# ── 13-4. 중요 03 + P-5 — 재생·carry-over·TRIM · 섹터 분모 ────────────────────
+def test_confirmed_exit_survives_rerun_without_flag(monkeypatch):
+    """확정 청산(S3)은 다음 날 플래그가 없어도 되살아나지 않는다(감사 03-(1))."""
+    _neutral_indicators(monkeypatch)
+    record = _buy(plan_weight=0.02)
+    prices = [100.0, 100.0, 104.0, 104.0]
+    panels = {"AAA": panel_of(prices)}
+    executions = {record["signal_id"]: fill_of(record)}
+    first = live.settle_positions([record], executions, {}, panels, date(2026, 5, 12),
+                                  forced_exits={"AAA": "S3"}, position_events_path=None)
+    assert first["by_signal"][record["signal_id"]]["exit"]["reason"] == "S3"
+    cash_after_exit = first["cash"]
+
+    # 다음 날: 같은 원장, 강제 청산 플래그 없음 — 세션 로그의 확정 청산을 재생한다
+    second = live.settle_positions([record], executions, {}, panels, date(2026, 5, 13),
+                                   forced_exits={}, prior_events=first["event_log"],
+                                   position_events_path=None)
+    assert second["by_signal"][record["signal_id"]]["exit"]["reason"] == "S3", \
+        "재실행에서 청산이 되돌아갔다 — 포지션이 되살아난다"
+    assert second["cash"] == pytest.approx(cash_after_exit, rel=1e-9)
+    assert second["holdings"] == {}
+    assert second["health"]["positions_open"] == 0
+
+
+def test_forced_exit_waits_for_next_available_bar(monkeypatch):
+    """`as_of` 봉이 아직 없으면 청산을 버리지 않고 **다음 이용 가능 봉**에서 체결한다(감사 03-(2))."""
+    _neutral_indicators(monkeypatch)
+    record = _buy(plan_weight=0.02)
+    executions = {record["signal_id"]: fill_of(record)}
+    stale = {"AAA": panel_of([100.0, 100.0])}                  # 05-11·05-12 봉만 있다
+    pending = live.settle_positions([record], executions, {}, stale, date(2026, 5, 13),
+                                    forced_exits={"AAA": "S3"}, position_events_path=None)
+    assert pending["by_signal"][record["signal_id"]]["exit"] is None
+    assert pending["health"]["pending_exit_count"] == 1
+    assert any(row.get("event") == "exit_pending" for row in pending["event_log"])
+
+    fresher = {"AAA": panel_of([100.0, 100.0, 101.0, 101.0])}   # 05-13 봉이 도착했다
+    filled = live.settle_positions([record], executions, {}, fresher, date(2026, 5, 13),
+                                   forced_exits={}, prior_events=pending["event_log"],
+                                   position_events_path=None)
+    exit_row = filled["by_signal"][record["signal_id"]]["exit"]
+    assert exit_row is not None and exit_row["at"] == "2026-05-13"
+    assert exit_row["price"] == pytest.approx(101.0, abs=0.001), "이용 가능 봉 시가가 아니다"
+
+
+def test_trim_sells_one_third_and_keeps_pending_tranches(monkeypatch):
+    """P-5: `TRIM`(60~74점)은 **보유 1/3 익절**이고 2·3차 주문은 살아 있다(S4 전량 정리와 구분)."""
+    _neutral_indicators(monkeypatch)
+    record = _buy(plan_weight=0.02)
+    executions = {record["signal_id"]: fill_of(record)}
+    panels = {"AAA": panel_of([100.0, 99.0, 100.0, 99.0, 100.0])}
+    result = live.settle_positions([record], executions, {}, panels, date(2026, 5, 12),
+                                   forced_exits={"AAA": "TRIM"}, position_events_path=None)
+    state = result["by_signal"][record["signal_id"]]
+    assert state["exit"] is None, "TRIM 이 전량 청산으로 처리됐다"
+    assert state["qty"] == pytest.approx(0.02 * 0.40 * 1_000_000 / 100.0 * 2 / 3, rel=1e-6)
+    trims = [e for e in result["events"] if e.get("event") == "profit_take"]
+    assert trims and trims[0]["reason"] == "TRIM"
+    assert result["health"]["trim_count"] == 1
+    assert all(row["status"] != "cancelled" for row in state["tranches"][1:]), \
+        "TRIM 이 잔여 2·3차 주문까지 취소했다(전량 청산과 같은 처리)"
+    # 다음 실행에서 같은 판정이 또 와도 두 번 팔지 않는다
+    again = live.settle_positions([record], executions, {}, panels, date(2026, 5, 12),
+                                  forced_exits={"AAA": "TRIM"}, prior_events=result["event_log"],
+                                  position_events_path=None)
+    assert again["by_signal"][record["signal_id"]]["qty"] == pytest.approx(state["qty"], rel=1e-9)
+    assert again["health"]["trim_count"] == 1
+
+
+def test_sector_cap_is_independent_of_record_order(monkeypatch):
+    """섹터 한도 분모가 그 시점 평가액·순자산으로 통일돼 **입력 순서 의존**이 사라진다(§14#2)."""
+    _neutral_indicators(monkeypatch)
+    a = _buy("2026-05-08-AAA-BUY-001", ticker="AAA", plan_weight=0.05)
+    b = _buy("2026-05-08-BBB-BUY-001", ticker="BBB", plan_weight=0.05)
+    panels = {"AAA": panel_of([100.0, 99.9, 99.9, 99.9, 99.9], ticker="AAA"),
+              "BBB": panel_of([100.0, 99.9, 99.9, 99.9, 99.9], ticker="BBB")}
+    executions = {r["signal_id"]: fill_of(r) for r in (a, b)}
+
+    def run(records):
+        return live.settle_positions(records, executions, {}, panels, date(2026, 5, 12),
+                                     params={"risk": {"risk_per_trade": 0.0075,
+                                                      "max_position": 0.05}},
+                                     max_sector=0.05, position_events_path=None)
+
+    forward, backward = run([a, b]), run([b, a])
+    assert forward["cash"] == pytest.approx(backward["cash"], abs=1e-6)
+    assert ({t: round(st["qty"], 6) for t, st in forward["positions"].items()}
+            == {t: round(st["qty"], 6) for t, st in backward["positions"].items()})
+
+
+# ── 13-5. 중요 04·05 + P-4 — A/B 모집단·비용·손절 순서·MDD ────────────────────
+def _account_candidates_of(by_signal, records, executions, policy="quant_only"):
+    return debate_mod._account_candidates(by_signal, records, executions, policy=policy)
+
+
+def test_quant_account_uses_whole_ledger_not_only_debated_reports():
+    """토론 보고서가 없어도 정량 계좌는 **실제 체결 전부**를 채점한다(감사 04-(a))."""
+    record = _buy(plan_weight=0.02)
+    execution = fill_of(record)
+    execution["quant_track"].update({"fill_price": 100.0, "stop_price": 90.0, "weight": 0.008})
+    executions = {record["signal_id"]: execution}
+    prices = [100.0 + 0.15 * i for i in range(80)]
+    panels = {"AAA": panel_of(prices)}
+
+    # 보고서 0건 — 예전에는 두 계좌 모두 후보 0건이었다
+    comp = debate_mod.compute_debate_comparison({}, [record], executions, panels,
+                                                date(2026, 8, 20), initial_cash=100_000.0,
+                                                costs={"slippage": 0.0, "commission": 0.0, "fx": 0.0})
+    quant = comp["accounts"]["quant_only"]
+    assert quant["n_candidates"] == 1 and quant["n_trades"] == 2, "보고서가 없다고 정량 체결이 사라졌다"
+    assert quant["final_equity"] != pytest.approx(100_000.0, abs=0.5)
+    # 토론이 없으면 `codex_debated` 도 **같은 행동**이다(정량과 동일한 독립 운용 결과)
+    debated = comp["accounts"]["codex_debated"]
+    assert debated["n_candidates"] == 1 and debated["final_equity"] == pytest.approx(
+        quant["final_equity"], abs=1e-6)
+    assert comp["policy_diff_pp"] == pytest.approx(0.0, abs=1e-9)
+
+
+def test_intent_without_fill_is_not_counted_as_a_trade():
+    """`pending_buy`(의도)는 체결이 아니다 — 수익률을 붙이지 않는다(감사 04-(c))."""
+    record = _buy(plan_weight=0.02)
+    view = debate_mod.public_report(report_of(), {"eligible": True, "late": False, "invalid": False},
+                                    None)
+    candidates = _account_candidates_of({record["signal_id"]: view}, [record], {})
+    assert candidates == [], "체결 이벤트 없는 의도가 후보로 올라왔다"
+    comp = debate_mod.compute_debate_comparison({record["signal_id"]: view}, [record], {},
+                                                {"AAA": panel_of([100.0] * 70)}, date(2026, 9, 30),
+                                                initial_cash=100_000.0)
+    assert comp["accounts"]["quant_only"]["n_trades"] == 0
+
+
+def test_codex_account_only_drops_signals_the_debate_held_back():
+    """`codex_debated` 는 보류한 건만 빼고, 편입 안 된 건은 정량과 같은 행동을 한다(§4.8.1)."""
+    held = _buy("2026-05-08-AAA-BUY-001", ticker="AAA")
+    kept = _buy("2026-05-08-BBB-BUY-001", ticker="BBB")
+    kept["as_of"] = "2026-05-08"
+    executions = {held["signal_id"]: fill_of(held), kept["signal_id"]: fill_of(kept)}
+    held_view = debate_mod.public_report(
+        report_of(sid=held["signal_id"]), {"eligible": True, "late": False, "invalid": False},
+        debate_mod.actions_for(report_of(sid=held["signal_id"]), held, executions[held["signal_id"]]))
+    assert held_view["divergent"] is True
+    by_signal = {held["signal_id"]: held_view}
+    quant = _account_candidates_of(by_signal, [held, kept], executions, "quant_only")
+    debated = _account_candidates_of(by_signal, [held, kept], executions, "codex_debated")
+    assert {c["signal_id"] for c in quant} == {held["signal_id"], kept["signal_id"]}
+    assert {c["signal_id"] for c in debated} == {kept["signal_id"]}, \
+        "보류한 건만 빠져야 하는데 정량 모집단 자체가 줄었다"
+
+
+def test_policy_account_does_not_double_entry_slippage():
+    """원장 체결가(10bp 포함)에 진입 슬리피지를 또 얹지 않는다 — 청산 10bp 는 유지(P-4)."""
+    costs = {"slippage": 10.0, "commission": 0.0, "fx": 0.0}
+    panels = {"AAA": panel_ohlc([100.0, 91.0], [101.0, 92.0], [99.0, 89.0], [100.0, 90.0])}
+    cand = {"signal_id": "s1", "ticker": "AAA", "sector": "Tech", "entry_day": date(2026, 5, 11),
+            "weight": 0.02, "fill_price": 100.1, "stop_price": 90.0, "stop_distance": 0.1}
+    result = debate_mod.simulate_policy_account([cand], panels, date(2026, 8, 20), costs=costs)
+    expected = 100_000 - 2_000 + (2_000 / 100.1) * (90 * 0.999)     # 진입 1회 + 청산 1회
+    wrong = 100_000 - 2_000 + (2_000 / (100.1 * 1.001)) * (90 * 0.999)
+    assert result["final_equity"] == pytest.approx(expected, abs=0.02)
+    assert result["final_equity"] != pytest.approx(wrong, abs=0.02)
+
+
+def test_policy_account_stops_same_day_after_open_entry():
+    """진입 당일 장중 저가로도 손절이 정상 처리된다 — 수량 0 짜리 '청산'이 아니다(감사 05-(2))."""
+    panels = {"AAA": panel_ohlc([100.0, 100.0], [101.0, 101.0], [85.0, 99.0], [100.0, 100.0])}
+    cand = {"signal_id": "s2", "ticker": "AAA", "sector": "Tech", "entry_day": date(2026, 5, 11),
+            "weight": 0.02, "fill_price": 100.1, "stop_price": 90.0, "stop_distance": 0.1}
+    result = debate_mod.simulate_policy_account([cand], panels, date(2026, 8, 20),
+                                                costs={"slippage": 0.0, "commission": 0.0, "fx": 0.0},
+                                                horizon_td=63)
+    assert result["n_trades"] == 2, "진입 당일 손절이 청산으로 처리되지 않았다"
+    expected = 100_000 - 2_000 + (2_000 / 100.1) * 90.0
+    assert result["final_equity"] == pytest.approx(expected, abs=0.05)
+
+
+def test_policy_account_mdd_includes_initial_assets():
+    """MDD 는 초기 자산(100,000)을 고점 후보로 넣는다 — 첫날 하락이 사라지지 않는다(감사 05-(3))."""
+    panels = {"AAA": panel_ohlc([100.0, 100.0, 100.0], [101.0] * 3, [99.0] * 3, [100.0] * 3)}
+    cand = {"signal_id": "s3", "ticker": "AAA", "sector": "Tech", "entry_day": date(2026, 5, 11),
+            "weight": 0.50, "fill_price": 110.0, "stop_price": 50.0, "stop_distance": 0.5}
+    result = debate_mod.simulate_policy_account([cand], panels, date(2026, 8, 20),
+                                                costs={"slippage": 0.0, "commission": 0.0, "fx": 0.0},
+                                                max_position=0.5, max_sector=1.0)
+    assert result["mdd"] < -0.04, f"첫날 낙폭이 MDD 에 없다: {result['mdd']}"
+    assert result["mdd"] == pytest.approx(
+        debate_mod._max_drawdown([p["equity"] for p in result["equity_curve"]], initial=100_000.0))
+
+
+def test_open_order_size_uses_previous_close_not_today_close():
+    """시가 주문 비중은 **전일 종가** 자산으로 정한다 — 다른 종목의 당일 종가가 크기를 바꾸지 않는다(감사 05-(4))."""
+    n = 70
+
+    def panels_with(close_x_on_day2):
+        x = [100.0, close_x_on_day2] + [100.0] * (n - 2)
+        y = [100.0, 100.0] + [200.0] * (n - 2)
+        return {"XXX": panel_ohlc([100.0] * n, [c + 1 for c in x], [c - 1 for c in x], x,
+                                  ticker="XXX"),
+                "YYY": panel_ohlc([100.0, 100.0] + [200.0] * (n - 2), [c + 1 for c in y],
+                                  [c - 1 for c in y], y, ticker="YYY")}
+
+    plans = [{"signal_id": "x1", "ticker": "XXX", "sector": "Tech", "entry_day": date(2026, 5, 11),
+              "weight": 0.50, "fill_price": 100.0, "stop_price": 80.0},
+             {"signal_id": "y1", "ticker": "YYY", "sector": "Tech", "entry_day": date(2026, 5, 12),
+              "weight": 0.02, "fill_price": 100.0, "stop_price": 80.0}]
+    low = debate_mod.simulate_policy_account(plans, panels_with(100.0), date(2026, 8, 20),
+                                             costs={"slippage": 0.0, "commission": 0.0, "fx": 0.0})
+    high = debate_mod.simulate_policy_account(plans, panels_with(130.0), date(2026, 8, 20),
+                                              costs={"slippage": 0.0, "commission": 0.0, "fx": 0.0})
+    assert high["final_equity"] == pytest.approx(low["final_equity"], abs=1e-6), \
+        "다른 종목의 당일 종가가 주문 크기를 바꿨다 — 미래 참조"
+
+
+# ── 13-6. 중요 06 — 분기 자격·정책 버전·계좌 기준 ────────────────────────────
+def _quarter_comparison(quarters, *, diff_pp=0.30, pairs=30, n_eff=30, versions=None):
+    rows = []
+    for i, quarter in enumerate(quarters):
+        rows.append({"quarter": quarter, "n_graded": 30, "n_eff": 30,
+                     "policy_diff": {"policy_diff_pp": diff_pp},
+                     "policy_version": (versions or {}).get(quarter, "params_v001"),
+                     "drawdown": {"defense_improved": True},
+                     "verdict": debate_mod.VERDICT_EFFECTIVE})
+    return {"n_graded_pairs": pairs, "n_eff": n_eff, "policy_diff_pp": diff_pp,
+            "quant_mdd": -0.10, "debate_mdd": -0.08, "quarters": rows,
+            "drawdown": {"defense_improved": True}, "auto_downgrade_enabled": False,
+            "verdict": debate_mod.VERDICT_EFFECTIVE}
+
+
+def test_auto_downgrade_rejects_non_adjacent_quarters():
+    """`2026Q1 · 2026Q3`(Q2 공백)는 2분기 연속이 아니다(감사 06-(a))."""
+    gap = debate_mod.evaluate_auto_downgrade_eligibility(
+        _quarter_comparison(["2026Q1", "2026Q3"]), [])
+    assert gap["eligible"] is False
+    assert gap["consecutive_quarters"] >= 2          # 조건 충족 분기 수는 2
+    assert any("달력으로 이어지지" in reason for reason in gap["reasons_ko"])
+    adjacent = debate_mod.evaluate_auto_downgrade_eligibility(
+        _quarter_comparison(["2026Q1", "2026Q2"]), [])
+    assert adjacent["eligible"] is True
+    # 해를 넘는 인접도 인정된다(Q4 → 다음 해 Q1)
+    cross = debate_mod.evaluate_auto_downgrade_eligibility(
+        _quarter_comparison(["2025Q4", "2026Q1"]), [])
+    assert cross["eligible"] is True
+    assert debate_mod.consecutive_quarter_count(["2026Q1", "2026Q2", "2026Q4"]) == 2
+
+
+def test_auto_downgrade_requires_explicit_identical_policy_version():
+    """정책 버전이 비었거나 다르면 전환 후보가 아니다(감사 06-(b))."""
+    missing = debate_mod.evaluate_auto_downgrade_eligibility(
+        _quarter_comparison(["2026Q1", "2026Q2"], versions={"2026Q1": "", "2026Q2": ""}), [])
+    assert missing["eligible"] is False and missing["same_policy_version"] is False
+    assert any("정책 버전이 없다" in reason for reason in missing["reasons_ko"])
+    half = debate_mod.evaluate_auto_downgrade_eligibility(
+        _quarter_comparison(["2026Q1", "2026Q2"], versions={"2026Q2": ""}), [])
+    assert half["eligible"] is False
+    different = debate_mod.evaluate_auto_downgrade_eligibility(
+        _quarter_comparison(["2026Q1", "2026Q2"],
+                            versions={"2026Q1": "params_v001", "2026Q2": "params_v002"}), [])
+    assert different["eligible"] is False and different["policy_versions"] == ["params_v001", "params_v002"]
+
+
+def test_auto_downgrade_has_no_pair_net_fallback():
+    """계좌 순자산 차이가 없으면 페어 손익으로 대신 판정하지 않는다(감사 06-(d))."""
+    comparison = _quarter_comparison(["2026Q1", "2026Q2"])
+    comparison["policy_diff_pp"] = None
+    comparison["net_after_cost"] = 0.01                 # 페어 합계는 크지만 계좌 차이는 없다
+    for row in comparison["quarters"]:
+        row.pop("policy_diff")
+    verdict = debate_mod.evaluate_auto_downgrade_eligibility(comparison, [])
+    assert verdict["eligible"] is False and verdict["basis"] == "insufficient"
+    assert any("policy_diff_pp" in reason for reason in verdict["reasons_ko"])
+
+
+def test_quarter_rows_record_policy_version_and_verification_times():
+    """분기 행이 **스스로** 정책 버전·평가 시각·만기 확인 시각을 남긴다(감사 06-(c))."""
+    record = record_of(sid="2026-05-11-AAA-BUY-001")
+    execution = fill_of(record)
+    view = debate_mod.public_report(report_of(sid="2026-05-11-AAA-BUY-001"),
+                                    {"eligible": True, "late": False, "invalid": False},
+                                    debate_mod.actions_for(report_of(sid="2026-05-11-AAA-BUY-001"),
+                                                           record, execution))
+    panel = panel_of([100.0] * 70, start="2026-05-11")
+    comp = debate_mod.compute_debate_comparison(
+        {record["signal_id"]: view}, [record], {record["signal_id"]: execution}, {"AAA": panel},
+        date(2026, 9, 30), initial_cash=100_000.0,
+        costs={"slippage": 0.0, "commission": 0.0, "fx": 0.0})
+    assert comp["quarters"], "분기 행이 없다"
+    row = comp["quarters"][0]
+    assert row["quarter"] == "2026Q2"
+    assert row["policy_version"] == record["params_version"]
+    assert row["policy_versions"] == [record["params_version"]]
+    assert row["evaluated_at"].endswith("Z")
+    assert row["maturity_verified_at"] is not None and row["maturity_verified_at"].startswith("2026-")

@@ -3,7 +3,11 @@
 
 `.github/workflows/daily-postclose.yml` 계약 [고정]
     python scripts/run_daily.py --mode postclose
-- `GITHUB_OUTPUT` 환경변수가 있으면 `snapshot_id`, `snapshot_id_short` 를 그 파일에 쓴다.
+- `GITHUB_OUTPUT` 환경변수가 있으면 워크플로 분기용 결과를 쓴다(감사 11):
+  `snapshot_id`, `snapshot_id_short`, `status`, `n_signals`, `n_blocked`,
+  **`run_outcome`**(`normal`|`outage`|`rejected`), **`status_written`**(health 기록 여부),
+  **`snapshot_created`**(패키징할 스냅샷이 있는가) + `snapshot_state`(created|reused|failed|missing),
+  `data_status`, `outage_id`.
 - 환경변수(FRED_API_KEY·SEC_USER_AGENT·FINNHUB_API_KEY)가 없거나 API 가 실패해도 **크래시하지 않는다**:
   소스별로 `degraded` 를 남기고, 가격이 하나도 없으면 **전일 데이터를 유지**한 채 종료한다
   (사이트가 빈 화면이 되지 않게 — 기획서 2.7).
@@ -15,10 +19,15 @@
   `run_started_at` 으로 따로 남긴다. 같은 입력 지문(`inputs_hash`)의 재실행은 **원장의 발행본을
   그대로 배포**하고, 입력이 바뀐 발행은 회차 접미사(`-002`…)와 `supersedes` 로 남긴다(감사 01·02).
 
-실행 순서(고정 · 감사 P0-2·P0-4·P2-1):
-    ① 원장·체결 로드(정산 전 스냅샷 유지) → ② 토론 편입 검증 → ③ 1차 정산
-    → ④ 신호 생성·동결(원장 append) → ⑤ 2·3차·손절·분할익절 정산 → ⑥ Paper 채점 → ⑦ A/B 비교 → ⑧ 알림
-- 편입이 정산보다 **먼저**다: 같은 배치의 체결을 보고 소급 페어를 만들지 않는다.
+실행 순서(고정 · 감사 P0-2·P0-4·P2-1 · §10② · 01-d):
+    ① 원장·체결 로드(정산 전 스냅샷 유지) → ② 토론 편입 검증(`now`=배치 시작 시각)
+    → ③ 1차 체결 **계산만**(기록 전 — 오늘 보유·섹터 비중 확정) → ④ 신호 생성·스냅샷
+    → ⑤ 발행·대체 레코드 append → ⑥ 차단 대체 레코드(`make_blocked_supersede_record`)
+    → ⑦ 1차 정산·취소 **기록**(발행 확정 뒤, `blocked=` 포함) → ⑧ 2·3차·손절·TRIM 정산
+    → ⑨ Paper 채점 → ⑩ A/B 비교 → ⑪ 알림
+- 발행 확정이 정산보다 **먼저**다: 같은 실행에서 만들어진 대체(`-002→-003`)의 취소가 그 자리에서
+  기록되고(이전에는 다음 실행이 과거 시각으로 back-date 했다), 같은 배치의 차단이 시가 체결을 막는다.
+- 편입 검증도 정산보다 **먼저**다: 같은 배치의 체결을 보고 소급 페어를 만들지 않는다.
 - Paper 채점은 `holdout_start=None` 이다: 만기 봉이 관측된 신호를 보정 홀드아웃 때문에 잘라 내지 않는다.
 - 장애(시세 전체 실패) 경로도 `data/health.json` 에 `data_status=outage`·`last_attempt_at`·
   `last_success_at`·`outage_id` 를 남기고 전일 정상 `quant_signals.json` 을 보존한다.
@@ -31,6 +40,7 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import inspect
 import json
 import os
 import subprocess
@@ -46,6 +56,7 @@ from engine.decide.macro import classify_regime  # noqa: E402
 from engine.decide.pipeline import build_payload, load_params  # noqa: E402
 from engine.ledger import debate as debate_mod  # noqa: E402
 from engine.ledger import live  # noqa: E402
+from engine.ledger import record as record_mod  # noqa: E402
 from engine.ledger.pilot import evaluate_pilot, write_pilot_eval  # noqa: E402
 from engine.ledger.record import (RecordError, append_immutable, attach_target_session,  # noqa: E402
                                   load_records, resolve_release)
@@ -74,6 +85,113 @@ NOTIFICATIONS = Path("data/notifications_latest.json")
 
 def _iso(value: datetime) -> str:
     return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+#: `live.settle_positions` 가 처리하는 강제 청산 사유 — 엔진이 `TRIM` 을 지원하면 그 모듈 상수가
+#: `{"S3", "S5", "EXIT", "TRIM"}` 이 되어 1/3 익절 경로도 배선된다(트랙 1 계약).
+DEFAULT_FORCED_EXIT_REASONS = {"S3", "S5", "EXIT"}
+
+
+def _supports(fn, name: str) -> bool:
+    """그 함수가 이 키워드를 **명시적 매개변수로** 받는가.
+
+    `**kwargs` 를 받는 래퍼(테스트 스파이 등)까지 "지원"으로 보면 안 된다 — 래퍼가 원본에 그대로
+    넘겨 `TypeError` 가 나고 배치가 죽는다. 그래서 이름이 시그니처에 있을 때만 넘긴다.
+    (다른 트랙이 아직 합치지 않은 시그니처에서도 배치가 살아 있게 하는 장치다.)
+    """
+    try:
+        params = inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return False
+    return name in params
+
+
+def _forced_exit_reasons() -> set[str]:
+    return set(getattr(live, "FORCED_EXIT_REASONS", DEFAULT_FORCED_EXIT_REASONS))
+
+
+_MISSING = object()
+
+
+class DebateByKey(dict):
+    """편입 토론 색인 — 키는 **(signal_id, snapshot_id)**, ticker 는 폴백이다(감사 07).
+
+    `ticker` 만으로 넘기면 같은 날 다른 스냅샷의 토론이 새 판단의 `news_state`·구조적 리스크를
+    바꿀 수 있다(기획서 4.8.1 은 `signal_id`+`snapshot_id` 로 묶으라고 못 박는다).
+    통합 전 호출부(`debate.get(ticker)`)도 깨지지 않도록 ticker 폴백을 남긴다.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.by_ticker: dict[str, dict] = {}
+
+    def add(self, signal_id, snapshot_id, ticker, view: dict) -> None:
+        if signal_id:
+            dict.__setitem__(self, (str(signal_id), str(snapshot_id or "")), view)
+        if ticker:
+            self.by_ticker[str(ticker)] = view
+
+    def get(self, key, default=None):
+        found = self.lookup(key)
+        return default if found is _MISSING else found
+
+    def lookup(self, key):
+        if dict.__contains__(self, key):
+            return dict.__getitem__(self, key)
+        if isinstance(key, str):
+            return self.by_ticker.get(key, _MISSING)
+        if isinstance(key, tuple) and key:
+            sid = str(key[0])
+            want_snapshot = str(key[1]) if len(key) > 1 and key[1] else None
+            for (stored_sid, stored_snapshot), view in dict.items(self):
+                if stored_sid != sid:
+                    continue
+                if want_snapshot is None or stored_snapshot == want_snapshot:
+                    return view
+        return _MISSING
+
+    def __getitem__(self, key):
+        found = self.lookup(key)
+        if found is _MISSING:
+            raise KeyError(key)
+        return found
+
+    def __contains__(self, key) -> bool:
+        return self.lookup(key) is not _MISSING
+
+    def __bool__(self) -> bool:
+        return dict.__len__(self) > 0
+
+
+def debate_index(by_signal: dict, records: list[dict]) -> DebateByKey:
+    """`by_signal`(자격 통과분) → (signal_id, snapshot_id) 색인. 스냅샷이 다르면 다른 키다."""
+    snapshots = {str(r.get("signal_id")): str(r.get("snapshot_id") or "") for r in records or []}
+    index = DebateByKey()
+    for sid, view in (by_signal or {}).items():
+        if not view or not view.get("eligible"):
+            continue
+        index.add(sid, view.get("snapshot_id") or snapshots.get(str(sid)),
+                  view.get("ticker"), view)
+    return index
+
+
+def _write_github_output(pairs: dict) -> None:
+    """`GITHUB_OUTPUT` — 워크플로가 분기할 수 있는 실행 결과를 남긴다(감사 11).
+
+    - `run_outcome`: `normal` | `outage` | `rejected`(계약 검증 실패)
+    - `status_written`: `data/health.json` 에 실행 상태를 남겼는가
+    - `snapshot_created`: 이번 실행이 참조한 스냅샷 디렉터리가 **있어 패키징할 수 있는가**
+      (`snapshot_state` 가 `created`/`reused`/`failed` 로 이유를 알려 준다)
+    """
+    path = os.environ.get("GITHUB_OUTPUT")
+    if not path:
+        return
+    with open(path, "a", encoding="utf-8") as f:
+        for key, value in pairs.items():
+            if value is None:
+                continue
+            text = str(value).lower() if isinstance(value, bool) else str(value)
+            f.write(f"{key}={text}\n")
 
 
 def _write_json(path: Path, payload) -> Path:
@@ -268,7 +386,8 @@ def ensure_folds(as_of: date) -> dict:
 def ledger_view(records: list[dict], executions: dict, panels: dict, as_of: date,
                 reanchors: dict | None = None, params: dict | None = None,
                 forced_exits: dict | None = None,
-                position_events_path: str | Path | None = live.POSITION_EVENTS_PATH
+                position_events_path: str | Path | None = live.POSITION_EVENTS_PATH,
+                stop_reentry_blocked: list[dict] | None = None
                 ) -> tuple[dict, dict, dict]:
     """1차 체결 재생 + **2·3차 분할·손절·분할익절 정산** → (공개 상태, 보유, 정산 결과).
 
@@ -281,6 +400,9 @@ def ledger_view(records: list[dict], executions: dict, panels: dict, as_of: date
       `data/ledger/position_events.jsonl`)라 실제 배치에서 2·3차·손절·익절 세션 이벤트가 **영속**된다.
       같은 `event_id` 는 다시 쓰지 않으므로 하루 두 번(발행 전·후) 불러도 중복이 없다.
       저장소 파일을 건드리면 안 되는 탐색·테스트 호출은 `None` 을 넘긴다.
+    - `stop_reentry_blocked` 는 **1차 `settle` 이 실제로 막은 재진입**(P-1)이다. 2·3차 정산은 세션
+      로그만 보므로 이번 정산에서 막힌 건을 스스로 알 수 없다 — 실행기가 넘겨야
+      `health.stop_reentry_blocked_count` 가 2·3차 취소 수와 섞이지 않고 실제 값이 된다.
     """
     risk = (params or {}).get("risk") or {}
     max_sector = risk.get("max_sector")
@@ -288,13 +410,15 @@ def ledger_view(records: list[dict], executions: dict, panels: dict, as_of: date
     try:
         settlement = live.settle_positions(
             records, executions, reanchors, panels, as_of, params, forced_exits=forced_exits,
-            max_sector=cap, position_events_path=position_events_path)
+            max_sector=cap, position_events_path=position_events_path,
+            stop_reentry_blocked=stop_reentry_blocked)
     except ValueError as exc:
         # append-only 충돌(같은 event_id 다른 내용)은 로그만 남기고 정산·발행은 계속한다.
         print(f"position_events 기록 실패: {exc}", file=sys.stderr)
         settlement = live.settle_positions(
             records, executions, reanchors, panels, as_of, params, forced_exits=forced_exits,
-            max_sector=cap, position_events_path=None)
+            max_sector=cap, position_events_path=None,
+            stop_reentry_blocked=stop_reentry_blocked)
     public = live.mark_positions(settlement, panels, as_of)
     return public, settlement["holdings"], settlement
 
@@ -353,6 +477,14 @@ def run(args) -> int:
                 outage_id=outage_id)
         except Exception as exc:  # noqa: BLE001 — 알림 실패가 장애 기록을 지우지 않는다
             print(f"알림 실패: {type(exc).__name__}", file=sys.stderr)
+        # 감사 11: 워크플로가 장애를 **분기**할 수 있게 결과를 남긴다. 스냅샷이 없으니 아카이브 단계는
+        # `snapshot_created=false` 로 건너뛰고, 상태 PUBLISH(health·알림·Pages 빌드)는 계속 간다.
+        _write_github_output({
+            "run_outcome": "outage", "status_written": True, "snapshot_created": False,
+            "snapshot_state": "missing", "snapshot_id": "", "snapshot_id_short": "",
+            "status": "degraded", "n_signals": 0, "n_blocked": 0,
+            "data_status": "outage", "outage_id": outage_id,
+        })
         return 0
 
     # 1) Ledger — 원장·체결 로드. **정산 전** 체결 상태를 따로 잡아 둔다(P0-2 페어 기준).
@@ -366,36 +498,47 @@ def run(args) -> int:
     #      그래서 ① 편입 판정을 정산 앞으로 옮기고 ② 정산 전 체결 스냅샷을 기준으로 쓴다.
     regime_view = classify_regime(data.get("macro"), data.get("macro_previous"))
     debate_doc = debate_mod.load_reports(DEBATE_REPORTS)
+    debate_kwargs = {}
+    if _supports(debate_mod.reconcile_debates, "now"):
+        # 검증 시각 = **이번 배치의 실제 수신·검증 시각**(감사 02) — 보고서 자기신고에만 맡기지 않는다.
+        debate_kwargs["now"] = run_started_at
+    if _supports(debate_mod.reconcile_debates, "require_receipt"):
+        # 바이트 영수증(`report_sha256`)이 없으면 편입하지 않는다(트랙 1 계약).
+        debate_kwargs["require_receipt"] = True
     debate_result = debate_mod.reconcile_debates(
         debate_doc, records, executions_pre_settle, event_dir=DEBATE_EVENTS, params=params,
-        regime=regime_view.regime, as_of=as_of)
-    debate_by_ticker = {view.get("ticker"): view for view in debate_result["by_signal"].values()
-                        if view.get("eligible") and view.get("ticker")}
+        regime=regime_view.regime, as_of=as_of, **debate_kwargs)
+    # 감사 07: ticker 단독이 아니라 **신호 정체성(signal_id, snapshot_id)** 으로 찾는다 —
+    # 구 스냅샷의 토론이 오늘 판단을 바꾸지 않게. ticker 폴백은 통합 전 호출부용이다.
+    debate_by_key = debate_index(debate_result["by_signal"], records)
 
-    # 2) 정산 — 대상 세션 의도 중 시가 확정분만 체결 + 이벤트 append
+    # 2) 정산 **준비** — 1차 체결을 계산만 해 두고(기록 전), 오늘 보유·섹터 비중을 확정한다.
     #    P0-3 배선: 1차 체결의 섹터 캡은 **정산 전 보유**까지 합산한다. 정산 전 계좌를 한 번 읽어
     #    섹터별 평가액(달러)을 넘기지 않으면, 같은 날 같은 섹터 5% 주문만 세고 기존 보유는 놓친다.
+    #    실제 기록은 발행·대체·차단 레코드가 확정된 **뒤**(7단계)에 한다 — 감사 §10②(대체 취소 누락)와
+    #    감사 01-d(같은 배치 차단이 시가 체결을 못 막음)의 뿌리가 "정산이 발행 확정보다 먼저"였기 때문이다.
     held_pre = ledger_view(records, executions, panels, as_of, reanchors, params,
                            position_events_path=None)[0]
-    settlement = live.settle(records, executions, panels, as_of, slippage_bps=args.slippage_bps,
-                             max_sector=sector_cap(params),
-                             sector_exposure=sector_exposure_dollars(held_pre))
-    for event in settlement["new_events"]:
-        live.write_execution(event, EXECUTIONS)
-        live.append_full_event(event, None, EXECUTIONS)
-        executions[event["signal_id"]] = event
-    for event in settlement["reanchors"]:
-        live.write_reanchor(event, EXECUTIONS)
-        reanchors[event["signal_id"]] = event
-    # P0-3 배선: 동결 전 WATCH·차단으로 취소된 1차 주문도 **세션 이벤트 로그**에 남긴다.
-    #   (`settled` 에만 있으면 콘솔 출력으로 사라진다 — 재생·감사 근거가 남지 않는다.)
-    order_cancellations = settlement.get("cancellations") or []
-    if order_cancellations:
-        live.append_position_events(
-            live.position_event_rows([], order_cancellations, as_of), live.POSITION_EVENTS_PATH)
-
-    portfolio_before, held_before, settlement_before = ledger_view(
-        records, executions, panels, as_of, reanchors, params)
+    # 섬터 캘의 분모는 **그 시점 순자산**이다 — 2·3차(`settle_positions` 의 `equity_at`)와 같은 기준.
+    #   배선 전에는 `equity_base` 기본값(초기 100만 달러)이 그대로 쓰여 자산이 변해도 상한이 안 움직였다.
+    equity_base = settle_equity_base(held_pre)
+    settle_kwargs = {}
+    if _supports(live.settle, "now"):
+        # 정산 시각 = 배치 시작 시각. 취소·동결 사유의 시각을 **실행한 시각**으로 남긴다(감사 §10①).
+        settle_kwargs["now"] = run_started_at
+    if _supports(live.settle, "position_events_path"):
+        # P-1: 세션 로그(S5 손절)를 읽어 **손절 당일 신규 1차 진입**을 막는다 — 경로만 넘기면 된다.
+        settle_kwargs["position_events_path"] = live.POSITION_EVENTS_PATH
+    if _supports(live.settle, "equity_base"):
+        settle_kwargs["equity_base"] = equity_base
+    probe = live.settle(records, executions, panels, as_of, slippage_bps=args.slippage_bps,
+                        max_sector=sector_cap(params),
+                        sector_exposure=sector_exposure_dollars(held_pre), **settle_kwargs)
+    probe_executions = dict(executions)
+    for event in probe["new_events"]:
+        probe_executions[str(event.get("signal_id"))] = event
+    portfolio_before, held_before, _ = ledger_view(
+        records, probe_executions, panels, as_of, reanchors, params, position_events_path=None)
     watch = ({r["ticker"] for r in (watchlist_payload or {}).get("watchlist") or []}
              if watchlist_payload else None)
     n_universe_before = len(data.get("universe") or [])
@@ -473,7 +616,7 @@ def run(args) -> int:
         data, as_of=as_of, mode=args.mode, params=params, params_version=params_version,
         code_commit=commit, snapshot_id=snapshot_id, status=status, three_times=times,
         held=list(held_before.values()), sector_weights=portfolio_before.get("sector_weights") or {},
-        source=data.get("source"), inputs_hash=inputs_hash or None, debate=debate_by_ticker,
+        source=data.get("source"), inputs_hash=inputs_hash or None, debate=debate_by_key,
     )
     payload["diagnostics"] = diag
     payload["watchlist_source"] = watchlist_filter["source"]
@@ -514,11 +657,70 @@ def run(args) -> int:
     if duplicated:
         payload["diagnostics"]["record_duplicates"] = duplicated
 
-    # 7) 계좌 — S3/S5/EXIT 판정이 있으면 같은 봉에서 전량 청산 + 잔여 분할 취소(3.5)
+    # 6-b) 차단(BUY→blocked)도 원장에서 **이전 BUY 를 대체**한다(감사 01-d).
+    #     차단은 발행 신호가 아니라 레코드가 없었고, 그래서 오전 BUY 가 그대로 최신으로 남아 시가에
+    #     체결될 수 있었다. 트랙 1의 `record.make_blocked_supersede_record` 가 있으면 그 자리에서 남긴다.
+    blocked_records = _append_blocked_supersedes(
+        records, payload.get("blocked") or [], times=times, as_of=as_of, inputs_hash=inputs_hash,
+        params_version=params_version, snapshot_id=snapshot_id, code_commit=commit, mode=args.mode)
+    if blocked_records:
+        payload["diagnostics"]["blocked_supersedes"] = [r.get("signal_id") for r in blocked_records]
+
+    # 7) 정산 — 발행·대체·차단 레코드가 **확정된 뒤** 1차 체결·취소를 계산하고 기록한다.
+    #    [감사 §10②] 정산이 발행보다 먼저 돌면, 같은 실행에서 만들어진 `-002→-003` 대체의 취소가
+    #    다음 실행으로 밀려 **과거 시각으로 back-date** 되었다. 이제 새 회차가 이미 원장에 있으므로
+    #    취소가 그 자리에서 기록된다.
+    #    [감사 01-d] 같은 배치의 차단(`blocked`)도 `settle` 에 넘겨 시가 체결을 막는다(이전 as_of 의 BUY 가
+    #    오늘 세션에 체결되는 경우는 대체 레코드만으로 막을 수 없다).
+    newly_appended = {str(sid) for sid in appended}
+    superseding_ids = {str(r.get("signal_id")) for r in deployed
+                       if str(r.get("signal_id")) in newly_appended and r.get("supersedes")}
+    superseding_ids |= {str(r.get("signal_id")) for r in blocked_records}
+    blocked_map = {str(b.get("ticker")): str(b.get("reason") or "BLOCKED")
+                   for b in payload.get("blocked") or [] if b.get("ticker")}
+    if blocked_map and _supports(live.settle, "blocked"):
+        settle_kwargs["blocked"] = blocked_map
+    # 감사 06-(e): 자동 하향이 켜져 있으면 **화면은 보류(`hold_cash`)인데 원장은 체결**(`buy_filled`)이었다.
+    #   `reconcile`/`actions_for` 가 자동 하향을 적용한 신호를 원장에도 넘겨 시가 체결을 막는다.
+    #   기록은 `hold_cash`(체결 아님)이고, 사유는 `AUTO_DOWNGRADE` 로 남긴다.
+    holds = debate_holds_for(debate_result, params)
+    if holds and _supports(live.settle, "debate_holds"):
+        settle_kwargs["debate_holds"] = holds
+    settlement = live.settle(records, executions, panels, as_of, slippage_bps=args.slippage_bps,
+                             max_sector=sector_cap(params),
+                             sector_exposure=sector_exposure_dollars(held_pre), **settle_kwargs)
+    for event in settlement["new_events"]:
+        sid = str(event.get("signal_id"))
+        if sid in executions:
+            continue
+        live.write_execution(event, EXECUTIONS)
+        live.append_full_event(event, None, EXECUTIONS)
+        executions[sid] = event
+    for event in settlement["reanchors"]:
+        live.write_reanchor(event, EXECUTIONS)
+        reanchors[event["signal_id"]] = event
+    # P0-3 배선: 동결 전 WATCH·차단으로 취소된 1차 주문도 **세션 이벤트 로그**에 남긴다.
+    #   (`settled` 에만 있으면 콘솔 출력으로 사라진다 — 재생·감사 근거가 남지 않는다.)
+    order_cancellations = settlement.get("cancellations") or []
+    if order_cancellations:
+        # 감사 R14#4: 같은 `event_id` 에 다른 내용이 생기면 여기서 ValueError 가 난다.
+        #   발행 의도는 이미 기록됐으므로 **배치를 죽이지 않고** 경고만 남긴다(다음 실행이 다시 시도).
+        try:
+            live.append_position_events(
+                live.position_event_rows([], order_cancellations, as_of), live.POSITION_EVENTS_PATH)
+        except ValueError as exc:
+            print(f"취소 이벤트 기록 실패(배치는 계속): {exc}", file=sys.stderr)
+            diag["position_events_error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
+    if superseding_ids:
+        diag["supersession_cancellations"] = len(
+            [c for c in order_cancellations if str(c.get("superseded_by")) in superseding_ids])
+
+    # 8) 계좌 — S3/S5/EXIT 판정이 있으면 같은 봉에서 전량 청산 + 잔여 분할 취소(3.5)
     forced_exits = _forced_exits(payload.get("position_checks") or [])
     records = load_records(RECORDS)
     portfolio_public, held_after, settlement_final = ledger_view(
-        records, executions, panels, as_of, reanchors, params, forced_exits=forced_exits)
+        records, executions, panels, as_of, reanchors, params, forced_exits=forced_exits,
+        stop_reentry_blocked=settlement.get("stop_reentry_blocked"))
     live.append_portfolio_history(portfolio_public, PORTFOLIO)
     first_entry = _first_entry_session(executions)
     portfolio_public["avg_exposure"] = live.avg_exposure_from_history(
@@ -661,12 +863,28 @@ def run(args) -> int:
         _write_json(Path("data/quant_signals.rejected.json"),
                     {"errors": exc.errors[:50], "as_of": as_of.isoformat()})
         print(json.dumps({"status": "rejected", "errors": exc.errors[:8]}, ensure_ascii=False), file=sys.stderr)
+        _write_github_output({"run_outcome": "rejected",
+                              # health.json 은 이미 기록됐다 — 계약 검증에서 막혔을 뿐이다.
+                              "status_written": HEALTH.exists(),
+                              "snapshot_created": bool(snapshot_state in ("created", "reused")),
+                              "snapshot_state": snapshot_state, "status": "rejected"})
         return 1
 
     # 11) 알림 — 중복 0건(같은 signal_id·event_key 는 다시 보내지 않는다)
+    #    §10⑥: 정산 health(`positions_open`·`tranche*`·`stop_*`)만 넘기면 `data_status` 가 `None` 이 되어
+    #    `notifications_latest.json` 의 실행 상태가 빈 값이 되었다. **실행 상태부를 합쳐** 넘긴다.
+    notify_health = {
+        **settlement_final["health"],
+        "data_status": data_status,
+        "outage_id": run_state.get("outage_id"),
+        "last_attempt_at": run_state.get("last_attempt_at"),
+        "last_success_at": run_state.get("last_success_at"),
+        "data_cutoff_at": run_state.get("data_cutoff_at"),
+        "target_session": run_state.get("target_session"),
+    }
     notification = notify.evaluate_notifications(
         payload, log_path=notify.DEFAULT_LOG, out_path=NOTIFICATIONS,
-        debate=debate_result, health=settlement_final["health"])
+        debate=debate_result, health=notify_health, outage_id=run_state.get("outage_id"))
     payload["notifications"] = {"n_new": notification["n_new"],
                                 "n_suppressed": notification["n_suppressed"],
                                 "events": [{k: e.get(k) for k in ("event_key", "type", "severity",
@@ -681,15 +899,22 @@ def run(args) -> int:
 
     github_output = os.environ.get("GITHUB_OUTPUT")
     if github_output:
-        with open(github_output, "a", encoding="utf-8") as f:
-            f.write(f"snapshot_id={snapshot_id}\n")
-            f.write(f"snapshot_id_short={short}\n")
-            f.write(f"status={status}\n")
-            f.write(f"n_signals={len(payload['signals'])}\n")
-            f.write(f"n_blocked={len(payload['blocked'])}\n")
+        _write_github_output({
+            "snapshot_id": snapshot_id, "snapshot_id_short": short, "status": status,
+            "n_signals": len(payload["signals"]), "n_blocked": len(payload["blocked"]),
+            # 감사 11 — 워크플로 분기 근거. `snapshot_created` 은 "패키징할 스냅샷이 있는가"이며
+            # `snapshot_state`(created|reused|failed)가 이유를 구분한다.
+            "run_outcome": "outage" if data_status == "outage" else "normal",
+            "status_written": True,
+            "snapshot_created": snapshot_state in ("created", "reused"),
+            "snapshot_state": snapshot_state,
+            "data_status": data_status,
+            "outage_id": run_state.get("outage_id") or "",
+        })
 
     print(json.dumps({
         "as_of": as_of.isoformat(), "mode": args.mode, "status": status,
+        "run_outcome": "outage" if data_status == "outage" else "normal",
         "snapshot_id": snapshot_id, "snapshot_id_short": short,
         "signals": [s["signal_id"] for s in payload["signals"]],
         "blocked": [b["ticker"] for b in payload["blocked"]],
@@ -758,6 +983,37 @@ def sector_cap(params: dict | None) -> float:
     return float(value) if value is not None else float(live.MAX_SECTOR)
 
 
+def settle_equity_base(portfolio: dict | None, initial_cash: float = live.INITIAL_CASH) -> float:
+    """1차 섬터 캘·비중의 분모 — **그 시점 순자산**(초기자본 × equity_index).
+
+    2·3차 정산은 세션마다 `equity_at(day)`(현금 + 보유 평가액)를 쓴다. 1차 `settle` 도 같은 기준을
+    받아야 한 배치 안에서 두 기준이 섞이지 않는다(감사 03-(3) · §14#2).
+    """
+    portfolio = portfolio or {}
+    return float(initial_cash) * float(portfolio.get("equity_index") or 1.0)
+
+
+def debate_holds_for(debate_result: dict | None, params: dict | None) -> dict[str, str]:
+    """자동 하향(`auto_downgrade_enabled`)으로 **보류된** 신호 → `{signal_id|ticker: "AUTO_DOWNGRADE"}`.
+
+    감사 06-(e): 화면(`hold_cash`)과 원장(`buy_filled`)이 갈렸다. `reconcile_debates` 가 적격으로
+    붙인 보고서 중 `actions_for` 가 자동 하향을 적용한 건(`auto_downgrade_applied`)을 원장 `settle`
+    에 넘겨, 시가에 사지 않고 `hold_cash` 로 남긴다. 자동 하향이 꺼져 있으면 항상 빈 dict 다.
+    """
+    auto = bool(((params or {}).get("debate") or {}).get("auto_downgrade_enabled", False))
+    if not auto:
+        return {}
+    out: dict[str, str] = {}
+    for sid, row in ((debate_result or {}).get("by_signal") or {}).items():
+        if not isinstance(row, dict) or not row.get("eligible"):
+            continue
+        if not bool(row.get("auto_downgrade_applied")):
+            continue
+        # 신호 정체성으로 먼저 잠그고, 종목 폴백은 같은 티커의 **다른 회차**까지 막지 않도록 남기지 않는다.
+        out[str(sid)] = "AUTO_DOWNGRADE"
+    return out
+
+
 def sector_exposure_dollars(portfolio: dict | None, initial_cash: float = live.INITIAL_CASH) -> dict[str, float]:
     """공개 비중 요약 → **섹터 평가액(달러)**. `live.settle(sector_exposure=...)` 의 분자다.
 
@@ -771,15 +1027,88 @@ def sector_exposure_dollars(portfolio: dict | None, initial_cash: float = live.I
 
 
 def _forced_exits(checks: list[dict]) -> dict[str, str]:
-    """S1~S5/EXIT 판정 → `{ticker: "S3"|"S5"|"EXIT"}` — 같은 봉에서 잔여 분할을 취소한다(3.5)."""
+    """S1~S5/EXIT(+TRIM) 판정 → `{ticker: "S3"|"S5"|"EXIT"|"TRIM"}` — 같은 봉에서 잔여 분할을 취소한다(3.5).
+
+    기획서 §3.5 의 `exit_score 60~74 → TRIM(1/3 익절)` 은 어떤 원장 경로에도 연결돼 있지 않았다(감사 14#1).
+    그래서 TRIM 도 넘기되, **엔진이 TRIM 을 1/3 익절로 처리한다고 알릴 때만**(`live.FORCED_EXIT_REASONS`)
+    넘긴다 — 지원 전에 넘기면 전량 청산으로 읽혀 매도 행동이 달라진다.
+    """
+    supported = _forced_exit_reasons()
     out: dict[str, str] = {}
     for check in checks or []:
-        if not check.get("cancel_pending_tranches"):
-            continue
+        ticker = str(check.get("ticker"))
+        verdict = str(check.get("verdict") or "").upper()
         triggers = check.get("triggers") or {}
-        reason = "S3" if triggers.get("S3") else ("S5" if triggers.get("S5") else "EXIT")
-        out[str(check.get("ticker"))] = reason
+        if check.get("cancel_pending_tranches") or verdict == "EXIT":
+            reason = "S3" if triggers.get("S3") else ("S5" if triggers.get("S5") else "EXIT")
+            out[ticker] = reason
+            continue
+        if verdict == "TRIM" and "TRIM" in supported:
+            out[ticker] = "TRIM"
     return out
+
+
+def _live_buy_to_supersede(records: list[dict], ticker: str, as_of: date) -> dict | None:
+    """같은 날 그 종목의 **살아 있는** BUY 발행본 — 차단이 대체해야 할 대상."""
+    superseded = record_mod.superseded_ids(records)
+    candidates = [r for r in records or []
+                  if str(r.get("ticker")) == ticker and str(r.get("as_of"))[:10] == as_of.isoformat()
+                  and str(r.get("quant_intent")) == "pending_buy"
+                  and str(r.get("signal_id")) not in superseded]
+    if not candidates:
+        return None
+    return sorted(candidates, key=lambda r: str(r.get("signal_published_at") or ""))[-1]
+
+
+def _append_blocked_supersedes(records, blocked_rows, *, times: dict, as_of: date, inputs_hash: str,
+                               params_version: str, snapshot_id: str, code_commit: str,
+                               mode: str) -> list[dict]:
+    """차단 목록 → `supersede` 만 하는 발행 레코드(트랙 1 `make_blocked_supersede_record` 계약).
+
+    차단은 지금까지 **레코드를 만들지 않았다** — 오전에 BUY 를 발행했는데 같은 날 차단되면 원장에는
+    BUY 가 최신으로 남아 시가에 체결됐다(감사 01-d). 헬퍼가 없거나 시그니처가 다르면 배치를 죽이지 않고
+    건너뛴다(트랙 통합 전 저장소에서도 파이프라인이 돌아야 한다). 결과는 진단에 남긴다.
+    """
+    maker = getattr(record_mod, "make_blocked_supersede_record", None)
+    if maker is None or not blocked_rows:
+        return []
+    accepted = None
+    has_kwargs = False
+    try:
+        params = inspect.signature(maker).parameters
+        accepted = set(params)
+        has_kwargs = any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values())
+    except (TypeError, ValueError):
+        return []
+    appended: list[dict] = []
+    for blocked in blocked_rows:
+        ticker = str(blocked.get("ticker") or "")
+        prior = _live_buy_to_supersede(records, ticker, as_of)
+        if prior is None:
+            continue
+        candidate = {
+            "blocked": blocked, "prior": prior, "times": times, "as_of": as_of.isoformat(),
+            "inputs_hash": inputs_hash, "params_version": params_version, "snapshot_id": snapshot_id,
+            "code_commit": code_commit, "mode": mode,
+            "signal_published_at": times.get("signal_published_at"),
+        }
+        call = candidate if has_kwargs else {k: v for k, v in candidate.items() if k in accepted}
+        try:
+            # ① 실행기 형태: 첫 인자는 **지금까지의 원장**(대체 계보를 찾는 풀)이다.
+            record = maker(records, **call)
+        except TypeError:
+            return appended   # 시그니처 불일치 — 통합 단계에서 맞춘다(배치는 계속)
+        except (RecordError, ValueError):
+            continue
+        if not isinstance(record, dict) or not record.get("signal_id"):
+            continue
+        try:
+            append_immutable(RECORDS, record)
+        except RecordError:
+            continue
+        records.append(record)
+        appended.append(record)
+    return appended
 
 
 def holdout_status_for(as_of: date) -> dict:

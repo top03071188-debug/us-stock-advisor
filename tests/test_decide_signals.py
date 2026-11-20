@@ -224,6 +224,7 @@ from engine.data import fixtures  # noqa: E402
 from engine.decide.pipeline import (  # noqa: E402
     MIN_INDEPENDENT_SOURCES,
     build_payload,
+    build_views,
     confidence_grade,
     evidence_items,
     independent_source_count,
@@ -282,15 +283,71 @@ def test_grade_a_needs_verified_quote_two_sources_and_regime_sample():
     b = {"type": "news", "source": "WireB", "url": "https://b/2", "quote_verified": True,
          "quote_sha256": "y"}
     evidence = _core_evidence() + [a[2], b]
-    assert confidence_grade(evidence, "read_done") == "A"
+    # 표본을 **넘기지 않으면** A 가 아니다(기획서 3.10 "미전달 시 B 상한" — 감사 07-b)
+    assert confidence_grade(evidence, "read_done") == "B"
+    assert confidence_grade(evidence, "read_done", regime_sample={"n": 30}) == "A"
     # 같은 매체 두 건은 독립 출처 2곳이 아니다
     same_source = [a[2], {**b, "source": "WireA"}]
     assert independent_source_count(same_source) == 1 < MIN_INDEPENDENT_SOURCES
-    assert confidence_grade(_core_evidence()[:2] + same_source, "read_done") == "B"
-    # 국면 표본이 모자라면 A 가 아니라 B
+    assert confidence_grade(_core_evidence()[:2] + same_source, "read_done", regime_sample={"n": 30}) == "B"
+    # 국면 표본이 모자라면 A 가 아니라 B — `min_n` 을 낮춰도 기획서 하한 30 아래로는 못 내린다
     assert confidence_grade(evidence, "read_done", regime_sample={"n": 3}) == "B"
-    assert confidence_grade(evidence, "read_done", regime_sample={"n": 12, "min_n": 10}) == "A"
+    assert confidence_grade(evidence, "read_done", regime_sample={"n": 12, "min_n": 10}) == "B"
+    assert confidence_grade(evidence, "read_done", regime_sample={"n": 29}) == "B"
     assert confidence_grade(evidence, "read_done", regime_sample=4) == "B"
+
+
+def test_grade_a_requires_fresh_data():
+    """데이터가 신선하지 않으면(종가 지연 등) A 를 줄 수 없다 — 최대 B(감사 07-b)."""
+    a = _core_evidence(source="WireA", url="https://a/1", quote_verified=True, quote_sha256="x")
+    b = {"type": "news", "source": "WireB", "url": "https://b/2", "quote_verified": True,
+         "quote_sha256": "y"}
+    evidence = _core_evidence() + [a[2], b]
+    basis: dict = {}
+    assert confidence_grade(evidence, "read_done", regime_sample={"n": 30}, data_fresh=False,
+                            grade_basis=basis) == "B"
+    assert basis["reason"] == "data_stale" and basis["data_fresh"] is False
+    assert confidence_grade(evidence, "read_done", regime_sample={"n": 30}, data_fresh=True) == "A"
+
+
+def test_grade_a_alt_path_8k_and_fundamentals_without_news_read():
+    """뉴스 미판독이어도 8-K·검증된 재무 근거·독립 출처 2곳이면 A(기획서 3.10 대체 경로)."""
+    evidence = [
+        {"type": "fundamental", "metric": "quality_composite", "accession": "acc-10k",
+         "available_at": "2026-11-01T20:00:00Z"},
+        {"type": "sec_filing", "form": "8-K", "items": ["2.02"], "accession": "acc-8k",
+         "url": "https://sec.gov/8k"},
+        {"type": "market", "metric": "atr_pct", "value_kind": "ratio"},
+    ]
+    filing = {"form": "8-K", "items": ["2.02"]}
+    basis: dict = {}
+    assert confidence_grade(evidence, "not_read", regime_sample={"n": 30}, alt_8k_evidence=[filing],
+                            grade_basis=basis) == "A"
+    assert basis["alt_8k"] is True
+    # 구조적 악재 8-K(3.01 상장폐지 등)는 대체 근거가 될 수 없다
+    assert confidence_grade(evidence, "not_read", regime_sample={"n": 30},
+                            alt_8k_evidence=[{"form": "8-K", "items": ["3.01"]}]) == "B"
+    # 8-K 가 없으면 대체 경로 자체가 없다
+    assert confidence_grade(evidence, "not_read", regime_sample={"n": 30}) == "B"
+    # 재무 근거의 접수번호가 없으면(검증 불가) 역시 B
+    unverified = [{**evidence[0], "accession": None, "available_at": None}, evidence[1], evidence[2]]
+    assert confidence_grade(unverified, "not_read", regime_sample={"n": 30},
+                            alt_8k_evidence=[filing]) == "B"
+    # 신선도·표본 조건은 대체 경로에도 똑같이 걸린다
+    assert confidence_grade(evidence, "not_read", regime_sample={"n": 30}, data_fresh=False,
+                            alt_8k_evidence=[filing]) == "B"
+    assert confidence_grade(evidence, "not_read", regime_sample=None,
+                            alt_8k_evidence=[filing]) == "B"
+    # 접수번호가 붙은 10-K 참조도 재무 근거로 인정한다(8-K 자신은 공시 쪽 조건이다)
+    mixed = [
+        {"type": "fundamental", "metric": "ROIC"},
+        {"type": "sec_filing", "form": "10-K", "accession": "acc-10k", "url": "https://sec.gov/10k"},
+        {"type": "sec_filing", "form": "8-K", "items": ["2.02"], "accession": "acc-8k",
+         "url": "https://sec.gov/8k"},
+        {"type": "market", "metric": "atr_pct", "value_kind": "ratio"},
+    ]
+    assert confidence_grade(mixed, "not_read", regime_sample={"n": 30},
+                            alt_8k_evidence=[filing]) == "A"
 
 
 def test_failed_quote_and_insufficient_evidence_are_c():
@@ -301,16 +358,26 @@ def test_failed_quote_and_insufficient_evidence_are_c():
     assert confidence_grade(ok, "not_read") == "B"
 
 
-def test_regime_sample_helper_documents_backward_compatibility():
-    assert regime_sample_ok(None) == (True, None)      # 미전달 → 하위 호환(기존 호출 보존)
+def test_regime_sample_helper_caps_a_without_sample():
+    """미전달(`None`)은 **통과가 아니라 미충족**이다 — 기획서 3.10 "미전달 시 B 상한"(감사 07-b)."""
+    assert regime_sample_ok(None) == (False, "regime_sample_missing")
     assert regime_sample_ok(3)[0] is False
-    assert regime_sample_ok({"count": 20}) == (True, None)
+    assert regime_sample_ok({"count": 20})[0] is False      # 30 미만
+    assert regime_sample_ok({"count": 30}) == (True, None)
     assert regime_sample_ok("nonsense")[0] is False
+
+
+def _linked(ticker: str, **fields) -> dict:
+    """오늘 스냅샷에 묶인 토론 행(`signal_id`·`snapshot_id` 포함) — 편입 계약(4.8.1)을 만족한다."""
+    row = {"ticker": ticker, "signal_id": f"{AS_OF.isoformat()}-{ticker}-BUY-001",
+           "snapshot_id": "sha256:test", "eligible": True}
+    row.update(fields)
+    return row
 
 
 def test_debate_structural_risk_does_not_change_quant_grade_when_auto_downgrade_off():
     """P1-1-b: 자동 하향이 꺼져 있으면 토론 리스크는 기록·배지만, 정량 등급은 그대로."""
-    debate = {"FIXA": {"ticker": "FIXA", "structural_risk": 58.0, "eligible": True}}
+    debate = {"FIXA": _linked("FIXA", structural_risk=58.0)}
     baseline = next(r for r in _payload()["signals"] if r["ticker"] == "FIXA")
     record = next(r for r in _payload(debate=debate)["signals"] if r["ticker"] == "FIXA")
     assert baseline["trade_grade"] == "BUY" and record["trade_grade"] == "BUY"
@@ -323,7 +390,7 @@ def test_debate_structural_risk_does_not_change_quant_grade_when_auto_downgrade_
 def test_debate_structural_risk_applies_to_gate_when_auto_downgrade_on():
     params = load_params(ROOT / "config" / "params_v001.yaml")
     params["debate"]["auto_downgrade_enabled"] = True
-    debate = {"FIXA": {"ticker": "FIXA", "structural_risk": 58.0, "eligible": True}}
+    debate = {"FIXA": _linked("FIXA", structural_risk=58.0)}
     record = next(r for r in _payload(params=params, debate=debate)["signals"] if r["ticker"] == "FIXA")
     assert record["decision"] == "WATCH" and record["quant_intent"] == "no_action"
     assert record["debate_risk_gate_applied"] is True
@@ -343,3 +410,125 @@ def test_c_grade_with_insufficient_evidence_caps_watch_and_intent():
     # 근거 부족이 아닌 종목에는 상한 표시가 붙지 않는다
     assert all(r["confidence_cap"] is None for r in payload["signals"]
                if r["news_state"] != "insufficient_evidence")
+
+
+# ── 중요 07: 스냅샷·신호로 묶인 토론만 판단에 붙는다 · 신선도·표본·8-K 대체 경로 ──────────────
+from engine.decide.pipeline import debate_row_for  # noqa: E402
+
+
+def test_debate_row_for_requires_matching_snapshot():
+    today = "sha256:today"
+    row = {"ticker": "FIXA", "snapshot_id": "sha256:old", "news_state": "insufficient_evidence",
+           "signal_id": "2026-11-19-FIXA-BUY-001", "eligible": True}
+    assert debate_row_for({"FIXA": row}, ticker="FIXA", as_of=AS_OF, snapshot_id=today) == {}
+    ok = {**row, "snapshot_id": today, "signal_id": f"{AS_OF.isoformat()}-FIXA-BUY-001"}
+    assert debate_row_for({"FIXA": ok}, ticker="FIXA", as_of=AS_OF, snapshot_id=today) == ok
+    # `(signal_id, snapshot_id)` 복합 키도 받는다 — 행에 식별자가 없어도 키가 채워진다
+    bare = {"news_state": "insufficient_evidence", "eligible": True}
+    got = debate_row_for({(ok["signal_id"], today): bare}, ticker="FIXA", as_of=AS_OF, snapshot_id=today)
+    assert got["snapshot_id"] == today and got["signal_id"] == ok["signal_id"]
+    # 다른 종목·다른 회차(어제)·자격 미달 행은 붙지 않는다
+    assert debate_row_for({"FIXA": {**ok, "signal_id": "2026-11-19-FIXA-BUY-001"}},
+                          ticker="FIXA", as_of=AS_OF, snapshot_id=today) == {}
+    assert debate_row_for({"FIXA": {**ok, "eligible": False}},
+                          ticker="FIXA", as_of=AS_OF, snapshot_id=today) == {}
+    # 현재 스냅샷을 모르는 호출(픽스처·구 경로)은 비교 기준이 없으므로 그대로 쓴다
+    legacy = {"ticker": "FIXA", "news_state": "read_done"}
+    assert debate_row_for({"FIXA": legacy}, ticker="FIXA", as_of=AS_OF) == legacy
+    # 행 목록으로 와도 같은 규칙으로 고른다
+    rows = [{**ok, "ticker": "OTHER"}, ok]
+    assert debate_row_for(rows, ticker="FIXA", as_of=AS_OF, snapshot_id=today) == ok
+
+
+def test_old_snapshot_debate_cannot_change_today_views():
+    """구 스냅샷 리포트가 오늘 정량 상태(news_state)를 바꾸지 못한다(감사 07-a)."""
+    data = fixtures.dataset(AS_OF)
+    today = "sha256:today"
+    base = {v.ticker: v for v in build_views(data, AS_OF, snapshot_id=today)}
+    old = {"FIXB": {"ticker": "FIXB", "snapshot_id": "sha256:old",
+                    "signal_id": "2026-11-19-FIXB-WATCH-001", "eligible": True,
+                    "news_state": "insufficient_evidence", "structural_risk": 72.0}}
+    stale = {v.ticker: v for v in build_views(data, AS_OF, old, snapshot_id=today)}
+    assert base["FIXB"].news_state == "not_read"
+    assert stale["FIXB"].news_state == "not_read" and stale["FIXB"].debate == {}
+
+    fresh = {"FIXB": {"ticker": "FIXB", "snapshot_id": today,
+                      "signal_id": f"{AS_OF.isoformat()}-FIXB-WATCH-001", "eligible": True,
+                      "news_state": "insufficient_evidence"}}
+    linked = {v.ticker: v for v in build_views(data, AS_OF, fresh, snapshot_id=today)}
+    assert linked["FIXB"].news_state == "insufficient_evidence"
+    assert linked["FIXB"].news_state_base == "not_read"
+    assert linked["FIXB"].debate["snapshot_id"] == today
+
+
+def test_old_snapshot_debate_cannot_flip_today_intent():
+    """BUY → (구 스냅샷 리포트의 근거 부족) → WATCH 로 뒤집히던 경로를 막는다."""
+    old = {"FIXA": {"ticker": "FIXA", "snapshot_id": "sha256:old",
+                    "signal_id": "2026-11-19-FIXA-BUY-001", "eligible": True,
+                    "news_state": "insufficient_evidence"}}
+    record = next(r for r in _payload(debate=old)["signals"] if r["ticker"] == "FIXA")
+    assert record["decision"] == "BUY" and record["quant_intent"] == "pending_buy"
+    assert record["news_state"] == "read_done"
+    assert record["debate_ref"] is None and record["debate_advice"] is None
+
+    matched = {"FIXA": _linked("FIXA", news_state="insufficient_evidence",
+                               recommendation="WATCH", structural_risk=40.0, divergent=True)}
+    record = next(r for r in _payload(debate=matched)["signals"] if r["ticker"] == "FIXA")
+    assert record["news_state"] == "insufficient_evidence"
+    assert record["decision"] == "WATCH" and record["quant_intent"] == "no_action"
+    assert record["debate_ref"]["snapshot_id"] == "sha256:test"
+    assert record["debate_ref"]["signal_id"] == f"{AS_OF.isoformat()}-FIXA-BUY-001"
+    # 토론 **권고**는 따로 실린다 — 정량 판단 필드와 섞이지 않는다
+    assert record["debate_advice"]["recommendation"] == "WATCH"
+    assert record["debate_advice"]["divergent"] is True
+    assert record["debate_structural_risk"] == 40.0
+    assert record["debate_risk_gate_applied"] is False
+
+
+def test_quant_grade_records_why_it_is_not_a():
+    """신선도·국면 표본을 넘기지 않으면 A 가 아니다 — 레코드에 판정 근거가 남는다(감사 07-b·c)."""
+    payload = _payload()
+    assert payload["signals"], "픽스처에 신호가 있어야 등급 계약을 검증할 수 있다"
+    for record in payload["signals"]:
+        assert record["grade"] in ("B", "C")
+        detail = record["confidence_detail"]
+        assert detail["regime_sample_ok"] is False      # 표본 미전달 → A 상한
+        assert detail["data_fresh"] is True
+        if record["grade"] == "B":
+            assert detail["reason"] == "regime_sample_missing"
+        else:                                            # C 는 뉴스 근거 부족이 먼저 걸린다
+            assert detail["reason"] in ("insufficient_evidence", "quote_unverified")
+
+
+def test_regime_sample_from_dataset_can_reach_grade_a():
+    """데이터셋이 국면 표본을 주면 A 가 가능해진다 — 배선이 살아 있음을 고정한다."""
+    data = fixtures.dataset(AS_OF)
+    data = {**data, "regime_sample": {"n": 30}}
+    view = {v.ticker: v for v in build_views(data, AS_OF)}["FIXA"]
+    evidence = [
+        {"type": "fundamental", "metric": "quality_composite", "value_kind": "score_0_100"},
+        {"type": "sec_filing", "form": "10-Q"},
+        {"type": "news", "source": "WireA", "url": "https://a/1", "quote_verified": True,
+         "quote_sha256": "x"},
+        {"type": "news", "source": "WireB", "url": "https://b/2", "quote_verified": True,
+         "quote_sha256": "y"},
+    ]
+    assert view.regime_sample == {"n": 30}
+    assert confidence_grade(evidence, "read_done", regime_sample=view.regime_sample) == "A"
+
+
+def test_debate_advice_never_changes_entry_gates():
+    """토론 권고는 결과에 실리기만 한다 — 게이트·등급을 바꾸는 것은 정량 입력뿐이다(감사 07)."""
+    from engine.decide.signals import DEBATE_ADVICE_FIELDS, QUANT_DECISION_FIELDS
+
+    base = evaluate_entry(ctx(), "neutral")
+    advised = evaluate_entry(ctx(debate_advice={"recommendation": "WATCH", "structural_risk": 99.0,
+                                                "divergent": True}), "neutral")
+    assert base["signal"] == advised["signal"] == "BUY"
+    assert base["grade"] == advised["grade"]
+    assert base["failed_gates"] == advised["failed_gates"]
+    assert advised["debate_advice"]["recommendation"] == "WATCH"
+    assert set(DEBATE_ADVICE_FIELDS) == {"debate_advice"}
+    assert "debate_advice" not in QUANT_DECISION_FIELDS
+    # 구조적 리스크(B5)는 **정량 값**으로만 판정된다
+    assert evaluate_entry(ctx(structural_risk=90.0), "neutral")["gates"]["B5"] is False

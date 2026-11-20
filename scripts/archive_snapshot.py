@@ -16,6 +16,7 @@
   check-asset  --assets assets.json --file TGZ [--repo R --tag T]
   upload       --repo R --tag T --file TGZ
 종료 코드(check-asset): 0=존재·일치, 10=없음(업로드 필요), 1=불일치/오류
+종료 코드(package): 0=성공, 3=스냅샷 없음(장애 배치 — 패키징 생략, `set -e` 에서 멈추지 않게 분기)
 """
 
 from __future__ import annotations
@@ -45,16 +46,28 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+class SnapshotMissing(FileNotFoundError):
+    """패키징할 스냅샷이 없다 — 장애 배치(스냅샷 미생성)의 정상적인 결말이다."""
+
+
+#: 스냅샷 부재로 끝났을 때의 종료 코드(0=성공, 1=불일치/오류와 구분한다).
+EXIT_SNAPSHOT_MISSING = 3
+
+
 def package(source: str | Path, out_dir: str | Path, name: str) -> dict:
     """디렉터리를 tgz 로 묶고 `.sha256` 파일을 함께 남긴다.
 
     manifest.json 이 있으면 그 안의 snapshot_id 를 확인해 파일명과 대조한다.
+    스냅샷이 없으면(장애 배치 — `run_daily` 가 스냅샷을 만들지 않았다) `SnapshotMissing` 으로
+    **명확히 끝난다**. 조용히 빈 tgz 를 만들면 아카이브에 빈 원본이 남는다.
     """
     source = Path(source)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    if not source.exists():
-        raise FileNotFoundError(source)
+    if not source.exists() or not source.is_dir():
+        raise SnapshotMissing(f"스냅샷 디렉터리가 없다: {source} — 이번 실행은 스냅샷을 만들지 않았다")
+    if not any(p.is_file() for p in source.rglob("*")):
+        raise SnapshotMissing(f"스냅샷 디렉터리가 비어 있다: {source} — 패키징할 원본이 없다")
     tgz = out_dir / f"{name}.tgz"
     # 결정론적 tar+gzip: 정렬된 경로, 고정 mtime/소유자, gzip 헤더 mtime=0.
     # 그래야 같은 스냅샷을 다시 패키징해도 sha256 이 같아 “해시 일치 → 스킵”이 성립한다.
@@ -172,7 +185,12 @@ def main(argv: list[str] | None = None) -> int:
 
     args = ap.parse_args(argv)
     if args.cmd == "package":
-        result = package(args.source, args.out, args.name)
+        try:
+            result = package(args.source, args.out, args.name)
+        except SnapshotMissing as exc:
+            # 스택 트레이스 대신 한 줄로 끝낸다 — 워크플로가 이 코드(3)로 분기한다.
+            print(f"::warning::스냅샷 없음 — 패키징 생략: {exc}", file=sys.stderr)
+            return EXIT_SNAPSHOT_MISSING
         print(json.dumps(result, ensure_ascii=False) if args.json else result["file"])
         return 0
     if args.cmd == "check-asset":

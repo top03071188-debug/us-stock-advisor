@@ -214,8 +214,9 @@ python -m codex_debate.run_debate --top 6 --no-push    # 커밋만, push는 Clou
   `status: auth_expired`로 끝나고 아무것도 커밋하지 않는다.
 - 수집된 기사 본문(`data/debate/context/`)은 `.gitignore`라 PR에 포함되지 않는다. **PR에 본문·인용 원문이
   들어가면 안 된다** — 그래서 리포트에는 해시만 남긴다.
-- PR 검사는 `codex_debate/workflows/debate-validate.yml` 템플릿이 한다(§10).
-  템플릿은 PR 이 건드린 **전체 경로**를 공개 범위 가드로 검사하고, 리포트 PR 이
+- PR 검사는 **등록된** `.github/workflows/debate-validate.yml`이 한다(§10). 저장소의
+  `codex_debate/workflows/debate-validate.yml`은 **같은 내용의 사본**이고, 사본이 어긋나면 테스트가 실패한다.
+  이 워크플로는 PR 이 건드린 **전체 경로**를 공개 범위 가드로 검사하고, 리포트 PR 이
   `data/debate_reports.json`·`data/debate/manifest.json` 외 경로(코드·규칙·워크플로)를 건드리면 차단한다.
 
 ---
@@ -276,16 +277,17 @@ python -m codex_debate.run_debate --provider openai --top 6
 
 ---
 
-## 10. 검증 워크플로 등록 (통합 담당 몫)
+## 10. 검증 워크플로 — 등록·운영 상태
 
-`codex_debate/workflows/debate-validate.yml`은 **템플릿**이다. 이 저장소에 쓰는 CLI 토큰에는
-`workflows` 권한이 없어 `.github/workflows/`로 push하면 **403으로 거부**된다.
+`.github/workflows/debate-validate.yml`은 **등록되어 실제로 도는 워크플로**다(2026-11-20 확인).
+저장소의 `codex_debate/workflows/debate-validate.yml`은 같은 내용의 **사본**이다 — 이 저장소에 쓰는 CLI 토큰에는
+`workflows` 권한이 없어 `.github/workflows/`로 push하면 **403으로 거부**되므로, 갱신은 GitHub 웹 편집기로 한다.
 
-1. GitHub 웹에서 `.github/workflows/debate-validate.yml`을 새로 만들고 템플릿 내용을 붙여넣는다.
-2. `data/debate_reports.json`·`codex_debate/**` 변경 PR에서 자동 실행되는지 확인한다.
-3. 실패하면 PR을 막는다(리포트 계약·인용 원문 0건 검사).
+- 등록본 머리말은 운영 문구다(“이 파일은 **실제로 도는 워크플로**”). 사본과 내용이 같아야 하고,
+  어긋나면 `test_debate_pr_workflow_uses_base_branch_verifier` 가 실패한다.
+- 내용을 바꿀 때는 **둘 다** 같은 내용으로 바꾸고, 웹 업로드로 `.github/workflows/` 를 갱신한다.
 
-템플릿이 검사하는 것(v1.3.4 · P1-2):
+이 워크플로가 검사하는 것(v1.3.5 · P1-2 · 감사 10):
 
 | 단계 | 내용 |
 |---|---|

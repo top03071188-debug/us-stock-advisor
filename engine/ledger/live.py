@@ -44,6 +44,9 @@ RECORDS_PATH = Path("data/ledger/records.jsonl")
 POSITION_EVENTS_PATH = Path("data/ledger/position_events.jsonl")
 #: 주문 동결 마감 — 주문 마감보다 **앞선 내부 확정 시각**(P0-2). 기본 5분.
 FREEZE_BUFFER = timedelta(minutes=5)
+#: `settle_positions(forced_exits=...)` 가 받는 강제 청산 사유.
+#: `TRIM` 은 **전량이 아니라 보유 1/3 익절**이다(§3.5 · P-5) — 나머지 셋은 잔여 분할까지 취소한다.
+FORCED_EXIT_REASONS = ("S3", "S5", "EXIT", "TRIM")
 
 EXECUTION_SUFFIX = ".json"
 REANCHOR_SUFFIX = ".reanchor.json"
@@ -147,52 +150,110 @@ def freeze_deadline_at(order_cutoff, buffer: timedelta = FREEZE_BUFFER) -> datet
     return None if cutoff is None else cutoff - buffer
 
 
-def order_slots(records: list[dict], *, freeze_buffer: timedelta = FREEZE_BUFFER) -> dict[tuple, dict]:
-    """주문 슬롯 — `(ticker, target_session)` 별 **동결 시각·동결 마감·유효 발행본**(P0-1·P0-2).
+#: 주문 슬롯의 계정 축 — 지금은 단일 모의 계좌지만 슬롯 키는 `(account_id, ticker, 세션)` 이다.
+DEFAULT_ACCOUNT = "default"
 
-    슬롯은 "그 세션에 이 종목을 산다"는 상태이며, 발행본(`signal_id`)과 분리한다. 지금 유효한
-    신규 진입 발행만 슬롯을 만들고, `frozen_at` 은 그 슬롯을 확정한 마지막 발행 시각(동결 마감을
-    넘지 않는다)이다. 발행본이 대체되면 슬롯의 `signal_id` 도 최신 회차를 가리진다.
+
+def slot_key(account_id, ticker, session) -> tuple:
+    """슬롯 키 — `(account_id, ticker, target_session)` (v1.3.5 · 치명 01)."""
+    return (str(account_id or DEFAULT_ACCOUNT), str(ticker or ""), session)
+
+
+def get_slot(slots: dict, ticker: str, session, account_id: str = DEFAULT_ACCOUNT) -> dict:
+    """슬롯 조회 — 계정 축이 없는 옛 호출도 같은 슬롯을 찾는다."""
+    if not slots:
+        return {}
+    found = slots.get(slot_key(account_id, ticker, session))
+    if found is not None:
+        return found
+    return slots.get((str(ticker or ""), session)) or {}
+
+
+def _release_kind(record: dict) -> str:
+    """발행 종류(`BUY`/`WATCH`/`BLOCKED`) — 레코드가 스스로 밝힌 값을 먼저 믿는다."""
+    kind = str(record.get("release_kind") or record.get("type") or "").upper()
+    if kind in ("BUY", "WATCH", "BLOCKED"):
+        return kind
+    return "BUY" if record.get("quant_intent") == "pending_buy" else "WATCH"
+
+
+def order_slots(records: list[dict], *, freeze_buffer: timedelta = FREEZE_BUFFER,
+                account_id: str = DEFAULT_ACCOUNT) -> dict[tuple, dict]:
+    """주문 슬롯 — `(account_id, ticker, target_session)` 별 **동결 주문·동결 시각**(P0-1 · v1.3.5).
+
+    슬롯은 "그 세션에 이 종목을 산다"는 상태이고, 그 세션의 주문은 **동결 마감(`freeze_deadline_at`)
+    까지 도착한 마지막 회차**가 확정한다. 슬롯은 다음을 함께 남긴다.
+
+    - `signal_id`·`frozen_at`·`freeze_deadline_at` — 동결된 주문과 그 시각. `frozen_at` 은 슬롯이
+      있으면 **절대 `None` 이 아니다**(감사 §10①: 취소 시각을 사후 검증할 수 있어야 한다).
+    - `held` — 동결 뒤 도착한 회차. 당일 슬롯을 덮어쓰지 않고 다음 세션용으로 보류된다.
+      (예전에는 동결 뒤 BUY 가 슬롯을 갈아치우고 **두 회차가 모두 체결**됐다 — 감사 재현 01-(a).)
+    - `frozen_source` — `before_deadline`(마감 전 확정) · `no_prior_order`(마감 전 주문이 없어
+      마감 뒤 첫 회차가 그 세션 주문이 됨 — 취소·대체할 기존 주문이 없다).
+
+    `pending_buy` 뿐 아니라 WATCH·차단 재발행도 슬롯을 만든다. 주문이 없던 회차도 `frozen_at` 을
+    남겨야 "동결 전에 취소됐나"를 사후에 판정할 수 있다(감사 §10①).
     """
-    superseded = superseded_ids(records)
-    newer_of = _superseding_map(records)
-    latest: dict[tuple, dict] = {}
+    groups: dict[tuple, list[dict]] = {}
     for record in records or []:
-        sid = str(record.get("signal_id"))
-        if record.get("quant_intent") != "pending_buy":
-            continue
-        if sid in superseded:
-            # 동결 뒤 도착한 변경은 이미 동결된 주문을 취소하지 않는다 — 슬롯은 그대로 살아 있다.
-            newer = newer_of.get(sid) or {}
-            deadline = freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer)
-            arrived = _as_dt(newer.get("signal_published_at"))
-            if not (deadline is not None and arrived is not None and arrived > deadline):
-                continue
         session = _session_of(record)
         if session is None:
             try:
                 session = _next_trading_day(date.fromisoformat(str(record["as_of"])[:10]))
             except (ValueError, KeyError):
                 session = None
-        key = (str(record.get("ticker") or ""), session)
-        published = _as_dt(record.get("signal_published_at"))
-        deadline = freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer)
-        frozen = published
-        if frozen is not None and deadline is not None:
-            frozen = min(frozen, deadline)
-        seq = split_signal_id(sid)[1]
-        if key in latest and latest[key]["revision"] > seq:
-            continue
-        latest[key] = {
-            "slot_id": f"{key[0]}:{session.isoformat() if session else 'none'}",
-            "ticker": key[0],
+        groups.setdefault((str(record.get("ticker") or ""), session), []).append(record)
+    out: dict[tuple, dict] = {}
+    for (ticker, session), rows in sorted(groups.items(),
+                                          key=lambda kv: (str(kv[0][1] or ""), kv[0][0])):
+        rows = sorted(rows, key=lambda r: (split_signal_id(str(r.get("signal_id")))[1],
+                                           str(r.get("signal_published_at") or "")))
+        frozen: dict | None = None
+        late: list[dict] = []
+        for record in rows:
+            published = _as_dt(record.get("signal_published_at"))
+            deadline = freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer)
+            if published is not None and deadline is not None and published > deadline:
+                late.append({"record": record, "published": published, "deadline": deadline})
+                continue
+            frozen = {"record": record, "published": published, "deadline": deadline}
+        source = "before_deadline"
+        if frozen is None:
+            if not late:
+                continue
+            frozen = late.pop(0)          # 마감 전 주문이 없다 — 취소·대체할 기존 주문도 없다
+            source = "no_prior_order"
+        held = [{
+            "signal_id": str(item["record"].get("signal_id")),
+            "revision": split_signal_id(str(item["record"].get("signal_id")))[1],
+            "release_kind": _release_kind(item["record"]),
+            "intent": item["record"].get("quant_intent"),
+            "signal_published_at": None if item["published"] is None else _iso(item["published"]),
+            "reason": "ARRIVED_AFTER_FREEZE",
+        } for item in late]
+        record = frozen["record"]
+        deadline = (frozen["deadline"] if frozen["deadline"] is not None
+                    else freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer))
+        published = frozen["published"]
+        frozen_at = published
+        if frozen_at is None or (deadline is not None and frozen_at > deadline):
+            frozen_at = deadline if deadline is not None else published
+        out[slot_key(account_id, ticker, session)] = {
+            "slot_id": f"{str(account_id or DEFAULT_ACCOUNT)}:{ticker}:"
+                       f"{session.isoformat() if session else 'none'}",
+            "account_id": str(account_id or DEFAULT_ACCOUNT),
+            "ticker": ticker,
             "target_session": session.isoformat() if session else None,
-            "signal_id": sid,
-            "revision": seq,
-            "frozen_at": None if frozen is None else _iso(frozen),
+            "signal_id": str(record.get("signal_id")),
+            "revision": split_signal_id(str(record.get("signal_id")))[1],
+            "release_kind": _release_kind(record),
+            "intent": record.get("quant_intent"),
+            "frozen_at": None if frozen_at is None else _iso(frozen_at),
             "freeze_deadline_at": None if deadline is None else _iso(deadline),
+            "frozen_source": source,
+            "held": held,
         }
-    return latest
+    return out
 
 
 def _superseding_map(records: list[dict]) -> dict[str, dict]:
@@ -205,64 +266,221 @@ def _superseding_map(records: list[dict]) -> dict[str, dict]:
     return out
 
 
+def _lock_keys(stop_locks) -> set[tuple[str, str]]:
+    """손절 재진입 잠금 → `{(ticker, 'YYYY-MM-DD')}` (P-1).
+
+    받아들이는 형태: `{"TICKER|2026-05-12", …}`, `[("TICKER", "2026-05-12"), …]`,
+    `{("TICKER", "2026-05-12"): "S5"}`(사유 포함) — 실행기가 어느 쪽을 넘겨도 같은 집합이 된다.
+    """
+    out: set[tuple[str, str]] = set()
+    if not stop_locks:
+        return out
+    items = stop_locks.items() if isinstance(stop_locks, dict) else [(item, None) for item in stop_locks]
+    for key, _value in items:
+        if isinstance(key, dict):
+            ticker = str(key.get("ticker") or "")
+            day = str(key.get("session") or key.get("date") or key.get("lock") or "")
+            if not ticker and "|" in day:
+                ticker, _, day = day.partition("|")
+            if ticker and day:
+                out.add((ticker, day[:10]))
+            continue
+        if isinstance(key, str):
+            if "|" in key:
+                ticker, _, day = key.partition("|")
+            else:
+                ticker, _, day = key.partition(":")
+            if ticker and day:
+                out.add((ticker.strip(), day.strip()[:10]))
+            continue
+        if isinstance(key, (tuple, list)) and len(key) >= 2:
+            out.add((str(key[0]), str(key[1])[:10]))
+    return out
+
+
+def _hold_reason(debate_holds, signal_id: str, ticker: str) -> str | None:
+    """토론 보류 목록에서 이 신호의 사유를 찾는다 — 신호 정체성 우선, 종목 폴백.
+
+    받아들이는 형태: `{signal_id: "AUTO_DOWNGRADE"}`, `{ticker: 사유}`, `[signal_id, …]`.
+    `None` 이면 보류가 아니다.
+    """
+    if not debate_holds:
+        return None
+    sid, tic = str(signal_id or ""), str(ticker or "")
+    if isinstance(debate_holds, dict):
+        for key in (sid, tic):
+            if key and key in debate_holds:
+                return str(debate_holds.get(key) or "AUTO_DOWNGRADE")
+        return None
+    items = [str(item) for item in debate_holds]
+    if sid in items or tic in items:
+        return "AUTO_DOWNGRADE"
+    return None
+
+
+def stop_reentry_locks(prior_events: list[dict] | None, *, as_of: date | None = None) -> list[dict]:
+    """`position_events` 의 **S5 손절** → 재진입 잠금 목록 `[{"ticker", "session", "lock"}]`.
+
+    P-1: 손절이 난 종목·세션은 그 세션의 신규 1차 진입까지 막는다. 잠금은 세션 로그에서 파생한다 —
+    별도 상태 파일을 만들면 원장(append-only)과 어긋날 수 있다.
+    """
+    out: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for row in prior_events or []:
+        if row.get("event") != "exit_filled" or str(row.get("reason") or "") != "S5":
+            continue
+        ticker = str(row.get("ticker") or "")
+        day = str(row.get("date") or "")[:10]
+        if not ticker or not day or (ticker, day) in seen:
+            continue
+        if as_of is not None and day > str(as_of)[:10]:
+            continue
+        seen.add((ticker, day))
+        out.append({"ticker": ticker, "session": day, "signal_id": row.get("signal_id"),
+                    "lock": f"{ticker}|{day}"})
+    return out
+
+
 def settle(records: list[dict], executions: dict[str, dict], panels: dict,
            as_of: date, slippage_bps: float = SLIPPAGE_BPS, *,
            max_sector: float | None = MAX_SECTOR, equity_base: float = INITIAL_CASH,
            sector_exposure: dict[str, float] | None = None,
-           freeze_buffer: timedelta = FREEZE_BUFFER) -> dict:
+           freeze_buffer: timedelta = FREEZE_BUFFER,
+           now: str | datetime | None = None,
+           stop_locks=None, account_id: str = DEFAULT_ACCOUNT,
+           position_events_path: str | Path | None = None,
+           prior_events: list[dict] | None = None,
+           blocked: dict[str, str] | None = None,
+           debate_holds: dict[str, str] | None = None) -> dict:
     """발행 의도 → 체결 이벤트. 시가가 확정되지 않은 신호는 `pending` 으로 남긴다.
 
     체결 세션은 **레코드의 `target_session`** 이다 — `next_trading_day(signal_day)` 로 밀면
     금요일 신호가 월요일 시가에 체결된다(R08). 그 세션 봉이 없으면 대체 세션을 쓰지 않고
     `SESSION_BAR_MISSING` 으로 보류한다.
 
-    [v1.3.4 · P0-1/P0-2]
-    - **동결 전**의 WATCH·차단(재발행이 `freeze_deadline_at` 까지 도착)은 이전 BUY 를 취소한다 —
-      `cancellations` 에 `cancel_pending` 이벤트를 남긴다. **동결 뒤** 도착한 변경은 이미 동결된
-      주문을 사후에 취소하지 않는다(`frozen_override`).
-    - 1차 체결도 **섹터 상한**을 본다 — 같은 날 같은 섹터의 5% 주문 여러 건이 25%를 넘지 않는다(P0-3).
-      `sector_exposure`(현재 섹터 평가액 달러)를 주면 기존 보유까지 합산하고, 주지 않으면 **이번 배치에서
-      체결한 금액만** 센다 — 실행기는 가능하면 보유 섹터 비중을 넘겨 주는 것이 좋다.
+    [v1.3.5 · 치명 01 · §10①②③⑤ · P-1]
+
+    1. **슬롯당 체결은 1건**이다. 체결은 `order_slots()` 가 확정한 **동결 주문**(동결 마감까지 도착한
+       마지막 회차)만 대상으로 하고, 회차 루프가 아니라 **슬롯 루프**로 돈다. 동결 뒤 도착한 회차는
+       `held`/`pending`(사유 `ARRIVED_AFTER_FREEZE`)으로만 남아 같은 세션을 두 번 사지 않는다.
+    2. **취소는 실제 주문이 있을 때만** 남긴다 — WATCH·차단으로 대체된 회차가 `pending_buy` 였고
+       아직 체결되지 않았을 때만 `cancellations`(`cancel_pending`)에 넣는다. 처음부터 `no_action`
+       이던 WATCH 재발행은 `intent_superseded`(회차 무효화)로만 기록한다(§10⑤).
+    3. 취소 이벤트의 `at` 은 **실제 대체 발행 시각**(`now` 또는 대체 레코드의 `signal_published_at`)
+       이다. `freeze_deadline_at` 은 참고 메타 필드로 따로 남긴다(§10①).
+    4. `-001→-002→-003` 처럼 여러 회차가 이어져도 계보를 빠짐없이 따라간다(§10②). `revision` 은
+       **종목·세션 단위 회차**다(§10③).
+    5. **P-1**: `stop_locks` 에 `(ticker, 세션)` 이 있으면 그 세션의 신규 1차 진입을 체결하지 않고
+       `no_action`(`STOP_REENTRY_LOCK`)으로 남긴다. 차단 건수는 `stop_reentry_blocked_count` 로
+       따로 보고한다(2·3차 취소 수와 분리). `stop_locks` 를 주지 않고 `position_events_path`(세션 로그)
+       나 `prior_events` 를 주면 S5 손절 행에서 잠금을 **파생**한다 — 실행기는 경로만 넘기면 된다.
+    6. **차단 우선**: `blocked={ticker: 사유}` 를 주면 그 종목의 1차 진입을 체결하지 않는다. 배치가
+       차단 레코드를 **정산 뒤에** append 하는 실행기에서도 같은 배치의 시가 체결을 막는다.
+    7. **토론 보류**: `debate_holds={signal_id: 사유}`(종목 키도 받는다)를 주면 그 신호의 1차 진입을
+       체결하지 않고 `hold_cash`(체결 아님)로 남긴다 — 자동 하향이 켜진 배치에서 화면(`hold_cash`)과
+       원장(`buy_filled`)이 갈리지 않게 한다(감사 06-(e)). 사유는 `settled[].reason="AUTO_DOWNGRADE"`.
+
+    `sector_exposure`(현재 섹터 평가액 달러)를 주면 기존 보유까지 합산하고, 주지 않으면 이번 배치에서
+    체결한 금액만 센다. 체결 순서는 `(세션, 종목, 회차)` 로 고정해 **입력 순서에 의존하지 않는다**.
     """
     new_events: list[dict] = []
     reanchors: list[dict] = []
     pending: list[dict] = []
     settled: list[dict] = []
     cancellations: list[dict] = []
+    held: list[dict] = []
+    reentry_blocked: list[dict] = []
     superseded = superseded_ids(records)
     by_supersedes = _superseding_map(records)
-    slots = order_slots(records, freeze_buffer=freeze_buffer)
-    sector_dollars: dict[str, float] = {str(k): float(v) for k, v in (sector_exposure or {}).items()}
-    for record in records:
+    by_sid = {str(r.get("signal_id")): r for r in records or []}
+    slots = order_slots(records, freeze_buffer=freeze_buffer, account_id=account_id)
+    slot_by_group = {(s["ticker"], str(s["target_session"] or "")): s for s in slots.values()}
+    arrived_at = _as_dt(now)
+
+    def _slot_for(record: dict) -> dict:
+        session = _session_of(record)
+        if session is None:
+            try:
+                session = _next_trading_day(date.fromisoformat(str(record.get("as_of"))[:10]))
+            except (ValueError, KeyError):
+                session = None
+        return slot_by_group.get((str(record.get("ticker") or ""),
+                                  session.isoformat() if session else ""), {})
+
+    # ── 1) 계보 — 대체·취소·회차 무효화 ─────────────────────────────────────────
+    ordered = sorted(records or [], key=lambda r: (str(r.get("as_of") or ""),
+                                                   str(r.get("ticker") or ""),
+                                                   split_signal_id(str(r.get("signal_id")))[1]))
+    for record in ordered:
         sid = str(record.get("signal_id"))
         if sid in executions:
             continue
-        if sid in superseded:
-            # 같은 (as_of, ticker) 계보에서 새 회차가 확정된 이전 발행본 — 원칙적으로는 체결하지 않는다.
-            newer = by_supersedes.get(sid) or {}
-            deadline = freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer)
-            arrived = _as_dt(newer.get("signal_published_at"))
-            frozen_override = bool(deadline is not None and arrived is not None and arrived > deadline)
-            if not frozen_override:
-                settled.append({"signal_id": sid, "event": "superseded",
-                                "reason": "SUPERSEDED_BEFORE_FREEZE",
-                                "superseded_by": newer.get("signal_id"),
-                                "frozen_at": (slots.get((record.get("ticker"), _session_of(record))) or {})
-                                .get("frozen_at")})
-                cancellations.append({"signal_id": sid, "ticker": record.get("ticker"),
-                                      "target_session": (newer.get("target_session")
-                                                         or record.get("target_session")),
-                                      "cancelled_by": "WATCH_OR_BLOCKED",
-                                      "superseded_by": newer.get("signal_id"),
-                                      "at": (deadline.isoformat().replace("+00:00", "Z")
-                                             if deadline else None),
-                                      "frozen_at": (slots.get((record.get("ticker"), _session_of(record))) or {})
-                                      .get("frozen_at")})
-                continue
+        newer = by_supersedes.get(sid)
+        if sid not in superseded or not newer:
+            continue
+        slot = _slot_for(record)
+        deadline = freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer)
+        arrived = _as_dt(newer.get("signal_published_at")) or arrived_at
+        after_freeze = bool(deadline is not None and arrived is not None and arrived > deadline)
+        if after_freeze:
             settled.append({"signal_id": sid, "event": "superseded_after_freeze",
-                            "reason": "FROZEN_ORDER_STANDS", "superseded_by": newer.get("signal_id")})
-        intent = record.get("quant_intent")
-        if intent != "pending_buy":
+                            "reason": "FROZEN_ORDER_STANDS",
+                            "superseded_by": newer.get("signal_id"),
+                            "frozen_at": slot.get("frozen_at"),
+                            "freeze_deadline_at": slot.get("freeze_deadline_at")})
+            continue
+        if record.get("quant_intent") != "pending_buy":
+            # 처음부터 주문이 없던 회차(WATCH·차단 재발행) — 주문 취소가 아니라 **회차 무효화**다.
+            settled.append({"signal_id": sid, "event": "superseded",
+                            "reason": "INTENT_SUPERSEDED",
+                            "superseded_by": newer.get("signal_id"),
+                            "frozen_at": slot.get("frozen_at"),
+                            "freeze_deadline_at": slot.get("freeze_deadline_at")})
+            continue
+        if newer.get("quant_intent") == "pending_buy":
+            # 미체결 BUY 가 새 BUY 회차로 교체됨 — 슬롯 교체(취소 + 새 주문)다.
+            settled.append({"signal_id": sid, "event": "superseded", "reason": "REVISION_REPLACED",
+                            "superseded_by": newer.get("signal_id"),
+                            "frozen_at": slot.get("frozen_at"),
+                            "freeze_deadline_at": slot.get("freeze_deadline_at")})
+            cancellations.append({
+                "signal_id": sid, "ticker": record.get("ticker"),
+                "target_session": (newer.get("target_session") or record.get("target_session")),
+                "cancelled_by": "REVISION_REPLACED", "cancel_kind": _release_kind(newer),
+                "superseded_by": newer.get("signal_id"),
+                "at": None if arrived is None else _iso(arrived),
+                "frozen_at": slot.get("frozen_at"),
+                "freeze_deadline_at": slot.get("freeze_deadline_at")})
+            continue
+        settled.append({"signal_id": sid, "event": "superseded", "reason": "SUPERSEDED_BEFORE_FREEZE",
+                        "superseded_by": newer.get("signal_id"),
+                        "frozen_at": slot.get("frozen_at"),
+                        "freeze_deadline_at": slot.get("freeze_deadline_at")})
+        cancellations.append({
+            "signal_id": sid, "ticker": record.get("ticker"),
+            "target_session": (newer.get("target_session") or record.get("target_session")),
+            "cancelled_by": "WATCH_OR_BLOCKED", "cancel_kind": _release_kind(newer),
+            "superseded_by": newer.get("signal_id"),
+            "at": None if arrived is None else _iso(arrived),
+            "frozen_at": slot.get("frozen_at"),
+            "freeze_deadline_at": slot.get("freeze_deadline_at")})
+
+    # ── 2) 슬롯별 1차 체결 — 슬롯당 1건 ─────────────────────────────────────────
+    if stop_locks is None and (prior_events is not None or position_events_path is not None):
+        # P-1 잠금은 세션 로그에서 파생한다 — 실행기가 경로나 이벤트 목록을 주면 여기서 만든다.
+        stop_locks = stop_reentry_locks(
+            prior_events if prior_events is not None else read_position_events(position_events_path),
+            as_of=as_of)
+    locks = _lock_keys(stop_locks)
+    sector_dollars: dict[str, float] = {str(k): float(v) for k, v in (sector_exposure or {}).items()}
+    slot_rows = sorted(slots.values(),
+                       key=lambda s: (str(s["target_session"] or ""), s["ticker"], s["signal_id"]))
+    for slot in slot_rows:
+        sid = str(slot["signal_id"])
+        record = by_sid.get(sid) or {}
+        if not record or sid in executions:
+            continue
+        if record.get("quant_intent") != "pending_buy":
             continue
         ticker = record.get("ticker")
         panel = panels.get(ticker)
@@ -278,6 +496,38 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
         if session > as_of:
             pending.append({"signal_id": sid, "ticker": ticker,
                             "expected_fill_day": session.isoformat()})
+            continue
+        if blocked and str(ticker) in {str(k) for k in blocked}:
+            # 같은 배치에서 확정된 차단 — 발행 레코드 append 가 정산 뒤에 오더라도 시가에 사지 않는다.
+            reason = str(blocked.get(ticker) or blocked.get(str(ticker)) or "BLOCKED")
+            event = execution_event(signal_id=sid, snapshot_id=record.get("snapshot_id", ""),
+                                    at=_open_at(session), execution_event="no_action",
+                                    note=f"차단({reason}) — 신규 진입 없음(치명 01)")
+            new_events.append(public_event(event))
+            settled.append({"signal_id": sid, "event": "no_action", "reason": "BLOCKED",
+                            "target_session": session.isoformat(), "blocked_reason": reason})
+            continue
+        hold_reason = _hold_reason(debate_holds, sid, ticker)
+        if hold_reason is not None:
+            # 감사 06-(e): 토론 자동 하향으로 보류된 신호 — 원장도 체결하지 않고 `hold_cash` 로 남긴다.
+            event = execution_event(signal_id=sid, snapshot_id=record.get("snapshot_id", ""),
+                                    at=_open_at(session), execution_event="hold_cash",
+                                    note=f"토론 자동 하향({hold_reason}) — 이번 세션 신규 1차 진입 보류")
+            new_events.append(public_event(event))
+            settled.append({"signal_id": sid, "event": "hold_cash", "reason": "AUTO_DOWNGRADE",
+                            "debate_reason": hold_reason, "target_session": session.isoformat()})
+            continue
+        if locks and (str(ticker), session.isoformat()) in locks:
+            # P-1: 같은 종목·같은 세션은 손절 뒤 신규 1차 진입을 하지 않는다.
+            event = execution_event(signal_id=sid, snapshot_id=record.get("snapshot_id", ""),
+                                    at=_open_at(session), execution_event="no_action",
+                                    note="S5 손절 당일 — 같은 세션 신규 1차 진입 차단(3.5 · P-1)")
+            new_events.append(public_event(event))
+            settled.append({"signal_id": sid, "event": "no_action", "reason": "STOP_REENTRY_LOCK",
+                            "target_session": session.isoformat()})
+            reentry_blocked.append({"signal_id": sid, "ticker": ticker,
+                                    "target_session": session.isoformat(),
+                                    "reason": "S5_STOP_SAME_SESSION"})
             continue
         stamp = pd.Timestamp(session)
         if panel is None or stamp not in panel.frame.index:
@@ -345,9 +595,26 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
         settled.append({"signal_id": sid, "event": "buy_filled", "fill_price": fill,
                         "target_session": session.isoformat(), "legacy_session": legacy,
                         "band_basis_migrated": migrated})
+
+    # ── 3) 동결 뒤 도착분 — 당일 체결 없이 다음 세션용으로 보류 ──────────────────
+    for slot in slot_rows:
+        for item in slot.get("held") or []:
+            held.append({**item, "ticker": slot["ticker"], "target_session": slot["target_session"]})
+            next_day = None
+            if slot.get("target_session"):
+                try:
+                    next_day = _next_trading_day(date.fromisoformat(slot["target_session"]))
+                except ValueError:
+                    next_day = None
+            pending.append({"signal_id": item["signal_id"], "ticker": slot["ticker"],
+                            "expected_fill_day": next_day.isoformat() if next_day else None,
+                            "reason": "ARRIVED_AFTER_FREEZE"})
     return {"new_events": new_events, "reanchors": reanchors, "pending": pending,
-            "settled": settled, "cancellations": cancellations,
-            "slots": sorted(slots.values(), key=lambda s: (s["target_session"] or "", s["ticker"]))}
+            "settled": settled, "cancellations": cancellations, "held": held,
+            "slots": slot_rows,
+            "stop_reentry_blocked_count": len(reentry_blocked),
+            "stop_reentry_blocked": reentry_blocked,
+            "stop_locks": sorted(f"{ticker}|{day}" for ticker, day in locks)}
 
 
 def _next_trading_day(day: date) -> date | None:
@@ -895,51 +1162,120 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
                      initial_cash: float = INITIAL_CASH,
                      slippage_bps: float = SLIPPAGE_BPS,
                      max_sector: float | None = MAX_SECTOR,
-                     position_events_path: str | Path | None = None) -> dict:
-    """1차 체결 이후의 2·3차 분할·손절·분할익절을 봉 단위로 정산한다.
+                     position_events_path: str | Path | None = None,
+                     prior_events: list[dict] | None = None,
+                     stop_reentry_blocked: list[dict] | None = None) -> dict:
+    """1차 체결 이후의 2·3차 분할·손절·분할익절·TRIM 을 **세션 순서**로 정산한다.
 
     발행 레코드·체결 이벤트는 고치지 않는다 — 여기서 만드는 것은 **파생 상태**(화면·건강 지표)다.
-    `forced_exits` 는 `pipeline` 이 계산한 S1~S5/EXIT 판정(`{ticker: "S3"|"S5"|"EXIT"}`)으로,
-    `as_of` 봉 시가에 전량 청산하고 잔여 분할을 취소한다.
 
-    [v1.3.4 · P0-3]
-    - 2·3차 수량은 **계획 비중 × 분할 비율**(`plan_weight × tranche weight`)이다 — 예전에는 분할
-      비율만 곱해 2차가 계획 1.5% 대신 상한까지(2.0%) 채워졌다(A-1).
-    - 3차 200일선 조건은 **다음 거래일 시가**에 체결한다(`pending_dma_buy`) — 같은 봉 종가로 조건을
-      판정해 그 봉 시가에 사면 실현 불가능한 가격이다(A-2, `portfolio.py:_next_open` 과 같은 규칙).
-    - 분할익절은 **고정 기준 수량의 1/3**(`trim_basis_qty`)씩 — 매번 잔량의 1/3 을 팔면 두 번째 뒤에
-      잔량이 4/9 로 남아 기획서의 "세 번에 걸쳐 0"과 달라진다(3.5).
-    - 분할 때 `iv_high`(익절 목표가)도 `1/ratio` 로 조정 — 예전에는 $120 이 그대로 남아 2:1 분할 뒤
-      익절 조건이 영원히 닿지 않았다.
-    - 같은 봉에서 손절과 추가 진입이 겹치면 **손절 우선** + 잔여 주문 즉시 취소(`cancelled_by`).
-    - 체결·손절·익절 이벤트를 `position_events.jsonl` 에 세션 순서로 남겨 재실행 멱등성·재생 근거를 만든다.
-      (금지 키 `shares`·`avg_cost`·`cash_balance` 는 싣지 않는다 — 비중과 가격만 남긴다, 2.2.3)
+    [v1.3.5 · 중요 03 + P-1 + P-5 + §14#2]
+
+    - **확정 매도를 되돌리지 않는다.** `position_events` 의 기존 `exit_filled`(S3·S5·S4·EXIT)·
+      `profit_take`(iv_high·rsi·TRIM)·`cancel_pending` 을 먼저 재생해 상태에 반영한다. 예전에는
+      청산 뒤 다음 날 재실행하면 그 청산이 사라져 포지션이 되살아났다(감사 재현 03-(1)).
+    - **시세 봉이 없으면 버리지 않는다.** `as_of` 봉이 아직 없으면 청산·TRIM 주문을
+      `exit_pending` 으로 남기고, 다음 이용 가능 봉 시가에 체결한다(감사 재현 03-(2)).
+    - **날짜 바깥 루프** — 날짜마다 `시가 예약(강제 청산·TRIM·예약 매도·예약 매수) → 장중 손절 →
+      지정가 2·3차 → 종가(트레일링·예약·평가)` 순서로 **모든 보유**를 같은 규칙으로 돌린다.
+    - **섹터 한도 분모 통일** — 1차(`settle`)와 2·3차가 모두 **그 시점 열린 포지션 평가액 / 그 시점
+      순자산**을 쓴다. 예전 2·3차는 `cash_spent`(미래 지출 포함)를 써서 종목 입력 순서로 결과가
+      달라졌다(감사 재현 03-(3), §14#2).
+    - **P-5 TRIM** — `forced_exits` 에 `"TRIM"` 이 오면 **보유 수량의 1/3 익절 매도**를 실행하고
+      사유를 `TRIM` 으로 남긴다(S4 200일선 잔여 전량 정리와 구분). 잔여 2·3차 주문은 취소하지 않는다.
+    - **P-1** — S5 손절은 세션 로그에 남아 `stop_reentry_locks()` 로 재진입 잠금이 되고, 이번 정산에서
+      실제로 막은 재진입은 `stop_reentry_blocked`(실행기 전달값)로 센다. 2·3차 취소 수는
+      `tranche_cancel_count` 로 **분리**한다.
+
+    2·3차 수량은 **계획 비중 × 분할 비율**, 3차 200일선 조건은 **다음 거래일 시가**, 분할익절은
+    **고정 기준 수량의 1/3** 이다(3.5 · 4.12). 체결·손절·익절 이벤트는 `position_events.jsonl` 에
+    세션 순서로 남기며 금지 키(`shares`·`avg_cost`·`cash_balance`)는 싣지 않는다(2.2.3).
     """
     reanchors = reanchors or {}
-    forced_exits = forced_exits or {}
+    forced_exits = {str(k): str(v) for k, v in (forced_exits or {}).items()}
     risk = (params or {}).get("risk") or {}
     risk_per_trade = float(risk.get("risk_per_trade") or 0.0075)
     max_position = float(risk.get("max_position") or 0.05)
-    superseded = superseded_ids(records)
-    states: dict[str, dict] = {}
     events: list[dict] = []
     cancelled: list[dict] = []
+    replayed: list[dict] = []
+    states: dict[str, dict] = {}
+    bars_cache: dict[str, dict[date, dict]] = {}
+    lines_cache: dict[str, dict] = {}
 
+    def bars_of(ticker: str) -> dict[date, dict]:
+        if ticker not in bars_cache:
+            bars_cache[ticker] = {bar["date"]: bar for bar in bars_for(panels.get(ticker), as_of)}
+        return bars_cache[ticker]
+
+    def lines_of(ticker: str) -> dict:
+        if ticker not in lines_cache:
+            lines_cache[ticker] = _indicator_lines(panels.get(ticker))
+        return lines_cache[ticker]
+
+    if prior_events is None:
+        prior_events = (read_position_events(position_events_path)
+                        if position_events_path is not None else [])
+    prior: dict[str, list[dict]] = {}
+    for row in prior_events or []:
+        sid = str(row.get("signal_id") or "")
+        day = str(row.get("date") or "")[:10]
+        if not sid or not day:
+            continue
+        try:
+            date.fromisoformat(day)
+        except ValueError:
+            continue
+        prior.setdefault(sid, []).append({**row, "date": day})
+    for rows in prior.values():
+        rows.sort(key=lambda r: str(r.get("date")))
+
+    def cash_now() -> float:
+        return (float(initial_cash) - sum(float(st["cash_spent"]) for st in states.values())
+                + sum(float(st["cash_returned"]) for st in states.values()))
+
+    def mark_price(sid_value: str, day: date) -> float:
+        st = states[sid_value]
+        bar = bars_of(st["ticker"]).get(day)
+        if bar is not None:
+            return float(bar["raw_open"])
+        return float(st.get("last_price") or st.get("avg_cost") or 0.0)
+
+    def equity_at(day: date) -> float:
+        total = cash_now()
+        for key, st in states.items():
+            if st["exit"] is not None or float(st["qty"]) <= 0:
+                continue
+            total += float(st["qty"]) * mark_price(key, day)
+        return total
+
+    def sector_value_at(day: date, sector: str, exclude: str) -> float:
+        if not sector:
+            return 0.0
+        return float(sum(float(st["qty"]) * mark_price(key, day)
+                         for key, st in states.items()
+                         if key != exclude and (st.get("sector") or "") == sector
+                         and st["exit"] is None and float(st["qty"]) > 0))
+
+    # ── 상태 만들기 — 실제 1차 체결이 있는 발행만 ───────────────────────────────
     for record in records or []:
         sid = str(record.get("signal_id"))
-        if sid in superseded:
-            continue
-        ticker = record.get("ticker")
-        panel = panels.get(ticker)
-        if panel is None or panel.frame.empty:
+        if sid in states:
             continue
         event = executions.get(sid) or {}
         track = event.get("quant_track") or {}
         if track.get("execution_event") != "buy_filled" or track.get("fill_price") is None:
             continue
-        bars = bars_for(panel, as_of)
+        # [v1.3.5 · 치명 01] `superseded` 로 표시돼도 **실제 체결이 있으면 보유를 유지**한다.
+        #   예전에는 동결 뒤 WATCH 로 바뀐 종목의 체결분이 다음 날 사라져 계좌가 전액 현금이 됐다.
+        ticker = record.get("ticker")
+        panel = panels.get(ticker)
+        if panel is None or panel.frame.empty:
+            continue
+        bars = bars_of(ticker)
         if not bars:
             continue
+        fill = float(track["fill_price"])
         fill_day = None
         if event.get("at"):
             try:
@@ -950,14 +1286,13 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
             fill_day = _session_of(record)
         if fill_day is None:
             continue
-        dates = [bar["date"] for bar in bars]
-        start = next((i for i, d in enumerate(dates) if d >= fill_day), None)
+        start = next((d for d in sorted(bars) if d >= fill_day), None)
         if start is None:
             continue
-        fill = float(track["fill_price"])
         first_fill = float((reanchors.get(sid) or {}).get("first_fill") or fill)
         stop_distance = float((record.get("position") or {}).get("stop_distance") or 0.0)
-        initial_stop = float((reanchors.get(sid) or {}).get("stop_price") or first_fill * (1.0 - stop_distance))
+        initial_stop = float((reanchors.get(sid) or {}).get("stop_price")
+                             or first_fill * (1.0 - stop_distance))
         tranches = _tranche_plan(record, reanchors.get(sid), first_fill, initial_stop, params)
         weight = float(track.get("weight") or (record.get("position") or {}).get("tranche_weight") or 0.0)
         plan_weight = float((record.get("position") or {}).get("plan_weight_target") or weight)
@@ -983,89 +1318,161 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
             "last_event_ko": "1차 체결",
         }
         tranches[0]["filled_at"] = fill_day.isoformat()
-        lines = _indicator_lines(panel)
-        factor_prev = float(bars[start].get("split_factor") or 1.0)
-        cash_left = plan_weight * initial_cash
-        for bar in bars[start:]:
-            day = bar["date"]
+        st["start_day"] = start
+        st["factor_prev"] = float(bars[start].get("split_factor") or 1.0)
+        st["cash_left"] = plan_weight * initial_cash
+        st["pending_exit"] = None
+        st["prior_by_day"] = {}
+        for row in prior.get(sid) or []:
+            st["prior_by_day"].setdefault(str(row.get("date")), []).append(row)
+            if row.get("event") == "exit_pending":
+                st["pending_exit"] = {"reason": str(row.get("reason") or "EXIT"),
+                                      "since": str(row.get("date"))[:10]}
+        states[sid] = st
+
+    ordered_sids = sorted(states, key=lambda s: (states[s]["opened_at"], s))
+
+    def _apply_split(st: dict, bar: dict, day: date) -> None:
+        factor = float(bar.get("split_factor") or 1.0)
+        if factor > 0 and abs(factor - st["factor_prev"]) > 1e-12:
+            ratio = st["factor_prev"] / factor
+            st["qty"] *= ratio
+            st["avg_cost"] /= ratio
+            st["stop_price"] /= ratio
+            st["initial_stop"] /= ratio
+            st["trailing_high"] /= ratio
+            st["first_fill"] /= ratio
+            st["trim_basis_qty"] *= ratio
+            if st["iv_high"] is not None:
+                st["iv_high"] = round(float(st["iv_high"]) / ratio, 6)
+            for row in st["tranches"]:
+                if row.get("price_ref") is not None:
+                    row["price_ref"] = round(float(row["price_ref"]) / ratio, 4)
+            events.append({"date": day.isoformat(), "ticker": st["ticker"], "signal_id": st["signal_id"],
+                           "event": "split_adjustment", "ratio": round(ratio, 6),
+                           "iv_high": None if st["iv_high"] is None else round(st["iv_high"], 4)})
+        st["factor_prev"] = factor
+
+    def _exit_all(st: dict, day: date, price: float, reason: str, cancel: bool = True,
+                  replay: bool = False) -> None:
+        price = float(price)
+        st["exit"] = {"reason": reason, "at": day.isoformat(), "price": round(price, 4)}
+        st["cash_returned"] += float(st["qty"]) * price * (1.0 - slippage_bps / 1e4)
+        row = {"date": day.isoformat(), "ticker": st["ticker"], "signal_id": st["signal_id"],
+               "event": "exit_filled", "reason": reason, "price": round(price, 4),
+               "fill_basis": "daily_ohlc_assumption"}
+        (replayed if replay else events).append(row)
+        if cancel:
+            _cancel_pending(st, st["signal_id"], st["ticker"], day, reason, cancelled,
+                            replay=replay, replayed=replayed)
+        st["last_event_ko"] = f"{reason} — 잔여 분할 즉시 취소" if cancel else f"{reason} 청산"
+
+    def _sell(st: dict, day: date, price: float, qty: float, reason: str,
+              fraction: float | None = None, replay: bool = False) -> None:
+        qty = min(float(qty), float(st["qty"]))
+        if qty <= 1e-12:
+            return
+        price = float(price)
+        st["qty"] -= qty
+        st["cash_returned"] += qty * price * (1.0 - slippage_bps / 1e4)
+        row = {"date": day.isoformat(), "ticker": st["ticker"], "signal_id": st["signal_id"],
+               "event": "profit_take", "reason": reason,
+               "fraction": round(float(fraction), 4) if fraction is not None else None,
+               "qty_pct": round(qty * price / float(st["equity_base"]), 6),
+               "price": round(price, 4), "fill_basis": "daily_ohlc_assumption"}
+        (replayed if replay else events).append(row)
+        if reason in ("iv_high", "rsi"):
+            st["trim_stage"] = reason
+        elif reason == "TRIM":
+            st["trim_stage"] = "score"
+        if st["qty"] <= 1e-9:
+            st["exit"] = {"reason": "S2", "at": day.isoformat(), "price": round(price, 4)}
+
+    # ── 마감 봉이 없는 강제 청산·TRIM → carry-over ──────────────────────────────
+    for sid in ordered_sids:
+        st = states[sid]
+        reason = forced_exits.get(st["ticker"])
+        if reason and st["exit"] is None and as_of not in bars_of(st["ticker"]):
+            st["pending_exit"] = {"reason": reason, "since": as_of.isoformat()}
+            events.append({"date": as_of.isoformat(), "ticker": st["ticker"], "signal_id": sid,
+                           "event": "exit_pending", "reason": reason})
+
+    day_list = sorted({d for cache in bars_cache.values() for d in cache})
+    if ordered_sids:
+        day_list = [d for d in day_list if d >= min(states[s]["start_day"] for s in ordered_sids)]
+
+    for day in day_list:
+        iso_day = day.isoformat()
+        for sid in ordered_sids:
+            st = states[sid]
+            if st["exit"] is not None or day < st["start_day"]:
+                continue
+            bar = bars_of(st["ticker"]).get(day)
+            if bar is None:
+                continue
+            # 0) 기업 이벤트 → 기록된 확정 이벤트 재생(청산·TRIM·취소는 되돌리지 않는다)
+            _apply_split(st, bar, day)
+            for row in st["prior_by_day"].pop(iso_day, []):
+                kind = row.get("event")
+                if kind == "exit_filled" and st["exit"] is None:
+                    _exit_all(st, day, float(row.get("price") or bar["raw_open"]),
+                              str(row.get("reason") or "EXIT"), replay=True)
+                elif kind == "profit_take" and st["qty"] > 0:
+                    why = str(row.get("reason") or "TRIM")
+                    marker = {"TRIM": "score"}.get(why, why)      # TRIM 의 1회 표식은 "score"
+                    if marker not in st["trim_done"]:
+                        st["trim_done"].append(marker)
+                        qty = float(st["qty"]) / 3.0 if why == "TRIM" else _trim_qty(st)
+                        _sell(st, day, float(row.get("price") or bar["raw_open"]), qty, why,
+                              fraction=row.get("fraction"), replay=True)
+                        if why == "rsi":
+                            # 전일 종가가 예약한 RSI 매도를 **이미 재생**했으면 이번 봉에서 또 팔지 않는다.
+                            st["pending_sell_fraction"] = 0.0
+                elif kind == "cancel_pending":
+                    _cancel_pending(st, sid, st["ticker"], day,
+                                    str(row.get("cancelled_by") or "CANCELLED"), cancelled,
+                                    only=int(row["tranche"]) if row.get("tranche") is not None else None,
+                                    replay=True, replayed=replayed)
             if st["exit"] is not None:
-                break
-            # 1) 기업 이벤트 — 분할을 먼저 적용한다(수량·가격·익절가·기준 수량을 함께 조정)
-            factor = float(bar.get("split_factor") or 1.0)
-            if factor > 0 and abs(factor - factor_prev) > 1e-12:
-                ratio = factor_prev / factor
-                st["qty"] *= ratio
-                st["avg_cost"] /= ratio
-                st["stop_price"] /= ratio
-                st["initial_stop"] /= ratio
-                st["trailing_high"] /= ratio
-                st["first_fill"] /= ratio
-                st["trim_basis_qty"] *= ratio
-                if st["iv_high"] is not None:
-                    st["iv_high"] = round(float(st["iv_high"]) / ratio, 6)
-                for row in st["tranches"]:
-                    if row.get("price_ref") is not None:
-                        row["price_ref"] = round(float(row["price_ref"]) / ratio, 4)
-                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
-                               "event": "split_adjustment", "ratio": round(ratio, 6),
-                               "iv_high": None if st["iv_high"] is None else round(st["iv_high"], 4)})
-            factor_prev = factor
-            # 2) 전일 종가 조건으로 예약된 매도(RSI 75 · 200일선 이탈) → 오늘 시가
-            if st["pending_sell_fraction"] > 0 and st["exit"] is None:
+                continue
+            # 1) 시가 예약 — 강제 청산(S3·S5·EXIT) · TRIM · 예약 매도 · 예약 매수
+            forced = forced_exits.get(st["ticker"]) if day == as_of else None
+            if forced is None and st.get("pending_exit") and iso_day >= st["pending_exit"]["since"]:
+                forced = st["pending_exit"]["reason"]
+            if forced == "TRIM":
+                st["pending_exit"] = None
+                if "score" not in st["trim_done"]:
+                    st["trim_done"].append("score")
+                    st["trim_count"] += 1
+                    # P-5: 보유 수량의 1/3 익절 — 잔여 2·3차 주문은 취소하지 않는다.
+                    _sell(st, day, float(bar["raw_open"]), float(st["qty"]) / 3.0, "TRIM",
+                          fraction=PROFIT_TAKE_FRACTION)
+                    st["last_event_ko"] = "TRIM — 보유 1/3 익절"
+                    if st["exit"] is not None:
+                        continue
+            elif forced:
+                st["pending_exit"] = None
+                _exit_all(st, day, float(bar["raw_open"]), forced)
+                continue
+            if st["pending_sell_fraction"] > 0:
                 fraction = st["pending_sell_fraction"]
                 st["pending_sell_fraction"] = 0.0
                 if fraction >= 0.999:
-                    st["exit"] = {"reason": "S4", "at": day.isoformat(), "price": round(float(bar["raw_open"]), 4)}
-                    st["cash_returned"] += st["qty"] * float(bar["raw_open"]) * (1.0 - slippage_bps / 1e4)
-                    events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
-                                   "event": "exit_filled", "reason": "S4",
-                                   "price": round(float(bar["raw_open"]), 4),
-                                   "fill_basis": "daily_ohlc_assumption"})
-                    _cancel_pending(st, sid, ticker, day, "S4", cancelled)
-                    st["last_event_ko"] = "200일선 이탈 — 잔여 청산(S4)"
-                    break
+                    _exit_all(st, day, float(bar["raw_open"]), "S4")
+                    continue
                 sold = _trim_qty(st)
-                st["qty"] -= sold
                 st["trim_count"] += 1
-                st["cash_returned"] += sold * float(bar["raw_open"]) * (1.0 - slippage_bps / 1e4)
-                st["trim_stage"] = "rsi"
-                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
-                               "event": "profit_take", "reason": "rsi", "fraction": round(fraction, 4),
-                               "qty_pct": round(sold * float(bar["raw_open"]) / st["equity_base"], 6),
-                               "price": round(float(bar["raw_open"]), 4),
-                               "fill_basis": "daily_ohlc_assumption"})
-                if st["qty"] <= 1e-9:
-                    st["exit"] = {"reason": "S2", "at": day.isoformat(), "price": round(float(bar["raw_open"]), 4)}
-                    break
-            # 3) 전량 청산 판정(pipeline) — as_of 봉 시가에 청산하고 잔여 분할 취소
-            if day == as_of and forced_exits.get(ticker) and st["exit"] is None:
-                reason = str(forced_exits[ticker])
-                st["exit"] = {"reason": reason, "at": day.isoformat(), "price": round(float(bar["raw_open"]), 4)}
-                st["cash_returned"] += st["qty"] * float(bar["raw_open"]) * (1.0 - slippage_bps / 1e4)
-                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
-                               "event": "exit_filled", "reason": reason,
-                               "price": round(float(bar["raw_open"]), 4),
-                               "fill_basis": "daily_ohlc_assumption"})
-                _cancel_pending(st, sid, ticker, day, reason, cancelled)
-                st["last_event_ko"] = f"{reason} — 잔여 분할 즉시 취소"
-                break
-            # 4) 손절 먼저 — 갭이면 시가, 아니면 손절가(같은 봉의 추가 진입은 취소된다)
-            if float(bar["raw_open"]) <= st["stop_price"]:
-                _stop_out(st, sid, ticker, day, float(bar["raw_open"]), "S5", cancelled, events,
-                          slippage_bps)
-                break
-            if float(bar["raw_low"]) <= st["stop_price"]:
-                _stop_out(st, sid, ticker, day, float(st["stop_price"]), "S5", cancelled, events,
-                          slippage_bps)
-                break
-            # 5) 전일 종가 조건(RSI ≤ 25 · 200일선 −3%)으로 예약된 2·3차 매수 → **오늘 시가**(3.4.4 표)
+                _sell(st, day, float(bar["raw_open"]), sold, "rsi", fraction=fraction)
+                if st["exit"] is not None:
+                    continue
             if st.get("pending_buy"):
                 index = int(st.pop("pending_buy"))
                 row = next((r for r in st["tranches"] if int(r["tranche"]) == index), None)
                 if row is not None and row["status"] == "pending":
-                    cash_left = _fill_tranche(st, row, sid, ticker, day, float(bar["raw_open"]),
-                                              "rsi_next_open", cash_left, risk_per_trade,
-                                              max_position, events, states, max_sector)
+                    _fill_tranche(st, row, sid, st["ticker"], day, float(bar["raw_open"]),
+                                  "rsi_next_open", st["cash_left"], equity_at(day),
+                                  sector_value_at(day, st["sector"], sid), cash_now(),
+                                  risk_per_trade, max_position, events, max_sector)
             if st.get("pending_dma_buy"):
                 index = int(st.pop("pending_dma_buy"))
                 row = next((r for r in st["tranches"] if int(r["tranche"]) == index), None)
@@ -1074,11 +1481,20 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
                         row["status"] = "invalid"
                         row["note"] = "200일선 조건 시가가 초기 손절가 이하 → 무효(3.5)"
                     else:
-                        cash_left = _fill_tranche(st, row, sid, ticker, day, float(bar["raw_open"]),
-                                                  "dma_next_open", cash_left, risk_per_trade,
-                                                  max_position, events, states, max_sector)
-            # 5b) 2·3차 지정가 — 손절이 나지 않은 봉에서만(장중 순서는 '손절 먼저')
-            line200, _rsi = lines.get(day, (None, None))
+                        _fill_tranche(st, row, sid, st["ticker"], day, float(bar["raw_open"]),
+                                      "dma_next_open", st["cash_left"], equity_at(day),
+                                      sector_value_at(day, st["sector"], sid), cash_now(),
+                                      risk_per_trade, max_position, events, max_sector)
+            # 2) 장중 손절 — 손절 먼저(같은 봉의 추가 진입은 취소된다)
+            if float(bar["raw_open"]) <= st["stop_price"]:
+                _exit_all(st, day, float(bar["raw_open"]), "S5")
+                st["last_event_ko"] = "S5 손절 — 잔여 분할 즉시 취소"
+                continue
+            if float(bar["raw_low"]) <= st["stop_price"]:
+                _exit_all(st, day, float(st["stop_price"]), "S5")
+                st["last_event_ko"] = "S5 손절 — 잔여 분할 즉시 취소"
+                continue
+            # 3) 지정가 2·3차 — 손절이 나지 않은 봉에서만
             for row in st["tranches"]:
                 if row["status"] != "pending":
                     continue
@@ -1086,7 +1502,6 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
                 price_ref = float(row["price_ref"])
                 triggered = index == 2 and float(bar["raw_low"]) <= price_ref
                 if index == 3:
-                    # 지정가는 초기 손절가 아래면 걸지 않는다 — 대신 DMA 트랙으로 무장돼 있다(A-7).
                     triggered = (row.get("trigger") != "dma200" and float(bar["raw_low"]) <= price_ref)
                 if not triggered:
                     continue
@@ -1094,49 +1509,42 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
                     row["status"] = "invalid"
                     row["note"] = "지정가가 초기 손절가 이하 → 무효"
                     continue
-                cash_left = _fill_tranche(st, row, sid, ticker, day, price_ref, "limit",
-                                          cash_left, risk_per_trade, max_position, events,
-                                          states, max_sector)
-            # 6) 분할익절 — IV_high 도달 시 **고정 기준 수량의 1/3**
+                _fill_tranche(st, row, sid, st["ticker"], day, price_ref, "limit",
+                              st["cash_left"], equity_at(day), sector_value_at(day, st["sector"], sid),
+                              cash_now(), risk_per_trade, max_position, events, max_sector)
+            # 4) 분할익절 — IV_high 도달 시 기준 수량의 1/3
             if (st["iv_high"] is not None and float(bar["raw_high"]) >= st["iv_high"]
                     and "iv_high" not in st["trim_done"] and st["qty"] > 0):
                 sold = _trim_qty(st)
-                st["qty"] -= sold
-                st["trim_count"] += 1
-                st["cash_returned"] += sold * float(st["iv_high"]) * (1.0 - slippage_bps / 1e4)
                 st["trim_done"].append("iv_high")
-                st["trim_stage"] = "iv_high"
+                st["trim_count"] += 1
+                _sell(st, day, float(st["iv_high"]), sold, "iv_high", fraction=PROFIT_TAKE_FRACTION)
                 st["last_event_ko"] = "IV_high 도달 — 기준 수량 1/3 분할익절"
-                events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
-                               "event": "profit_take", "reason": "iv_high",
-                               "fraction": round(PROFIT_TAKE_FRACTION, 4),
-                               "qty_pct": round(sold * float(st["iv_high"]) / st["equity_base"], 6),
-                               "price": round(float(st["iv_high"]), 4),
-                               "fill_basis": "daily_ohlc_assumption"})
-                if st["qty"] <= 1e-9:
-                    st["exit"] = {"reason": "S2", "at": day.isoformat(),
-                                  "price": round(float(st["iv_high"]), 4)}
-            # 7) 종가 — 트레일링 갱신, 전일 종가 조건 예약
+                if st["exit"] is not None:
+                    continue
+            # 5) 종가 — 트레일링 갱신, 다음 세션 예약
             st["trailing_high"] = max(st["trailing_high"], float(bar["raw_high"]))
             st["stop_price"] = max(st["stop_price"],
-                                  st["trailing_high"] * (1.0 - st["stop_distance"]))
+                                   st["trailing_high"] * (1.0 - st["stop_distance"]))
             st["last_price"] = float(bar["raw_close"])
-            _line200, rsi = lines.get(day, (None, None))
+            _line200, rsi = lines_of(st["ticker"]).get(day, (None, None))
+            line200 = _line200
             if (rsi is not None and rsi <= 25.0
                     and any(int(r["tranche"]) == 2 and r["status"] == "pending" for r in st["tranches"])):
                 st["pending_buy"] = 2           # 전일 RSI ≤ 25 → 다음 거래일 시가 2차 체결
             if (line200 is not None and float(bar["sadj_close"]) <= line200 * 0.97
                     and any(int(r["tranche"]) == 3 and r["status"] == "pending" for r in st["tranches"])):
-                st["pending_dma_buy"] = 3       # 200일선 −3% → **다음 거래일 시가** 3차 체결(A-2)
+                st["pending_dma_buy"] = 3       # 200일선 −3% → 다음 거래일 시가 3차 체결(A-2)
             if rsi is not None and rsi >= 75.0 and "rsi" not in st["trim_done"]:
                 st["trim_done"].append("rsi")
                 st["pending_sell_fraction"] = PROFIT_TAKE_FRACTION
             if line200 is not None and float(bar["sadj_close"]) < line200 and st["trim_stage"] != "none":
                 st["pending_sell_fraction"] = 1.0
-        # 청산되지 않았으면 마지막 종가로 평가한다
+
+    for sid in ordered_sids:
+        st = states[sid]
         if st["exit"] is None:
             st["stop_price"] = max(st["stop_price"], st["initial_stop"])
-        states[sid] = st
 
     by_ticker: dict[str, dict] = {}
     for sid, st in sorted(states.items(), key=lambda kv: (kv[1]["opened_at"], kv[0])):
@@ -1163,6 +1571,7 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
 
     cash = initial_cash - sum(st["cash_spent"] for st in states.values()) + \
         sum(st["cash_returned"] for st in states.values())
+    blocked_entries = list(stop_reentry_blocked or [])
     health = {
         "positions_open": sum(1 for st in states.values() if st["exit"] is None),
         "tranches_filled": sum(1 for st in states.values() for row in st["tranches"]
@@ -1170,9 +1579,14 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
         "tranches_pending": sum(1 for st in states.values() for row in st["tranches"]
                                 if row["status"] == "pending"),
         "stop_count": sum(1 for st in states.values() if (st["exit"] or {}).get("reason") == "S5"),
-        "trim_count": sum(1 for event in events if event.get("event") == "profit_take"),
-        "stop_reentry_blocked_count": len(cancelled),
-        "blocked_reentries": cancelled[:50],
+        "trim_count": sum(1 for item in [*events, *replayed] if item.get("event") == "profit_take"),
+        # P-1: 재진입 차단 수는 **2·3차 취소 수와 분리**한다(예전에는 `len(cancelled)` 였다).
+        "stop_reentry_blocked_count": len(blocked_entries),
+        "tranche_cancel_count": len(cancelled),
+        "pending_exit_count": sum(1 for st in states.values()
+                                  if st.get("pending_exit") and st["exit"] is None),
+        "blocked_reentries": blocked_entries[:50],
+        "cancelled_tranches": cancelled[:50],
     }
     rows = position_event_rows(events, cancelled, as_of)
     if position_events_path is not None:
@@ -1248,6 +1662,10 @@ def append_position_events(rows: list[dict], path: str | Path = POSITION_EVENTS_
     """세션 이벤트를 append-only 로 남긴다 — 같은 `event_id` 는 다시 쓰지 않는다(멱등).
 
     같은 `event_id` 에 **다른 내용**이 오면 `ValueError` 로 막는다(원장 위조 변경 금지).
+
+    [v1.3.5] `recorded_for`(그 행을 만든 배치의 `as_of`)만 다른 재발행은 **같은 사건의 재계산**
+    이므로 조용히 건너뛴다. 예전에는 다음 날 재실행이 과거 사건을 다시 만들면(= `recorded_for`
+    만 달라짐) `ValueError` 로 배치 이벤트 기록이 통째로 실패했다.
     """
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -1258,7 +1676,11 @@ def append_position_events(rows: list[dict], path: str | Path = POSITION_EVENTS_
             key = str(row.get("event_id"))
             if key in existing:
                 if existing[key] != row:
-                    raise ValueError(f"position event {key} 가 다른 내용으로 이미 기록돼 있다 — append-only")
+                    old = {k: v for k, v in existing[key].items() if k != "recorded_for"}
+                    new = {k: v for k, v in row.items() if k != "recorded_for"}
+                    if old != new:
+                        raise ValueError(
+                            f"position event {key} 가 다른 내용으로 이미 기록돼 있다 — append-only")
                 continue
             f.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
             existing[key] = row
@@ -1279,41 +1701,31 @@ def _trim_qty(st: dict) -> float:
     return min(qty, basis / 3.0)
 
 
-def _sector_committed(states: dict[str, dict], exclude_sid: str, sector: str) -> float:
-    """같은 섹터 **다른 신호**의 커밋 원가 합계(달러) — 2·3차 섹터 상한의 분母.
-
-    봉 단위 재생에서는 다른 종목의 같은 시각 평가액을 확정할 수 없으므로, 체결 시점에 실제로
-    지출한 금액(`cash_spent`)을 보수적인 근사로 쓴다(시세 상승으로 평가액이 커지는 몫은 반영하지 않는다).
-    """
-    if not sector:
-        return 0.0
-    return float(sum(float(st.get("cash_spent") or 0.0) for sid, st in states.items()
-                     if sid != exclude_sid and (st.get("sector") or "") == sector))
-
-
 def _fill_tranche(st: dict, row: dict, sid: str, ticker: str, day: date, price: float,
-                  reason: str, cash_left: float, risk_per_trade: float, max_position: float,
-                  events: list[dict], states: dict[str, dict] | None = None,
-                  max_sector: float | None = None) -> float:
+                  reason: str, cash_left: float, equity: float, sector_value: float,
+                  cash_available: float, risk_per_trade: float, max_position: float,
+                  events: list[dict], max_sector: float | None = None) -> float:
     """분할 체결 직전 **계획 손실·종목 상한·섹터 상한** 재검증(3.8 · 4.12) → 통과하면 체결, 초과하면 축소/거절.
 
-    [v1.3.4 · P0-3]
-    - 수량 = **계획 비중 × 분할 비율** × 총자산 / 가격 — 예전에는 분할 비율만 곱해 2차가 계획보다
-      큰 수량을 요청했다(A-1). 포지션 예산(`plan_weight × equity_base − 이미 쓴 금액`)을 넘지 않는다.
-    - `max_sector` 가 주어지면 같은 섹터 다른 신호의 커밋 원가를 빼고 남은 여유까지만 체결한다.
+    [v1.3.5 · §14#2] 섹터 상한의 분모를 **그 시점 순자산·그 시점 섹터 평가액**으로 받는다. 예전에는
+    `cash_spent`(전 기간 지출 합, 미래 지출 포함)를 써서 종목 입력 순서에 따라 결과가 달라졌다.
 
-    Returns: 남은 현금(체결했으면 줄어든 값).
+    - 수량 = **계획 비중 × 분할 비율** × 그 시점 순자산 / 가격. 포지션 예산
+      (`plan_weight × 순자산 − 이미 쓴 금액`)과 **실제 가용 현금**을 넘지 않는다(A-1).
+
+    Returns: 체결 금액(달러). 체결하지 않았으면 `0.0`.
     """
     index = int(row["tranche"])
     price = float(price)
     if price <= 0:
-        return cash_left
+        return 0.0
     plan_weight = float(st.get("plan_weight") or 0.0)
-    equity = float(st["equity_base"])
+    equity = float(equity if equity and equity > 0 else st.get("equity_base") or 0.0)
+    if equity <= 0:
+        return 0.0
     want = float(row["weight"]) * plan_weight * equity / price
     budget_left = max(0.0, plan_weight * equity - float(st.get("cash_spent") or 0.0))
-    cash = min(float(cash_left), budget_left)
-    sector_value = _sector_committed(states or {}, sid, st.get("sector") or "")
+    cash = min(float(cash_left), budget_left, max(0.0, float(cash_available)))
     check = recheck_planned_loss(st["qty"], st["avg_cost"], st["stop_price"], want, price,
                                  equity, cash=cash,
                                  max_position=max_position, risk_per_trade=risk_per_trade,
@@ -1325,15 +1737,15 @@ def _fill_tranche(st: dict, row: dict, sid: str, ticker: str, day: date, price: 
         events.append({"date": day.isoformat(), "ticker": ticker, "signal_id": sid,
                        "event": "tranche_rejected", "tranche": index,
                        "reason": check.get("reason"), "capped_by": check.get("capped_by")})
-        return cash_left
+        return 0.0
     add = float(check["allowed_shares"])
     notional = add * price
-    if notional > cash_left:
-        return cash_left
-    cash_left -= notional
+    if notional <= 0 or notional > cash + 1e-9:
+        return 0.0
     st["avg_cost"] = (st["avg_cost"] * st["qty"] + add * price) / (st["qty"] + add)
     st["qty"] += add
     st["cash_spent"] += notional
+    st["cash_left"] = max(0.0, float(cash_left) - notional)
     row["status"] = "filled"
     row["filled_at"] = day.isoformat()
     st["last_event_ko"] = f"{index}차 분할 체결"
@@ -1342,7 +1754,7 @@ def _fill_tranche(st: dict, row: dict, sid: str, ticker: str, day: date, price: 
                    "weight": round(row["weight"], 6), "recheck": check["action"],
                    "qty_pct": round(notional / equity, 6), "reason": reason,
                    "fill_basis": "daily_ohlc_assumption"})
-    return cash_left
+    return notional
 
 
 def _stop_out(st: dict, sid: str, ticker: str, day: date, price: float, reason: str,
@@ -1358,14 +1770,24 @@ def _stop_out(st: dict, sid: str, ticker: str, day: date, price: float, reason: 
 
 
 def _cancel_pending(st: dict, sid: str, ticker: str, day: date, reason: str,
-                    cancelled: list[dict]) -> None:
+                    cancelled: list[dict], *, only: int | None = None,
+                    replay: bool = False, replayed: list[dict] | None = None) -> None:
+    """잔여 2·3차 주문 취소 — `only` 를 주면 그 회차만, `replay=True` 면 재생 로그로 보낸다.
+
+    재생(`replay`)은 **이미 기록된 취소**를 상태에만 다시 적용하는 경로다. 같은 `event_id` 에
+    `recorded_for` 만 다른 행이 다시 append 되면 append-only 검사에 걸리므로, 재생 행은
+    `replayed` 로 분리해 로그에 다시 쓰지 않는다.
+    """
+    rows = replayed if replay else cancelled
     for row in st["tranches"]:
         if row["status"] != "pending":
             continue
+        if only is not None and int(row["tranche"]) != int(only):
+            continue
         row["status"] = "cancelled"
         row["cancelled_by"] = reason
-        cancelled.append({"ticker": ticker, "signal_id": sid, "tranche": int(row["tranche"]),
-                          "cancelled_by": reason, "at": day.isoformat()})
+        rows.append({"ticker": ticker, "signal_id": sid, "tranche": int(row["tranche"]),
+                     "cancelled_by": reason, "at": day.isoformat()})
 
 
 def mark_positions(settlement: dict, panels: dict, as_of: date) -> dict:
@@ -1444,9 +1866,12 @@ def write_health(health: dict, as_of: date, *, path: str | Path = HEALTH_PATH,
         "status": status,
         "degraded": list(degraded or []),
         **{k: health.get(k) for k in ("positions_open", "tranches_filled", "tranches_pending",
-                                      "stop_count", "trim_count", "stop_reentry_blocked_count")},
+                                      "stop_count", "trim_count", "stop_reentry_blocked_count",
+                                      "tranche_cancel_count", "pending_exit_count")},
         "blocked_reentries": list(health.get("blocked_reentries") or []),
-        "note_ko": "손절 직후 재진입 차단 건수는 같은 봉에서 취소된 2·3차 주문 수다(3.5).",
+        "cancelled_tranches": list(health.get("cancelled_tranches") or []),
+        "note_ko": ("손절 후 재진입 차단 수는 손절이 난 종목·세션의 신규 1차 진입을 막은 건수이고,"
+                    " 같은 봉에서 취소된 2·3차 주문 수(tranche_cancel_count)와 따로 센다(3.5)."),
     }
     payload.update(extra or {})
     p = Path(path)

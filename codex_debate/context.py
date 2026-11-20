@@ -4,8 +4,12 @@
 `context_hash` 를 리포트에 박아 "어떤 입력으로 토론했는지"를 나중에 대조한다.
 
 - `context.json` 은 `data/debate/context/{TICKER}.json` 에 저장한다(**로컬 전용**, .gitignore).
-- 뉴스 본문은 앞 1,500자만 넣고, 본문 안의 프롬프트 인젝션 패턴을 탐지하면 그 기사를 **뺀다**
-  (`injection_detected: true` → 코드가 `NEWS_INJECTION` Veto 를 세운다).
+- 뉴스 본문은 앞 1,500자만 넣고, 본문·헤드라인·`source`·`url` 안의 프롬프트 인젝션을 탐지하면
+  그 기사를 **뺀다**(격리 메타데이터는 `article_id`·`content_sha256`·`reason_code` 만 — 원문·매체·URL 은
+  프롬프트에 되돌려 놓지 않는다). 뉴스 밖 필드(13F·업종·공시·자유 서술)에 침투했으면 격리로 지울 수
+  없으므로 `injection_integrity_compromised` 를 세우고, 오케스트레이터가 **Codex 를 부르기 전에** V11 로 끝낸다.
+- 숫자 검증용 표(`context_number_table`)는 수치를 **경로·값·단위**로 남긴다 — `PEG 3.5` 를 `350%` 로
+  바꿔 말하는 식의 단위 세탁을 막기 위해서다.
 - 13F 는 **45일 지연**을 필드로 명시한다(방향 판단 금지).
 """
 
@@ -57,24 +61,50 @@ MAX_8K_ITEMS = 5
 NORMALIZER_VERSION = "news-norm-v1"
 #: `context_hash` 에서 빼는 휘발성 필드 — 벽시게라서 해시에 넣으면 재개 키가 매번 달라진다.
 VOLATILE_KEYS: tuple[str, ...] = ("retrieved_at", "news_retrieved_at")
-#: 격리 사유 — 본문·헤드라인 모두 "기사 하나"만 빼면 되는 경우(2단계 격리).
+#: 격리 사유 — 기사 하나만 빼면 되는 경우(2단계 격리). 사유 코드는 리포트에 그대로 남는다.
 QUARANTINE_BODY = "prompt_injection_body"
 QUARANTINE_HEADLINE = "prompt_injection_headline"
-#: 판단 경로 무결성 훼손 — 뉴스 본문 밖 필드(공시·자유 텍스트)에 인젝션이 침투한 경우.
+QUARANTINE_SOURCE = "prompt_injection_source"
+QUARANTINE_URL = "prompt_injection_url"
+QUARANTINE_REASONS: tuple[str, ...] = (QUARANTINE_BODY, QUARANTINE_HEADLINE, QUARANTINE_SOURCE, QUARANTINE_URL)
+#: 판단 경로 무결성 훼손 — 뉴스 밖 필드(공시·13F·자유 텍스트)에 인젝션이 침투한 경우.
 INTEGRITY_NON_NEWS = "non_news_field"
+#: 프롬프트 경계 직전 스캔에서 제외하는 **장부 필드** — 모델에게 가지 않는 메타데이터다.
+#: (격리 목록·해시·사유 코드 자체를 다시 스캔하면 자기 참조로 오탐이 난다.)
+PROMPT_SCAN_SKIP_KEYS: tuple[str, ...] = (
+    "news", "excluded_news", "context_notes", "injection_detected", "injection_scope",
+    "injection_fields", "injection_integrity_compromised", "context_hash", "prompt_hash",
+)
 
 #: 프롬프트 인젝션 패턴 — 탐지되면 그 기사는 **판독 대상에서 제외**한다(§3.9.4 6).
+#: [감사 08] 정상 리서치·금융 기사에 흔한 표현("system prompt", "developer prompt",
+#: "You are now a shareholder of record")은 **잡지 않는다** — 실제 지시문 탈취·역할 덮어쓰기만 잡는다.
+#: 구분자는 공백뿐 아니라 `-`·`_`·`.` 도 허용한다(URL·슬러그로 위장한 지시문 대응).
 INJECTION_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("ignore_previous",
-     re.compile(r"ignore\s+(?:all\s+)?(?:the\s+)?(?:previous|prior|above|earlier)\s+"
-                r"(?:instructions?|prompts?|rules?|directions?)", re.IGNORECASE)),
+     re.compile(r"ignore[\s._\-]+(?:all[\s._\-]+)?(?:the[\s._\-]+)?"
+                r"(?:previous|prior|above|earlier)[\s._\-]+"
+                r"(?:instructions?|prompts?|rules?|directions?|directives?)", re.IGNORECASE)),
     ("disregard_previous",
-     re.compile(r"disregard\s+(?:all\s+)?(?:the\s+)?(?:previous|prior|above)\s+"
+     re.compile(r"disregard[\s._\-]+(?:all[\s._\-]+)?(?:the[\s._\-]+)?"
+                r"(?:previous|prior|above)[\s._\-]+"
                 r"(?:instructions?|prompts?|rules?)", re.IGNORECASE)),
-    ("system_prompt",
-     re.compile(r"(?:system|developer)\s+prompt|reveal\s+your\s+(?:instructions?|prompt)", re.IGNORECASE)),
+    ("reveal_system_prompt",
+     re.compile(r"(?:reveal|show|print|output|repeat|leak|dump|expose|tell\s+me)[\s._\-]+"
+                r"(?:me[\s._\-]+)?(?:your|the)[\s._\-]+"
+                r"(?:system[\s._\-]+|developer[\s._\-]+|hidden[\s._\-]+|initial[\s._\-]+)?"
+                r"(?:prompt|instructions?|system\s+message)", re.IGNORECASE)),
+    ("system_prompt_override",
+     re.compile(r"(?:new|updated|override|overwrite|forget|replace)[\s._\-]+"
+                r"(?:system|developer|original)[\s._\-]+(?:prompt|instructions?)", re.IGNORECASE)),
     ("role_override",
-     re.compile(r"you\s+are\s+now\s+(?:a|an|the)?\s*\w+|act\s+as\s+(?:an?\s+)?(?:admin|unrestricted)", re.IGNORECASE)),
+     re.compile(r"you[\s._\-]+are[\s._\-]+now[\s._\-]+(?:an?[\s._\-]+|the[\s._\-]+)?"
+                r"(?:ai|a\.i\.|assistant|model|chatbot|bot|system|developer|admin|administrator|"
+                r"unrestricted|jailbroken|dan)\b", re.IGNORECASE)),
+    ("act_as_admin",
+     re.compile(r"act[\s._\-]+as[\s._\-]+(?:an?[\s._\-]+)?"
+                r"(?:admin|administrator|root|superuser|unrestricted|developer[\s._\-]+mode)",
+                re.IGNORECASE)),
     ("korean_ignore",
      re.compile(r"(?:이전|앞|위|앞선)\s*(?:의\s*)?(?:지시|명령|지침|프롬프트)(?:를|을|는|은)?\s*"
                 r"(?:무시|잊|따르지\s*마)")),
@@ -127,12 +157,18 @@ def detect_prompt_injection(text: str | None) -> list[str]:
     return hits
 
 
-def content_hash(text: str | None) -> str:
-    """기사 버전 해시 — 정규화된 본문 발췌의 sha256(`sha256:…`).
+def content_sha256(text: str | None) -> str:
+    """기사 버전 영수증 — 정규화된 본문 발췌의 sha256(`sha256:…`).
 
-    같은 기사라도 본문이 바뀌면 해시가 달라진다. 재판독·재개 판단의 근거다(감사 P1-1).
+    같은 기사라도 본문이 바뀌면 해시가 달라진다. 재판독·재개 판단과 "그때 읽은 그 기사인가"의
+    대조 근거다(감사 P1-1 · 08).
     """
     return "sha256:" + hashlib.sha256(normalize_text(text or "").encode("utf-8")).hexdigest()
+
+
+def content_hash(text: str | None) -> str:
+    """`content_sha256` 의 옛 이름 — 근거 목록(`evidence[]`)이 쓰는 필드명과 호환한다."""
+    return content_sha256(text)
 
 
 def _strip_volatile(node: Any) -> Any:
@@ -615,16 +651,23 @@ def build_context(
             body = fetcher(str(item.get("url") or "")) or ""
         body = excerpt_body(body)
         headline = str(item.get("headline") or item.get("title") or "")
+        source = str(item.get("source") or "")
+        url = str(item.get("url") or "")
         # V11 2단계: 문제 **기사 하나만** 격리하고 나머지 유효 기사로 판단을 계속한다.
-        # 격리 목록(ID·사유·패턴)은 `excluded_news` 에 남겨 "왜 뺐는지"를 감사할 수 있게 한다.
-        hits = detect_prompt_injection(body)
-        headline_hits = detect_prompt_injection(headline)
-        if hits or headline_hits:
+        # [감사 08] 본문·헤드라인만 보면 부족하다 — `source`·`url` 도 프롬프트에 들어가는 자유
+        # 문자열이므로 같은 경계에서 스캔한다(슬러그로 위장한 지시문 대응).
+        reason_code = None
+        for scope, text in ((QUARANTINE_BODY, body), (QUARANTINE_HEADLINE, headline),
+                            (QUARANTINE_SOURCE, source), (QUARANTINE_URL, url)):
+            if detect_prompt_injection(text):
+                reason_code = scope
+                break
+        if reason_code is not None:
             injection_detected = True
-            excluded.append({"id": nid, "reason": QUARANTINE_BODY if hits else QUARANTINE_HEADLINE,
-                             "patterns": sorted(set(hits) | set(headline_hits)),
-                             "source": item.get("source"), "url": item.get("url"),
-                             "content_hash": content_hash(body or headline)})
+            # 격리 메타데이터에는 **원문·source·url 을 남기지 않는다** — 기사 ID·본문 해시·사유 코드만.
+            excluded.append({"article_id": nid,
+                             "content_sha256": content_sha256(body or headline or url),
+                             "reason_code": reason_code})
             continue
         news_list.append({
             "id": nid,
@@ -634,8 +677,9 @@ def build_context(
             "source": item.get("source"),
             "body_excerpt_1500": body,
             "body_available": bool(body),
-            # 기사 **버전** — 무엇을 읽었는지 나중에 대조할 수 있게(감사 P1-1).
-            "content_hash": content_hash(body) if body else content_hash(headline),
+            # 기사 **버전 영수증** — 무엇을 읽었는지 나중에 대조할 수 있게(감사 P1-1 · 08).
+            "content_sha256": content_sha256(body if body else headline),
+            "content_hash": content_sha256(body if body else headline),
             "retrieved_at": item.get("retrieved_at") or retrieved_at,
             "normalizer_version": item.get("normalizer_version") or NORMALIZER_VERSION,
         })
@@ -659,23 +703,11 @@ def build_context(
     eights = eights[:MAX_8K_ITEMS]
 
     code_vetoes = sorted({name for name in (_veto_name(v) for v in signal.get("veto") or []) if name})
-    # 2단계 격리의 **두 번째 단계**: 기사를 빼도 남는 자리(공시 항목·자유 텍스트)에 지시문이 있으면
-    # 격리만으로는 무결성을 보장할 수 없다 → 이 종목은 `NEWS_INJECTION`(V11) 으로 차단한다.
-    non_news_hits = []
-    if candidates:
-        non_news_hits.extend(scan_fields(candidates, skip_keys=("url", "accession", "form", "form_type"),
-                                         path="filings"))
-    for key in ("thesis_ko",):
-        value = signal.get(key)
-        if isinstance(value, str):
-            hits = detect_prompt_injection(value)
-            if hits:
-                non_news_hits.append({"field": key, "patterns": hits})
-    if non_news_hits:
-        injection_detected = True
-    injection_scope = (INTEGRITY_NON_NEWS if non_news_hits
-                       else QUARANTINE_BODY if any(item.get("reason") == QUARANTINE_BODY for item in excluded)
-                       else QUARANTINE_HEADLINE if excluded else None)
+    # 2단계 격리의 **두 번째 단계**: 기사를 빼도 남는 자리(공시 항목·13F·업종·자유 텍스트)에
+    # 지시문이 있으면 격리만으로는 무결성을 보장할 수 없다 → 이 종목은 `NEWS_INJECTION`(V11) 으로 차단한다.
+    # 실제 스캔은 컨텍스트를 다 만든 뒤 **프롬프트 경계 직전**에 한 번만 한다(아래).
+    non_news_hits: list[dict] = []
+    injection_scope = next((item.get("reason_code") for item in excluded), None)
     regime = quant_signals.get("regime") or {}
     allowed_prices = _allowed_prices(signal, valuation_in, extra_prices)
     context = {
@@ -743,11 +775,11 @@ def build_context(
         "news_normalizer_version": NORMALIZER_VERSION,
         "filings_8k": eights,
         "injection_detected": injection_detected,
-        # 격리 목록·범위 — 리포트에 그대로 옮길 수 있는 형태(ID·사유·패턴·출처).
+        # 격리 목록·범위 — 원문·source·url 없이 **기사 ID·본문 해시·사유 코드**만.
         "excluded_news": excluded,
         "injection_scope": injection_scope,
-        "injection_integrity_compromised": bool(non_news_hits),
-        "injection_fields": non_news_hits[:5],
+        "injection_integrity_compromised": False,
+        "injection_fields": [],
         # ── 허용값·제약
         "allowed": {
             "prices": allowed_prices,
@@ -766,6 +798,33 @@ def build_context(
         context["regime_verified"] = False
     else:
         context["regime_verified"] = bool(regime.get("verified"))
+    # [감사 08] V11 스캔 경계를 **프롬프트에 실리는 전 필드**로 넓힌다 — news 본문·헤드라인·source·url 은
+    # 기사 단위로 이미 격리했고, 여기서는 13F 기관명·업종·median_method·8-K url·thesis_ko 처럼 나머지
+    # 자유 문자열을 본다. 컨텍스트로 직렬화되기 **전** 입력(공시 원본 행의 설명 필드 등)도 같이 본다.
+    # 장부 필드(격리 목록·해시·사유 코드)는 자기 참조를 피해 건너뛴다.
+    scan_targets: list[tuple[str, Any]] = [
+        ("", {k: v for k, v in context.items() if k not in PROMPT_SCAN_SKIP_KEYS}),
+        ("signal", {k: v for k, v in signal.items() if k != "news"}),
+    ]
+    if candidates:
+        scan_targets.append(("filings", candidates))
+    if context.get("holdings_13f"):
+        scan_targets.append(("holdings_13f", context["holdings_13f"]))
+    seen_hits: set[tuple[str, tuple[str, ...]]] = set()
+    for prefix, node in scan_targets:
+        for hit in scan_fields(node, skip_keys=(), path=prefix):
+            key = (str(hit.get("field")), tuple(hit.get("patterns") or []))
+            if key in seen_hits:
+                continue
+            seen_hits.add(key)
+            non_news_hits.append(hit)
+    if non_news_hits:
+        injection_detected = True
+        injection_scope = INTEGRITY_NON_NEWS
+        context["injection_detected"] = True
+        context["injection_scope"] = INTEGRITY_NON_NEWS
+        context["injection_integrity_compromised"] = True
+        context["injection_fields"] = non_news_hits[:5]
     context["context_notes"] = {
         "news_excluded": excluded,
         "units": "비율은 소수(0.21 = 21%), 거시(hy_oas·real_rate·t10y2y)는 퍼센트",
@@ -797,48 +856,140 @@ def save_context(context: dict, directory: str | Path = DEFAULT_CONTEXT_DIR) -> 
 
 
 def context_numbers(context: dict) -> set[float]:
-    """서술 검증에 쓰는 '허용 숫자' 집합 — context 의 모든 수치와 그 표기 변형."""
+    """서술 검증에 쓰는 '허용 숫자' 집합 — **필드별 단위를 알고** 만든 표기 변형의 합집합.
+
+    예전에는 모든 수치를 한 집합에 섮고 `±`·`×100` 변형을 전부 펼쳤다. 그러면 `PEG 3.5`
+    하나로 `-3.5`·`350`·`4` 까지 통과했다(감사 08-d). 지금은 **각 필드의 단위**가
+    허용하는 변형만 만든다(`field_number_forms`).
+    """
     found: set[float] = set()
-
-    def walk(node: Any, parent: str = "") -> None:
-        if isinstance(node, dict):
-            for key, value in node.items():
-                if key in ("context_notes", "news", "body_excerpt_1500", "headline", "thesis_ko", "reason"):
-                    continue
-                walk(value, key)
-        elif isinstance(node, list):
-            for value in node:
-                walk(value, parent)
-        elif isinstance(node, str):
-            return
-        else:
-            number = _num(node)
-            if number is not None:
-                found.update(number_forms(number))
-
-    walk(context)
+    for slot in context_number_table(context).values():
+        found.update(field_number_forms(slot["value"], slot["unit"]))
     return found
 
 
+#: 필드별 단위 — 단위가 다르면 허용 변형이 다르다(비율만 %로 환산, 배수는 환산 금지).
+#: `price`·`currency`·`multiple`·`score`·`count` 는 표기 그대로(반올림 제시만), `ratio` 는 ×100,
+#: `percent` 는 ÷100 도 허용한다. `_signed` 는 부호를 뒤집는 서술(할인/프리미엄)을 허용한다.
+NUMBER_FIELD_UNITS: dict[str, str] = {
+    # 가격·통화
+    "price": "price", "dma50": "price", "dma200": "price", "atr14": "price",
+    "iv_low": "price", "iv_median": "price", "iv_high": "price",
+    "dcf_bear": "price", "dcf_base": "price", "dcf_bull": "price", "epv": "price", "graham": "price",
+    "lo": "price", "hi": "price", "base_price": "price", "invalidation_price": "price",
+    "prices": "price",
+    # 비율(소수)
+    "margin": "ratio_signed", "pct_b": "ratio", "atr_pct": "ratio",
+    "roic": "ratio", "roic_spread": "ratio_signed", "fcf_margin": "ratio",
+    "dilution_3y": "ratio_signed", "roe_stdev": "ratio",
+    # 배수·성장
+    "peg": "multiple", "pegy": "multiple", "net_debt_ebitda": "multiple",
+    "interest_cover": "multiple", "fcf_to_ni": "multiple", "vol20": "multiple",
+    "growth": "score", "rev_cagr5": "ratio_signed", "eps_cagr5": "ratio_signed",
+    # 점수(0~100)
+    "q": "score", "paper_grade": "score", "entry_score": "score", "regime_score": "score",
+    "structural_risk": "score",
+    # 거시(퍼센트)
+    "real_rate": "percent_signed", "t10y2y": "percent_signed", "hy_oas": "percent",
+    "dxy_3m": "percent_signed", "vix": "multiple",
+    # 개수·기간
+    "lag_days": "count", "news_window_hours": "count", "max_quote_chars": "count",
+    "delta_shares_pct": "percent_signed", "period_end" : "count",
+}
+#: 숫자로 세지 않는 키 — 원문 발췌·서술은 숫자 검증 대상이 아니다.
+NUMBER_SKIP_KEYS: tuple[str, ...] = ("context_notes", "news", "body_excerpt_1500", "headline",
+                                    "thesis_ko", "reason", "injection_fields", "excluded_news",
+                                    "content_sha256", "content_hash", "context_hash", "prompt_hash")
+
+
+def field_number_forms(value: float, unit: str = "unknown") -> set[float]:
+    """한 필드 값의 **허용 표기 변형** — 단위가 바뀔 수 있는 것만 바꾼다.
+
+    - 모든 단위: 값 그대로 + 소수 1·2자리 반올림 제시
+    - `ratio*`: ×100(퍼센트 표기) — `0.15` → `15`
+    - `percent*`: ÷100 — `2.0` → `0.02`
+    - `_signed`: 부호 반전 — 손실을 −로 쓰는 서술(그 외 단위는 부호를 뒤집지 않는다)
+    - 소수 0자리 반올림은 **퍼센트·점수 표기에서 자릿수가 10 이상일 때만** 허용한다.
+      그래야 `3.5`(PEG)이 `4`로, `0.35`(비율)가 `0`으로 통과하지 않는다.
+    """
+    v = float(value)
+    unit = str(unit or "unknown")
+    forms: set[float] = {v, round(v, 1), round(v, 2)}
+    scaled: float | None = None
+    if unit.startswith("ratio"):
+        scaled = v * 100.0
+    elif unit.startswith("percent"):
+        scaled = v / 100.0
+    if scaled is not None:
+        forms |= {scaled, round(scaled, 1), round(scaled, 2)}
+        if abs(scaled) >= 10:
+            forms.add(round(scaled, 0))
+    if unit.startswith("score") and abs(v) >= 10:
+        forms.add(round(v, 0))
+    if unit.endswith("_signed") or v < 0:
+        forms |= {-f for f in list(forms)}
+    return {f for f in forms if f == f and abs(f) != float("inf")}
+
+
 def number_forms(value: float) -> set[float]:
-    """한 수치의 표기 변형 — 반올림 자리·퍼센트 표기(0.2176 → 21.76 → 22)."""
-    base = abs(float(value))
-    forms: set[float] = {base, -base}
-    for digits in range(0, 5):
-        forms.add(round(base, digits))
-        forms.add(round(-base, digits))
-    for digits in range(0, 3):
-        forms.add(round(base * 100.0, digits))
-        forms.add(round(-base * 100.0, digits))
-    return forms
+    """한 수치의 표기 변형 — 단위를 모르는 호출자용 **보수적 기본값**(`unknown`)."""
+    return field_number_forms(value, "unknown")
+
+
+def context_number_table(context: dict) -> dict[str, dict]:
+    """컨텍스트의 수치를 **경로 → {값, 단위}** 로 구조화한다(숫자 검증의 출처 표).
+
+    경로를 남기는 이유는 검증이 "어느 필드의 숫자인가"를 물을 수 있게 하기 위해서다 — 예컨대
+    `round2` 의 `quote_or_number_ref` 가 `peg` 라고 하면 그 필드의 허용 변형만 본다.
+    """
+    table: dict[str, dict] = {}
+
+    def walk(node: Any, path: str) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in NUMBER_SKIP_KEYS:
+                    continue
+                walk(value, f"{path}.{key}" if path else str(key))
+            return
+        if isinstance(node, (list, tuple)):
+            for index, value in enumerate(node):
+                walk(value, f"{path}[{index}]")
+            return
+        if isinstance(node, str) or isinstance(node, bool):
+            return
+        number = _num(node)
+        if number is None:
+            return
+        leaf = path.rsplit(".", 1)[-1]
+        leaf = leaf.split("[", 1)[0]
+        table[path or "$"] = {"value": number, "unit": NUMBER_FIELD_UNITS.get(leaf, "unknown")}
+
+    walk(context, "")
+    return table
+
+
+def field_numbers(context: dict, field: str) -> set[float]:
+    """한 **필드 이름**의 허용 숫자 집합 — 이름이 같으면 단위도 같다고 본다."""
+    name = str(field or "").strip()
+    if not name:
+        return set()
+    found: set[float] = set()
+    for path, slot in context_number_table(context).items():
+        leaf = path.rsplit(".", 1)[-1].split("[", 1)[0]
+        if leaf == name:
+            found.update(field_number_forms(slot["value"], slot["unit"]))
+    return found
 
 
 __all__ = [
     "ALL_SKILLS", "BLOCKING_VETO_CODES", "BODY_EXCERPT_CHARS", "DEFAULT_CONTEXT_DIR", "GRADE_RANK",
-    "GRADES", "INJECTION_PATTERNS", "INTENTS", "INVESTOR_SKILLS", "MAX_QUOTE_CHARS", "NEWS_WINDOW_HOURS",
-    "REPO_ROOT", "VETO_CODES", "build_context", "context_hash", "context_numbers", "detect_prompt_injection",
-    "excerpt_body", "fetch_article_body", "holdings_for_ticker", "load_prompt", "load_schema", "load_skill",
+    "GRADES", "INJECTION_PATTERNS", "INTENTS", "INTEGRITY_NON_NEWS", "INVESTOR_SKILLS", "MAX_QUOTE_CHARS",
+    "NEWS_WINDOW_HOURS", "NUMBER_FIELD_UNITS", "PROMPT_SCAN_SKIP_KEYS", "QUARANTINE_BODY",
+    "QUARANTINE_HEADLINE", "QUARANTINE_REASONS", "QUARANTINE_SOURCE", "QUARANTINE_URL", "REPO_ROOT",
+    "VETO_CODES", "build_context", "content_hash", "content_sha256", "context_hash", "context_number_table",
+    "context_numbers", "detect_prompt_injection", "excerpt_body", "fetch_article_body", "field_numbers",
+    "field_number_forms", "holdings_for_ticker", "load_prompt", "load_schema", "load_skill",
     "load_snapshot_inputs", "news_id_for", "normalize_text", "number_forms", "parse_front_matter",
-    "prompt_hash", "quote_in_body", "quote_sha256", "save_context", "schema_path", "select_targets", "skill_meta",
-    "to_strict_schema",
+    "prompt_hash", "quote_in_body", "quote_sha256", "save_context", "scan_fields", "schema_path",
+    "select_targets", "skill_meta", "to_strict_schema",
 ]

@@ -137,11 +137,13 @@ def publish_record(*, signal_id: str, ticker: str, type: str, grade: str, entry_
         "snapshot_id": snapshot_id,
         "code_commit": code_commit,
     }
+    # [v1.3.5 · 추가 14#3] 회차(`revision`)는 **모든 레코드**에 정수로 남긴다. 예전에는 `inputs_hash` 가
+    #   있는 레코드에만 있어서 `-001` 은 키가 없고(`None`) 소비자가 회차를 믿을 수 없었다.
+    record["revision"] = 1
+    record["supersedes"] = None
     if inputs_hash:
         record["inputs_hash"] = str(inputs_hash)
-        record["supersedes"] = None
-        record["revision"] = 1
-    assert_publish_record(record)
+    assert_publish_record(record, require_revision=True)
     return record
 
 
@@ -150,8 +152,12 @@ def _iso(value) -> str:
     return ts.isoformat().replace("+00:00", "Z")
 
 
-def assert_publish_record(record: dict) -> None:
-    """발행 레코드 규칙 — 체결가·손절가·행동이 미리 들어 있으면 실패(2.2.2, 4.7.1)."""
+def assert_publish_record(record: dict, *, require_revision: bool = False) -> None:
+    """발행 레코드 규칙 — 체결가·손절가·행동이 미리 들어 있으면 실패(2.2.2, 4.7.1).
+
+    `require_revision=True` 면 `revision` 정수 키를 **요구**한다(신규 발행 경로). 기존 원장 행에는
+    그 키가 없다(구 계약) — `validate_outputs` 처럼 과거 파일을 검사하는 경로는 요구하지 않는다.
+    """
     problems: list[str] = []
     if record.get("quant_intent") not in INTENTS:
         problems.append(f"quant_intent={record.get('quant_intent')!r}")
@@ -170,6 +176,12 @@ def assert_publish_record(record: dict) -> None:
     for key in ("fill_price", "shares", "avg_cost", "slippage_bps"):
         if key in record:
             problems.append(f"발행 레코드에 체결 필드 {key} 가 있다")
+    revision = record.get("revision")
+    if revision is None:
+        if require_revision:
+            problems.append("revision 키가 없다 — 회차는 모든 레코드에 정수로 기록한다")
+    elif not isinstance(revision, int) or isinstance(revision, bool) or revision < 1:
+        problems.append(f"revision 은 1 이상의 정수여야 한다: {revision!r}")
     try:
         check_three_times(record["data_cutoff_at"], record["signal_published_at"], record["order_cutoff_at"])
     except (RecordError, KeyError) as exc:
@@ -444,6 +456,82 @@ def superseding_release(existing: list[dict], *, ticker: str, as_of: str, type: 
     record["revision"] = int(release["revision"])
     record["supersedes"] = release["supersedes"]
     record["release_kind"] = kind
+    return record
+
+
+def make_blocked_supersede_record(existing: list[dict], *,
+                                  blocked: dict | None = None, prior: dict | None = None,
+                                  times: dict | None = None,
+                                  ticker: str | None = None, as_of: str | None = None,
+                                  data_cutoff_at=None, signal_published_at=None,
+                                  order_cutoff_at=None, target_session: str | None = None,
+                                  blocked_reason: str | None = None, reason_ko: str | None = None,
+                                  grade: str | None = None, snapshot_id: str = "",
+                                  params_version: str = "params_v001", code_commit: str = "",
+                                  inputs_hash: str | None = None,
+                                  run_request_id: str | None = None,
+                                  generated_price: float | None = None,
+                                  target_band: dict | None = None,
+                                  mode: str | None = None) -> dict:
+    """[v1.3.5 · 치명 01] 차단(BLOCKED)을 **대체 전용(supersede_only) `no_action` 레코드**로 남긴다.
+
+    아침 BUY 가 같은 날 차단되면 지금까지는 차단이 발행 레코드를 만들지 않아 이전 BUY 가 원장의
+    최신 판단으로 남았고, 다음 세션 시가에 그대로 체결됐다(감사 재현 01-(d)). 이 헬퍼는
+    `quant_intent="no_action"` 인 최소 레코드를 만들어 `supersedes` 로 직전 회차를 가리키게 하고,
+    `blocked=True`·`blocked_reason`·`supersede_only=True` 를 덧붙인다. 발행 레코드는 여전히 불변이다.
+
+    체결 경로는 `quant_intent` 가 `pending_buy` 가 아니므로 이 레코드를 사지 않고, 정산은
+    `supersedes` 계보로 이전 BUY 를 취소한다(`live.settle`).
+
+    호출 형태 두 가지를 받는다 — ① 실행기(`run_daily`) 형태:
+    `make_blocked_supersede_record(records, blocked=<payload blocker>, prior=<살아 있는 BUY>,
+    times=three_times(...), as_of=..., inputs_hash=..., mode=...)`
+    ② 직접 지정: `ticker`·`as_of`·세 시각을 하나씩 넘긴다.
+    """
+    blocked = blocked or {}
+    prior = prior or {}
+    times = times or {}
+    ticker = str(ticker or blocked.get("ticker") or prior.get("ticker") or "")
+    if not ticker:
+        raise RecordError("make_blocked_supersede_record: ticker 를 알 수 없다")
+    as_of = str(as_of or prior.get("as_of") or "")[:10]
+    data_cutoff_at = data_cutoff_at or times.get("data_cutoff_at") or prior.get("data_cutoff_at")
+    signal_published_at = (signal_published_at or times.get("signal_published_at")
+                           or prior.get("signal_published_at"))
+    order_cutoff_at = order_cutoff_at or times.get("order_cutoff_at") or prior.get("order_cutoff_at")
+    target_session = (target_session or times.get("target_session")
+                      or prior.get("target_session"))
+    if not (data_cutoff_at and signal_published_at and order_cutoff_at and as_of):
+        raise RecordError("make_blocked_supersede_record: 세 시각과 as_of 가 필요하다")
+    reason = blocked_reason if blocked_reason is not None else blocked.get("reason")
+    pool = list(existing or [])
+    if prior and prior.get("signal_id") and all(
+            str(r.get("signal_id")) != str(prior.get("signal_id")) for r in pool):
+        pool.append(prior)
+    record = superseding_release(
+        pool, ticker=ticker, as_of=as_of, type="BLOCKED",
+        data_cutoff_at=data_cutoff_at, signal_published_at=signal_published_at,
+        order_cutoff_at=order_cutoff_at, target_session=target_session,
+        grade=str(grade or blocked.get("grade") or "NONE"),
+        reason_ko=reason_ko or blocked.get("message_ko") or "차단 — 신규 진입 없음",
+        snapshot_id=snapshot_id or str(prior.get("snapshot_id") or ""),
+        params_version=params_version or str(prior.get("params_version") or "params_v001"),
+        code_commit=code_commit or str(prior.get("code_commit") or ""),
+        inputs_hash=inputs_hash, run_request_id=run_request_id,
+        generated_price=generated_price, target_band=target_band,
+    )
+    if prior.get("signal_id"):
+        # 차단이 대체할 대상은 **그 아직 살아 있는 BUY** 다(다른 회차를 가리키지 않게 고정).
+        record["supersedes"] = str(prior.get("signal_id"))
+        base, _seq = split_signal_id(str(record.get("signal_id")))
+        record["revision"] = max(int(record.get("revision") or 1),
+                                 split_signal_id(str(prior.get("signal_id")))[1] + 1)
+        record["signal_id"] = f"{base}-{int(record['revision']):03d}"
+    record["blocked"] = True
+    record["blocked_reason"] = str(reason or "BLOCKED")
+    record["blocked_codes"] = [str(code) for code in (blocked.get("codes") or []) if code]
+    record["supersede_only"] = True
+    record["release_kind"] = "BLOCKED"
     return record
 
 

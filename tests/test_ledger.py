@@ -290,3 +290,51 @@ def test_weighted_agreement_and_summary():
 def test_summary_with_no_signals_is_not_failure():
     summary = summarize_grades([], "6m")
     assert summary["agreement_mean"] is None and summary["win_rate"] is None
+
+
+# ── 발행 회차 계약 (v1.3.5 · 감사 §10③ · 추가 14#3) ───────────────────────────
+def test_revision_is_an_integer_on_every_release():
+    """`-001` 을 포함한 모든 발행 레코드에 `revision` 이 **정수**로 있다.
+
+    예전에는 `inputs_hash` 가 있는 레코드에만 이 키가 있어서 `-001` 은 `None` 이었고, 소비자가
+    `revision` 을 믿으면 회차를 잃었다(감사 추가 14#3).
+    """
+    r = record()
+    assert r["revision"] == 1 and isinstance(r["revision"], int)
+    assert r["supersedes"] is None
+    with_hash = record(inputs_hash="hash-A")
+    assert with_hash["revision"] == 1
+    assert_publish_record(r, require_revision=True)      # 신규 경로는 회차 키를 요구한다
+    legacy = {k: v for k, v in r.items() if k != "revision"}
+    assert_publish_record(legacy)                        # 구 원장 행 검사는 깨지지 않는다
+    with pytest.raises(RecordError):
+        assert_publish_record(legacy, require_revision=True)
+    bad = dict(r, revision="2")
+    with pytest.raises(RecordError):
+        assert_publish_record(bad)
+
+
+def test_blocked_supersede_record_is_a_no_action_release():
+    """차단은 **대체 전용 `no_action` 레코드**로 남아 이전 BUY 를 계보에서 밀어낸다(치명 01)."""
+    from engine.ledger.record import make_blocked_supersede_record, superseded_ids
+
+    buy = record()
+    blocked = make_blocked_supersede_record(
+        [buy], blocked={"ticker": buy["ticker"], "reason": "V06", "codes": ["V06"]}, prior=buy,
+        times={"data_cutoff_at": CUT, "signal_published_at": "2026-05-14T23:40:00Z",
+               "order_cutoff_at": OC, "target_session": "2026-05-15"})
+    assert blocked["quant_intent"] == "no_action"
+    assert blocked["type"] == "BLOCKED" and blocked["release_kind"] == "BLOCKED"
+    assert blocked["blocked"] is True and blocked["supersede_only"] is True
+    assert blocked["blocked_reason"] == "V06" and blocked["blocked_codes"] == ["V06"]
+    assert blocked["supersedes"] == buy["signal_id"]
+    assert blocked["revision"] == buy["revision"] + 1
+    assert buy["signal_id"] in superseded_ids([buy, blocked])
+    assert_publish_record(blocked)
+    # 다른 종목의 BUY 를 대체하지 않는다
+    other = record(signal_id="2026-05-15-AAPL-BUY-001", ticker="AAPL")
+    foreign = make_blocked_supersede_record(
+        [other], blocked={"ticker": buy["ticker"], "reason": "V01"}, prior=buy,
+        times={"data_cutoff_at": CUT, "signal_published_at": "2026-05-14T23:40:00Z",
+               "order_cutoff_at": OC, "target_session": "2026-05-15"})
+    assert foreign["ticker"] == buy["ticker"] and foreign["supersedes"] == buy["signal_id"]
