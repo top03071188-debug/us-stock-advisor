@@ -141,6 +141,10 @@ function section(title, children, extra) {
   return el("section", { class: "card" }, [el("h2", { text: title }, extra || null), ...[].concat(children)]);
 }
 
+function subBlock(title, children) {
+  return el("div", { class: "sub" }, [el("h3", { text: title }), ...[].concat(children)]);
+}
+
 function emptyState(text) {
   return el("p", { class: "empty", text });
 }
@@ -605,13 +609,13 @@ function renderStrategy(summary, portfolio) {
   const accuracy = (summary && summary.accuracy) || {};
   const strategy = (summary && summary.strategy) || {};
   const p = portfolio || {};
-  host.append(section("신호 정확도 (방향이 맞았나)", [
+  host.append(subBlock("신호 정확도 (방향이 맞았나)", [
     metricRow("3개월 Agreement", fmtNum(accuracy.agreement_3m, 1), "A/B/C 가중 평균(4.2.4)"),
     metricRow("IC (점수-수익률 순위상관)", fmtNum(accuracy.ic_3m, 2), "3건 미만이면 계산하지 않음"),
     metricRow("승률", fmtPct(accuracy.win_rate), "참고치 55% — 게이트 아님"),
     metricRow("평균 3개월 초과수익", fmtSignedPct(accuracy.mean_excess), accuracy.note_ko || "SPY 대비"),
   ]));
-  host.append(section("전략 (모의 계좌)", [
+  host.append(subBlock("전략 (모의 계좌)", [
     metricRow("자산 지수(초기=1)", fmtNum(pick(p.equity_index, strategy.equity_index), 4), null),
     metricRow("현금 비중", fmtPct(pick(p.cash_pct, strategy.cash_pct)), null),
     metricRow("투자 비중", fmtPct(pick(p.invested_pct, strategy.invested_pct)), "평균 노출도"),
