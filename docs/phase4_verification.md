@@ -100,7 +100,7 @@ live.write_health(..., extra={"order_cancellations_count": len(order_cancellatio
 
 ```text
 $ .venv/bin/python -m pytest -m "not network"
-624 passed, 4 deselected in 33.75s
+625 passed, 4 deselected in 33.36s
 
 $ .venv/bin/python -m ruff check .
 All checks passed!
@@ -122,7 +122,8 @@ $ .venv/bin/python scripts/check_commit_scope.py --staged
 scope ok  (아래 §5)
 ```
 
-테스트 구성(Phase 4 관련 170건):
+테스트 구성 — 기준선(감사 수정 시점) **618** → 이번 **625**(신규 7: 배선 6 + 커밋 가드 스키마 예외 1).
+Phase 4 관련 170건:
 
 | 파일 | 건수 | 검사 |
 |---|---|---|
@@ -166,22 +167,37 @@ scope ok  (아래 §5)
 `.github/workflows/*` 는 수정·추가·스테이징 **0건**(토큰 권한 없음). `codex_debate/workflows/debate-validate.yml` 은
 **템플릿**(사람이 GitHub 웹에서 추가)이며, PR 전체 경로를 검사하고 `.github/workflows/`·`config/params*` 변경을 가드한다.
 
+## 4.5 커밋 가드의 스키마 예외(한 곳)
+
+`codex_debate/schemas/round1.schema.json` 은 1R 스킬 출력의 `quote` 필드를 **선언**해야 한다(원문은 검증 뒤
+`quote_sha256` 으로 바뀐다). 기존 `UNIT_CONTAINERS`(SEC XBRL 의 `units.shares`)와 같은 원리로,
+**`*.schema.json` 파일의 `properties`/`required` 아래 이름만** 구조 선언으로 인정하도록 가드를 좁혔다.
+같은 키라도 데이터 파일(`.schema.json` 이 아닌 `.json`)에서는 **계속 차단**되고, 스키마 파일이라도 값 안의
+이메일·토큰 패턴은 계속 걸린다 — `deny_keys`·`deny_patterns` 목록은 **한 항목도 바꾸지 않았다**
+(`test_schema_file_declaration_is_structure_not_data`).
+
 ---
 
 ## 5. 커밋·CI·배포
 
-- 커밋: `__COMMIT__` — `feat(phase4): codex 6-skill debate, dual A/B ledger, 2nd/3rd tranche & audit fixes`
+- 커밋: `9de2c88` — `feat(phase4): codex 6-skill debate, dual A/B ledger, 2nd/3rd tranche & audit fixes`
+  (50 files, +9163/−290)
 - 스테이징: 실제 변경·신규 파일만(`out/`·`web/data/`·`data/` 미포함 — `.gitignore` 확인).
-  `scripts/check_commit_scope.py --staged` → **통과**.
-- `ci` / `deploy` 실행 결과는 푸시 후 이 절에 기록한다(아래 표).
+  `scripts/check_commit_scope.py --staged` → **`scope ok (50 files)`**.
+- 브랜치: `main`, `5381f9c..9de2c88` 푸시.
 
-| 실행 | run ID | 결론 |
-|---|---|---|
-| `ci` | `__CI_ID__` | `__CI_STATE__` |
-| `deploy` | `__DEPLOY_ID__` | `__DEPLOY_STATE__` |
+| 실행 | run ID | 결론 | 소요 |
+|---|---|---|---|
+| `ci` | [44695897072](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44695897072) | **success** | 1m11s |
+| `deploy` | [44695896967](https://github.com/top03071188-debug/us-stock-advisor/actions/runs/44695896967) | **success** | 59s |
+
+`ci` 스텝 전부 success: Install(locked) · Lint(`All checks passed!`) · Unit & look-ahead tests(offline) ·
+Commit scope guard(`scope ok (4 files)` — `ci.yml` 이 아직 4경로만 검사한다, P1-2 잔여) ·
+Public data build guard(34파일 생성, 금지 키 0건). `deploy` 는 `build` → `deploy` 둘 다 success(공개 빌드 34파일, `signals_status: normal`).
 
 > `gh workflow run daily-postclose.yml` 은 **아직 실행하지 않았다** — `.github/workflows/` 의
 > `daily-postclose.yml`·`ci.yml`·`debate-validate.yml` 을 웹에서 갱신할 수 있는지 확인 중이다.
+> 그래서 이번 검증은 **로컬 계약 파일 기준**(`data/quant_signals.json` as_of 2026-11-19 발행 7건)이다.
 
 ---
 
