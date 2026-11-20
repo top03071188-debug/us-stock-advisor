@@ -306,7 +306,12 @@ ARTIFACT_CONTRACTS: dict[str, dict] = {
                     "order_cutoff_at", "eligible", "late", "invalid", "reasons", "auto_downgrade_applied",
                     "quant_grade", "recommendation", "display_grade", "quant_action", "debate_action",
                     "divergent", "veto_codes", "regime", "news_state", "structural_risk",
-                    "quote_verified", "receipt", "report_sha256"},
+                    "quote_verified", "receipt", "report_sha256",
+                    # [2026-11-21 첫 예약 배치] 신호당 채택 확정(02)이 원장 문서에 남기는 필드들.
+                    #   값은 **보고서 정체성·시각·출처 enum** 뿐이다(인용 원문·수량·평단 없음).
+                    #   예전에는 계약에 없어 첫 실배치의 커밋 가드가 실패했다(run 44830634315).
+                    "adopted", "adoption", "superseded", "adopted_at", "adopted_report_id",
+                    "frozen_source", "received_at", "validation_claimed_at", "validation_source"},
     },
     "notify_log": {
         "required": {"schema_version", "keys", "deliveries"},
@@ -324,7 +329,9 @@ ARTIFACT_CONTRACTS: dict[str, dict] = {
                     # 두 필드가 계약에 없어 **다음 배치의 커밋 가드가 실패**할 상태였다.
                     "n_retry_suppressed", "retry_pending_inactive",
                     # 채널별 장부(`channels`)의 상태 이름·건수 — `sent` 는 상태 이름이다.
-                    "sent"},
+                    # [2026-11-21 첫 예약 배치] 채널 상태는 `sent` 만이 아니다 — 실패·재시도 대기·
+                    #   미설정도 상태 이름이고 본문·수신자 정보는 없다(값은 이름과 건수뿐).
+                    "sent", "failed", "pending_retry", "unconfigured"},
     },
     "deploy_manifest": {
         "required": {"schema_version", "bundle_version", "files"},
@@ -348,8 +355,13 @@ CONTRACT_SAFE_KEYS = {
 }
 
 #: 행 목록을 담는 필드 — 그 안의 dict 는 **필드 계약**을 따른다(그 밖의 dict 값은 데이터 맵).
+#: `superseded` 는 같은 신호의 뒤 회차 목록이다(02) — 행 단위로 키를 검사한다.
 CONTRACT_ROW_FIELDS = {"order_cancellations", "blocked_reentries", "new", "deliveries", "events",
-                       "retry_pending", "suppressed", "keys", "channels", "files"}
+                       "retry_pending", "suppressed", "keys", "channels", "files", "superseded"}
+
+#: **단일 객체**로 들어가는 하위 블록 — 자기 키를 그대로 필드로 검사한다.
+#: `adopted` 는 신호당 한 번 확정되는 채택 정체성이고, 그 안에 새 키가 생기면 여기서 걸린다.
+CONTRACT_OBJECT_FIELDS = {"adopted"}
 
 CORE_PUBLIC_FILES = ("meta.json", "signals/today.json", "health.json", "debate.json",
                      "notifications.json", "ledger/summary.json", "ledger/records.json",
@@ -388,6 +400,9 @@ def _contract_problems(name: str, data) -> list[str]:
     def _row_keys(row: dict) -> None:
         unknown.update(k for k in row if k not in allowed)
         for field, value in row.items():
+            if field in CONTRACT_OBJECT_FIELDS and isinstance(value, dict):
+                unknown.update(k for k in value if k not in allowed)
+                continue
             if field not in CONTRACT_ROW_FIELDS:
                 continue
             items = value.values() if isinstance(value, dict) else (value if isinstance(value, list) else [])

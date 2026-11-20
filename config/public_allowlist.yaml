@@ -491,6 +491,7 @@ allow:
   - n_retry_suppressed
   - retry_pending_inactive
   - sent
+  - failed
   - pending_retry
   - unconfigured
   - retried
@@ -502,6 +503,20 @@ allow:
   - channel
   - attempts
   - detail
+
+  # ── 2026-11-21 첫 예약 배치: 신호당 채택 확정(02)이 남기는 정체성·시각·출처 ──
+  # 보고서 ID·해시·스냅샷 ID·시각·출처 enum 뿐이다(인용 원문·수량·평단 없음).
+  - adopted
+  - adoption
+  - adopted_at
+  - adopted_report_id
+  - adopted_report_sha256
+  - adopted_snapshot_id
+  - superseded
+  - frozen_source
+  - received_at
+  - validation_claimed_at
+  - validation_source
 
   # ── Phase 4 최종 배선: 동결 전 WATCH·차단으로 취소된 1차 주문(P0-3) ──
   # 식별자·사유·시각뿐이다(수량·평단 없음).
