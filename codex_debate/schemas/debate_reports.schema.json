@@ -104,7 +104,7 @@
         },
         "validation": {
           "type": "object",
-          "additionalProperties": true,
+          "additionalProperties": false,
           "required": ["skills_in", "skills_kept", "quotes_checked", "quotes_dropped",
             "numbers_checked", "numbers_rejected"],
           "properties": {
@@ -114,8 +114,49 @@
             "quotes_dropped": {"type": "integer", "minimum": 0},
             "numbers_checked": {"type": "integer", "minimum": 0},
             "numbers_rejected": {"type": "integer", "minimum": 0},
+            "refs_dropped": {"type": "integer", "minimum": 0},
             "drop_reasons": {"type": "array", "items": {"type": "string"}},
-            "confidence_cap": {"type": ["string", "null"], "enum": ["A", "B", "C", null]}
+            "confidence_cap": {"type": ["string", "null"], "enum": ["A", "B", "C", null]},
+            "report_validated_at": {"type": "string", "minLength": 10},
+            "resume_key": {"type": "string"},
+            "injection_scope": {"type": ["string", "object", "array", "null"]},
+            "injection_blocking": {"type": "boolean"},
+            "blocked_before_calls": {"type": "boolean"},
+            "blocked_reason": {"type": ["string", "null"]},
+            "excluded_news": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "article_id": {"type": ["string", "null"]},
+                  "content_sha256": {"type": ["string", "null"]},
+                  "reason_code": {"type": ["string", "null"]}
+                }
+              }
+            },
+            "article_receipts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "article_id": {"type": "string"},
+                  "content_sha256": {"type": ["string", "null"]}
+                }
+              }
+            },
+            "round_state": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "round1": {"type": "array", "items": {"$ref": "#/$defs/round_state_entry"}},
+                "round2": {"type": "array", "items": {"$ref": "#/$defs/round_state_entry"}},
+                "guard": {"type": ["object", "null"]},
+                "chair": {"type": ["object", "null"]}
+              }
+            },
+            "report_sha256": {"type": "string"}
           }
         },
         "quant_grade": {"type": "string", "enum": ["STRONG_BUY", "BUY", "WATCH", "NONE"]},
@@ -129,8 +170,18 @@
         "context_hash": {"type": "string"},
         "prompt_hash": {"type": "string"},
         "provider": {"type": "string", "enum": ["codex", "openai"]},
-        "context_sha256": {"type": "string"}
+        "context_sha256": {"type": "string"},
+        "provenance": {
+          "description": "조립기(T3)가 리포트별로 남기는 출처 — 라운드 파일 해시·코덱스 버전·조립 시각. 원문·계좌 정보는 없다.",
+          "type": "object",
+          "additionalProperties": true
+        }
       }
+    },
+    "round_state_entry": {
+      "description": "라운드 하나의 검증 상태 스냅샷 — ok·사유·카운트·플래그(내부 구조는 자유).",
+      "type": ["object", "null"],
+      "additionalProperties": true
     },
     "round1_entry": {
       "type": "object",

@@ -20,7 +20,7 @@
   그대로 배포**하고, 입력이 바뀐 발행은 회차 접미사(`-002`…)와 `supersedes` 로 남긴다(감사 01·02).
 
 실행 순서(고정 · 감사 P0-2·P0-4·P2-1 · §10② · 01-d):
-    ① 원장·체결 로드(정산 전 스냅샷 유지) → ② 토론 편입 검증(`now`=배치 시작 시각)
+    ① 원장·체결 로드(정산 전 스냅샷 유지) → ② 토론 편입 검증(`now`=보고서 파일을 읽은 수신 시각)
     → ③ 1차 체결 **계산만**(기록 전 — 오늘 보유·섹터 비중 확정) → ④ 신호 생성·스냅샷
     → ⑤ 발행·대체 레코드 append → ⑥ 차단 대체 레코드(`make_blocked_supersede_record`)
     → ⑦ 1차 정산·취소 **기록**(발행 확정 뒤, `blocked=` 포함) → ⑧ 2·3차·손절·TRIM 정산
@@ -498,16 +498,24 @@ def run(args) -> int:
     #      그래서 ① 편입 판정을 정산 앞으로 옮기고 ② 정산 전 체결 스냅샷을 기준으로 쓴다.
     regime_view = classify_regime(data.get("macro"), data.get("macro_previous"))
     debate_doc = debate_mod.load_reports(DEBATE_REPORTS)
+    # 감사 5331ab7-01: 신뢰 상한은 **이 보고서 파일을 실제로 읽은 시각**이다(배치 시작보다 이르지 않다).
+    #   배치가 오래 걸려 그 사이 도착한 보고서를 읽었다면 "받은 시각"은 지금이다.
+    debate_received_at = datetime.now(timezone.utc).replace(microsecond=0)
     debate_kwargs = {}
     if _supports(debate_mod.reconcile_debates, "now"):
         # 검증 시각 = **이번 배치의 실제 수신·검증 시각**(감사 02) — 보고서 자기신고에만 맡기지 않는다.
-        debate_kwargs["now"] = run_started_at
+        debate_kwargs["now"] = debate_received_at
     if _supports(debate_mod.reconcile_debates, "require_receipt"):
         # 바이트 영수증(`report_sha256`)이 없으면 편입하지 않는다(트랙 1 계약).
         debate_kwargs["require_receipt"] = True
     debate_result = debate_mod.reconcile_debates(
         debate_doc, records, executions_pre_settle, event_dir=DEBATE_EVENTS, params=params,
         regime=regime_view.regime, as_of=as_of, **debate_kwargs)
+    # [5331ab7-11] 알림 재시도 재판정용 **원장 이벤트** — 이번 배치가 방금 확정한 편입까지 포함한다.
+    #   문서 단위(`{signal_id, adopted, events}`)가 아니라 **이벤트 행**으로 넘겨야 `eligible` 을 읽는다.
+    debate_events = {str(sid): list(doc.get("events") or [])
+                     for sid, doc in (debate_mod.load_events(DEBATE_EVENTS) or {}).items()
+                     if isinstance(doc, dict)}
     # 감사 07: ticker 단독이 아니라 **신호 정체성(signal_id, snapshot_id)** 으로 찾는다 —
     # 구 스냅샷의 토론이 오늘 판단을 바꾸지 않게. ticker 폴백은 통합 전 호출부용이다.
     debate_by_key = debate_index(debate_result["by_signal"], records)
@@ -676,10 +684,20 @@ def run(args) -> int:
     superseding_ids = {str(r.get("signal_id")) for r in deployed
                        if str(r.get("signal_id")) in newly_appended and r.get("supersedes")}
     superseding_ids |= {str(r.get("signal_id")) for r in blocked_records}
-    blocked_map = {str(b.get("ticker")): str(b.get("reason") or "BLOCKED")
-                   for b in payload.get("blocked") or [] if b.get("ticker")}
+    blocked_map = _blocked_plans(payload.get("blocked") or [],
+                                 target_session=times["target_session"],
+                                 observed_at=times["signal_published_at"])
     if blocked_map and _supports(live.settle, "blocked"):
         settle_kwargs["blocked"] = blocked_map
+    # [v1.3.6 · 중요 04 · 당일 S5 잠금] 같은 실행에서 관측된 손절을 `settle` 에도 넘긴다 —
+    #   시가 **이전** 확정분은 그 세션 재진입을 막고, 종가 판정(시가 이후 관측)은 잠금을 다음
+    #   세션으로 넘긴다(`stop_locks_next`). 이 값을 넘기지 않으면 "같은 실행의 S5"가 어느 쪽에도
+    #   닿지 않아 세션 로그가 이미 있는지에 따라 결과가 갈렸다(감사 04).
+    stop_plans = _stop_exit_plans(payload.get("position_checks") or [],
+                                  observed_at=times["signal_published_at"],
+                                  target_session=times["target_session"])
+    if stop_plans and _supports(live.settle, "stop_exits"):
+        settle_kwargs["stop_exits"] = stop_plans
     # 감사 06-(e): 자동 하향이 켜져 있으면 **화면은 보류(`hold_cash`)인데 원장은 체결**(`buy_filled`)이었다.
     #   `reconcile`/`actions_for` 가 자동 하향을 적용한 신호를 원장에도 넘겨 시가 체결을 막는다.
     #   기록은 `hold_cash`(체결 아님)이고, 사유는 `AUTO_DOWNGRADE` 로 남긴다.
@@ -716,7 +734,11 @@ def run(args) -> int:
             [c for c in order_cancellations if str(c.get("superseded_by")) in superseding_ids])
 
     # 8) 계좌 — S3/S5/EXIT 판정이 있으면 같은 봉에서 전량 청산 + 잔여 분할 취소(3.5)
-    forced_exits = _forced_exits(payload.get("position_checks") or [])
+    # [v1.3.6 · 중요 04] 매도 의도의 **관측 시각**(발행 시각)을 함께 넘긴다 — 종가 판정으로 만들어진
+    #   S3/TRIM/S5 를 같은 날 시가로 되돌려 체결하던 경로를 막는다(`_forced_exit_plan` 새 계약).
+    checks = payload.get("position_checks") or []
+    forced_exit_reasons = _forced_exits(checks)          # 화면·health 용 `{ticker: 사유}`
+    forced_exits = _forced_exits(checks, observed_at=times["signal_published_at"])  # 원장 계약
     records = load_records(RECORDS)
     portfolio_public, held_after, settlement_final = ledger_view(
         records, executions, panels, as_of, reanchors, params, forced_exits=forced_exits,
@@ -760,15 +782,26 @@ def run(args) -> int:
     regime_lookup = {str(r.get("signal_id")): regime_view.regime for r in records
                      if str(r.get("as_of")) == as_of.isoformat()}
     # P0-2: **편입 검증보다 먼저 체결된** 주문의 페어는 소급이다 — 표시는 남기고 비교에서는 뺀다.
+    #   5331ab7-02: 기준 시각은 보고서 배열의 마지막이 아니라 **채택된 보고서**의 검증 시각이다.
+    adopted_map = debate_result.get("adopted") if isinstance(debate_result, dict) else None
     comparison_input, retroactive = drop_retroactive_pairs(
-        debate_result["by_signal"], executions, debate_doc)
+        debate_result["by_signal"], executions, debate_doc, adopted=adopted_map)
+    # 감사 5331ab7-05: 섹터 캡에 막힌 주문 의도를 **구조화 사유**로 넘긴다 — 두 계좌가 독립 평가한다.
+    sector_cap_blocked = {str(row.get("signal_id")): "SECTOR_CAP"
+                          for row in (settlement.get("settled") or [])
+                          if str(row.get("reason") or "") == "SECTOR_CAP"
+                          and row.get("signal_id")}
+    comparison_kwargs = {}
+    if _supports(debate_mod.compute_debate_comparison, "intent_blocked"):
+        comparison_kwargs["intent_blocked"] = sector_cap_blocked
     comparison = debate_mod.compute_debate_comparison(
         comparison_input, records, executions, panels, as_of, params=params,
-        regime_lookup=regime_lookup)
+        regime_lookup=regime_lookup, **comparison_kwargs)
     comparison["counts"] = {"reports": debate_result["n_reports"],
                              "eligible": debate_result["n_eligible"],
                              "late": debate_result["n_late"],
                              "invalid": debate_result["n_invalid"],
+                             "superseded": debate_result.get("n_superseded", 0),
                              "retroactive_dropped": len(retroactive)}
     comparison["retroactive_dropped"] = len(retroactive)
     if retroactive:
@@ -777,9 +810,11 @@ def run(args) -> int:
     debate_mod.record_auto_downgrade_evaluation(PARAMS_HISTORY, comparison, params_version)
     debate_mod.write_comparison(comparison, DEBATE_COMPARISON)
     _write_json(Path("data/ledger/debate_summary.json"), {
-        k: debate_result[k] for k in ("schema_version", "as_of", "generated_at",
-                                      "auto_downgrade_enabled", "n_reports", "n_eligible",
-                                      "n_late", "n_invalid", "by_signal")
+        k: debate_result[k] for k in ("schema_version", "as_of", "generated_at", "received_at",
+                                      "freeze_buffer_seconds", "auto_downgrade_enabled", "n_reports",
+                                      "n_eligible", "n_late", "n_invalid", "n_superseded",
+                                      "adopted", "superseded", "by_signal")
+        if k in debate_result
     } | {"auto_downgrade": auto_eval})
     summary["debate_effect"] = debate_mod.comparison_summary(comparison)
     summary["debate"] = {"status": "ok" if debate_result["n_reports"] else "none",
@@ -842,7 +877,7 @@ def run(args) -> int:
     _write_json(LIMITS, _limits(data, as_of))
     live.write_health(settlement_final["health"], as_of, status=status,
                       degraded=diag.get("degraded"),
-                      extra={"forced_exits": forced_exits,
+                      extra={"forced_exits": forced_exit_reasons,
                              "cash_pct": portfolio_public["cash_pct"],
                              "order_cancellations_count": len(order_cancellations),
                              "order_cancellations": order_cancellations[:20],
@@ -884,12 +919,21 @@ def run(args) -> int:
     }
     notification = notify.evaluate_notifications(
         payload, log_path=notify.DEFAULT_LOG, out_path=NOTIFICATIONS,
-        debate=debate_result, health=notify_health, outage_id=run_state.get("outage_id"))
-    payload["notifications"] = {"n_new": notification["n_new"],
-                                "n_suppressed": notification["n_suppressed"],
-                                "events": [{k: e.get(k) for k in ("event_key", "type", "severity",
-                                                                  "message_ko", "ticker", "signal_id")}
-                                           for e in notification["new"]]}
+        debate=debate_result, health=notify_health, outage_id=run_state.get("outage_id"),
+        # [5331ab7-11] 재시도 전 **원장 이벤트 기반 재판정** — 이미 적격 토론이 편입된 "토론 실행 권장"은
+        #   재전송하지 않고 `suppressed` 로 닫는다. `debate_events/` 를 넘기지 않으면 그 재판정이
+        #   배치 요약(`debate=`)만 보고 판단해 하루 늦은 권장을 다시 보낼 수 있다.
+        debate_events=debate_events)
+    payload["notifications"] = {
+        "n_new": notification["n_new"],
+        "n_suppressed": notification["n_suppressed"],
+        # [5331ab7-11] 채널별 재시도 장부 — 화면·원장이 "다음 실행에서 다시 보낼 알림"을 알 수 있게 한다.
+        "n_retried": notification.get("n_retried", 0),
+        "n_retry_suppressed": notification.get("n_retry_suppressed", 0),
+        "retry_pending": notification.get("retry_pending") or [],
+        "events": [{k: e.get(k) for k in ("event_key", "type", "severity",
+                                          "message_ko", "ticker", "signal_id")}
+                   for e in notification["new"]]}
     summary["notifications"] = payload["notifications"]
 
     _write_json(SIGNALS, payload)
@@ -944,22 +988,50 @@ def _ts(value):
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
-def drop_retroactive_pairs(by_signal: dict, executions: dict, reports_doc: dict | None) -> tuple[dict, list[dict]]:
+def drop_retroactive_pairs(by_signal: dict, executions: dict, reports_doc: dict | None,
+                           adopted: dict | None = None) -> tuple[dict, list[dict]]:
     """P0-2: **편입 검증 시각보다 먼저 체결된** 주문의 페어는 소급이므로 비교에서 제외한다.
 
     편입 자격은 "마감 전에 끝난 토론인가"만 본다. 그래서 이미 시가 체결이 끝난 주문에
     "토론 계좌는 현금을 들고 있었다"는 페어가 뒤늦게 붙을 수 있다 — 그런 페어는
     `quant_action` 이 사후에 정해진 값이라 A/B 비교의 증거가 될 수 없다.
 
+    [v1.3.6 · 감사 5331ab7-02] 기준 시각은 **실제 채택된 보고서의 검증 시각**이다.
+    예전에는 신호별 보고서 배열의 **마지막** 검증 시각을 써서, 동결 전에 적격으로 붙은 `-01` 페어를
+    지연 `-02` 하나 때문에 통째로 버렸다. 이제는 ① `by_signal` 행의 `report_validated_at`(채택 결과)·
+    ② `adopted` 매핑·③ 보고서 문서에서 채택본을 찾은 순서로 정한다. 문서에 회차가 하나뿐이면
+    예전과 같은 결과다(하위 호환).
+
     반환: (비교용 by_signal, 제외 목록). 제외한 건도 화면에서는 `retroactive: true` 로 남긴다.
     """
-    validated: dict[str, object] = {}
-    for rep in (reports_doc or {}).get("reports") or []:
+    adopted = {str(k): str(v) for k, v in (adopted or {}).items() if v}
+    rows = (reports_doc or {}).get("reports") or []
+    grouped: dict[str, list[dict]] = {}
+    for rep in rows:
         sid = str(rep.get("signal_id") or "")
-        if not sid:
-            continue
-        validated[sid] = _ts((rep.get("validation") or {}).get("report_validated_at")) \
-            or _ts(rep.get("completed_at"))
+        if sid:
+            grouped.setdefault(sid, []).append(rep)
+
+    def _validated_of(rep: dict | None):
+        rep = rep or {}
+        return _ts((rep.get("validation") or {}).get("report_validated_at")) or _ts(rep.get("completed_at"))
+
+    validated: dict[str, object] = {}
+    for sid, candidates in grouped.items():
+        chosen = None
+        wanted = adopted.get(str(sid))
+        if wanted:
+            chosen = next((rep for rep in candidates
+                           if str(rep.get("report_id")) == wanted), None)
+        if chosen is None:
+            # 채택본을 모를 때는 **가장 먼저 검증된** 보고서(선착순 채택 규칙)를 기준으로 본다.
+            with_time = [rep for rep in candidates if _validated_of(rep) is not None]
+            chosen = min(with_time, key=_validated_of) if with_time else candidates[0]
+        validated[sid] = _validated_of(chosen)
+    # 채택 결과를 아는 `by_signal` 행이 문서보다 **우선**한다(원장이 확정한 값).
+    for sid, row in (by_signal or {}).items():
+        if isinstance(row, dict) and row.get("report_validated_at"):
+            validated[str(sid)] = _ts(row["report_validated_at"])
     keep: dict[str, dict] = {}
     dropped: list[dict] = []
     for sid, row in (by_signal or {}).items():
@@ -1026,25 +1098,83 @@ def sector_exposure_dollars(portfolio: dict | None, initial_cash: float = live.I
             for sector, weight in (portfolio.get("sector_weights") or {}).items() if sector}
 
 
-def _forced_exits(checks: list[dict]) -> dict[str, str]:
+def _forced_exit_reason(check: dict, supported: set[str]) -> str | None:
+    """포지션 점검 1건 → 강제 청산 사유(`S3`/`S5`/`EXIT`/`TRIM`) 또는 없음."""
+    verdict = str(check.get("verdict") or "").upper()
+    triggers = check.get("triggers") or {}
+    if check.get("cancel_pending_tranches") or verdict == "EXIT":
+        return "S3" if triggers.get("S3") else ("S5" if triggers.get("S5") else "EXIT")
+    if verdict == "TRIM" and "TRIM" in supported:
+        return "TRIM"
+    return None
+
+
+def _forced_exits(checks: list[dict], observed_at: str | None = None) -> dict:
     """S1~S5/EXIT(+TRIM) 판정 → `{ticker: "S3"|"S5"|"EXIT"|"TRIM"}` — 같은 봉에서 잔여 분할을 취소한다(3.5).
 
     기획서 §3.5 의 `exit_score 60~74 → TRIM(1/3 익절)` 은 어떤 원장 경로에도 연결돼 있지 않았다(감사 14#1).
     그래서 TRIM 도 넘기되, **엔진이 TRIM 을 1/3 익절로 처리한다고 알릴 때만**(`live.FORCED_EXIT_REASONS`)
     넘긴다 — 지원 전에 넘기면 전량 청산으로 읽혀 매도 행동이 달라진다.
+
+    [v1.3.6 · 중요 04] `observed_at`(그 판정을 관측한 **발행 시각**)을 주면 `_forced_exit_plan` 의
+    새 계약(`{"reason", "observed_at"}`)으로 돌려준다. 종가 판정은 시가 이후 관측이므로 그 날 시가에
+    체결되지 않고 다음 세션 시가로 넘어간다. 주지 않으면 구 계약(문자열 맵)이다 — 기존 호출·테스트 호환.
     """
     supported = _forced_exit_reasons()
-    out: dict[str, str] = {}
+    out: dict[str, object] = {}
     for check in checks or []:
         ticker = str(check.get("ticker"))
-        verdict = str(check.get("verdict") or "").upper()
-        triggers = check.get("triggers") or {}
-        if check.get("cancel_pending_tranches") or verdict == "EXIT":
-            reason = "S3" if triggers.get("S3") else ("S5" if triggers.get("S5") else "EXIT")
-            out[ticker] = reason
+        reason = _forced_exit_reason(check, supported)
+        if reason is None:
             continue
-        if verdict == "TRIM" and "TRIM" in supported:
-            out[ticker] = "TRIM"
+        out[ticker] = reason if observed_at is None else {"reason": reason, "observed_at": observed_at}
+    return out
+
+
+def _stop_exit_plans(checks: list[dict], *, observed_at: str | None = None,
+                     target_session: str | None = None) -> list[dict]:
+    """같은 실행에서 관측된 **손절(S5)** → `settle(stop_exits=...)` 입력(중요 04 · 당일 S5 잠금).
+
+    `settle` 은 이 목록으로 ① 시가 이전 확정 손절이면 그 세션 재진입을 막고(`STOP_REENTRY_LOCK`)
+    ② 시가 이후(종가 판정) 관측이면 잠금을 **다음 세션**으로 넘긴다(`stop_locks_next`).
+    넘기지 않으면 같은 실행의 S5 가 세션 로그 유무에 따라 결과를 갈랐다(감사 04).
+    """
+    plans: list[dict] = []
+    for check in checks or []:
+        if str(check.get("verdict") or "").upper() != "EXIT":
+            continue
+        triggers = check.get("triggers") or {}
+        if not triggers.get("S5"):
+            continue
+        ticker = str(check.get("ticker") or "")
+        if not ticker:
+            continue
+        plan = {"ticker": ticker, "reason": "S5", "observed_at": observed_at}
+        if target_session:
+            plan["target_session"] = target_session
+        plans.append(plan)
+    return plans
+
+
+def _blocked_plans(rows: list[dict], *, target_session: str | None = None,
+                   observed_at: str | None = None) -> dict[str, dict]:
+    """차단 목록 → `settle(blocked=...)` 의 **새 계약**(치명 03).
+
+    `{"reason", "signal_id", "target_session", "observed_at"}` 로 넘겨야 ① 다른 세션용 차단이
+    같은 종목의 오늘 슬롯을 막지 않고 ② 장중·종가에 관측된 차단이 이미 동결·체결된 시가 주문을
+    `no_action@시가` 로 **소급해 뒤집지 않는다**. 종전에는 `{ticker: 사유}` 뿐이라 둘 다 구분할
+    수 없었다(감사 재현 03-C·03-D).
+    """
+    out: dict[str, dict] = {}
+    for row in rows or []:
+        ticker = str(row.get("ticker") or "")
+        if not ticker:
+            continue
+        entry = {"reason": str(row.get("reason") or "BLOCKED"),
+                 "signal_id": row.get("signal_id"),
+                 "target_session": target_session,
+                 "observed_at": observed_at}
+        out[ticker] = entry
     return out
 
 

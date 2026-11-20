@@ -610,19 +610,46 @@ def build_views(data: dict, as_of: date, debate: dict | None = None, *,
 
 
 def _regime_sample_for(data: dict, regime_hint=None):
-    """국면 표본 입력 — 데이터셋이 주면 그대로, 없으면 `None`(→ A 상한, 기획서 3.10).
+    """국면 표본 입력 — 데이터셋이 그 국면의 표본을 주면 그대로, 없으면 `None`(→ A 상한, 기획서 3.10).
 
-    백테스트 표본은 수집 데이터에 없으므로 지금은 대부분 `None` 이다. 그래도 **통과로 읽지 않고**
-    B 상한을 걸어, 표본을 실제로 넘기는 경로(향후 백테스트 요약)만 A 를 줄 수 있게 한다.
+    `collect()` 는 `regime_sample` 에 `by_regime`(국면별 `n`·`min_n`·`matured_as_of`)를 넘긴다.
+    국면 이름을 모르는 호출(`regime_hint=None`)에서 국면별 문서를 통째로 넘기면 `n` 이 없어
+    `regime_sample_invalid` 가 되거나 엉뚱한 국면 표본으로 A 가 열릴 수 있다 — 그래서 그때는
+    `None` 을 돌려 B 상한을 유지한다. 레거시 형태(`{"n": 30}`·`30`)는 그대로 받는다(기존 호출 호환).
     """
     value = (data or {}).get("regime_sample")
     if value is None:
         value = (data or {}).get("regime_samples")
-    if isinstance(value, dict) and regime_hint:
-        per_regime = value.get("by_regime") or value
-        if isinstance(per_regime, dict) and regime_hint in per_regime:
-            return per_regime[regime_hint]
+    if isinstance(value, dict):
+        per_regime = value.get("by_regime")
+        if isinstance(per_regime, dict):
+            if not regime_hint:
+                return None
+            picked = per_regime.get(str(regime_hint))
+            return picked if isinstance(picked, (dict, int)) else None
+        if regime_hint and isinstance(value.get(str(regime_hint)), (dict, int)):
+            return value[str(regime_hint)]
     return value
+
+
+def _sample_fields(regime_sample, regime_name: str | None) -> dict:
+    """신뢰도 판정 근거에 남길 국면 표본 수·기준일(감사 5331ab7-12)."""
+    if isinstance(regime_sample, dict):
+        n = regime_sample.get("n", regime_sample.get("count", regime_sample.get("samples")))
+        try:
+            n_int = None if n is None else int(n)
+        except (TypeError, ValueError):
+            n_int = None
+        return {"regime_sample_n": n_int,
+                "regime_sample_min_n": regime_sample.get("min_n", MIN_REGIME_SAMPLE),
+                "regime_sample_horizon": regime_sample.get("horizon"),
+                "matured_as_of": regime_sample.get("matured_as_of"),
+                "regime_sample_source": regime_sample.get("source")}
+    if isinstance(regime_sample, (int, float)):
+        return {"regime_sample_n": int(regime_sample), "regime_sample_min_n": MIN_REGIME_SAMPLE,
+                "regime_sample_horizon": None, "matured_as_of": None, "regime_sample_source": None}
+    return {"regime_sample_n": None, "regime_sample_min_n": MIN_REGIME_SAMPLE,
+            "regime_sample_horizon": None, "matured_as_of": None, "regime_sample_source": None}
 
 
 def _last_return(panel) -> float | None:
@@ -646,6 +673,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
     regime = classify_regime(data.get("macro"), data.get("macro_previous"))
     # 국면 표본은 A 등급 판정에만 쓰인다 — 넘기지 않으면 `regime_sample_missing` 으로 B 상한.
     regime_sample = _regime_sample_for(data, regime_hint=getattr(regime, "regime", None))
+    sample_fields = _sample_fields(regime_sample, getattr(regime, "regime", None))
     debate_cfg = (params or {}).get("debate") or {}
     auto_downgrade_enabled = bool(debate_cfg.get("auto_downgrade_enabled", False))
     held = held or []
@@ -855,7 +883,12 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         record["debate_risk_gate_applied"] = bool(apply_debate_risk)
         record["confidence_cap"] = ("WATCH" if evidence_cap else None)
         # 신뢰도 판정 근거를 레코드에 남긴다 — 왜 A 가 아닌지 화면·감사가 바로 읽는다.
-        record["confidence_detail"] = {"grade": conf, **grade_basis}
+        # 감사 5331ab7-12: 어떤 국면의 몇 건 표본으로 A 를 판단했는지(또는 표본이 없었는지)를 남긴다.
+        record["confidence_detail"] = {"grade": conf, **grade_basis, **sample_fields}
+        # 발행 시점 국면을 레코드에 남긴다 — 이 값이 나중에 국면별 표본(만기 전 표본)의 근거가 된다.
+        # 사후에 최신 거시로 다시 분류하지 않기 위해 발행 시점에 그대로 확정한다.
+        record["regime"] = regime.regime
+        record["regime_verified"] = bool(regime.verified)
         # 토론은 **권고**로만 붙는다(스냅샷·신호가 같은 행). 정량 판단 필드(news_state·등급·의도)는
         # 위에서 이미 확정됐고, 여기서는 "어떤 토론이 붙었나"만 기록한다(감사 07).
         record["debate_ref"] = ({"signal_id": deb.get("signal_id"),
@@ -950,6 +983,9 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         "mode": mode,
         "source": source or data.get("source", "live"),
         "regime": regime.as_dict(),
+        # 감사 5331ab7-12 — 이 페이로드의 신뢰도 A 판정에 쓰인 국면 표본 공급 상태.
+        "regime_sample": _public_sample(regime_sample, sample_fields, regime.regime,
+                                        (data or {}).get("regime_sample")),
         "ingest": data.get("macro_ingest"),
         "signals": signals,
         "blocked": blocked,
@@ -959,6 +995,29 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         "diagnostics": diagnostics,
         "charts": charts,
         "next_trading_day": next_trading_day(as_of).isoformat(),
+    }
+
+
+def _public_sample(regime_sample, sample_fields: dict, regime_name: str | None, doc) -> dict:
+    """이 페이로드가 쓴 국면 표본 공급 상태(감사 5331ab7-12) — 화면·감사가 숫자와 기준일을 바로 본다."""
+    by_regime: dict = {}
+    counts = None
+    if isinstance(doc, dict):
+        for name, row in (doc.get("by_regime") or {}).items():
+            if isinstance(row, dict):
+                by_regime[str(name)] = {"n": row.get("n"), "min_n": row.get("min_n")}
+        counts = doc.get("counts")
+    n = sample_fields.get("regime_sample_n")
+    return {
+        "regime": regime_name,
+        "n": n,
+        "min_n": sample_fields.get("regime_sample_min_n"),
+        "matured_as_of": sample_fields.get("matured_as_of"),
+        "horizon": sample_fields.get("regime_sample_horizon"),
+        "source": sample_fields.get("regime_sample_source"),
+        "reason": None if n is not None else "regime_sample_missing",
+        "by_regime": by_regime or None,
+        "counts": counts,
     }
 
 

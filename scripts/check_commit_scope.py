@@ -44,12 +44,13 @@ TEXT_SUFFIXES = {".json", ".jsonl", ".md", ".yaml", ".yml", ".py", ".ts", ".tsx"
 ALLOWED_BINARY_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".webp", ".svg",
                            ".woff", ".woff2", ".ttf", ".otf", ".pdf", ".mp3", ".mp4"}
 #: JSON Schema 예외를 인정하는 경로 접두사(감사 10 — 파일 이름만으로는 예외가 아니다).
+#  **최상위 폴더 바로 아래**만 인정한다: `schemas/x.schema.json` · `codex_debate/schemas/x.schema.json`.
+#  `docs/schemas/…` 같은 **경로 중간 일치**는 스키마 예외가 아니다(감사 10 · T4).
 SCHEMA_PREFIXES = ("schemas/", "codex_debate/schemas/")
-#: 스키마 안에서 자식 키가 **필드 선언 이름**인 컨테이너.
-SCHEMA_CONTAINERS = {"properties", "required", "$defs", "definitions", "patternProperties",
-                     "dependentSchemas", "dependentRequired"}
-#: 스키마 안에서도 **값이 데이터**인 키 — 예외를 주지 않는다.
-SCHEMA_DATA_KEYWORDS = {"examples", "example", "default", "const", "enum"}
+#: 스키마 안에서 자식 키가 **필드 이름 선언**인 컨테이너 — 값 자리(`examples`·`default`·임의 객체)는 제외.
+SCHEMA_CONTAINERS = {"properties", "$defs", "definitions"}
+#: 허용하는 `$schema` 선언 — 문자열이면서 정식 JSON Schema URL 이어야 한다(`$schema: 1` 은 스키마가 아니다).
+SCHEMA_URL_RE = re.compile(r"^https?://json-schema\.org/[A-Za-z0-9._~:/?#@!$&'()*+,;=%-]*$")
 #: XBRL companyfacts 의 단위 컨테이너가 놓이는 루트 키.
 XBRL_UNIT_ROOTS = {"facts"}
 #: 메트릭 단위 계약의 루트 키(예: `metrics.<name>.units`).
@@ -112,28 +113,36 @@ def _read_worktree(path: str | Path, root: str | Path | None = None) -> bytes | 
 
 
 # ────────────────────────────── 키 판정 ──────────────────────────────
-def _iter_keys(obj, chain: tuple[str, ...] = ()):
-    """JSON 의 모든 키와 **조상 키 사슬**을 돌려준다.
+def _iter_keys(obj, chain: tuple[str, ...] = (), node: int | None = None):
+    """JSON 의 모든 키와 **조상 키 사슬**·**부모 객체 id** 를 돌려준다.
 
     부모가 필요한 이유: SEC companyfacts 의 `units: {"shares": [...]}` 는 XBRL **단위 이름**이지
     보유 주식수가 아니다. 반면 `position: {"shares": 3.2}` 는 계좌 정보다 — 둘을 같은 키 하나로
     판정하면 공개 가능한 픽스처를 커밋할 수 없고, 그렇다고 `shares` 를 통째로 빼면 계좌가 새어 나간다.
+    부모 객체 id 는 스키마의 **선언 자리** 판정에 쓴다(감사 10 · T4).
     """
     if isinstance(obj, dict):
         for k, v in obj.items():
-            yield k, chain
-            yield from _iter_keys(v, chain + (k,))
+            yield k, chain, id(obj)
+            yield from _iter_keys(v, chain + (k,), id(obj))
     elif isinstance(obj, list):
         for v in obj:
-            yield from _iter_keys(v, chain)
+            yield from _iter_keys(v, chain, node)
 
 
 def _looks_like_schema(data) -> bool:
-    """유효한 JSON Schema 구조인가 — 이름만 `*.schema.json` 인 데이터 파일과 구분한다."""
+    """유효한 JSON Schema 구조인가 — 이름만 `*.schema.json` 인 데이터 파일과 구분한다.
+
+    [감사 10] `$schema` 가 있으면 **정식 JSON Schema URL 문자열**이어야 한다(`$schema: 1` 같은 값은
+    스키마 선언이 아니다). 그리고 본문에는 실제 스키마 구조(properties/$defs/definitions/type 등)가 있어야 한다.
+    """
     if not isinstance(data, dict):
         return False
+    declared = data.get("$schema")
     if "$schema" in data:
-        return True
+        # 선언이 **있으면** 정식 JSON Schema URL 문자열이어야 한다 — `$schema: 1`·`$schema: null` 은 스키마가 아니다.
+        if not isinstance(declared, str) or not SCHEMA_URL_RE.match(declared.strip()):
+            return False
     has_body = any(key in data for key in ("properties", "$defs", "definitions", "required", "items"))
     return has_body and any(key in data for key in ("type", "$defs", "definitions", "properties"))
 
@@ -142,9 +151,40 @@ def _is_schema_scope(norm: str, data) -> bool:
     """승인된 경로의 **유효한** 스키마일 때만 True."""
     if not norm.endswith(".schema.json"):
         return False
-    if not any(f"/{prefix}" in f"/{norm}" for prefix in SCHEMA_PREFIXES):
+    if _schema_prefix_of(norm) is None:
         return False
     return _looks_like_schema(data)
+
+
+def _schema_prefix_of(norm: str) -> str | None:
+    """승인된 스키마 경로면 그 접두사를 돌려준다 — **경로 중간 일치를 인정하지 않는다**.
+
+    - 저장소 상대 경로: `schemas/` 또는 `codex_debate/schemas/` **바로 아래** 파일만.
+    - 절대 경로(테스트·수동 점검): ① 현재 작업 폴더 기준으로 상대화되면 상대 경로 규칙을,
+      ② 폴더 밖이면 마지막 2~3조각이 그 구조와 같은지만 본다(파일 자체의 위치만 확인).
+    """
+    text = str(norm).replace("\\", "/")
+    candidates: list[str] = []
+    if text.startswith("/") or (len(text) > 1 and text[1] == ":"):
+        try:
+            candidates.append(str(Path(text).resolve().relative_to(Path.cwd().resolve())).replace("\\", "/"))
+        except (ValueError, OSError):
+            parts = [part for part in text.split("/") if part]
+            for depth in (2, 3):
+                if len(parts) >= depth:
+                    candidates.append("/".join(parts[-depth:]))
+    else:
+        candidates.append(text)
+    for candidate in candidates:
+        for prefix in SCHEMA_PREFIXES:
+            head = prefix.rstrip("/")
+            if not candidate.startswith(head + "/"):
+                continue
+            rest = candidate[len(head) + 1:]
+            # 바로 아래 파일 하나만 — 하위 폴더·추가 경로 조각은 승인된 스키마 위치가 아니다.
+            if "/" not in rest and rest.endswith(".schema.json") and len(rest) > len(".schema.json"):
+                return prefix
+    return None
 
 
 def _units_exempt(chain: tuple[str, ...]) -> bool:
@@ -160,12 +200,45 @@ def _units_exempt(chain: tuple[str, ...]) -> bool:
     return False
 
 
-def _key_exempt(key: str, chain: tuple[str, ...], *, schema: bool) -> bool:
+def _key_exempt(key: str, chain: tuple[str, ...]) -> bool:
+    """**구조적** 예외 — XBRL·메트릭 단위 계약의 단위 이름만(스키마 이름 자리는 `_schema_declarations`)."""
     if _units_exempt(chain):
         return bool(UNIT_NAME_RE.match(str(key)))
-    if schema and chain and chain[-1] in SCHEMA_CONTAINERS and chain[-1] not in SCHEMA_DATA_KEYWORDS:
-        return True
     return False
+
+
+#: 스키마 안에서 **자식 스키마**를 품는 키워드 — 선언 자리를 찾으려면 여기로 내려가야 한다.
+SCHEMA_NESTED_KEYWORDS = ("items", "additionalProperties", "prefixItems", "additionalItems",
+                          "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "contains",
+                          "propertyNames", "unevaluatedItems", "unevaluatedProperties",
+                          "dependentSchemas")
+
+
+def _schema_declarations(node, out: set[tuple[int, str]], depth: int = 0) -> set[tuple[int, str]]:
+    """스키마의 **필드 이름 선언 자리**만 모은다 — `(부모 객체 id, 필드 이름)` 의 집합.
+
+    [감사 10 · T4] 예전에는 키 사슬의 마지막 조각만 보고 예외를 줬기 때문에
+    `default: {"properties": {"avg_cost": 3}}` 처럼 **값 자리**에 우연히 같은 키가 있으면 면제됐다.
+    지금은 스키마 구조를 따라 내려가며 `properties`·`$defs`·`definitions` **바로 아래의 이름**만
+    선언으로 인정한다. `examples`·`default`·`const` 같은 값 자리는 내려가지 않는다.
+    """
+    if not isinstance(node, dict) or depth > 60:
+        return out
+    for container in SCHEMA_CONTAINERS:
+        block = node.get(container)
+        if not isinstance(block, dict):
+            continue
+        for name, sub in block.items():
+            out.add((id(block), str(name)))
+            _schema_declarations(sub, out, depth + 1)
+    for keyword in SCHEMA_NESTED_KEYWORDS:
+        sub = node.get(keyword)
+        if isinstance(sub, dict):
+            _schema_declarations(sub, out, depth + 1)
+        elif isinstance(sub, list):
+            for item in sub:
+                _schema_declarations(item, out, depth + 1)
+    return out
 
 
 def check_text(path: Path, text: str, rules: dict, norm: str | None = None) -> list[str]:
@@ -185,8 +258,11 @@ def check_text(path: Path, text: str, rules: dict, norm: str | None = None) -> l
             problems.append(f"{label}: JSON 파싱 실패")
     if data is not None:
         schema = _is_schema_scope(norm or str(path), data)
-        bad = sorted({k for k, chain in _iter_keys(data)
-                      if k in deny_keys and not _key_exempt(k, chain, schema=schema)})
+        declarations = _schema_declarations(data, set()) if schema else set()
+        bad = sorted({k for k, chain, node in _iter_keys(data)
+                      if k in deny_keys
+                      and not _key_exempt(k, chain)
+                      and (node, str(k)) not in declarations})
         if bad:
             problems.append(f"{label}: forbidden keys {bad}")
 
@@ -243,7 +319,12 @@ ARTIFACT_CONTRACTS: dict[str, dict] = {
         "allowed": {"outage_id", "n_events", "n_new", "n_suppressed", "n_retried", "retry_pending",
                     "new", "suppressed", "channels", "note_ko", "label_ko", "severity", "message_ko",
                     "ticker", "signal_id", "event_key", "type", "sent_at", "attempts", "last_attempt_at",
-                    "last_success_at"},
+                    "last_success_at",
+                    # [5331ab7-11] 채널별 재시도 장부의 요약 — 11번 수정이 `notify.py` 에서 쓰기 시작한
+                    # 두 필드가 계약에 없어 **다음 배치의 커밋 가드가 실패**할 상태였다.
+                    "n_retry_suppressed", "retry_pending_inactive",
+                    # 채널별 장부(`channels`)의 상태 이름·건수 — `sent` 는 상태 이름이다.
+                    "sent"},
     },
     "deploy_manifest": {
         "required": {"schema_version", "bundle_version", "files"},
@@ -263,6 +344,7 @@ CONTRACT_SAFE_KEYS = {
     "event_id", "frozen_at", "cancelled_by", "superseded_by", "tranche", "recorded_for",
     "ok", "skipped", "retried", "n_retried", "sha256", "size", "cancel_kind",
     "freeze_deadline_at", "session", "lock", "expected_fill_day", "note",
+    "n_retry_suppressed", "retry_pending_inactive", "sent",
 }
 
 #: 행 목록을 담는 필드 — 그 안의 dict 는 **필드 계약**을 따른다(그 밖의 dict 값은 데이터 맵).

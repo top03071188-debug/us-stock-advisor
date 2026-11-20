@@ -32,7 +32,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 DEFAULT_LOG = Path("data/notifications_log.json")
 DEFAULT_OUT = Path("data/notifications_latest.json")
-SCHEMA_VERSION = 2
+#: 감사 5331ab7-11: 발송 장부가 `(event_key, channel)` 단위가 됐다 — 구 로그(schema 2)도 읽는다.
+SCHEMA_VERSION = 3
+#: 채널 한 곳의 전달 상태. `unconfigured` 는 "설정이 없어 보내지 않았다"(실패가 아니다).
+CHANNEL_SENT = "sent"
+CHANNEL_PENDING = "pending_retry"
+CHANNEL_FAILED = "failed"
+CHANNEL_UNCONFIGURED = "unconfigured"
+CHANNEL_SUPPRESSED = "suppressed"
 MAX_EVENTS_PER_RUN = 20
 #: 실패한 발송을 다시 시도하는 횟수 상한 — 넘으면 `failed` 로 남긴다(P2-1).
 MAX_ATTEMPTS = 3
@@ -208,20 +215,83 @@ def dedupe(events: list[dict], log: dict) -> tuple[list[dict], list[dict]]:
     return new, suppressed
 
 
-def pending_retries(log: dict) -> list[dict]:
-    """지난 실행에서 **모든 채널이 실패**해 남은 발송 건 — 횟수가 남았으면 이번에 다시 보낸다."""
+def channel_rows(entry: dict) -> dict:
+    """이벤트 장부의 채널별 상태 — 구 로그(채널 장부 이전)는 빈 dict 로 읽는다."""
+    channels = (entry or {}).get("channels")
+    return channels if isinstance(channels, dict) else {}
+
+
+def pending_retries(log: dict, active: set[str] | list[str] | None = None) -> list[dict]:
+    """다시 보내야 할 이벤트의 재시도 큐 — **아직 전달되지 않은 채널**이 근거다(감사 5331ab7-11).
+
+    예전에는 이벤트 전체 상태(`any(channel.ok)`)만 봤기 때문에 콘솔이 성공하면 실패한 웹훅이
+    다시 호출되지 않았다. 이제 큐는 채널 장부(`(event_key, channel)`)에서 `pending_retry` 인
+    채널이 있는 이벤트를 모은다. 실제 재전송은 **이번 실행에서 켜졌고 아직 `sent` 가 아닌
+    채널** 에만 한다(`_attempt`) — 이미 전달된 콘솔은 다시 출력하지 않는다.
+
+    `active` 를 주면, 실패한 채널이 모두 꺼져 있어도 **아직 받지 못한 활성 채널**이 있으면
+    큐에 넣는다(설정을 나중에 켜도 그 채널은 사건을 받을 자격이 있다).
+    """
     rows: list[dict] = []
+    active_names = None if active is None else {str(name) for name in active}
     for key, entry in ((log or {}).get("keys") or {}).items():
         if not isinstance(entry, dict):
             continue
-        if entry.get("status") != "pending_retry":
+        event = entry.get("event")
+        if not isinstance(event, dict):
+            continue
+        channels = channel_rows(entry)
+        if entry.get("status") == CHANNEL_SUPPRESSED:
+            continue
+        if channels:
+            pending = [name for name, row in channels.items()
+                       if isinstance(row, dict) and row.get("status") == CHANNEL_PENDING
+                       and int(row.get("attempts") or 0) < MAX_ATTEMPTS]
+            if not pending:
+                continue
+            waiting_active = [name for name in (active_names or set())
+                              if name not in channels or channels.get(name, {}).get("status") != CHANNEL_SENT]
+            if active_names is not None and not (set(pending) & active_names) and not waiting_active:
+                continue
+            rows.append({"event": event, "key": key, "channels": pending,
+                         "attempts": max(int((channels.get(name) or {}).get("attempts") or 0)
+                                         for name in pending)})
+            continue
+        # 구 로그(schema 2): 채널 장부가 없다 — 이벤트 상태가 pending_retry 면 활성 채널로 다시 본다.
+        if entry.get("status") != CHANNEL_PENDING:
             continue
         if int(entry.get("attempts") or 0) >= MAX_ATTEMPTS:
             continue
-        event = entry.get("event")
-        if isinstance(event, dict):
-            rows.append({"event": event, "attempts": int(entry.get("attempts") or 0), "key": key})
+        if active_names is not None and not active_names:
+            continue
+        rows.append({"event": event, "key": key, "channels": [],
+                     "attempts": int(entry.get("attempts") or 0)})
     return rows
+
+
+def _is_unconfigured(result: dict | None) -> bool:
+    """채널이 **설정이 없어 보내지 않은** 경우(실패가 아니다) — 재시도 큐에 넣지 않는다."""
+    result = result or {}
+    if result.get("unconfigured"):
+        return True
+    return str(result.get("detail") or "").endswith("건너뜀")
+
+
+def event_status(channels: dict) -> str:
+    """채널 상태들 → 이벤트 상태. 한 채널이라도 전달되면 `sent`(다른 채널 실패는 채널 장부에 남는다)."""
+    statuses = [str((row or {}).get("status")) for row in (channels or {}).values()
+                if isinstance(row, dict)]
+    if CHANNEL_SENT in statuses:
+        return CHANNEL_SENT
+    if CHANNEL_PENDING in statuses:
+        return CHANNEL_PENDING
+    if CHANNEL_FAILED in statuses:
+        return CHANNEL_FAILED
+    if CHANNEL_SUPPRESSED in statuses:
+        return CHANNEL_SUPPRESSED
+    if statuses:
+        return CHANNEL_UNCONFIGURED
+    return CHANNEL_PENDING          # 시도 기록 없음 → 다음 실행에서 다시 본다
 
 
 # ────────────────────────────── 채널 ──────────────────────────────
@@ -243,7 +313,7 @@ class GithubIssueChannel:
 
     def send(self, event: dict) -> dict:
         if not self.repo:
-            return {"ok": False, "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"}
+            return {"ok": False, "unconfigured": True, "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"}
         title = f"[알림] {event.get('label_ko')} — {event.get('ticker') or event.get('event_key')}"
         try:
             proc = subprocess.run(["gh", "issue", "create", "--repo", self.repo, "--title", title,
@@ -264,10 +334,14 @@ class WebhookChannel:
 
     def send(self, event: dict) -> dict:
         if not self.url:
-            return {"ok": False, "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"}
+            return {"ok": False, "unconfigured": True, "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"}
         body = json.dumps(event, ensure_ascii=False).encode("utf-8")
-        request = urllib.request.Request(self.url, data=body, method="POST",
-                                         headers={"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json"}
+        # 감사 5331ab7-11: 재시도·워크플로 재실행의 중복을 받는 쪽이 접을 수 있게 멱등 키를 붙인다.
+        idempotency_key = str(event.get("event_key") or "").strip()
+        if idempotency_key:
+            headers["X-Idempotency-Key"] = idempotency_key
+        request = urllib.request.Request(self.url, data=body, method="POST", headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=10) as response:  # noqa: S310 — 설정된 URL 만
                 return {"ok": 200 <= response.status < 300, "detail": f"HTTP {response.status}"}
@@ -283,85 +357,245 @@ def default_channels(names: list[str] | None = None) -> list:
 
 
 # ────────────────────────────── 본체 ──────────────────────────────
+def _eligible_debate_row(row: dict) -> bool:
+    """이 토론 행이 **편입 적격**인가 — `eligible: true` 또는 적격 상태 표기."""
+    if not isinstance(row, dict):
+        return False
+    if row.get("eligible") is False:
+        return False
+    if row.get("eligible") is True:
+        return True
+    return str(row.get("status") or "").strip().lower() in ("eligible", "adopted", "confirmed", "included")
+
+
+def retry_is_stale(event: dict, *, debate: dict | None = None, debate_events=None) -> bool:
+    """재시도 대상 후보 추천이 **지금은 무효**인가 — 이미 적격 토론이 편입된 신호다(감사 5331ab7-11).
+
+    발송에 실패한 "토론 실행 권장"을 다음 실행에서 그대로 다시 보내면, 그 사이 편입된 적격
+    토론을 무시한 권장이 나간다. 재전송 전에 현재 `debate` 요약·`debate_events` 로 다시 판정해
+    무효면 보내지 않고 `suppressed` 로 닫는다.
+    """
+    if str(event.get("type") or "") != "debate_recommended":
+        return False
+    target = str(event.get("signal_id") or "").strip()
+    if not target:
+        return False
+    by_signal = (debate or {}).get("by_signal") if isinstance(debate, dict) else None
+    for key, value in (by_signal or {}).items():
+        rows = list(value) if isinstance(value, (list, tuple)) else [value]
+        for row in rows:
+            if not _eligible_debate_row(row):
+                continue
+            sid = str((row or {}).get("signal_id") or key).strip() if isinstance(row, dict) else str(key)
+            if sid == target:
+                return True
+    for row in _iter_debate_events(debate_events):
+        if str(row.get("signal_id") or "").strip() != target:
+            continue
+        if _eligible_debate_row(row):
+            return True
+    return False
+
+
+def _iter_debate_events(debate_events) -> list[dict]:
+    """`debate_events` 입력 → 행 목록. dict(신호 ID 키)·list 어느 형태든 받는다."""
+    if isinstance(debate_events, dict):
+        out: list[dict] = []
+        for key, value in debate_events.items():
+            rows = list(value) if isinstance(value, (list, tuple)) else [value]
+            for row in rows:
+                if isinstance(row, dict):
+                    out.append(row if row.get("signal_id") else {**row, "signal_id": str(key)})
+        return out
+    if isinstance(debate_events, (list, tuple)):
+        return [row for row in debate_events if isinstance(row, dict)]
+    return []
+
+
+def _persist_log(log: dict, log_path: str | Path) -> None:
+    """발송 장부를 지금 디스크에 쓴다 — 외부 발송 **전**에도 한 번 써서 재실행 중복을 줄인다.
+
+    **원자적 쓰기**(임시 파일 → `os.replace`)로 남긴다. 쓰는 도중 프로세스가 죽어 장부가 깨지면
+    다음 실행이 모든 사건을 "처음"으로 보고 다시 보낼 수 있다(감사 5331ab7-11).
+    """
+    log["schema_version"] = SCHEMA_VERSION
+    path = Path(log_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.tmp")
+    tmp.write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+
+
 def evaluate_notifications(payload: dict, *, log_path: str | Path = DEFAULT_LOG,
                            out_path: str | Path | None = DEFAULT_OUT,
                            debate: dict | None = None, health: dict | None = None,
                            outage_id: str | None = None,
                            channels: list | None = None, now: datetime | None = None,
-                           dry_run: bool = False) -> dict:
+                           dry_run: bool = False,
+                           debate_events=None) -> dict:
     """사건 감지 → 중복 차단 → 채널 발송 → 로그·요약 JSON. 실패해도 파이프라인을 멈추지 않는다.
 
-    발송 로그는 **채널 단위**로 남긴다: `channel`·`event_key`·`status(sent|failed|pending_retry)`·
-    `attempt_at`·`latency_seconds`. 한 채널도 성공하지 못한 이벤트는 `sent` 로 기록하지 않고
-    다음 실행에서 재시도 대상으로 남긴다(P2-1).
+    발송 장부는 **`(event_key, channel)` 단위**다(감사 5331ab7-11). 채널별 상태는
+    `sent` / `pending_retry` / `failed` / `unconfigured` / `suppressed` 중 하나이고,
+    **콘솔이 성공해도 실패한 웹훅은 `pending_retry` 로 남아 다음 실행에서 다시 시도된다**.
+    이미 전달된 채널은 다시 보내지 않고, 재시도 전 "토론 실행 권장"은 현재 편입 상태로 재판정한다.
     """
     at = (now or datetime.now(timezone.utc)).replace(microsecond=0)
     log = load_log(log_path)
     active_channels = channels if channels is not None else default_channels()
+    active_names = [channel.name for channel in active_channels]
     events = collect_events(payload, debate=debate, health=health, outage_id=outage_id)
     new, suppressed = dedupe(events, log)
-    retries = pending_retries(log)
+    retries = pending_retries(log, active=active_names)
 
     sent: list[dict] = []
     channel_results: dict[str, dict] = {}
     delivery_rows: list[dict] = []
     retried = 0
+    rejudged: list[dict] = []
 
-    def _attempt(event: dict, *, is_retry: bool, prior_attempts: int = 0) -> None:
+    def _count(rows: list[dict]) -> None:
+        for row in rows:
+            bucket = channel_results.setdefault(row["channel"],
+                                                {"attempts": 0, "sent": 0, "pending_retry": 0,
+                                                 "failed": 0, "unconfigured": 0, "suppressed": 0})
+            bucket["attempts"] += 1
+            status = str(row.get("status") or "")
+            if status in bucket:
+                bucket[status] += 1
+
+    def _attempt(event: dict, *, is_retry: bool, pending_channel: str | None = None) -> None:
         nonlocal retried
-        delivery: dict[str, dict] = {}
-        latency: dict[str, float | None] = {}
+        key = str(event.get("event_key"))
+        entries = log.setdefault("keys", {})
+        entry = entries.get(key)
+        if not isinstance(entry, dict):
+            entry = {"sent_at": None, "type": event.get("type"), "status": CHANNEL_PENDING,
+                     "attempts": 0, "event": event, "channels": {}}
+            entries[key] = entry
+        entry["event"] = event
+        entry["type"] = entry.get("type") or event.get("type")
+        channels_doc = channel_rows(entry)
+        if not channels_doc:
+            channels_doc = {}
+        entry["channels"] = channels_doc
+        # 이미 전달된 채널은 **다시 보내지 않는다**. 재시도에서는 실패한 채널(또는 시도 기록이
+        # 없는 신규 활성 채널)만 대상으로 삼는다.
+        targets = []
         for channel in active_channels:
+            row = channels_doc.get(channel.name)
+            row = row if isinstance(row, dict) else {}
+            if row.get("status") == CHANNEL_SENT:
+                continue
+            if row.get("status") in (CHANNEL_FAILED, CHANNEL_SUPPRESSED):
+                continue
+            if int(row.get("attempts") or 0) >= MAX_ATTEMPTS:
+                continue
+            targets.append(channel)
+        if not dry_run:
+            # 발송 **전**에 시도 사실을 디스크에 남긴다 — 워크플로가 중간에 죽어도 재실행이
+            # 같은 사건을 처음부터 다시 만들지 않고, 채널 멱등 키로 중복을 줍는다.
+            for channel in targets:
+                row = channels_doc.setdefault(channel.name, {"attempts": 0})
+                row["attempts"] = int(row.get("attempts") or 0) + 1
+                row["status"] = CHANNEL_PENDING
+                row["attempt_at"] = _iso(at)
+                row["detail"] = row.get("detail") or "in_flight"
+            entry["status"] = event_status(channels_doc)
+            entry["attempt_at"] = _iso(at)
+            _persist_log(log, log_path)
+        for channel in targets:
             started = time.monotonic()
             try:
-                delivery[channel.name] = channel.send(event)
+                result = channel.send(event)
             except Exception as exc:  # noqa: BLE001
-                delivery[channel.name] = {"ok": False, "detail": f"{type(exc).__name__}"}
-            latency[channel.name] = round(time.monotonic() - started, 4)
-        rows = log_deliveries(event, delivery, latency, at)
-        delivery_rows.extend(rows)
-        ok = any(bool(result.get("ok")) for result in delivery.values())
-        for row in rows:
-            bucket = channel_results.setdefault(row["channel"], {"attempts": 0, "ok": 0, "skipped": 0})
-            bucket["attempts"] += 1
-            if row["status"] == "sent":
-                bucket["ok"] += 1
-            elif row["status"] == "skipped":
-                bucket["skipped"] += 1
-        key = str(event.get("event_key"))
-        if ok:
-            log.setdefault("keys", {})[key] = {"sent_at": _iso(at), "type": event.get("type"),
-                                              "status": "sent", "attempts": prior_attempts + 1,
-                                              "event": event}
-        else:
-            attempts = prior_attempts + 1
-            log.setdefault("keys", {})[key] = {
-                "sent_at": None, "type": event.get("type"),
-                "status": "pending_retry" if attempts < MAX_ATTEMPTS else "failed",
-                "attempts": attempts, "attempt_at": _iso(at), "event": event}
-        record = {**event, "sent_at": _iso(at), "channels": delivery,
-                  "status": "sent" if ok else log["keys"][key]["status"],
+                result = {"ok": False, "detail": f"{type(exc).__name__}"}
+            latency = round(time.monotonic() - started, 4)
+            row = channels_doc.setdefault(channel.name, {"attempts": 0})
+            attempts = int(row.get("attempts") or 0)
+            if result.get("ok"):
+                row["status"] = CHANNEL_SENT
+            elif _is_unconfigured(result):
+                row["status"] = CHANNEL_UNCONFIGURED
+                row["attempts"] = max(0, attempts - 1)    # 설정이 없었던 것은 시도가 아니다
+            else:
+                row["status"] = CHANNEL_FAILED if attempts >= MAX_ATTEMPTS else CHANNEL_PENDING
+            row["attempt_at"] = _iso(at)
+            row["latency_seconds"] = latency
+            row["detail"] = str(result.get("detail") or "")[:120] or None
+            row["attempts"] = int(row.get("attempts") or 0)
+            delivery_rows.append({"channel": channel.name, "event_key": key, "type": event.get("type"),
+                                  "status": row["status"], "attempts": row["attempts"],
+                                  "attempt_at": _iso(at), "latency_seconds": latency,
+                                  "detail": row["detail"]})
+            _count([{"channel": channel.name, "status": row["status"]}])
+        status = event_status(channels_doc)
+        entry["status"] = status
+        entry["attempts"] = max([int((row or {}).get("attempts") or 0)
+                                for row in channels_doc.values()] or [0])
+        entry["sent_at"] = _iso(at) if status == CHANNEL_SENT else None
+        entry["attempt_at"] = _iso(at)
+        record = {**event, "sent_at": _iso(at), "channels": channels_doc, "status": status,
                   "retried": bool(is_retry)}
-        if ok:
+        if status == CHANNEL_SENT:
             sent.append(record)
         if is_retry:
             retried += 1
 
+    def _close_suppressed(event: dict, channel: str | None) -> None:
+        """재판정으로 무효가 된 재시도 — 보내지 않고 그 채널을 `suppressed` 로 닫는다."""
+        key = str(event.get("event_key"))
+        entry = (log.get("keys") or {}).get(key)
+        if not isinstance(entry, dict):
+            return
+        channels_doc = channel_rows(entry)
+        if not channels_doc:
+            channels_doc = {channel or "unknown": {"attempts": int(entry.get("attempts") or 0)}}
+            entry["channels"] = channels_doc
+        for name, row in channels_doc.items():
+            if not isinstance(row, dict):
+                continue
+            if channel is not None and name != channel:
+                continue
+            if row.get("status") == CHANNEL_SENT:
+                continue
+            row["status"] = CHANNEL_SUPPRESSED
+            row["detail"] = "적격 토론 편입으로 무효 — 재전송하지 않음"
+            row["attempt_at"] = _iso(at)
+            _count([{"channel": name, "status": CHANNEL_SUPPRESSED}])
+        entry["status"] = event_status(channels_doc)
+        entry["attempt_at"] = _iso(at)
+
     for pending in retries:
-        _attempt(pending["event"], is_retry=True, prior_attempts=pending["attempts"])
+        event = pending["event"]
+        if retry_is_stale(event, debate=debate, debate_events=debate_events):
+            _close_suppressed(event, None)
+            rejudged.append({"event_key": event.get("event_key"), "type": event.get("type"),
+                             "reason": "eligible_debate_now"})
+            continue
+        _attempt(event, is_retry=True)
     for event in new:
         _attempt(event, is_retry=False)
 
     if not dry_run:
         if delivery_rows:
             log["deliveries"] = (list(log.get("deliveries") or []) + delivery_rows)[-MAX_DELIVERY_ROWS:]
-        log["schema_version"] = SCHEMA_VERSION
-        Path(log_path).parent.mkdir(parents=True, exist_ok=True)
-        Path(log_path).write_text(json.dumps(log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    retry_pending = [{"event_key": key, "type": (entry or {}).get("type"),
-                      "attempts": (entry or {}).get("attempts")}
-                     for key, entry in (log.get("keys") or {}).items()
-                     if isinstance(entry, dict) and entry.get("status") == "pending_retry"]
+        _persist_log(log, log_path)
+    retry_pending = []
+    retry_pending_inactive = []
+    for row in pending_retries(log, active=active_names):
+        key = row["key"]
+        entry = (log.get("keys") or {}).get(key) or {}
+        channels = channel_rows(entry)
+        for name in row.get("channels") or []:
+            item = {"event_key": key, "channel": name, "type": (row.get("event") or {}).get("type"),
+                    "attempts": int((channels.get(name) or {}).get("attempts") or 0)}
+            if name in active_names:
+                retry_pending.append(item)
+            else:
+                retry_pending_inactive.append(item)
+    suppressed_events = ([{"event_key": e.get("event_key"), "type": e.get("type")} for e in suppressed]
+                         + rejudged)
     summary = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": _iso(at),
@@ -372,13 +606,17 @@ def evaluate_notifications(payload: dict, *, log_path: str | Path = DEFAULT_LOG,
                       or outage_id),
         "n_events": len(events),
         "n_new": len([r for r in sent if not r.get("retried")]) if not dry_run else 0,
-        "n_suppressed": len(suppressed) + (len(sent) if dry_run else 0),
+        "n_suppressed": len(suppressed_events) + (len(sent) if dry_run else 0),
         "n_retried": retried,
+        "n_retry_suppressed": len(rejudged),
         "retry_pending": retry_pending[:20],
+        # 꺼져 있는 채널(환경변수 없음)의 재시도 잔여 — 다시 켜지면 그때 보낸다.
+        "retry_pending_inactive": retry_pending_inactive[:20],
         "new": sent,
-        "suppressed": [{"event_key": e.get("event_key"), "type": e.get("type")} for e in suppressed],
+        "suppressed": suppressed_events,
         "channels": channel_results,
-        "note_ko": "같은 signal_id·event_key 는 다시 보내지 않는다(중복 0건 계약). 실패는 재시도 큐에 남긴다.",
+        "note_ko": ("같은 signal_id·event_key 는 다시 보내지 않는다(중복 0건 계약). "
+                    "전달 장부는 (event_key, channel) 단위이며, 실패한 채널만 다음 실행에서 재시도한다."),
     }
     if out_path and not dry_run:
         p = Path(out_path)
@@ -393,11 +631,11 @@ def log_deliveries(event: dict, delivery: dict, latency: dict, at: datetime) -> 
     for name, result in delivery.items():
         detail = str((result or {}).get("detail") or "")
         if (result or {}).get("ok"):
-            status = "sent"
-        elif detail.endswith("건너뜀"):
-            status = "skipped"
+            status = CHANNEL_SENT
+        elif _is_unconfigured(result):
+            status = CHANNEL_UNCONFIGURED
         else:
-            status = "pending_retry"
+            status = CHANNEL_PENDING
         rows.append({"channel": name, "event_key": event.get("event_key"),
                      "type": event.get("type"), "status": status,
                      "attempt_at": _iso(at), "latency_seconds": latency.get(name),

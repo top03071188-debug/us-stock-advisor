@@ -11,11 +11,22 @@
  * - 네트워크가 없으면 마지막 성공 세트로 화면을 열고, 클라이언트는 "캐시된 세트" 배지를 띄운다.
  *
  * 캐시 키를 바꿀 때는 `SW_VERSION` 과 index.html 의 `?v=` 를 함께 올린다.
+ *
+ * [감사 09] 토론 상세는 `data/debate_details/{report_id}.json` 로 나뉜다. 이 파일들은
+ * `CORE_FILES` 가 아니다(종목 화면을 열 때 처음 필요해진다) — 그래도 **같은 발행 세트**로 취급한다:
+ *   - `handleData` 가 `/data/` 아래 모든 경로를 받고, `cacheIfCurrent` 가 매니페스트의 sha256 과
+ *     대조한 뒤에만 세트 캐시에 넣는다(온라인·오프라인 모두 같은 규칙).
+ *   - 매니페스트에 없는 상세 경로는 캐시하지 않는다 — 낡은 세트가 새 파일을 섞지 않는다.
+ *   - 세트를 바꿀 때 `trimSets` 가 옛 세트 캐시를 지우므로 상세도 함께 정리된다.
  */
 "use strict";
 
-const SW_VERSION = "phase4-3";
+/** 서비스워커·셸 캐시 키 — sw.js 가 바뀌면 올린다. */
+const SW_VERSION = "phase4-5";
+/** index.html 의 `?v=` 와 **같은** 값 — 셸 자산 URL 은 html 이 소유한다(둘을 함께 올린다). */
+const ASSET_VERSION = "phase4-5";
 const SHELL_CACHE = `shell-${SW_VERSION}`;
+const SHELL_PREFIX = "shell-";
 const SET_PREFIX = "set-";
 const DATA_PREFIX = "./data/";
 const MANIFEST = "deploy_manifest.json";
@@ -37,8 +48,8 @@ const CORE_FILES = [
 const SHELL_ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=phase4-3",
-  "./app.js?v=phase4-3",
+  `./styles.css?v=${ASSET_VERSION}`,
+  `./app.js?v=${ASSET_VERSION}`,
   "./manifest.json",
   "./icon.svg",
 ];
@@ -71,8 +82,25 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    self.clients
+      .claim()
+      // [감사 09] 셸 캐시는 **지금 버전 하나만** 남긴다. 예전 셸이 남아 있으면
+      // index.html 이 같은 `?v=` 로 요청하는 app.js 를 **옛 캐시**에서 돌려줄 수 있다.
+      // install 이 새 셸을 이미 채운 뒤에만 부르므로 오프라인 낙폭은 없다.
+      .then(() => trimShells()),
+  );
 });
+
+/** 현재 버전이 아닌 `shell-*` 캐시를 지운다 — 새 셸이 준비된 뒤에만. */
+async function trimShells() {
+  const names = await caches.keys();
+  await Promise.all(
+    names
+      .filter((name) => name.startsWith(SHELL_PREFIX) && name !== SHELL_CACHE)
+      .map((name) => caches.delete(name)),
+  );
+}
 
 /** 현재 세트가 아닌 set-* 캐시를 지운다 — **전환이 끝난 뒤에만** 부른다. */
 async function trimSets(keep) {

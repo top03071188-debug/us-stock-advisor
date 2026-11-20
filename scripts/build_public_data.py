@@ -17,6 +17,8 @@
     ledger/records.json · ledger/portfolio.json · radar/13f.json · health.json ·
     debate.json · notifications.json · config.json · **deploy_manifest.json**
     (+ 하위 호환: folds.json, watchlist.json)
+    (+ **토론 상세**: debate_details/{report_id}.json — 1R·2R·3R 원문. `debate.json` 의 행은
+      `detail_path` 만 갖고, 화면이 그 경로를 읽어 예전과 같은 1R→2R→3R 을 그린다(감사 09·10).
     `data/debate_reports.json` 이 없으면 `debate/*` 를 만들지 않는다(화면은 "토론 없음").
     `deploy_manifest.json` 은 모든 공개 파일의 sha256 과 통합 `bundle_version` 을 담는다 —
     서비스워커가 이 세트 전체를 받아 검증한 뒤 **원자적으로** 전환한다(감사 12).
@@ -50,6 +52,10 @@ STRUCTURAL_KEYS = {
     "reason", "reasons", "gates", "components", "notes", "note", "list",
     "regime_votes", "inputs_missing", "eligible_folds", "blocked_horizons",
     "watchlist_count", "count", "as_of_date", "horizon",
+    # [감사 09·10] 토론 행의 **구조 키** — 상세 파일 위치와 스냅샷 대조 결과(값 아님).
+    "detail_path", "snapshot_matched", "one_line_ko",
+    # [통합 재검토] 신호 카드가 "요약 행"임을 말하는 표식(크기 상한에서만 쓰인다).
+    "compact",
 }
 
 
@@ -101,7 +107,13 @@ def assert_no_forbidden(obj, rules: dict, name: str = "") -> None:
 
 
 def _json_size(obj) -> int:
-    return len(json.dumps(obj, ensure_ascii=False).encode("utf-8"))
+    """파일에 **실제로 쓰이는** 바이트 수(5.6).
+
+    [감사 09] 예전에는 `ensure_ascii=False` 의 compact 결과를 쟀는데, 게시되는 파일은 `indent=2`
+    였다 — 24건 케이스가 compact 189,851B(통과)·실파일 243,123B(200KiB 초과)로 갈렸다.
+    검사는 반드시 **커밋·배포되는 그 바이트**로 한다.
+    """
+    return len(_serialize(obj))
 
 
 # ────────────────────────────── 각 파일 ──────────────────────────────
@@ -220,7 +232,8 @@ def build_today(signals: dict | None) -> dict:
         key = "sell" if str(row.get("type", "")).upper().startswith("SELL") else (
             "buy" if str(row.get("decision") or row.get("type")) == "BUY" else "watch")
         counts[key] += 1
-    return {
+    noted = ("오늘 신호 없음 — 기준을 넘은 종목이 없습니다(정상)." if not rows else None)
+    doc = {
         "as_of": signals.get("as_of"),
         "status": signals.get("status", "awaiting_first_run"),
         "regime": signals.get("regime"),
@@ -230,9 +243,80 @@ def build_today(signals: dict | None) -> dict:
         "watchlist_count": signals.get("watchlist_count", len(signals.get("watchlist") or [])),
         "params_version": signals.get("params_version"),
         "published_at": signals.get("signal_published_at"),
-        "notes": ("오늘 신호 없음 — 기준을 넘은 종목이 없습니다(정상)." if not rows else None),
+        "notes": noted,
         "blocked_note_ko": (None if not blocked else f"차단 {len(blocked)}건 — 안 산 이유도 정보입니다."),
     }
+    return _fit_today_size(doc)
+
+
+def _fit_today_size(doc: dict) -> dict:
+    """`signals/today.json` 크기 상한(5.6) — 자세한 행을 **점수 낮은 순으로** 요약 행으로 줄인다.
+
+    200KiB 를 넣어 돌려 보면 신호 7건이 이미 66KB, 20건이 185KB, 43건이 396KB 였다.
+    한 종목당 상세(뉴스·공시·밸류에이션)가 9KB 라서, \"기준을 넘은 종목이 많은 날\"에는
+    **빌드 전체가 SystemExit 로 죽고** 다른 파일까지 하나도 안 쓰였다(감사 09 의 같은 뿌리).
+    상세는 이미 `tickers/{T}.json` 에 종목별로 있으므로, 상한을 넘긴 나머지는 **요약 행**으로
+    내리고 몇 건을 그렇게 했는지 `notes` 에 적는다(조용히 깎지 않는다).
+    """
+    rows = doc.get("signals") or []
+    trimmed = 0
+    idx = len(rows) - 1
+    while rows and _json_size(doc) > TODAY_MAX and idx >= 0:
+        if rows[idx].get("compact") is not True:
+            rows[idx] = _compact_signal_row(rows[idx])
+            trimmed += 1
+        idx -= 1
+    if trimmed:
+        extra = (f"화면 크기 상한(200KB) 때문에 신호 {trimmed}건은 요약만 실었습니다 "
+                 f"— 전체 내용은 종목 상세(`tickers/<티커>.json`)에 있습니다.")
+        doc["notes"] = " ".join(x for x in (doc.get("notes"), extra) if x)
+    return doc
+
+
+#: `signals/today.json` 이 이 바이트를 넘으면 자세한 행을 요약으로 바꿔다(5.6 200KiB 의 안전 여유).
+TODAY_MAX = 190 * 1024
+#: 요약 행에 남기는 필드 — 카드가 "무엇을·얼마에·왜"를 말하는 데 필요한 최소한이다.
+COMPACT_SIGNAL_FIELDS = ("signal_id", "ticker", "as_of", "type", "grade", "trade_grade",
+                         "entry_score", "quant_intent", "decision", "generated_price",
+                         "thesis_ko", "sector", "target_session", "revision", "supersedes",
+                         "params_version", "snapshot_id")
+
+
+def _compact_signal_row(row: dict) -> dict:
+    """상세 행 → 요약 행(같은 종목 상세 파일을 가리키는 `detail_path` 포함).
+
+    `compact: true` 표식은 화면이 "이 카드는 요약"이라고 말할 수 있게 남긴다(값이 아니라 상태).
+    """
+    out = {key: row.get(key) for key in COMPACT_SIGNAL_FIELDS if key in row}
+    ticker = str(row.get("ticker") or "")
+    if ticker:
+        out["detail_path"] = f"data/tickers/{ticker}.json"
+    out["compact"] = True
+    return out
+
+
+def _with_snapshot_flag(debate_row: dict | None, record: dict | None,
+                        signals: dict | None) -> dict | None:
+    """토론 행에 `snapshot_matched` 를 붙인다(부수 ③).
+
+    종목 상세는 `by_ticker` 의 **티커별 최신 행**을 그대로 붙여 왔기 때문에, 오늘 신호가 새 스냅샷인데
+    토론이 지난 스냅샷의 것일 수 있었다. `signal_id`(없으면 `snapshot_id`)를 대조해 명시한다.
+      - 비교할 식별자가 아예 없으면 `False` — "오늘 신호의 확정 토론"으로 단정하지 않는다.
+    """
+    if not debate_row:
+        return None
+    row = dict(debate_row)
+    sig = (record or {}).get("signal_id")
+    row_sig = debate_row.get("signal_id")
+    snap = (signals or {}).get("snapshot_id")
+    row_snap = debate_row.get("snapshot_id")
+    if sig and row_sig:
+        row["snapshot_matched"] = str(sig) == str(row_sig)
+    elif snap and row_snap:
+        row["snapshot_matched"] = str(snap) == str(row_snap)
+    else:
+        row["snapshot_matched"] = False
+    return row
 
 
 def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = None,
@@ -242,6 +326,7 @@ def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = Non
     record = public_signal(rows[0]) if rows else None
     chart = (signals.get("charts") or {}).get(ticker)
     checks = next((c for c in signals.get("position_checks") or [] if c.get("ticker") == ticker), None)
+    debate = _with_snapshot_flag(debate_row, record, signals)
     return {
         "ticker": ticker,
         "as_of": signals.get("as_of"),
@@ -262,13 +347,15 @@ def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = Non
         "risk": (record or {}).get("risk") or {"veto": []},
         "invalidation": (record or {}).get("invalidation"),
         "gate_summary": (record or {}).get("gate_summary"),
-        "debate": debate_row,
-        "debate_note_ko": (None if debate_row else DEBATE_TICKER_NOTE.format(ticker=ticker)),
-        "debate_display": None if not debate_row else {
-            "badge": debate_row.get("badge"), "quant_grade": debate_row.get("quant_grade"),
-            "display_grade": debate_row.get("display_grade"),
-            "recommendation": debate_row.get("recommendation"),
-            "one_line_ko": ((debate_row.get("round3") or {}).get("chair") or {}).get("one_line_ko"),
+        "debate": debate,
+        "debate_note_ko": (None if debate else DEBATE_TICKER_NOTE.format(ticker=ticker)),
+        "debate_display": None if not debate else {
+            "badge": debate.get("badge"), "quant_grade": debate.get("quant_grade"),
+            "display_grade": debate.get("display_grade"),
+            "recommendation": debate.get("recommendation"),
+            # 행은 **요약**이고 의장 한 줄은 행 꼭대기로 옮겼다(라운드 원문은 상세 파일로 빠짐).
+            "one_line_ko": debate.get("one_line_ko") or _one_line_of(debate),
+            "snapshot_matched": debate.get("snapshot_matched"),
         },
         "position": ({k: position.get(k) for k in POSITION_FIELDS if position.get(k) is not None}
                      if position else None),
@@ -342,7 +429,9 @@ def build_ledger(signals: dict | None, records: list[dict] | None, portfolio: di
         "debate_effect": summary.get("debate_effect") or {
             "pairs": 0, "net_pp": None, "verdict": "표본 0건 — 판정 보류"},
         "portfolio": portfolio or (signals.get("portfolio") or {}),
-        "records": records or [],
+        # [감사 09] 예전에는 원장 **전체 레코드**를 여기에도 복사해 넣었다(28건에서 251KB).
+        # 정식 목록은 `ledger/records.json`(최근 200건)이고, 여기 중복이 바로 5.6 의 200KiB 를
+        # 넘기게 만든 원인이었다 — 화면도 `ledger/records.json` 만 읽는다.
         "note_ko": "신호 정확도와 계좌 성과는 다른 질문이다 — 따로 읽는다(4.12).",
     }
 
@@ -366,7 +455,24 @@ def build_records(signals: dict | None, records: list[dict] | None) -> dict:
             # v1.3.3 02: 발행 회차·대체 대상 — 원장 탭에서 "같은 날 몇 번째 발행인지"를 보여 준다.
             "revision": record.get("revision"), "supersedes": record.get("supersedes"),
         })
-    return {"as_of": signals.get("as_of"), "count": len(rows), "records": rows}
+    # [통합 재검토] 행 수 상한(200)만으로는 부족하다 — 실제 레코드는 행당 1.07KB 라 200건이면
+    #   214,705B 로 200KiB 를 넘고 **빌드 전체가 SystemExit 로 죽었다**(다른 파일도 미기록).
+    #   오래된 행부터 바이트 예산에 맞춰 빼고 몇 건을 뺐는지 적는다(화면은 최근 50건만 그린다).
+    dropped = 0
+    doc = {"as_of": signals.get("as_of"), "count": len(rows), "records": rows}
+    while rows and _json_size(doc) > RECORDS_MAX:
+        rows.pop(0)
+        dropped += 1
+        doc["count"] = len(rows)
+    if dropped:
+        doc["omitted"] = dropped
+        doc["note_ko"] = (f"최근 {len(rows)}건만 실었습니다 — 오래된 {dropped}건은 크기 상한(200KB)으로 "
+                          f"공개 파일에서 빠졌습니다(원장에는 그대로 있음).")
+    return doc
+
+
+#: `ledger/records.json` 이 이 바이트를 넘으면 오래된 행부터 뺀다(5.6 200KiB 의 안전 여유).
+RECORDS_MAX = 170 * 1024
 
 
 def build_portfolio(signals: dict | None, state: dict | None) -> dict:
@@ -589,7 +695,22 @@ NO_DEBATE_COMPARISON = {
     "pair_summary": EMPTY_PAIR_SUMMARY,
 }
 
+#: `debate.json` 목록에 싣는 최대 리포트 수(오래된 것부터 목록에서 뺄 뿐, 상세 파일은 남긴다).
 MAX_DEBATE_REPORTS = 40
+#: 라운드 원문(1R·2R·3R)을 `debate.json` 에 **인라인**으로 넣어도 되는 상한(실파일 바이트).
+#  감사 09: 원문은 보고서마다 5KB 안팎이고, 43종목 × 수십 건이 쌓이면 500KB 를 넘겼다.
+#  그래서 ① 원문은 **항상** `debate_details/{report_id}.json` 으로 분리하고 ② 목록은 전부
+#  인라인일 때만(작은 배포·구 샘플과의 호환) 이 예산 안에서 인라인을 유지한다.
+DEBATE_INLINE_BUDGET = 150 * 1024
+#: 상세 파일을 빼고도 남은 `debate.json` 이 이 값을 넘으면 오래된 리포트 행부터 목록에서 뺀다.
+DEBATE_LIST_MAX = 190 * 1024
+DETAIL_PATH_PREFIX = "data/debate_details/"
+#: 채택되지 않은 회차의 배지 — "토톤 완료"로 읽히면 안 된다(02 · T1 채택 계약).
+BADGE_NOT_ADOPTED = "채택 아님"
+REASON_NOT_ADOPTED = "NOT_ADOPTED"
+REASON_ADOPTED_MISMATCH = "ADOPTED_REPORT_MISMATCH"
+#: 상세 파일로 빠지는 필드 — 이 셋이 본문 크기의 대부분이다.
+ROUND_FIELDS = ("round1", "round2", "round3")
 
 POSITION_FIELDS = ("ticker", "weight", "sector", "opened_at", "tranches_filled", "tranches",
                    "stop_distance", "stop_price", "stop_headroom_pct", "trailing", "trim_stage",
@@ -611,15 +732,64 @@ def load_debate_events(event_dir: str | Path | None = "data/ledger/debate_events
     return debate_mod.load_events(event_dir)
 
 
-def _latest_event(events: list[dict], report_id: str | None = None) -> dict | None:
-    """같은 신호의 이벤트 중 최신 — 같은 `report_id` 가 있으면 그것을 우선한다."""
-    if not events:
+def _events_of(doc_row: dict) -> list[dict]:
+    return [e for e in (doc_row.get("events") or []) if isinstance(e, dict)]
+
+
+def _adopted_block(doc_row: dict) -> dict:
+    """신호 단위로 확정된 **채택 정체성**(`report_id`·`report_sha256`·`snapshot_id`)."""
+    adopted = doc_row.get("adopted")
+    return adopted if isinstance(adopted, dict) else {}
+
+
+def _event_for_report(doc_row: dict, report_id) -> dict | None:
+    """이 리포트 **자신**의 이벤트만 돌려준다 — 다른 회차의 이벤트로 내려가지 않는다(02 · 채택 계약).
+
+    [T1 · 02] 예전에는 `report_id` 가 맞는 이벤트가 없으면 **신호의 마지막 이벤트**로 폴백했다.
+    그래서 지연 도착 `-02` 행이 적격 `-01` 의 이벤트를 그대로 받아 "토톤 완료"로 보였다.
+    """
+    rid = str(report_id or "")
+    if not rid:
         return None
-    if report_id:
-        matched = [e for e in events if str(e.get("report_id")) == str(report_id)]
-        if matched:
-            return max(matched, key=lambda e: str(e.get("recorded_at") or ""))
-    return max(events, key=lambda e: str(e.get("recorded_at") or e.get("completed_at") or ""))
+    matched = [e for e in _events_of(doc_row) if str(e.get("report_id") or "") == rid]
+    if not matched:
+        return None
+    return max(matched, key=lambda e: str(e.get("recorded_at") or e.get("completed_at") or ""))
+
+
+def _superseded_reason(doc_row: dict, report_id) -> str | None:
+    rid = str(report_id or "")
+    for row in doc_row.get("superseded") or []:
+        if isinstance(row, dict) and str(row.get("report_id") or "") == rid:
+            return str(row.get("reason") or "") or None
+    return None
+
+
+def _adoption_of(doc_row: dict, report: dict) -> tuple[bool, list[str]]:
+    """(이 리포트가 **채택본**인가, 어긋난 경우의 사유 코드).
+
+    [02 · T1] 채택은 `adopted` 블록의 **정체성**(`report_id`·`report_sha256`·`snapshot_id`)으로 판정한다.
+    같은 `report_id` 라도 내용이 바뀌면(영수증 불일치) 그 결정에 붙은 보고서가 아니다.
+    """
+    adopted = _adopted_block(doc_row)
+    if not adopted:
+        # 채택 블록 이전 문서 — 자기 `report_id` 의 이벤트가 있으면 그 리포트에 대한 판정으로 쓴다.
+        return (_event_for_report(doc_row, report.get("report_id")) is not None), []
+    if str(adopted.get("report_id") or "") != str(report.get("report_id") or ""):
+        return False, [REASON_NOT_ADOPTED]
+    snapshot = str(adopted.get("snapshot_id") or "")
+    report_snapshot = str(report.get("snapshot_id") or "")
+    if snapshot and report_snapshot and snapshot != report_snapshot:
+        return False, [REASON_ADOPTED_MISMATCH]
+    claimed = str(adopted.get("report_sha256") or "")
+    if claimed:
+        try:
+            actual = debate_mod.compute_report_sha256(report)
+        except (TypeError, ValueError):
+            actual = ""
+        if actual and actual != claimed:
+            return False, [REASON_ADOPTED_MISMATCH]
+    return True, []
 
 
 def _event_el(event: dict) -> dict:
@@ -631,6 +801,47 @@ def _event_el(event: dict) -> dict:
             "signal_observed_at": event.get("signal_observed_at")}
 
 
+def debate_detail_name(report_id) -> str | None:
+    """`report_id` → 파일 이름(경로 조작 문자를 지운다). 비었으면 None."""
+    rid = str(report_id or "").strip()
+    if not rid:
+        return None
+    safe = re.sub(r"[^A-Za-z0-9._-]", "_", rid)[:120].strip(".")
+    return safe or None
+
+
+def debate_detail_path(report_id) -> str | None:
+    name = debate_detail_name(report_id)
+    return f"{DETAIL_PATH_PREFIX}{name}.json" if name else None
+
+
+def _one_line_of(row: dict):
+    return ((row.get("round3") or {}).get("chair") or {}).get("one_line_ko")
+
+
+def slim_report_row(row: dict, *, with_detail: bool = True) -> dict:
+    """공개 목록·`by_ticker` 용 요약 행 — 라운드 원문만 빼고 식별·판정은 그대로 둔다.
+
+    `one_line_ko`(의장 한 줄)는 요약이므로 남기고, 상세 위치를 `detail_path` 로 가리킨다.
+    """
+    slim = {k: v for k, v in row.items() if k not in ROUND_FIELDS}
+    slim["one_line_ko"] = _one_line_of(row)
+    path = debate_detail_path(row.get("report_id")) if with_detail else None
+    if path:
+        slim["detail_path"] = path
+    return slim
+
+
+def _inline_row(row: dict) -> dict:
+    """상세(원문 포함) 행 + `detail_path` — 작은 배포에서 구 화면과 똑같이 보이게 한다."""
+    inline = dict(row)
+    inline["one_line_ko"] = _one_line_of(row)
+    path = debate_detail_path(row.get("report_id"))
+    if path:
+        inline["detail_path"] = path
+    return inline
+
+
 def _event_actions(event: dict) -> dict:
     """이벤트 → `public_report` 의 행동 인자(`actions`)."""
     return {"quant_grade": event.get("quant_grade"), "recommendation": event.get("recommendation"),
@@ -640,16 +851,76 @@ def _event_actions(event: dict) -> dict:
             "veto_codes": list(event.get("veto_codes") or [])}
 
 
+def _by_ticker_of(rows: list[dict], detail_names: set[str] | None = None) -> dict[str, dict]:
+    """종목별 **최신 요약 1행** — 라운드 원문은 담지 않는다(43종목이 쌓여도 크기가 상수를 유지).
+
+    행은 이미 최신순으로 정렬되어 있으므로 종목당 첫 행이 최신이다. `detail_names` 를 주면
+    상세 파일이 **실제로 있는** 행만 `detail_path` 를 갖는다(없는 경로를 가리키지 않게).
+    """
+    by_ticker: dict[str, dict] = {}
+    for row in rows:
+        ticker = row.get("ticker")
+        if ticker and ticker not in by_ticker:
+            name = debate_detail_name(row.get("report_id"))
+            has_detail = detail_names is None or (name is not None and name in detail_names)
+            by_ticker[ticker] = slim_report_row(row, with_detail=has_detail)
+    return by_ticker
+
+
+def _with_inline_rounds(doc: dict, rows: list[dict]) -> dict:
+    """작은 배포에서는 라운드 원문을 **인라인으로도** 남긴다(구 화면·구 샘플 호환).
+
+    [감사 09] 큰 배포에서 크기를 먹은 것은 원문의 **반복**이다. 그래서
+      - 상세 파일(`debate_details/*.json`)은 항상 만들고,
+      - 목록은 **전부 인라인해도 `DEBATE_INLINE_BUDGET` 안에 들 때만** 인라인한다(전부 아니면 전무).
+    이러면 작은 배포는 예전과 똑같은 바이트를 보이고, 종목·리포트가 쌓여도 상한이 지켜진다.
+    """
+    if not rows:
+        return doc
+    if not any(row.get("round1") or row.get("round2") or row.get("round3") for row in rows):
+        return doc
+    candidate = {**doc, "reports": [_inline_row(row) for row in rows]}
+    if _json_size(candidate) <= DEBATE_INLINE_BUDGET:
+        return candidate
+    return doc
+
+
+def _fit_debate_size(doc: dict) -> dict:
+    """`debate.json` 의 마지막 안전핀 — 그래도 넘으면 **오래된 리포트부터** 목록에서 뻐낸다.
+
+    `by_ticker`(종목당 1행)는 남긴다. 그걸로도 넘치면 조용히 깎지 않고 **실패**한다(5.6).
+    """
+    rows = doc.get("reports") or []
+    trimmed = 0
+    while rows and _json_size(doc) > DEBATE_LIST_MAX:
+        rows.pop()
+        trimmed += 1
+    if trimmed:
+        extra = f"파일 크기 상한(5.6) 때문에 오래된 {trimmed}건을 목록에서 더 뻐습니다."
+        doc["note_ko"] = " ".join(x for x in (doc.get("note_ko"), extra) if x)
+    if _json_size(doc) > MAX_BYTES:
+        raise SystemExit(f"빌드 실패: debate.json 이 {_json_size(doc) / 1024:.0f}KB — 200KB 제한(5.6)")
+    return doc
+
+
 def build_debate(reports_doc: dict | None, records: list[dict] | None,
                  comparison: dict | None, params: dict | None, as_of: str | None, *,
-                 debate_events: dict | None = None) -> dict:
+                 debate_events: dict | None = None, details: dict | None = None) -> dict:
     """`web/data/debate.json` — 토론 0건이어도 **항상 만든다**(화면은 '토론 없음'을 읽는다, 5.7).
 
     [02 · 감사 02] 예전에는 `reconcile_debates(doc, records, {}, ...)` 로 **빈 체결 목록**으로 편입을
     다시 계산했다 — 그렇게 하면 `ATTACHED_AFTER_FILL` 이 원리적으로 작동하지 않고, Pages 의 편입
     판정이 원장과 달라진다. 지금은 원장이 `debate_events` 에 남긴 **확정 결과를 그대로** 쓰고,
     리포트 본문(1R·2R·3R)만 `data/debate_reports.json` 에서 가져와 붙인다.
-    이벤트가 없는 리포트는 자격을 추정하지 않고 `badge: null` 로 **표시만** 한다.
+    [02 · T1] 편입 결과는 원장이 `debate_events` 에 남긴 **채택 결과**를 그대로 쓴다:
+    채택본(`adopted.report_id`·`report_sha256`·`snapshot_id`)과 일치하는 행만 적격을 신뢰하고,
+    채택되지 않은 회차는 자기 이벤트의 지연·기각 사유만 달고 `채택 아님` 으로 남긴다
+    (다른 회차의 이벤트를 빌려 “토톤 완료”로 보이지 않게 — 감사 02).
+    이벤트가 없는 신호는 자격을 추정하지 않고 `badge: null` 로 **표시만** 한다.
+
+    [감사 09] 본문은 여기서 **분리**한다 — 라운드 원문(`round1`·`round2`·`round3`)은
+    `details` 에 `debate_details/{report_id}.json` 으로 나가고, `debate.json` 의 행은
+    `detail_path` 로 그 파일을 가리킨다. 그래서 종목·리포트가 쌓여도 목록은 상수 크기로 남는다.
     """
     doc = reports_doc or {}
     reports = debate_mod.reports_of(doc)
@@ -660,8 +931,43 @@ def build_debate(reports_doc: dict | None, records: list[dict] | None,
     for report in reports:
         sid = str(report.get("signal_id") or "")
         doc_row = events.get(sid) or {}
-        event = _latest_event(list(doc_row.get("events") or []), report.get("report_id"))
+        has_ledger = bool(_events_of(doc_row) or _adopted_block(doc_row) or doc_row.get("superseded"))
+        if not has_ledger:
+            # 원장이 이 신호를 **한 번도 판정하지 않았다** — 자격을 지어내지 않고 표시만 한다.
+            missing_events += 1
+            row = debate_mod.public_report(report, {}, {})
+            row.update({"badge": None, "eligible": None, "late": None, "invalid": None,
+                        "track": None, "reasons": ["LEDGER_EVENT_MISSING"]})
+            rows.append(row)
+            continue
+        adopted, why = _adoption_of(doc_row, report)
+        event = _event_for_report(doc_row, report.get("report_id"))
+        if not adopted:
+            # [02 · T1] 채택되지 않은 회차(`-02` 등)는 **자기 이벤트의 지연·기각 사유**만 쓰고,
+            # 적격·“토톤 완료”로는 절대 올리지 않는다.
+            local = _event_el(event) if event is not None else {}
+            reasons = [*why, *(str(r) for r in local.get("reasons") or [])]
+            superseded = _superseded_reason(doc_row, report.get("report_id"))
+            if superseded:
+                reasons.append(superseded)
+            if not reasons:
+                reasons = [REASON_NOT_ADOPTED]
+            el = {"eligible": False, "late": bool(local.get("late")), "invalid": bool(local.get("invalid")),
+                  "reasons": reasons, "report_validated_at": local.get("report_validated_at"),
+                  "frozen_at": local.get("frozen_at"), "order_cutoff_at": local.get("order_cutoff_at"),
+                  "signal_observed_at": local.get("signal_observed_at")}
+            row = debate_mod.public_report(report, el, {})
+            if row.get("badge") == debate_mod.BADGE_DONE:
+                row["badge"] = BADGE_NOT_ADOPTED  # `BADGE_DONE` 는 “토톤 완료”다 — 채택본만 말할 수 있다.
+            row["reasons"] = reasons
+            if el["late"]:
+                n_late += 1
+            if el["invalid"]:
+                n_invalid += 1
+            rows.append(row)
+            continue
         if event is None:
+            # 채택본인데 그 리포트의 이벤트가 없다 — 자격을 추정하지 않고 표시만 한다.
             missing_events += 1
             row = debate_mod.public_report(report, {}, {})
             row.update({"badge": None, "eligible": None, "late": None, "invalid": None,
@@ -680,18 +986,53 @@ def build_debate(reports_doc: dict | None, records: list[dict] | None,
         rows.append(row)
     rows.sort(key=lambda r: (str(r.get("completed_at") or ""), str(r.get("signal_id") or "")),
               reverse=True)
-    by_ticker: dict[str, dict] = {}
-    for row in rows:
+    # 200KB 제한(5.6): 목록은 최근 것만 싣는다 — 종목별 요약은 전부 남긴다.
+    dropped = max(0, len(rows) - MAX_DEBATE_REPORTS)
+    listed = rows[:MAX_DEBATE_REPORTS]
+    # 상세 파일은 ① 목록에 실린 행 ② 종목별 최신 행 — 종목 화면이 빈 상세를 가리키지 않게.
+    detail_rows = list(listed)
+    detail_names = {debate_detail_name(row.get("report_id")) for row in listed} - {None}
+    listed_tickers = {row.get("ticker") for row in listed}
+    for row in rows[MAX_DEBATE_REPORTS:]:
         ticker = row.get("ticker")
-        if ticker and ticker not in by_ticker:
-            by_ticker[ticker] = row
-    # 200KB 제한(5.6): 리포트 목록은 최근 것만 싣는다 — 종목별 요약은 전부 남긴다.
-    rows = rows[:MAX_DEBATE_REPORTS]
+        name = debate_detail_name(row.get("report_id"))
+        if ticker in listed_tickers or not name or name in detail_names:
+            continue
+        listed_tickers.add(ticker)
+        detail_names.add(name)
+        detail_rows.append(row)
+    by_ticker = _by_ticker_of(rows, detail_names)
+    oversized: list[str] = []
+    degraded_detail: list[str] = []
+    skipped_detail: set[str] = set()
+    if details is not None:
+        # 라운드 원문은 **리포트별 파일**로 — 파일 하나가 다시 200KiB 를 넘지 않게 여기서도 잰다.
+        # [통합 재검토] 너무 큰 리포트 하나가 빌드 전체를 죽이면 안 된다 — 라운드 원문만 빼고
+        # 요약을 남기고(그래도 넘치면 파일을 안 만들고 `detail_path` 를 지운다) 사유를 적는다.
+        for row in detail_rows:
+            name = debate_detail_name(row.get("report_id"))
+            if not name:
+                continue
+            payload = _inline_row(row)
+            if _json_size(payload) > MAX_BYTES:
+                payload = slim_report_row(row, with_detail=False)
+                payload["note_ko"] = ("이 리포트의 라운드 원문은 파일 크기 상한(200KB)을 넘어"
+                                      " 공개 상세에 실리지 않았습니다 — 요약만 제공합니다.")
+                degraded_detail.append(name)
+            if _json_size(payload) > MAX_BYTES:
+                oversized.append(name)
+                skipped_detail.add(name)
+                continue
+            details[f"debate_details/{name}.json"] = payload
+    # 상세 파일을 만들지 못한 리포트는 `detail_path` 를 지워 **없는 파일을 가리키지 않게** 한다.
+    for row in [*listed, *by_ticker.values()]:
+        if debate_detail_name(row.get("report_id")) in skipped_detail:
+            row.pop("detail_path", None)
     source = comparison or {}
     summary = {k: source.get(k) for k in COMPARISON_FIELDS if k in source}
     summary.update({k: v for k, v in NO_DEBATE_COMPARISON.items() if k not in summary})
     summary["pair_summary"] = pair_summary_of(source)
-    # `policy_diff_pp` 는 **계좌 순자산 차이**다. 산출 주체는 비교 모듈이고, 없으면 None 으로 둔다
+    # `policy_diff_pp` 는 **계좌 순자산 차이**다 — 산출 주체는 비교 모듈이고, 없으면 None 으로 둔다
     # (페어 손익으로 대신 채우지 않는다 — 그게 감사 P1-3 이 지적한 혼합이다).
     summary["policy_diff_pp"] = source.get("policy_diff_pp")
     notes = []
@@ -700,7 +1041,14 @@ def build_debate(reports_doc: dict | None, records: list[dict] | None,
     if missing_events:
         notes.append(f"원장 편입 이벤트가 없는 리포트 {missing_events}건은 자격을 다시 계산하지 않고"
                      " 표시만 합니다(다음 배치가 확정합니다).")
-    return {
+    if degraded_detail:
+        notes.append(f"라운드 원문이 200KB 상한을 넘은 리포트 {len(degraded_detail)}건은 원문을 빼고"
+                     " 요약만 상세로 제공합니다.")
+    if oversized:
+        notes.append(f"요약으로도 200KB 상한을 넘는 리포트 {len(oversized)}건은 상세 파일을 만들지 않습니다.")
+    if dropped:
+        notes.append(f"최근 {len(listed)}건만 목록에 싣고 오래된 {dropped}건은 상세 파일로 읽을 수 있습니다(5.6).")
+    doc = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "as_of": as_of,
@@ -710,10 +1058,12 @@ def build_debate(reports_doc: dict | None, records: list[dict] | None,
         "auto_downgrade_enabled": bool(((params or {}).get("debate") or {}).get(
             "auto_downgrade_enabled", False)),
         "comparison": summary,
-        "reports": rows,
+        # `reports` = 최근 요약 행, `by_ticker` = 종목별 최신 요약 1행 — 둘 다 라운드 원문이 없다.
+        "reports": [slim_report_row(row) for row in listed],
         "by_ticker": by_ticker,
         "note_ko": " ".join(notes) or None,
     }
+    return _fit_debate_size(_with_inline_rounds(doc, listed))
 
 
 def build_health(health: dict | None, signals: dict | None = None) -> dict:
@@ -764,6 +1114,9 @@ def build_notifications(doc: dict | None) -> dict:
     rows = [{k: e.get(k) for k in ("event_key", "type", "label_ko", "severity", "message_ko",
                                    "ticker", "signal_id", "sent_at")}
             for e in (doc.get("new") or [])[:20]]
+    # [5331ab7-11] 채널별 재시도 장부의 **요약** — 화면이 "다음 실행에서 다시 보낼 알림"을 보여 준다.
+    retry_rows = [{k: e.get(k) for k in ("event_key", "channel", "type", "attempts")}
+                  for e in (doc.get("retry_pending") or [])[:20] if isinstance(e, dict)]
     return {
         "schema_version": 1,
         "generated_at": doc.get("generated_at"),
@@ -774,6 +1127,9 @@ def build_notifications(doc: dict | None) -> dict:
         "n_events": doc.get("n_events", 0),
         "n_new": doc.get("n_new", 0),
         "n_suppressed": doc.get("n_suppressed", 0),
+        "n_retried": doc.get("n_retried", 0),
+        "n_retry_suppressed": doc.get("n_retry_suppressed", 0),
+        "retry_pending": retry_rows,
         "new": rows,
         "channels": doc.get("channels") or {},
         "note_ko": doc.get("note_ko") or "같은 signal_id·event_key 는 다시 보내지 않는다.",
@@ -850,8 +1206,12 @@ def build(signals: dict | None, folds: dict | None, records: list[dict] | None, 
           health: dict | None = None, notifications: dict | None = None,
           debate_events: dict | None = None) -> dict:
     out: dict[str, dict] = {}
+    debate_details: dict[str, dict] = {}
     debate_doc = build_debate(debate_reports, records, debate_comparison, params,
-                              (signals or {}).get("as_of"), debate_events=debate_events)
+                              (signals or {}).get("as_of"), debate_events=debate_events,
+                              details=debate_details)
+    # 상세 파일은 **매니페스트·크기 검사·금지 키 검사**를 같은 규칙으로 통과한다(감사 09).
+    out.update(debate_details)
     out["meta.json"] = build_meta(signals, debate_reports, debate_comparison, health)
     out["signals/today.json"] = build_today(signals)
     out["ledger/summary.json"] = build_ledger(signals, records, portfolio_state, folds=folds,

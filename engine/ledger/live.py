@@ -177,22 +177,43 @@ def _release_kind(record: dict) -> str:
     return "BUY" if record.get("quant_intent") == "pending_buy" else "WATCH"
 
 
+def _held_item(item: dict) -> dict:
+    """동결 뒤 도착한 회차 한 건 — 슬롯·정산이 같이 쓰는 모양."""
+    record = item["record"]
+    return {
+        "signal_id": str(record.get("signal_id")),
+        "revision": split_signal_id(str(record.get("signal_id")))[1],
+        "release_kind": _release_kind(record),
+        "intent": record.get("quant_intent"),
+        "signal_published_at": None if item["published"] is None else _iso(item["published"]),
+        "reason": "ARRIVED_AFTER_FREEZE",
+    }
+
+
 def order_slots(records: list[dict], *, freeze_buffer: timedelta = FREEZE_BUFFER,
                 account_id: str = DEFAULT_ACCOUNT) -> dict[tuple, dict]:
     """주문 슬롯 — `(account_id, ticker, target_session)` 별 **동결 주문·동결 시각**(P0-1 · v1.3.5).
 
     슬롯은 "그 세션에 이 종목을 산다"는 상태이고, 그 세션의 주문은 **동결 마감(`freeze_deadline_at`)
-    까지 도착한 마지막 회차**가 확정한다. 슬롯은 다음을 함께 남긴다.
+    까지 도착한 마지막 회차**가 확정한다.
 
-    - `signal_id`·`frozen_at`·`freeze_deadline_at` — 동결된 주문과 그 시각. `frozen_at` 은 슬롯이
-      있으면 **절대 `None` 이 아니다**(감사 §10①: 취소 시각을 사후 검증할 수 있어야 한다).
-    - `held` — 동결 뒤 도착한 회차. 당일 슬롯을 덮어쓰지 않고 다음 세션용으로 보류된다.
+    [v1.3.6 · 치명 03] 세 시각의 뜻을 갈라 적는다 — 같은 이름이 두 뜻이면 사후 검증이 불가능하다.
+
+    - `freeze_deadline_at` — **규칙 마감**(주문 마감 − `freeze_buffer`). 세션마다 하나이고
+      레코드 값에서 계산한다. "언제까지 도착해야 그 세션 주문인가"의 기준이다.
+    - `frozen_at` — **동결 확정 시각**, 곧 확정된 주문이 실제로 발행된 시각. 채택된 주문이 없으면
+      `None` 이다. 예전에는 마감 뒤 도착분도 `frozen_at` 을 마감 시각으로 **깎아** 적어서
+      13:23Z 발행 주문이 13:20Z 에 확정된 것처럼 보였다(감사 재현 03-A).
+    - `resolved_at` — 슬롯이 **결정된 시각**(채택이면 `frozen_at`, 미채택이면 마감). 슬롯이 있으면
+      항상 값이 있고, "동결 전에 취소됐나"는 이 값과 `adopted`·`frozen_source` 로 판정한다(§10①).
+    - `adopted` — 그 세션 주문이 확정됐는가. **동결 마감 전에 도착한 유효 발행이 없으면 `False`** 다.
+      그때 동결 뒤 첫 도착분은 그 세션 주문으로 채택되지 않고 `held`(사유 `NO_PRIOR_ORDER`)로만
+      남아 다음 세션으로 넘어간다(기획서 §2.2.2 — 동결 뒤 도착분은 당일 주가에 back-date 하지 않는다).
+    - `held` — 동결 뒤 도착한 회차. 당일 슬롯을 덮어쓰지 않는다.
       (예전에는 동결 뒤 BUY 가 슬롯을 갈아치우고 **두 회차가 모두 체결**됐다 — 감사 재현 01-(a).)
-    - `frozen_source` — `before_deadline`(마감 전 확정) · `no_prior_order`(마감 전 주문이 없어
-      마감 뒤 첫 회차가 그 세션 주문이 됨 — 취소·대체할 기존 주문이 없다).
+    - `frozen_source` — `before_deadline`(마감 전 확정) · `no_prior_order`(마감 전 유효 발행이 없다).
 
-    `pending_buy` 뿐 아니라 WATCH·차단 재발행도 슬롯을 만든다. 주문이 없던 회차도 `frozen_at` 을
-    남겨야 "동결 전에 취소됐나"를 사후에 판정할 수 있다(감사 §10①).
+    `pending_buy` 뿐 아니라 WATCH·차단 재발행도 슬롯을 만든다.
     """
     groups: dict[tuple, list[dict]] = {}
     for record in records or []:
@@ -217,41 +238,52 @@ def order_slots(records: list[dict], *, freeze_buffer: timedelta = FREEZE_BUFFER
                 late.append({"record": record, "published": published, "deadline": deadline})
                 continue
             frozen = {"record": record, "published": published, "deadline": deadline}
-        source = "before_deadline"
-        if frozen is None:
-            if not late:
-                continue
-            frozen = late.pop(0)          # 마감 전 주문이 없다 — 취소·대체할 기존 주문도 없다
-            source = "no_prior_order"
-        held = [{
-            "signal_id": str(item["record"].get("signal_id")),
-            "revision": split_signal_id(str(item["record"].get("signal_id")))[1],
-            "release_kind": _release_kind(item["record"]),
-            "intent": item["record"].get("quant_intent"),
-            "signal_published_at": None if item["published"] is None else _iso(item["published"]),
-            "reason": "ARRIVED_AFTER_FREEZE",
-        } for item in late]
-        record = frozen["record"]
-        deadline = (frozen["deadline"] if frozen["deadline"] is not None
-                    else freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer))
-        published = frozen["published"]
-        frozen_at = published
-        if frozen_at is None or (deadline is not None and frozen_at > deadline):
-            frozen_at = deadline if deadline is not None else published
-        out[slot_key(account_id, ticker, session)] = {
-            "slot_id": f"{str(account_id or DEFAULT_ACCOUNT)}:{ticker}:"
-                       f"{session.isoformat() if session else 'none'}",
+        held = [_held_item(item) for item in late]
+        slot_id = (f"{str(account_id or DEFAULT_ACCOUNT)}:{ticker}:"
+                   f"{session.isoformat() if session else 'none'}")
+        base = {
+            "slot_id": slot_id,
             "account_id": str(account_id or DEFAULT_ACCOUNT),
             "ticker": ticker,
             "target_session": session.isoformat() if session else None,
+            "held": held,
+        }
+        if frozen is None:
+            if not late:
+                continue
+            # 마감 전 유효 발행이 없다 — 그 세션 주문을 채택하지 않는다(동결 뒤 첫 도착 = held).
+            first_deadline = next((item["deadline"] for item in late
+                                   if item["deadline"] is not None), None)
+            out[slot_key(account_id, ticker, session)] = {
+                **base,
+                "signal_id": None,
+                "revision": None,
+                "release_kind": None,
+                "intent": None,
+                "frozen_at": None,
+                "freeze_deadline_at": None if first_deadline is None else _iso(first_deadline),
+                "resolved_at": None if first_deadline is None else _iso(first_deadline),
+                "frozen_source": "no_prior_order",
+                "adopted": False,
+                "reason": "NO_PRIOR_ORDER",
+            }
+            continue
+        record = frozen["record"]
+        deadline = (frozen["deadline"] if frozen["deadline"] is not None
+                    else freeze_deadline_at(record.get("order_cutoff_at"), freeze_buffer))
+        frozen_at = frozen["published"]            # 실제 확정 시각 — 마감으로 깎지 않는다
+        resolved = frozen_at if frozen_at is not None else deadline
+        out[slot_key(account_id, ticker, session)] = {
+            **base,
             "signal_id": str(record.get("signal_id")),
             "revision": split_signal_id(str(record.get("signal_id")))[1],
             "release_kind": _release_kind(record),
             "intent": record.get("quant_intent"),
             "frozen_at": None if frozen_at is None else _iso(frozen_at),
             "freeze_deadline_at": None if deadline is None else _iso(deadline),
-            "frozen_source": source,
-            "held": held,
+            "resolved_at": None if resolved is None else _iso(resolved),
+            "frozen_source": "before_deadline",
+            "adopted": True,
         }
     return out
 
@@ -323,14 +355,22 @@ def stop_reentry_locks(prior_events: list[dict] | None, *, as_of: date | None = 
 
     P-1: 손절이 난 종목·세션은 그 세션의 신규 1차 진입까지 막는다. 잠금은 세션 로그에서 파생한다 —
     별도 상태 파일을 만들면 원장(append-only)과 어긋날 수 있다.
+
+    [v1.3.6 · 중요 04] 아직 체결되지 않은 S5 매도(`exit_pending` + `expected_fill_day`)도 잠금이 된다.
+    종가 판정으로 만들어진 손절은 **다음 세션 시가**에 팔리므로, 그 전에 기록된 `exit_filled` 만 보면
+    "손절 당일 재진입 금지"가 한 세션 늦게 걸린다(배치가 settle 을 먼저 돌리기 때문).
     """
     out: list[dict] = []
     seen: set[tuple[str, str]] = set()
     for row in prior_events or []:
-        if row.get("event") != "exit_filled" or str(row.get("reason") or "") != "S5":
+        event = str(row.get("event") or "")
+        if str(row.get("reason") or "") != "S5" or event not in ("exit_filled", "exit_pending"):
             continue
         ticker = str(row.get("ticker") or "")
-        day = str(row.get("date") or "")[:10]
+        # 예약 행은 **체결 예정 세션**이 잠금 세션이다(기록일이 아니라).
+        raw_day = row.get("date") if event == "exit_filled" else (row.get("expected_fill_day")
+                                                                 or row.get("date"))
+        day = str(raw_day or "")[:10]
         if not ticker or not day or (ticker, day) in seen:
             continue
         if as_of is not None and day > str(as_of)[:10]:
@@ -339,6 +379,97 @@ def stop_reentry_locks(prior_events: list[dict] | None, *, as_of: date | None = 
         out.append({"ticker": ticker, "session": day, "signal_id": row.get("signal_id"),
                     "lock": f"{ticker}|{day}"})
     return out
+
+
+def _next_session(session: date | None) -> str | None:
+    """세션 다음 거래일(ISO) — 없으면 `None`."""
+    if session is None:
+        return None
+    try:
+        nxt = _next_trading_day(session)
+    except ValueError:
+        return None
+    return None if nxt is None else nxt.isoformat()
+
+
+def _block_decision(blocked, ticker: str, session: date, session_open: datetime) -> dict | None:
+    """차단 맵 한 종목 → `{verdict, reason, entry, observed_at}` (없으면 `None`).
+
+    [v1.3.6 · 치명 03] `blocked` 는 두 모양을 받는다.
+
+    - `{ticker: "V06"}` — 구 계약(문자열). 관측 시각을 알 수 없으므로 **그 세션 1차 진입을 막는다**.
+      같은 배치의 차단이 레코드 append 순서와 무관하게 시가 체결을 막던 동작을 그대로 둔다.
+    - `{ticker: {"reason", "signal_id", "target_session", "observed_at"}}` — 새 계약.
+      `target_session` 이 이 슬롯의 세션과 다르면 다른 세션용 차단이므로 이 슬롯을 막지 않고,
+      `observed_at >= 시가`(장중·장후 관측)면 **이미 동결·체결된 주문을 소급해서 뒤집지 않는다**.
+      시간 순서상 그 차단은 다음 세션 주문부터 적용된다(감사 재현 03-C).
+    """
+    if not blocked:
+        return None
+    value = None
+    for key in (ticker, str(ticker)):
+        if key in blocked:
+            value = blocked[key]
+            break
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        return {"verdict": "block", "reason": str(value or "BLOCKED"),
+                "entry": None, "observed_at": None}
+    reason = str(value.get("reason") or value.get("verdict") or "BLOCKED")
+    target = None
+    if value.get("target_session"):
+        try:
+            target = date.fromisoformat(str(value["target_session"])[:10])
+        except ValueError:
+            target = None
+    observed = _as_dt(value.get("observed_at"))
+    decision = {"verdict": "block", "reason": reason, "entry": value, "observed_at": observed}
+    if target is not None and target != session:
+        decision["verdict"] = "other_session"
+        return decision
+    if observed is not None and observed >= session_open:
+        decision["verdict"] = "after_open"
+    return decision
+
+
+def _stop_exit_items(stop_exits, as_of: date) -> list[dict]:
+    """`stop_exits` 정규화 — 같은 실행에서 관측된 손절(S5)·강제 청산.
+
+    받아들이는 형태: `[{"ticker", "reason", "observed_at", "sector", "value"}, …]` 또는 같은 모양의 dict.
+    `value` 는 그 포지션의 **달러 평가액**(섹터 여유 계산용, 선택).
+
+    [v1.3.6 · 중요 04] 손절과 1차 신규 진입은 같은 실행에서 시간 순서가 갈린다. 시가 **이전**에 확정된
+    손절은 그 세션 시가에 이미 팔린 것이므로 ① 재진입 잠금이 그 세션을 막고 ② 그 평가액만큼 섹터 여유가
+    생긴다(손절 먼저, §3.5). 시가 **이후**(장중·종가) 관측된 손절은 시가 진입보다 늦으므로 그 진입을
+    막지 않고, 잠금은 **다음 세션**으로 넘긴다 — 같은 실행 안에서도 로그 유무로 결론이 갈리지 않는다.
+    """
+    items = (stop_exits.items() if isinstance(stop_exits, dict)
+             else enumerate(stop_exits or []))
+    rows: list[dict] = []
+    for key, item in items:
+        if isinstance(item, str):
+            item = {"reason": item}
+        if not isinstance(item, dict):
+            continue
+        ticker = str(item.get("ticker") or (key if isinstance(key, str) else "") or "")
+        if not ticker:
+            continue
+        session = as_of
+        if item.get("session") or item.get("target_session"):
+            try:
+                session = date.fromisoformat(str(item.get("session") or item["target_session"])[:10])
+            except ValueError:
+                session = as_of
+        value = item.get("value")
+        try:
+            value = None if value is None else float(value)
+        except (TypeError, ValueError):
+            value = None
+        rows.append({"ticker": ticker, "reason": str(item.get("reason") or "S5").upper(),
+                     "observed_at": _as_dt(item.get("observed_at")), "session": session,
+                     "sector": str(item.get("sector") or ""), "value": value})
+    return rows
 
 
 def settle(records: list[dict], executions: dict[str, dict], panels: dict,
@@ -350,8 +481,9 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
            stop_locks=None, account_id: str = DEFAULT_ACCOUNT,
            position_events_path: str | Path | None = None,
            prior_events: list[dict] | None = None,
-           blocked: dict[str, str] | None = None,
-           debate_holds: dict[str, str] | None = None) -> dict:
+           blocked: dict | None = None,
+           debate_holds: dict[str, str] | None = None,
+           stop_exits=None) -> dict:
     """발행 의도 → 체결 이벤트. 시가가 확정되지 않은 신호는 `pending` 으로 남긴다.
 
     체결 세션은 **레코드의 `target_session`** 이다 — `next_trading_day(signal_day)` 로 밀면
@@ -376,9 +508,19 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
        나 `prior_events` 를 주면 S5 손절 행에서 잠금을 **파생**한다 — 실행기는 경로만 넘기면 된다.
     6. **차단 우선**: `blocked={ticker: 사유}` 를 주면 그 종목의 1차 진입을 체결하지 않는다. 배치가
        차단 레코드를 **정산 뒤에** append 하는 실행기에서도 같은 배치의 시가 체결을 막는다.
+       [v1.3.6 · 치명 03] `{ticker: {"reason", "signal_id", "target_session", "observed_at"}}` 도 받는다 —
+       `target_session` 이 다르거나 `observed_at >= 시가`(장중·장후 관측)면 이미 동결·체결된 주문을
+       `no_action@시가` 로 **소급해서 뒤집지 않는다**(`BLOCK_OBSERVED_AFTER_OPEN`/`BLOCK_FOR_OTHER_SESSION`).
     7. **토론 보류**: `debate_holds={signal_id: 사유}`(종목 키도 받는다)를 주면 그 신호의 1차 진입을
        체결하지 않고 `hold_cash`(체결 아님)로 남긴다 — 자동 하향이 켜진 배치에서 화면(`hold_cash`)과
        원장(`buy_filled`)이 갈리지 않게 한다(감사 06-(e)). 사유는 `settled[].reason="AUTO_DOWNGRADE"`.
+    8. **[v1.3.6 · 치명 03] 발행이 시가보다 늦은 레코드는 그 시가에 체결하지 않는다.** `target_session` 이
+       없는 구 레코드까지 포함해 `signal_published_at > 시가` 면 `held`/`pending`(`LATE_AFTER_OPEN`)으로
+       보류한다 — 15:00Z 발행 레코드가 13:30Z 시가에 체결되던 경로(감사 재현 03-B)를 막는다.
+    9. **[v1.3.6 · 중요 04] 손절·1차 진입의 시간 순서**: `stop_exits` 에 같은 실행에서 관측된 손절(S5)을
+       넘기면 시가 **이전** 확정분은 그 세션 재진입을 막고(`STOP_REENTRY_LOCK`) 그 평가액만큼 섹터 여유를
+       돌려준다(손절 먼저, §3.5). 시가 **이후** 관측분은 시가 진입보다 늦으므로 진입을 막지 않고 잠금을
+       `stop_locks_next`(다음 세션)로 넘긴다.
 
     `sector_exposure`(현재 섹터 평가액 달러)를 주면 기존 보유까지 합산하고, 주지 않으면 이번 배치에서
     체결한 금액만 센다. 체결 순서는 `(세션, 종목, 회차)` 로 고정해 **입력 순서에 의존하지 않는다**.
@@ -472,10 +614,58 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
             prior_events if prior_events is not None else read_position_events(position_events_path),
             as_of=as_of)
     locks = _lock_keys(stop_locks)
+    stop_rows = _stop_exit_items(stop_exits, as_of)
+    stop_locks_next: list[dict] = []
+    sector_freed: dict[str, float] = {}
+    for item in stop_rows:
+        session = item["session"]
+        observed = item["observed_at"]
+        if observed is not None and observed >= _open_at(session):
+            # 장중·종가 관측 — 그 세션 시가(이미 지남)가 아니라 **관측 이후 첫 시가**로 미룬다.
+            nxt = _next_session(session)
+            if observed is not None:
+                nxt = _fill_session_after(session, observed).isoformat()
+            stop_locks_next.append({"ticker": item["ticker"], "session": nxt,
+                                    "reason": item["reason"], "observed_at": _iso(observed),
+                                    "why": "OBSERVED_AFTER_OPEN"})
+            continue
+        locks.add((item["ticker"], session.isoformat()))
+        if item["sector"] and item["value"]:
+            # 손절 먼저(§3.5) — 시가 이전에 확정된 청산은 그 시점 섹터 평가액에서 빼고 본다.
+            sector_freed[item["sector"]] = (sector_freed.get(item["sector"], 0.0)
+                                             + max(0.0, float(item["value"])))
     sector_dollars: dict[str, float] = {str(k): float(v) for k, v in (sector_exposure or {}).items()}
+    for sector, freed in sector_freed.items():
+        if sector in sector_dollars:
+            sector_dollars[sector] = sector_dollars[sector] - freed
+    #: 1차 캐의 **평가 기준** — `sector_exposure`(정산 전 평가액)에서 시가 이전 확정손절을 뺐다.
+    sector_basis = {"max_sector": max_sector, "equity_base": float(equity_base),
+                    "exposure_at_start": {k: round(v, 4) for k, v in sorted(sector_dollars.items())},
+                    "freed_before_open": {k: round(v, 4) for k, v in sorted(sector_freed.items())},
+                    "note_ko": ("섹터 여유는 **시가 이전에 확정된 평가액**으로 본다 — 시가 이후 관측된"
+                                " 손절·청산은 그 시가 진입에 영향을 주지 않는다(4.12 · 중요 04).")}
     slot_rows = sorted(slots.values(),
-                       key=lambda s: (str(s["target_session"] or ""), s["ticker"], s["signal_id"]))
+                       key=lambda s: (str(s["target_session"] or ""), s["ticker"],
+                                      str(s["signal_id"] or "")))
+    # ── 2-a) 동결 마감 전 유효 발행이 없던 슬롯 — 그 세션 주문으로 채택하지 않는다(치명 03) ──
     for slot in slot_rows:
+        if slot.get("adopted") is not False:
+            continue
+        for item in slot.get("held") or []:
+            held.append({**item, "ticker": slot["ticker"], "target_session": slot["target_session"],
+                         "reason": "NO_PRIOR_ORDER"})
+            pending.append({"signal_id": item.get("signal_id"), "ticker": slot["ticker"],
+                            "expected_fill_day": _next_session(_session_of(slot)),
+                            "reason": "NO_PRIOR_ORDER"})
+            settled.append({"signal_id": item.get("signal_id"), "event": "held_after_freeze",
+                            "reason": "NO_PRIOR_ORDER",
+                            "target_session": slot["target_session"],
+                            "signal_published_at": item.get("signal_published_at"),
+                            "freeze_deadline_at": slot.get("freeze_deadline_at"),
+                            "note_ko": "동결 마감 전 유효 발행이 없었다 — 그 세션 시가 채택 없음(다음 세션)."})
+    for slot in slot_rows:
+        if slot.get("adopted") is False:
+            continue
         sid = str(slot["signal_id"])
         record = by_sid.get(sid) or {}
         if not record or sid in executions:
@@ -497,16 +687,51 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
             pending.append({"signal_id": sid, "ticker": ticker,
                             "expected_fill_day": session.isoformat()})
             continue
-        if blocked and str(ticker) in {str(k) for k in blocked}:
+        session_open = _open_at(session)
+        published = _as_dt(record.get("signal_published_at"))
+        if published is not None and published > session_open:
+            # 발행이 그 시가보다 늦다 — 구 레코드(target_session 없음)까지 포함해 소급 체결 금지.
+            held.append({"signal_id": sid, "ticker": ticker, "revision": slot.get("revision"),
+                         "release_kind": _release_kind(record), "intent": record.get("quant_intent"),
+                         "signal_published_at": _iso(published), "target_session": session.isoformat(),
+                         "reason": "LATE_AFTER_OPEN"})
+            pending.append({"signal_id": sid, "ticker": ticker,
+                            "expected_fill_day": _next_session(session), "reason": "LATE_AFTER_OPEN"})
+            settled.append({"signal_id": sid, "event": "held", "reason": "LATE_AFTER_OPEN",
+                            "target_session": session.isoformat(), "legacy_session": legacy,
+                            "signal_published_at": _iso(published), "open_at": _iso(session_open),
+                            "note_ko": "발행이 시가보다 늦다 — 그 시가에 체결하지 않는다(치명 03)."})
+            continue
+        decision = _block_decision(blocked, str(ticker), session, session_open)
+        if decision and decision["verdict"] == "block":
             # 같은 배치에서 확정된 차단 — 발행 레코드 append 가 정산 뒤에 오더라도 시가에 사지 않는다.
-            reason = str(blocked.get(ticker) or blocked.get(str(ticker)) or "BLOCKED")
+            reason = decision["reason"]
             event = execution_event(signal_id=sid, snapshot_id=record.get("snapshot_id", ""),
-                                    at=_open_at(session), execution_event="no_action",
+                                    at=session_open, execution_event="no_action",
                                     note=f"차단({reason}) — 신규 진입 없음(치명 01)")
             new_events.append(public_event(event))
             settled.append({"signal_id": sid, "event": "no_action", "reason": "BLOCKED",
                             "target_session": session.isoformat(), "blocked_reason": reason})
             continue
+        if decision and decision["verdict"] == "after_open":
+            # 장중·장후 관측 차단 — 이미 동결된 시가 주문을 사후 취소하지 않는다(치명 03).
+            settled.append({"signal_id": sid, "event": "block_observed_after_open",
+                            "reason": "BLOCK_OBSERVED_AFTER_OPEN",
+                            "target_session": session.isoformat(),
+                            "observed_at": _iso(decision["observed_at"]),
+                            "blocked_reason": decision["reason"],
+                            "note_ko": "관측이 시가 이후 — 동결 주문은 유지하고 다음 세션부터 적용한다."})
+            pending.append({"signal_id": sid, "ticker": ticker,
+                            "expected_fill_day": _next_session(session),
+                            "reason": "BLOCK_OBSERVED_AFTER_OPEN"})
+        elif decision and decision["verdict"] == "other_session":
+            # 다른 세션용 차단이 같은 티커의 오늘 슬롯을 막지 않는다.
+            settled.append({"signal_id": sid, "event": "block_other_session",
+                            "reason": "BLOCK_FOR_OTHER_SESSION",
+                            "target_session": session.isoformat(),
+                            "block_target_session": str((decision["entry"] or {})
+                                                        .get("target_session") or ""),
+                            "blocked_reason": decision["reason"]})
         hold_reason = _hold_reason(debate_holds, sid, ticker)
         if hold_reason is not None:
             # 감사 06-(e): 토론 자동 하향으로 보류된 신호 — 원장도 체결하지 않고 `hold_cash` 로 남긴다.
@@ -570,14 +795,16 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
             room = float(max_sector) * float(equity_base) - sector_dollars.get(sector, 0.0)
             if notional > room + 1e-9:
                 event = execution_event(
-                    signal_id=sid, snapshot_id=record.get("snapshot_id", ""), at=_open_at(session),
+                    signal_id=sid, snapshot_id=record.get("snapshot_id", ""), at=session_open,
                     execution_event="no_action",
                     note=(f"섹터 {sector} 상한 {float(max_sector):.0%} 초과 예정"
                           f"({(sector_dollars.get(sector, 0.0) + notional) / float(equity_base):.2%})"
                           " — 체결하지 않는다(4.12)"))
                 new_events.append(public_event(event))
                 settled.append({"signal_id": sid, "event": "no_action", "reason": "SECTOR_CAP",
-                                "target_session": session.isoformat(), "sector": sector})
+                                "target_session": session.isoformat(), "sector": sector,
+                                "sector_exposure_used": round(sector_dollars.get(sector, 0.0), 4),
+                                "sector_freed": round(sector_freed.get(sector, 0.0), 4)})
                 continue
             sector_dollars[sector] = sector_dollars.get(sector, 0.0) + notional
         event = execution_event(signal_id=sid, snapshot_id=record.get("snapshot_id", ""),
@@ -598,6 +825,8 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
 
     # ── 3) 동결 뒤 도착분 — 당일 체결 없이 다음 세션용으로 보류 ──────────────────
     for slot in slot_rows:
+        if slot.get("adopted") is False:
+            continue                      # 2-a) 에서 이미 held·pending 으로 남겼다
         for item in slot.get("held") or []:
             held.append({**item, "ticker": slot["ticker"], "target_session": slot["target_session"]})
             next_day = None
@@ -614,7 +843,15 @@ def settle(records: list[dict], executions: dict[str, dict], panels: dict,
             "slots": slot_rows,
             "stop_reentry_blocked_count": len(reentry_blocked),
             "stop_reentry_blocked": reentry_blocked,
-            "stop_locks": sorted(f"{ticker}|{day}" for ticker, day in locks)}
+            "stop_locks": sorted(f"{ticker}|{day}" for ticker, day in locks),
+            # 시가 이후 관측된 손절 — 다음 세션 잠금(중요 04). 로그 유무로 결론이 갈리지 않게 실행 중에도 남긴다.
+            "stop_locks_next": stop_locks_next,
+            "sector_freed": {k: round(v, 4) for k, v in sector_freed.items()},
+            "sector_cap_basis": sector_basis,
+            "stop_exits": [{"ticker": item["ticker"], "reason": item["reason"],
+                            "session": item["session"].isoformat(),
+                            "observed_at": None if item["observed_at"] is None
+                            else _iso(item["observed_at"])} for item in stop_rows]}
 
 
 def _next_trading_day(day: date) -> date | None:
@@ -625,6 +862,25 @@ def _next_trading_day(day: date) -> date | None:
 def _open_at(day: date) -> datetime:
     from engine.utils.dates import market_open_at
     return market_open_at(day)
+
+
+def _fill_session_after(session: date, observed: datetime | None) -> date:
+    """**관측 시각 이후에 처음 열리는** 세션 — 매도·잠금의 실행 세션.
+
+    [v1.3.6 · 중요 04] 예전에는 `session` 다음 거래일을 그대로 썼다. 그런데 배치가 늦게 돌아
+    발행(관측)이 **그 다음 세션 시가보다도 늦으면**(예: 05-12 장후 배치가 05-13 15:00Z 에 발행),
+    예약이 이미 지나간 05-13 시가에 체결된 것으로 적혔다 — 종가 판정을 시가로 되돌리는 결함이
+    한 세션 미끄러진 것과 같다. 여기서는 관측 시각보다 **시가가 늦는** 첫 세션을 고른다.
+    """
+    day = _next_trading_day(session) or session
+    if observed is None:
+        return day
+    for _ in range(10):                     # 연휴가 길어도 열 번이면 충분하다(무한 루프 방지)
+        nxt = _next_trading_day(day)
+        if _open_at(day) > observed or nxt is None:
+            return day
+        day = nxt
+    return day
 
 
 def _reanchor_plan(record: dict, fill: float, stop_price: float) -> list[dict]:
@@ -1156,9 +1412,61 @@ def _indicator_lines(panel) -> dict:
     return out
 
 
+def _forced_exit_plan(forced_exits, as_of: date) -> dict[str, dict]:
+    """`forced_exits` 정규화 — 매도 의도의 **관측 시각**과 **실행 세션**을 가른다.
+
+    [v1.3.6 · 중요 04] 받아들이는 형태는 둘이다.
+
+    - `{ticker: "S3"}` — 구 계약. 관측 시각을 알 수 없으므로 예전처럼 **그 실행일 시가**에 체결한다.
+    - `{ticker: {"reason", "observed_at", "target_session"}}` — 새 계약.
+      `observed_at` 이 그 세션 시가 **이상**(장중·종가 판정으로 만들어진 S3/TRIM 의도)이면 그 시가에
+      팔 수 없다 — 판정 입력이 체결 시각보다 늦기 때문이다(감사 재현 04-A: 05-12 종가 101 로 내린
+      판정을 같은 날 시가 99 에 체결). 그때는 **다음 거래일 시가 대기**(`exit_pending`)로 남긴다.
+      `target_session` 이 오늘보다 뒤면 그 세션 대기, 이전이면 묵은 의도라 실행하지 않는다.
+
+    Returns: `{ticker: {reason, observed_at, target_session, when, since, note}}`,
+    `when` 은 `open`(오늘 시가 체결) · `deferred`(다음 세션 대기) · `stale`(버린다).
+    """
+    out: dict[str, dict] = {}
+    items = (forced_exits.items() if isinstance(forced_exits, dict)
+             else enumerate(forced_exits or []))
+    for key, value in items:
+        if isinstance(value, dict):
+            info = dict(value)
+        else:
+            info = {"reason": value}
+        ticker = str(info.get("ticker") or (key if isinstance(key, str) else "") or "")
+        reason = str(info.get("reason") or info.get("verdict") or "").upper()
+        if not ticker or not reason:
+            continue
+        observed = _as_dt(info.get("observed_at"))
+        session = as_of
+        if info.get("target_session"):
+            try:
+                session = date.fromisoformat(str(info["target_session"])[:10])
+            except ValueError:
+                session = as_of
+        plan = {"ticker": ticker, "reason": reason, "observed_at": observed,
+                "target_session": session, "when": "open", "since": session, "note": None}
+        if session > as_of:
+            plan.update({"when": "deferred", "since": session,
+                         "note": f"대상 세션 {session.isoformat()} 시가 체결 대기"})
+        elif session < as_of:
+            plan.update({"when": "stale",
+                         "note": f"대상 세션 {session.isoformat()} 이 이미 지났다 — 실행하지 않는다"})
+        elif observed is not None and observed >= _open_at(session):
+            nxt = _fill_session_after(session, observed)
+            plan.update({"when": "deferred", "since": nxt,
+                         "note": (f"관측 {_iso(observed)} 이 {session.isoformat()} 시가"
+                                  f"({_iso(_open_at(session))}) 이후 — 당일 시가 체결 금지, "
+                                  f"{nxt.isoformat()} 시가 대기(중요 04)")})
+        out[ticker] = plan
+    return out
+
+
 def settle_positions(records: list[dict], executions: dict[str, dict],
                      reanchors: dict[str, dict] | None, panels: dict, as_of: date,
-                     params: dict | None = None, *, forced_exits: dict[str, str] | None = None,
+                     params: dict | None = None, *, forced_exits: dict | None = None,
                      initial_cash: float = INITIAL_CASH,
                      slippage_bps: float = SLIPPAGE_BPS,
                      max_sector: float | None = MAX_SECTOR,
@@ -1183,6 +1491,11 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
       달라졌다(감사 재현 03-(3), §14#2).
     - **P-5 TRIM** — `forced_exits` 에 `"TRIM"` 이 오면 **보유 수량의 1/3 익절 매도**를 실행하고
       사유를 `TRIM` 으로 남긴다(S4 200일선 잔여 전량 정리와 구분). 잔여 2·3차 주문은 취소하지 않는다.
+    - **[v1.3.6 · 중요 04] 매도 의도의 세션 시간축** — `forced_exits` 는 `{ticker: 사유}` 문자열(구 계약,
+      오늘 시가 체결)과 `{ticker: {"reason", "observed_at", "target_session"}}`(새 계약)을 모두 받는다.
+      `observed_at` 이 그 세션 **시가 이후**면(장중·종가 판정으로 만들어진 S3·TRIM·S5) 그 시가에 팔지 않고
+      `exit_pending`(다음 거래일 시가 체결 대기)으로 남긴다 — 판정 시점과 체결 시점이 같은 날짜인 결함을
+      막는다. 예약행은 `expected_fill_day` 를 함께 남겨 재실행·다음 세션 재생이 그 세션에서 체결한다.
     - **P-1** — S5 손절은 세션 로그에 남아 `stop_reentry_locks()` 로 재진입 잠금이 되고, 이번 정산에서
       실제로 막은 재진입은 `stop_reentry_blocked`(실행기 전달값)로 센다. 2·3차 취소 수는
       `tranche_cancel_count` 로 **분리**한다.
@@ -1192,7 +1505,7 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
     세션 순서로 남기며 금지 키(`shares`·`avg_cost`·`cash_balance`)는 싣지 않는다(2.2.3).
     """
     reanchors = reanchors or {}
-    forced_exits = {str(k): str(v) for k, v in (forced_exits or {}).items()}
+    forced_plan = _forced_exit_plan(forced_exits, as_of)
     risk = (params or {}).get("risk") or {}
     risk_per_trade = float(risk.get("risk_per_trade") or 0.0075)
     max_position = float(risk.get("max_position") or 0.05)
@@ -1326,8 +1639,13 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
         for row in prior.get(sid) or []:
             st["prior_by_day"].setdefault(str(row.get("date")), []).append(row)
             if row.get("event") == "exit_pending":
-                st["pending_exit"] = {"reason": str(row.get("reason") or "EXIT"),
-                                      "since": str(row.get("date"))[:10]}
+                # 체결 예정 세션(`expected_fill_day`)이 있으면 그 세션부터 — 없으면 기록일부터(구 계약).
+                since = str(row.get("expected_fill_day") or row.get("date"))[:10]
+                try:
+                    date.fromisoformat(since)
+                except ValueError:
+                    since = str(row.get("date"))[:10]
+                st["pending_exit"] = {"reason": str(row.get("reason") or "EXIT"), "since": since}
         states[sid] = st
 
     ordered_sids = sorted(states, key=lambda s: (states[s]["opened_at"], s))
@@ -1388,14 +1706,29 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
         if st["qty"] <= 1e-9:
             st["exit"] = {"reason": "S2", "at": day.isoformat(), "price": round(price, 4)}
 
+    # ── 관측이 시가 이후인 매도 의도 → 다음 세션 시가 대기(중요 04) ────────────────
+    for sid in ordered_sids:
+        st = states[sid]
+        plan = forced_plan.get(st["ticker"])
+        if not plan or plan["when"] != "deferred" or st["exit"] is not None:
+            continue
+        if st.get("pending_exit"):
+            continue                     # 이미 예약된 매도가 있다 — 그 예약을 따른다
+        st["pending_exit"] = {"reason": plan["reason"], "since": plan["since"].isoformat()}
+        events.append({"date": as_of.isoformat(), "ticker": st["ticker"], "signal_id": sid,
+                       "event": "exit_pending", "reason": plan["reason"],
+                       "expected_fill_day": plan["since"].isoformat(), "note": plan["note"]})
+
     # ── 마감 봉이 없는 강제 청산·TRIM → carry-over ──────────────────────────────
     for sid in ordered_sids:
         st = states[sid]
-        reason = forced_exits.get(st["ticker"])
+        plan = forced_plan.get(st["ticker"])
+        reason = plan["reason"] if plan and plan["when"] == "open" else None
         if reason and st["exit"] is None and as_of not in bars_of(st["ticker"]):
             st["pending_exit"] = {"reason": reason, "since": as_of.isoformat()}
             events.append({"date": as_of.isoformat(), "ticker": st["ticker"], "signal_id": sid,
-                           "event": "exit_pending", "reason": reason})
+                           "event": "exit_pending", "reason": reason,
+                           "expected_fill_day": as_of.isoformat()})
 
     day_list = sorted({d for cache in bars_cache.values() for d in cache})
     if ordered_sids:
@@ -1436,7 +1769,8 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
             if st["exit"] is not None:
                 continue
             # 1) 시가 예약 — 강제 청산(S3·S5·EXIT) · TRIM · 예약 매도 · 예약 매수
-            forced = forced_exits.get(st["ticker"]) if day == as_of else None
+            plan = forced_plan.get(st["ticker"])
+            forced = plan["reason"] if (plan and day == as_of and plan["when"] == "open") else None
             if forced is None and st.get("pending_exit") and iso_day >= st["pending_exit"]["since"]:
                 forced = st["pending_exit"]["reason"]
             if forced == "TRIM":
@@ -1599,6 +1933,13 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
         "cancelled": cancelled,
         "event_log": rows,
         "health": health,
+        "forced_exit_plan": {
+            ticker: {"reason": plan["reason"], "when": plan["when"],
+                     "target_session": plan["target_session"].isoformat(),
+                     "exec_session": plan["since"].isoformat(),
+                     "observed_at": None if plan["observed_at"] is None else _iso(plan["observed_at"]),
+                     "note": plan["note"]}
+            for ticker, plan in sorted(forced_plan.items())},
         "cash": round(cash, 4),
         "initial_cash": initial_cash,
         "holdings": {
@@ -1613,7 +1954,10 @@ def settle_positions(records: list[dict], executions: dict[str, dict],
 
 #: `position_events.jsonl` 에 남기는 필드 — 금지 키(`shares`·`avg_cost`·`cash_balance`)는 없다.
 POSITION_EVENT_FIELDS = ("date", "ticker", "signal_id", "event", "tranche", "reason",
-                         "price", "qty_pct", "ratio", "fraction", "cancelled_by", "fill_basis")
+                         "price", "qty_pct", "ratio", "fraction", "cancelled_by", "fill_basis",
+                         # [v1.3.6 · 중요 04] 예약 매도의 **체결 예정 세션**과 시간축 사유(관측 시각 등).
+                         #   둘 다 공개 가드의 구조·식별자 키라 계약 검사를 통과한다(check_commit_scope).
+                         "expected_fill_day", "note")
 
 
 def position_event_rows(events: list[dict], cancelled: list[dict] | None = None,

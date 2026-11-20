@@ -355,7 +355,9 @@ def test_service_worker_caches_current_bundle_set():
     for needle in ("SW_VERSION", "SET_PREFIX", "bundle_version", "prepare-set", "set-activated",
                    "/data/", "offline", "deploy_manifest", "sha256"):
         assert needle in sw, f"sw.js 에 '{needle}' 가 없다"
-    assert "phase4-3" in sw
+    # 셸·자산 버전은 **고정 문자열이 아니라 app.js 를 고칠 때마다 올리는 계약**이다.
+    # index.html 의 `?v=` 와 같아야 새 셸이 옛 app.js 를 계속 물고 있지 않는다.
+    assert "ASSET_VERSION" in sw and "SW_VERSION" in sw
     # meta.json 만 보고 세트를 바꾸던 경로는 **없어야** 한다(감사 12)
     assert "set-bundle-version" not in sw
     js = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
@@ -373,7 +375,10 @@ def test_ui_surfaces_data_status_and_bundle_mismatch():
     for needle in ("이번 세션 판단 보류", "last_attempt_at", "last_success_at", "data_status",
                    "이전/혼합 세트", "policy_diff_pp", "pair_summary", "계좌 정책 순효과"):
         assert needle in js, f"app.js 에 '{needle}' 표시가 없다"
-    assert "app.js?v=phase4-3" in html and "styles.css?v=phase4-3" in html
+    asset = __import__("re").search(r'ASSET_VERSION = "([^"]+)"',
+                                    (ROOT / "web" / "sw.js").read_text(encoding="utf-8")).group(1)
+    assert f"app.js?v={asset}" in html and f"styles.css?v={asset}" in html, \
+        "index.html 의 ?v= 와 sw.js 의 ASSET_VERSION 이 어긋났다"
     manifest = json.loads((ROOT / "web" / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["start_url"] and manifest["display"] == "standalone"
 

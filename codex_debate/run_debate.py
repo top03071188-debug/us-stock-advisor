@@ -386,17 +386,51 @@ def load_reports_doc(path: str | Path, signals: dict | None = None) -> dict:
     }
 
 
-def write_reports_doc(path: str | Path, doc: dict, signals: dict, context: dict, cfg: RunConfig) -> Path:
+def write_reports_doc(
+    path: str | Path,
+    doc: dict,
+    signals: dict,
+    context: dict,
+    cfg: RunConfig,
+    *,
+    quant_signals_sha256: str | None = None,
+    provenance: dict | None = None,
+) -> Path:
+    """리포트 파일을 쓴다 — `inputs` 는 **이어 쓴다**(다종목 누적에서 앞 종목의 출처를 지우지 않는다).
+
+    `inputs.quant_signals_commit` 은 신호 파일이 스스로 적는 코드 커밋(`signals.code_commit`)이고,
+    **파일 바이트 해시**는 별도 키 `quant_signals_sha256` 에 적는다 — 둘은 다른 값이다(감사 07).
+    종목별 값이 섞이는 `context_hash` 는 마지막 종목 값 대신 `context_hash_by_ticker` 로도 남기고,
+    리포트별 출처(`provenance`)는 `reports_provenance[report_id]` 에 건별로 저장한다.
+    """
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     doc["generated_at"] = _now_iso()
     doc["codex"] = {"version": os.environ.get("CODEX_VERSION") or "unknown", "model": cfg.model or "default"}
-    doc["inputs"] = {
+    inputs = dict(doc.get("inputs") or {})
+    inputs.update({
         "quant_signals_commit": str(signals.get("code_commit") or ""),
         "as_of": str(signals.get("as_of") or ""),
         "context_hash": str(context.get("context_hash") or ""),
         "prompt_hash": prompt_hash(),
-    }
+    })
+    digest = quant_signals_sha256 or str(signals.get("quant_signals_sha256") or "")
+    if digest:
+        inputs["quant_signals_sha256"] = str(digest)
+    by_ticker = dict(inputs.get("context_hash_by_ticker") or {})
+    ticker = str(context.get("ticker") or "").upper()
+    if ticker:
+        by_ticker[ticker] = str(context.get("context_hash") or "")
+    if by_ticker:
+        inputs["context_hash_by_ticker"] = by_ticker
+    if provenance:
+        report_id = str(provenance.get("report_id") or "")
+        if report_id:
+            reports_provenance = dict(inputs.get("reports_provenance") or {})
+            reports_provenance[report_id] = {key: value for key, value in provenance.items()
+                                             if key != "report_id"}
+            inputs["reports_provenance"] = reports_provenance
+    doc["inputs"] = inputs
     p.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return p
 

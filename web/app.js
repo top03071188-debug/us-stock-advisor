@@ -49,6 +49,8 @@ const BADGE_CLASS = {
   "지연 도착": "warn",
   "산식과 다름(보류 권고)": "warn",
   "무효(발행 전 완료)": "bad",
+  // 02 · T1 채택 계약 — 채택되지 않은 회차는 “완료”가 아니다.
+  "채택 아님": "info",
 };
 
 const state = { core: {}, tickers: [], ticker: null, route: "today", sampleMode: false, bound: false,
@@ -509,6 +511,9 @@ function signalCard(sig) {
     // 원장 편입 이벤트가 아직 없는 리포트(02)는 배지가 비어 있다 — 빈 배지 대신 이유를 보여 준다.
     foot.push(badge(debateRow.badge || "토론 편입 미확정", BADGE_CLASS[debateRow.badge] || "info"));
   }
+  // [통합 재검토] 발행 신호가 많은 날은 목록 크기(200KB) 때문에 뒤쪽 카드가 **요약 행**으로 온다
+  // (상세는 `tickers/<티커>.json`). 카드가 조용히 비어 보이지 않게 이유를 적는다.
+  if (sig.compact) foot.push(badge("요약 — 종목 상세에서 전체 내용", "info"));
   foot.push(el("span", { class: "tiny", text: `근거 ${(sig.evidence || []).length}건` }));
   foot.push(el("span", { class: "tiny", text: `발행 ${fmtKo(sig.signal_published_at)}`
     + plannedHint(sig.signal_published_planned_at, sig.signal_published_at)
@@ -893,6 +898,11 @@ function debateBlock(tickerDoc) {
     row.news_state ? badge(NEWS_LABEL[row.news_state] || row.news_state,
       row.news_state === "read_done" ? "ok" : (row.news_state === "insufficient_evidence" ? "warn" : "info")) : null,
     el("span", { class: "tiny", text: `  완료 ${fmtKo(row.completed_at)} · 주문 마감 ${fmtKo(row.order_cutoff_at)}` })]));
+  if (row.snapshot_matched === false) {
+    // 부수 ③ — 티커별 최신 행은 오늘 신호의 스냅샷이 아닐 수 있다(구 리포트). 확정 토론으로 읽지 않게 밝힌다.
+    host.append(el("p", { class: "note-box", text:
+      "이 토론은 지금 화면의 신호 스냅샷에 붙은 것이 아닙니다 — 옛 스냅샷의 참고 기록이고, 오늘 결정의 확정 토론이 아닙니다." }));
+  }
   if (row.news_state === "insufficient_evidence") {
     host.append(el("p", { class: "note-box", text:
       "뉴스 근거 부족 — 신뢰도 상한 C·매수 등급 상한 WATCH 로 반영됩니다(3.6·3.10)." }));
@@ -907,16 +917,73 @@ function debateBlock(tickerDoc) {
   if (row.reasons && row.reasons.length) {
     host.append(el("p", { class: "tiny", text: `편입 판정: ${row.reasons.join(" · ")}` }));
   }
-  host.append(el("div", { class: "debate-rounds" }, [
-    el("div", { class: "debate-col" }, [el("h3", { text: "1R 독립 판단" }), round1List(row)]),
-    el("div", { class: "debate-col" }, [el("h3", { text: "2R 반박" }), round2List(row)]),
-    el("div", { class: "debate-col" }, [el("h3", { text: "3R 리스크·결론" }), round3Block(row)]),
-  ]));
+  if (row.badge === "채택 아님") {
+    // 02 · T1: 같은 신호에 회차가 여럿이어도 **채택본 하나만** 그 결정에 붙는다.
+    host.append(el("p", { class: "note-box", text:
+      "이 회차는 그날 결정에 채택되지 않았습니다 — 같은 신호의 다른 회차(또는 앞선 배포의 보고서)가 채택되었습니다." }));
+  }
+  const roundsHost = el("div", {});
+  host.append(roundsHost);
+  fillDebateRounds(roundsHost, row);
   host.append(el("p", { class: "tiny", text:
     `인용 원문은 공개하지 않습니다 — 해시 검증 배지만(검증 ${validation.quotes_checked ?? 0}건, 폐기 ${validation.quotes_dropped ?? 0}건).` }));
   host.append(el("p", { class: "tiny", text:
     "토론은 신뢰도 등급을 올리지 않습니다 — 등급은 데이터·근거·표본의 함수입니다(3.10)." }));
   return host;
+}
+
+/** 라운드 원문이 이 문서에 **인라인**으로 들어 있는가 — 분리 파일(감사 09)과 구 샘플 둘 다 지원. */
+function hasInlineRounds(row) {
+  if (!row) return false;
+  return (Array.isArray(row.round1) && row.round1.length > 0)
+    || (Array.isArray(row.round2) && row.round2.length > 0)
+    || Boolean(row.round3 && (row.round3.chair || row.round3.guard));
+}
+
+/** 1R → 2R → 3R 세 칸 — 예전 인라인 렌더와 **같은 마크업**을 쓴다. */
+function debateRounds(row) {
+  return el("div", { class: "debate-rounds" }, [
+    el("div", { class: "debate-col" }, [el("h3", { text: "1R 독립 판단" }), round1List(row)]),
+    el("div", { class: "debate-col" }, [el("h3", { text: "2R 반박" }), round2List(row)]),
+    el("div", { class: "debate-col" }, [el("h3", { text: "3R 리스크·결론" }), round3Block(row)]),
+  ]);
+}
+
+/** `data/debate_details/{report_id}.json` 경로 → `./data/` 기준 이름. */
+function debateDetailName(row) {
+  const path = String((row && row.detail_path) || "").trim();
+  if (!path) return null;
+  return path.replace(/^\.?\/?data\//, "").replace(/^\/+/, "") || null;
+}
+
+/**
+ * 토론 상세를 채운다 — 인라인이 있으면 바로, 없으면 `detail_path` 를 받아 **같은 마크업**으로 그린다.
+ * 상세는 발행 세트 캐시에 실려 오프라인에서도 열린다(서비스워커 `handleData`).
+ */
+function fillDebateRounds(roundsHost, row) {
+  if (hasInlineRounds(row)) {
+    roundsHost.append(debateRounds(row));
+    return;
+  }
+  const name = debateDetailName(row);
+  if (!name) {
+    roundsHost.append(emptyState("이 리포트의 라운드 원문은 공개 상세 파일로 제공되지 않습니다."));
+    if (row.one_line_ko) roundsHost.append(el("p", { class: "sig-why", text: row.one_line_ko }));
+    return;
+  }
+  roundsHost.append(el("p", { class: "tiny", text: "1R → 2R → 3R 원문을 불러오는 중입니다…" }));
+  loadJson(name).then((detail) => {
+    clear(roundsHost);
+    if (detail && hasInlineRounds(detail)) {
+      roundsHost.append(debateRounds({ ...row, ...detail }));
+      return;
+    }
+    roundsHost.append(emptyState("토론 상세 원문을 불러오지 못했습니다 — 오프라인이거나 보관 범위를 넘은 리포트입니다."));
+    if (row.one_line_ko) roundsHost.append(el("p", { class: "sig-why", text: row.one_line_ko }));
+  }).catch(() => {
+    clear(roundsHost);
+    roundsHost.append(emptyState("토론 상세 원문을 불러오지 못했습니다."));
+  });
 }
 
 function positionBlock(tickerDoc) {

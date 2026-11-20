@@ -61,6 +61,8 @@ BADGE_QUORUM = "정족수 미달"
 BADGE_LATE = "지연 도착"
 BADGE_DIFFERENT = "산식과 다름(보류 권고)"
 BADGE_INVALID = "무효(발행 전 완료)"
+#: 검증이 **체결 뒤**라 소급 편입할 수 없는 경우 — "발행 전 완료"와 사유가 다르다(감사 02 부수).
+BADGE_INVALID_AFTER_FILL = "무효(체결 후 검증)"
 
 VERDICT_INSUFFICIENT = "표본 부족 — 판단 보류"
 VERDICT_EFFECTIVE = "토론 유효"
@@ -200,10 +202,22 @@ def eligibility(report: dict, record: dict, *, now: datetime | None = None,
     ⑤ 스냅샷·`signal_id`·`status` 일치.
 
     [v1.3.5 · 치명 02]
-    - **`now` 는 원장 수신·배치 시각이다.** 보고서가 그보다 늦은 검증 시각을 적으면 그 값을 믿지 않고
-      `now` 로 깎는다(`POSTHOC_VALIDATION`) — 나중에 만들어진 보고서가 마감 전 검증으로 통과하지 않는다.
+    - **`now` 는 원장을 실제로 읽어 판정한 수신 시각이다.** 보고서가 그보다 늦은 검증 시각을 적으면 그
+      값을 믿지 않고 `now` 로 깎는다(`POSTHOC_VALIDATION`) — 나중에 만들어진 보고서가 마감 전 검증으로
+      통과하지 않는다.
     - **원장이 우선**: `order_cutoff_at`·`frozen_at` 은 레코드(원장) 값을 먼저 쓰고 보고서 내부 값은
       폴백이다. 보고서가 자기 마감을 넓게 적어 통과하는 경로를 막는다.
+
+    [v1.3.6 · 감사 5331ab7-01] **신뢰 경계는 수신 시각 하나다.**
+    - `completed_at > now`(배치가 그 파일을 읽은 시각보다 **나중에 완료**된 보고서)는 존재할 수 없다 —
+      `now` 상한 보정이 그런 보고서를 "동결 전 완료"로 **구제하지 못하도록** `invalid` +
+      `COMPLETED_AFTER_NOW` 로 **무조건** 부적격 처리한다(예전에는 `POSTHOC_VALIDATION` 메모만 달고
+      `eligible=True` 로 통과했다).
+    - 남는 사슬은 `completed_at ≤ report_validated_at ≤ now` 다 — 검증 시각을 `now` 로 깎은 뒤에도
+      이 순서가 유지된다.
+    - **규칙 마감과 실제 시각을 섞지 않는다** — `freeze_deadline_at`(주문마감 − 5분, 규칙값)과
+      `frozen_at`(레코드가 밝힌 실제 동결 시각, 없으면 규칙값)을 따로 돌려준다. `frozen_at` 은
+      기존 호출 호환을 위해 **그대로 둔다**.
     - **`strict=True`** 면 `completed_at`·`report_validated_at`·`order_cutoff_at` 이 빠진 보고서는
       검사를 건너뛰지 않고 `MISSING_TIMESTAMPS` 로 **부적격**이다(구 리포트의 무검증 통과 방지).
       기본값은 `False`(단위 호출 호환)이고 프로덕션 경로(`reconcile_debates`)는 `True` 다.
@@ -221,23 +235,48 @@ def eligibility(report: dict, record: dict, *, now: datetime | None = None,
                 or published)
     # [v1.3.5] 원장의 마감·동결이 보고서 내부 값보다 **항상 우선**한다.
     order = _ts(record.get("order_cutoff_at")) or _ts(report.get("order_cutoff_at"))
-    validated = (_ts(report_validated_at) or _ts(report.get("report_validated_at"))
-                 or _ts((report.get("validation") or {}).get("report_validated_at"))
-                 or _ts(record.get("report_validated_at")))
+    received = _ts(now)                       # 배치가 이 보고서를 읽어 판정한 수신 시각(신뢰 상한)
+    argued = _ts(report_validated_at)
+    in_report = _ts(report.get("report_validated_at"))
+    in_validation = _ts((report.get("validation") or {}).get("report_validated_at"))
+    in_record = _ts(record.get("report_validated_at"))
+    claimed = argued or in_report or in_validation or in_record
+    validation_source = ("argument" if argued is not None else "report" if in_report is not None
+                         else "validation" if in_validation is not None
+                         else "record" if in_record is not None else None)
+    validated = claimed
     if validated is None and not strict:
         # 구 호출 호환: 시각이 없으면 `now`(검증 시각)로 대신한다. strict 에서는 `now` 가 **상한**일 뿐이라
         # 이 폴백을 쓰지 않는다 — 그러지 않으면 시각 없는 구 리포트가 "방금 검증"으로 통과한다.
-        validated = _ts(now)
+        validated = received
+        validation_source = "now_fallback" if received is not None else None
+    # 규칙 마감(주문마감 − 5분)과 실제 동결 시각을 **따로** 계산한다 — 같은 이름으로 섞지 않는다(01).
+    freeze_deadline = _freeze_deadline(order)
+    if _ts(frozen_at) is not None:
+        frozen_source = "argument"
+    elif _ts(record.get("frozen_at")) is not None:
+        frozen_source = "record"
+    elif freeze_deadline is not None:
+        frozen_source = "rule"
+    elif _ts(report.get("frozen_at")) is not None:
+        frozen_source = "report"
+    else:
+        frozen_source = None
     frozen = (_ts(frozen_at) or _ts(record.get("frozen_at"))
-              or _freeze_deadline(order) or _ts(report.get("frozen_at")))
+              or freeze_deadline or _ts(report.get("frozen_at")))
     posthoc = False
-    if now is not None and validated is not None and validated > _ts(now):
+    if received is not None and validated is not None and validated > received:
         # 보고서가 원장 수신 시각보다 늦은 검증 시각을 적었다 — 값을 `now` 로 깎는다.
         #   깎은 값이 동결·마감을 넘으면 아래 시각 검사가 정상적으로 `late` 로 떨어뜨린다
         #   (그래서 이 사실은 **막는 사유가 아니라 기록**이다 — now 가 마감 전이면 편입은 정당하다).
-        validated = _ts(now)
+        validated = received
         posthoc = True
         notes.append("POSTHOC_VALIDATION")
+    if completed is not None and received is not None and completed > received:
+        # [01] 배치가 읽은 시각보다 **나중에 완료**된 보고서는 그 자리에 있을 수 없다.
+        #   `now` 상한 보정이 미래 완료를 적격으로 구제하지 못하게 **무조건 부적격**으로 막는다.
+        invalid = True
+        reasons.append("COMPLETED_AFTER_NOW")
     if strict:
         missing = [name for name, value in (("completed_at", completed),
                                             ("report_validated_at", validated),
@@ -297,7 +336,13 @@ def eligibility(report: dict, record: dict, *, now: datetime | None = None,
             "signal_observed_at": None if observed is None else _iso(observed),
             "completed_at": None if completed is None else _iso(completed),
             "report_validated_at": None if validated is None else _iso(validated),
+            # 검증 시각의 **출처**와 보고서가 적은 원값(깎기 전) — 신뢰 경계를 화면·로그에서 구분한다.
+            "validation_claimed_at": None if claimed is None else _iso(claimed),
+            "validation_source": validation_source,
+            "received_at": None if received is None else _iso(received),
             "frozen_at": None if frozen is None else _iso(frozen),
+            "freeze_deadline_at": None if freeze_deadline is None else _iso(freeze_deadline),
+            "frozen_source": frozen_source,
             "order_cutoff_at": None if order is None else _iso(order),
             "posthoc_validation": bool(posthoc),
             "receipt_required": bool(require_receipt),
@@ -344,6 +389,8 @@ def debate_step_times(record: dict, report: dict | None = None, *,
                                 or _ts(((report or {}).get("validation") or {}).get("report_validated_at"))
                                 or _ts(record.get("report_validated_at")) or _ts(now)),
         "frozen_at": _ts(record.get("frozen_at")) or _freeze_deadline(order),
+        # 규칙 마감과 실제 동결 시각을 화면도 같은 뜻으로 쓴다(01).
+        "freeze_deadline_at": _freeze_deadline(order),
         "order_cutoff_at": order,
     }
 
@@ -440,13 +487,19 @@ def actions_for(report: dict, record: dict, execution: dict | None = None,
 
 
 def debate_badge(report: dict | None, el: dict | None = None, actions: dict | None = None) -> str:
-    """화면 배지 — `토론 완료`/`토론 없음`/`정족수 미달`/`지연 도착`/`산식과 다름(보류 권고)`."""
+    """화면 배지 — `토론 완료`/`토론 없음`/`정족수 미달`/`지연 도착`/`산식과 다름(보류 권고)`.
+
+    무효 사유는 **사유에 맞는 문구**를 쓴다(감사 02 부수 ②): `ATTACHED_AFTER_FILL`(검증이 체결 뒤)을
+    "발행 전 완료"라고 적으면 화면이 거짓말을 한다 — 그 둘을 갈라 표기한다.
+    """
     if not report:
         return BADGE_NONE
     if str(report.get("status") or "") != "complete":
         return BADGE_QUORUM
     el = el or {}
     if el.get("invalid"):
+        if "ATTACHED_AFTER_FILL" in [str(r) for r in (el.get("reasons") or [])]:
+            return BADGE_INVALID_AFTER_FILL
         return BADGE_INVALID
     if el.get("late"):
         return BADGE_LATE
@@ -505,6 +558,12 @@ def public_report(report: dict, el: dict | None = None, actions: dict | None = N
         "completed_at": report.get("completed_at"),
         "signal_published_at": report.get("signal_published_at"),
         "order_cutoff_at": report.get("order_cutoff_at"),
+        # 편입 시각 계약 — 규칙 마감(`freeze_deadline_at`)과 실제 값(`frozen_at`)을 섞지 않는다(01).
+        "report_validated_at": el.get("report_validated_at") or report.get("report_validated_at"),
+        "freeze_deadline_at": el.get("freeze_deadline_at"),
+        "frozen_at": el.get("frozen_at"),
+        "received_at": el.get("received_at"),
+        "validation_source": el.get("validation_source"),
         "quant_grade": actions.get("quant_grade") or report.get("quant_grade"),
         "display_grade": display_grade(actions),
         "recommendation": actions.get("recommendation") or chair.get("grade_recommendation"),
@@ -543,6 +602,11 @@ def append_event(event_dir: str | Path, payload: dict) -> tuple[Path, bool]:
     """`debate_events/{signal_id}.json` 에 append — 같은 `report_id` 는 한 번만.
 
     발행 레코드는 건드리지 않는다. 파일이 이미 있으면 **이벤트 배열에만** 덧붙인다.
+
+    [02] 채택 결과는 신호 단위로 **한 번** 확정된다 — `adopted` 블록(`report_id`·`report_sha256`·
+    `snapshot_id`·검증 시각)을 문서에 남기고, 뒤에 온 보고서는 `superseded` 목록에만 쌓는다.
+    이미 채택된 보고서가 있으면 **덮어쓰지 않는다**(append-only) — 화면·감사가 "어느 보고서가
+    그 결정에 붙었나"를 파일 하나로 확인할 수 있게 한다.
     """
     sid = str(payload.get("signal_id"))
     path = Path(event_dir) / f"{sid}.json"
@@ -554,6 +618,9 @@ def append_event(event_dir: str | Path, payload: dict) -> tuple[Path, bool]:
                 doc = {"signal_id": old.get("signal_id") or sid,
                        "snapshot_id": old.get("snapshot_id") or payload.get("snapshot_id"),
                        "events": list(old.get("events") or [])}
+                for key in ("adopted", "superseded"):
+                    if old.get(key):
+                        doc[key] = old[key]
         except json.JSONDecodeError:
             pass
     added = 0
@@ -564,7 +631,20 @@ def append_event(event_dir: str | Path, payload: dict) -> tuple[Path, bool]:
             continue
         doc["events"].append(event)
         added += 1
-    if not added:
+    changed = added > 0
+    rows = payload.get("superseded") or []
+    if rows:
+        known = doc.setdefault("superseded", [])
+        for row in rows:
+            if any(old.get("report_id") == row.get("report_id") for old in known):
+                continue
+            known.append(row)
+            changed = True
+    adopted = payload.get("adopted")
+    if adopted and not doc.get("adopted"):
+        doc["adopted"] = adopted
+        changed = True
+    if not changed:
         return path, False
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -589,10 +669,19 @@ def load_events(event_dir: str | Path = EVENTS_DIR) -> dict[str, dict]:
 
 def _event_payload(report: dict, record: dict, el: dict, actions: dict, *, regime: str | None,
                    at: datetime) -> dict:
-    """편입 이벤트 1건 — `record.debate_event` 와 같은 골격에 A/B 판정 필드를 더한다."""
+    """편입 이벤트 1건 — `record.debate_event` 와 같은 골격에 A/B 판정 필드를 더한다.
+
+    [02] 신호 단위로 **채택된 보고서의 정체성**(`report_id`·`report_sha256`·`snapshot_id`)을
+    이벤트와 문서(`adopted` 블록) 양쪽에 남긴다 — 화면이 마지막 회차를 "채택"으로 오해하지 않게.
+    """
+    report_sha = el.get("report_sha256")
+    snapshot = report.get("snapshot_id") or record.get("snapshot_id")
     event = {
         "event": "debate_attached",
         "report_id": report.get("report_id"),
+        "report_sha256": report_sha,
+        "snapshot_id": snapshot,
+        "adoption": "adopted",
         "track": "codex_debated",
         "intent": (report.get("intent") if report.get("intent") in INTENTS
                    else ("pending_hold_cash" if actions["divergent"]
@@ -601,7 +690,12 @@ def _event_payload(report: dict, record: dict, el: dict, actions: dict, *, regim
         "recorded_at": _iso(at),
         "signal_observed_at": el.get("signal_observed_at"),
         "report_validated_at": el.get("report_validated_at"),
+        "validation_claimed_at": el.get("validation_claimed_at"),
+        "validation_source": el.get("validation_source"),
+        "received_at": el.get("received_at"),
         "frozen_at": el.get("frozen_at"),
+        "freeze_deadline_at": el.get("freeze_deadline_at"),
+        "frozen_source": el.get("frozen_source"),
         "order_cutoff_at": el.get("order_cutoff_at"),
         "eligible": bool(el.get("eligible")),
         "late": bool(el.get("late")),
@@ -617,8 +711,65 @@ def _event_payload(report: dict, record: dict, el: dict, actions: dict, *, regim
         "veto_codes": list(actions.get("veto_codes") or []),
         "regime": regime,
     }
+    adopted = {"report_id": report.get("report_id"), "report_sha256": report_sha,
+               "snapshot_id": snapshot, "signal_id": str(record.get("signal_id")),
+               "report_validated_at": el.get("report_validated_at"),
+               "freeze_deadline_at": el.get("freeze_deadline_at"),
+               "received_at": el.get("received_at"), "adopted_at": _iso(at)}
     return {"signal_id": str(record.get("signal_id")), "snapshot_id": record.get("snapshot_id"),
-            "events": [event]}
+            "adopted": adopted, "events": [event]}
+
+
+def _adoption_prior(doc: dict | None) -> str:
+    """이전 배치가 이 신호에 채택한 `report_id` — `adopted` 블록 > 마지막 편입 이벤트."""
+    doc = doc or {}
+    adopted = doc.get("adopted") or {}
+    if adopted.get("report_id"):
+        return str(adopted["report_id"])
+    for event in reversed(list(doc.get("events") or [])):
+        if event.get("event") == "debate_attached" and event.get("report_id"):
+            return str(event["report_id"])
+    return ""
+
+
+_FAR_FUTURE = datetime.max.replace(tzinfo=timezone.utc)
+
+
+def _adoption_key(item: tuple[dict, dict, dict]) -> tuple:
+    """채택 순위 — **가장 먼저 적격으로 확정된** 보고서(검증 시각, 동률이면 `report_id` 선착순)."""
+    report, el, _actions = item
+    return (_ts(el.get("report_validated_at")) or _FAR_FUTURE, str(report.get("report_id") or ""))
+
+
+def _adopted_from_prior(doc: dict | None, record: dict, sid: str) -> dict | None:
+    """이번 문서에 채택 보고서가 없을 때 — **이전 이벤트**로 화면 요약을 복원한다(채택은 되돌리지 않는다)."""
+    prior_id = _adoption_prior(doc)
+    if not prior_id:
+        return None
+    events = [e for e in ((doc or {}).get("events") or []) if str(e.get("report_id")) == prior_id]
+    if not events:
+        return None
+    event = events[-1]
+    return {"signal_id": sid, "ticker": record.get("ticker"), "report_id": prior_id,
+            "snapshot_id": event.get("snapshot_id") or record.get("snapshot_id"),
+            "status": "complete",
+            "badge": debate_badge({"status": "complete"}, event, event),
+            "eligible": bool(event.get("eligible")), "late": bool(event.get("late")),
+            "invalid": bool(event.get("invalid")), "reasons": list(event.get("reasons") or []),
+            "completed_at": event.get("completed_at"),
+            "report_validated_at": event.get("report_validated_at"),
+            "freeze_deadline_at": event.get("freeze_deadline_at"),
+            "frozen_at": event.get("frozen_at"),
+            "quant_action": event.get("quant_action"), "debate_action": event.get("debate_action"),
+            "divergent": bool(event.get("divergent")),
+            "auto_downgrade_applied": bool(event.get("auto_downgrade_applied")),
+            "quant_grade": event.get("quant_grade"),
+            "recommendation": event.get("recommendation"),
+            "display_grade": event.get("display_grade"),
+            "adoption": "adopted", "adopted_report_id": prior_id,
+            "adopted_report_sha256": event.get("report_sha256"),
+            "adopted_snapshot_id": event.get("snapshot_id"),
+            "recovered_from_event": True}
 
 
 def reconcile_debates(reports_doc: dict | None, records: list[dict],
@@ -634,71 +785,131 @@ def reconcile_debates(reports_doc: dict | None, records: list[dict],
     보여 줘야 하기 때문이다(다만 그 결정의 트랙에는 붙지 않는다).
 
     [v1.3.5 · 치명 02 · §10]
-    - `now` 는 **이번 배치의 원장 수신·검증 시각**이다(실행기는 배치 시작 시각을 넘긴다). 보고서가
-      그보다 늦은 검증 시각을 적으면 믿지 않고 깎는다 — 예전에는 `now` 자리에 보고서 자신의 검증
-      시각을 넣어 **`now` 보호를 사실상 끄고** 있었다.
+    - `now` 는 **이번 배치가 원장을 읽어 판정한 수신 시각**이다(실행기는 보고서 파일을 읽은 시각을
+      넘긴다). 보고서가 그보다 늦은 검증 시각을 적으면 믿지 않고 깎는다 — 예전에는 `now` 자리에
+      보고서 자신의 검증 시각을 넣어 **`now` 보호를 사실상 끄고** 있었다.
     - `strict=True`(기본) — `completed_at`·`report_validated_at`·`order_cutoff_at` 이 빠진 보고서는
       여섯 개 시각 검사를 건너뛰지 못하고 `MISSING_TIMESTAMPS` 로 받는다.
     - `require_receipt=True`(기본) — `report_sha256` 영수증이 없는 보고서는 편입하지 않는다
       (`REPORT_RECEIPT_MISSING`). 영수증이 있으면 바이트가 그대로인지 대조한다(`REPORT_HASH_MISMATCH`).
       기존 단위 호출 호환은 `eligibility(..., strict=False)` 로 남겨 둔다.
+
+    [v1.3.6 · 감사 5331ab7-02] **신호당 채택은 하나다.**
+    - 같은 `signal_id` 에 `-01`·`-02` 가 오면 **가장 먼저 적격으로 확정된** 보고서를 채택하고,
+      뒤에 온 보고서는 적격이어도 `superseded`, 지연·무효면 `rejected` 로만 남긴다.
+      `by_signal[sid]` 는 **채택 결과를 덮어쓰지 않는다**(예전에는 배열 마지막 보고서가 무조건 덮었다).
+    - 이미 채택된 보고서(이전 배치의 `adopted` 블록)는 재실행에서도 그대로 채택으로 돌아온다.
+    - 채택 정체성(`report_id`·`report_sha256`·`snapshot_id`)은 이벤트와 `debate_events` 문서
+      (`adopted` 블록)·`by_signal`(`adopted_*`)에 함께 남는다.
     """
     executions = executions or {}
     auto = bool(((params or {}).get("debate") or {}).get("auto_downgrade_enabled", False))
     reports = reports_of(reports_doc)
     index = {str(r.get("signal_id")): r for r in records or []}
     at = now or datetime.now(timezone.utc)
+    prior_docs = load_events(event_dir) if write else {}
     attached: list[dict] = []
     rejected: list[dict] = []
+    superseded: list[dict] = []
     by_signal: dict[str, dict] = {}
+    adopted_map: dict[str, str] = {}
     n_late = n_invalid = 0
+    groups: dict[str, list[dict]] = {}
     for report in reports:
-        sid = str(report.get("signal_id") or "")
+        groups.setdefault(str(report.get("signal_id") or ""), []).append(report)
+    for sid, rows in groups.items():
         record = index.get(sid)
         if record is None:
-            rejected.append({"signal_id": sid, "report_id": report.get("report_id"),
-                             "reason": "RECORD_MISSING"})
-            by_signal[sid] = {"signal_id": sid, "ticker": report.get("ticker"),
-                              "status": report.get("status"),
-                              "badge": debate_badge(report, {"eligible": False, "late": False,
-                                                             "invalid": False}, None),
-                              "eligible": False, "report_id": report.get("report_id")}
+            for report in rows:
+                rejected.append({"signal_id": sid, "report_id": report.get("report_id"),
+                                 "reason": "RECORD_MISSING"})
+            by_signal[sid] = {"signal_id": sid, "ticker": rows[-1].get("ticker"),
+                              "status": rows[-1].get("status"),
+                              "badge": debate_badge(rows[-1], {"eligible": False, "late": False,
+                                                              "invalid": False}, None),
+                              "eligible": False, "report_id": rows[-1].get("report_id")}
             continue
-        el = eligibility(report, record, now=at, report_validated_at=report_validated_at,
-                         execution=executions.get(sid), require_receipt=require_receipt,
-                         strict=strict)
-        actions = actions_for(report, record, executions.get(sid),
-                              auto_downgrade_enabled=auto)
-        summary = public_report(report, el, actions)
-        by_signal[sid] = summary
-        if el.get("late"):
-            n_late += 1
-        if el.get("invalid"):
-            n_invalid += 1
-        if not el["eligible"]:
+        evaluated: list[tuple[dict, dict, dict]] = []
+        for report in rows:
+            el = eligibility(report, record, now=at, report_validated_at=report_validated_at,
+                             execution=executions.get(sid), require_receipt=require_receipt,
+                             strict=strict)
+            actions = actions_for(report, record, executions.get(sid),
+                                  auto_downgrade_enabled=auto)
+            evaluated.append((report, el, actions))
+            if el.get("late"):
+                n_late += 1
+            if el.get("invalid"):
+                n_invalid += 1
+        prior_id = _adoption_prior(prior_docs.get(sid))
+        fixed = bool(prior_id)
+        adopted = next((item for item in evaluated
+                        if fixed and str(item[0].get("report_id")) == prior_id), None)
+        if adopted is None and not fixed:
+            eligible = [item for item in evaluated if item[1]["eligible"]]
+            adopted = min(eligible, key=_adoption_key) if eligible else None
+        for report, el, _actions in evaluated:
+            if adopted is not None and report is adopted[0]:
+                continue
+            if el["eligible"]:
+                # 적격인데 채택되지 못한 회차 — 채택은 이미 확정됐다(뒤 회차·이전 배치 채택).
+                superseded.append({"signal_id": sid, "report_id": report.get("report_id"),
+                                   "reason": "ADOPTION_FIXED" if adopted is None else "SUPERSEDED_BY_ADOPTED",
+                                   "adopted_report_id": (adopted[0].get("report_id")
+                                                         if adopted is not None else prior_id)})
+                continue
             rejected.append({"signal_id": sid, "report_id": report.get("report_id"),
-                             "reasons": el["reasons"]})
+                             "reasons": el["reasons"],
+                             "late": bool(el.get("late")), "invalid": bool(el.get("invalid")),
+                             "report_validated_at": el.get("report_validated_at"),
+                             "freeze_deadline_at": el.get("freeze_deadline_at")})
+        if adopted is not None:
+            report, el, actions = adopted
+            summary = public_report(report, el, actions)
+            summary.update({"adoption": "adopted", "adopted_report_id": report.get("report_id"),
+                            "adopted_report_sha256": el.get("report_sha256"),
+                            "adopted_snapshot_id": report.get("snapshot_id")})
+            by_signal[sid] = summary
+            adopted_map[sid] = str(report.get("report_id"))
+            payload = _event_payload(report, record, el, actions, regime=regime, at=at)
+            payload["superseded"] = [row for row in superseded if row["signal_id"] == sid]
+            if write:
+                append_event(event_dir, payload)
+            attached.append({"signal_id": sid, "ticker": record.get("ticker"),
+                             "report_id": report.get("report_id"),
+                             "report_sha256": el.get("report_sha256"),
+                             "snapshot_id": report.get("snapshot_id"),
+                             "report_validated_at": el.get("report_validated_at"),
+                             "divergent": actions["divergent"],
+                             "quant_action": actions["quant_action"],
+                             "debate_action": actions["debate_action"]})
             continue
-        payload = _event_payload(report, record, el, actions, regime=regime, at=at)
-        if write:
-            append_event(event_dir, payload)
-        attached.append({"signal_id": sid, "ticker": record.get("ticker"),
-                         "report_id": report.get("report_id"),
-                         "divergent": actions["divergent"],
-                         "quant_action": actions["quant_action"],
-                         "debate_action": actions["debate_action"]})
+        restored = _adopted_from_prior(prior_docs.get(sid), record, sid)
+        if restored is not None:
+            # 이전 배치가 채택한 보고서가 이번 문서에 없다 — 채택은 유지하고 새 보고서는 superseded 다.
+            by_signal[sid] = restored
+            adopted_map[sid] = str(restored["report_id"])
+            continue
+        if evaluated:
+            report, el, actions = evaluated[-1]
+            by_signal[sid] = public_report(report, el, actions)
     return {
         "schema_version": SCHEMA_VERSION,
         "as_of": as_of.isoformat() if as_of else None,
         "generated_at": _iso(at),
+        "received_at": _iso(at),
+        "freeze_buffer_seconds": int(FREEZE_BUFFER.total_seconds()),
         "auto_downgrade_enabled": auto,
         "n_reports": len(reports),
         "n_eligible": len(attached),
         "n_late": n_late,
         "n_invalid": n_invalid,
+        "n_superseded": len(superseded),
         "n_rejected": len(rejected),
         "attached": attached,
         "rejected": rejected,
+        "superseded": superseded,
+        "adopted": adopted_map,
         "by_signal": by_signal,
     }
 
@@ -757,6 +968,26 @@ def quarter_of(day: date | None) -> str | None:
     if day is None:
         return None
     return f"{day.year}Q{(day.month - 1) // 3 + 1}"
+
+
+def quarter_window(quarter: str | None) -> tuple[date, date] | None:
+    """`2026Q2` → `(2026-04-01, 2026-06-30)` — 분기 계좌 시뮬레이션의 창(05)."""
+    idx = quarter_index(quarter)
+    if idx is None:
+        return None
+    year, q = idx
+    start = date(year, 3 * (q - 1) + 1, 1)
+    if q == 4:
+        end = date(year, 12, 31)
+    else:
+        end = date(year, 3 * q + 1, 1) - timedelta(days=1)
+    return start, end
+
+
+def _entry_day_of(record: dict, event: dict | None = None) -> date | None:
+    """레코드의 **진입 세션** — 체결 시각이 있으면 그날, 없으면 대상 세션."""
+    return (_as_date(str((event or {}).get("at") or "")[:10])
+            or _as_date(record.get("target_session")))
 
 
 def _verdict(pairs: int, n_eff: int, net_after_cost: float | None, defense_improved: bool) -> str:
@@ -906,11 +1137,15 @@ def simulate_policy_account(candidates: list[dict], panels: dict, as_of: date, *
     - **진입 슬리피지 중복 제거** — 원장 체결가(`fill_price`)는 이미 10bp 를 포함한다. 그 값이 있으면
       그대로 쓰고, 없을 때만 `raw_open × (1+slip)` 로 계산한다. 예전에는 둘 다 곱해 10bp 를 두 번 냈다.
     - **청산 10bp 는 유지**(P-4) — 매도에는 슬리피지가 붙는다.
-    - **시가 비중은 전일 종가 자산으로** — 진입 판단 시점에 알 수 있는 값만 쓴다. 예전에는 그날 종가를
-      먼저 갱신해 **다른 종목의 당일 종가가 주문 크기를 바꿨다**(감사 재현 05-(4)).
-    - **진입 먼저, 청산 나중** — 같은 날 진입한 포지션도 그날 장중 저가로 손절된다. 예전에는 청산
-      루프가 먼저 돌아 수량 0 짜리 "청산"으로 처리됐다(감사 재현 05-(2)).
+    - **시가 비중은 전일 종가 자산으로** — 진입 판단 시점에 알 수 있는 값만 쓴다.
     - **MDD 에 초기 자산 포함**(`_max_drawdown`).
+
+    [v1.3.6 · 감사 5331ab7-05] 하루의 시간 순서를 한 가지로 고정한다.
+    ① 시가 갭 손절(전일까지 보유) → ② 시가 진입 → ③ 장중 손절(진입 당일 포함) → ④ 만기 종가 청산.
+    예전에는 진입이 먼저라 **갭으로 손절할 포지션을 전일 종가로 계속 평가**해 주문 크기를 부풀렸다.
+
+    또 신규 진입분은 진입일에 `mark` 가 아직 0 이다 — 그대로 합산하면 섹터 캡이 **0원**으로 보여
+    25% 캡을 뚫었다(6×5%=30%, 2×20%=36%). 이제 진입가(`entry_px`)로 **즉시 평가해 합산**한다.
     """
     costs = costs or ACCOUNT_COSTS
     slip = float(costs.get("slippage", 0.0)) / 1e4
@@ -950,18 +1185,43 @@ def simulate_policy_account(candidates: list[dict], panels: dict, as_of: date, *
     def mark(ticker: str) -> float:
         return last_close.get(ticker, 0.0)
 
+    def value_of(plan: dict) -> float:
+        """포지션 평가액 — 진입 당일(시세 mark 없음)은 **진입가로 즉시 평가**한다(05 섹터 캡)."""
+        if plan["qty"] <= 0:
+            return 0.0
+        last = mark(plan["ticker"])
+        return plan["qty"] * (last if last > 0 else plan["entry_px"])
+
+    def sector_value(sector: str) -> float:
+        return sum(value_of(p) for p in plans if p["qty"] > 0 and p["sector"] == sector)
+
+    def close_plan(plan: dict, day: date, price: float) -> None:
+        nonlocal cash, n_trades
+        plan["open"] = False
+        plan["exit_day"] = day
+        plan["exit_px"] = price * (1.0 - slip)          # 청산 10bp 는 유지(P-4)
+        cash += plan["qty"] * plan["exit_px"] * (1.0 - fee_bps)
+        plan["qty"] = 0.0
+        n_trades += 1
+
     for day in days:
-        # 1) 시가 진입 — 비중은 **전일 종가 기준 순자산**으로 계산한다(P-4).
-        equity_open = cash + sum(p["qty"] * mark(p["ticker"]) for p in plans if p["qty"] > 0)
+        # 1) 시가 갭 손절 — **진입보다 먼저** 처리해 현금을 먼저 확보한다(시간 순서 일관화).
+        for plan in plans:
+            if plan["qty"] <= 0 or plan["entry_day"] >= day:
+                continue
+            bar = bars[plan["ticker"]].get(day)
+            if bar is not None and bar["open"] <= plan["stop"]:
+                close_plan(plan, day, bar["open"])
+        # 2) 시가 진입 — 비중은 **전일 종가 기준 순자산**으로 계산한다(P-4).
+        equity_open = cash + sum(value_of(p) for p in plans if p["qty"] > 0)
         for plan in plans:
             if plan["entry_day"] != day or not plan["open"] or plan["qty"] > 0:
                 continue
             if equity_open <= 0:
                 break
-            sector_value = sum(p["qty"] * mark(p["ticker"])
-                               for p in plans if p["qty"] > 0 and p["sector"] == plan["sector"])
             notional = min(plan["weight"], max_position) * equity_open
-            room = max_sector * equity_open - sector_value
+            # 당일 진입분은 진입가로 이미 섹터 누적에 들어가 있다 — 같은 날 6건이어도 25% 를 넘지 않는다.
+            room = max_sector * equity_open - sector_value(plan["sector"])
             if notional > room:
                 notional = max(0.0, room)
             if notional <= 0 or notional + notional * fee_bps > cash:
@@ -969,34 +1229,28 @@ def simulate_policy_account(candidates: list[dict], panels: dict, as_of: date, *
                 continue
             plan["qty"] = notional / plan["entry_px"]
             cash -= notional + notional * fee_bps
-            equity_open = cash + sum(p["qty"] * mark(p["ticker"]) for p in plans if p["qty"] > 0)
+            equity_open = cash + sum(value_of(p) for p in plans if p["qty"] > 0)
             n_trades += 1
-        # 2) 청산 — 진입 당일도 포함해 **손절(갭이면 시가) → 만기 종가** 순서
+        # 3) 장중 손절(진입 당일 포함) → 만기 종가 청산
         for plan in plans:
             if not plan["open"] or plan["entry_day"] > day or plan["qty"] <= 0:
                 continue
             bar = bars[plan["ticker"]].get(day)
+            if bar is None:
+                continue
             exit_px = None
-            if bar is not None:
-                if bar["open"] <= plan["stop"]:
-                    exit_px = bar["open"]
-                elif bar["low"] <= plan["stop"]:
-                    exit_px = plan["stop"]        # 진입 당일 장중 저가도 포함된다(수량 0 청산 금지)
-            if exit_px is None and day >= plan["maturity_day"] and bar is not None:
+            if bar["low"] <= plan["stop"]:
+                exit_px = plan["stop"]        # 진입 당일 장중 저가도 포함된다(수량 0 청산 금지)
+            if exit_px is None and day >= plan["maturity_day"]:
                 exit_px = bar["close"]
             if exit_px is None:
                 continue
-            plan["open"] = False
-            plan["exit_day"] = day
-            plan["exit_px"] = exit_px * (1.0 - slip)      # 청산 10bp 는 유지(P-4)
-            cash += plan["qty"] * plan["exit_px"] * (1.0 - fee_bps)
-            plan["qty"] = 0.0
-            n_trades += 1
-        # 3) 종가 갱신·평가
+            close_plan(plan, day, exit_px)
+        # 4) 종가 갱신·평가
         for ticker, table in bars.items():
             if day in table:
                 last_close[ticker] = float(table[day]["close"])
-        holdings = sum(p["qty"] * mark(p["ticker"]) for p in plans if p["qty"] > 0)
+        holdings = sum(value_of(p) for p in plans if p["qty"] > 0)
         equity = cash + holdings
         curve.append({"date": day.isoformat(), "equity": round(equity, 4),
                       "return": round(equity / initial_cash - 1.0, 6)})
@@ -1013,24 +1267,43 @@ def simulate_policy_account(candidates: list[dict], panels: dict, as_of: date, *
 
 
 def _account_candidates(by_signal: dict[str, dict], records: list[dict],
-                        executions: dict[str, dict], *, policy: str) -> list[dict]:
-    """계좌별 후보 목록 — **정량 원장 전체(실제 `buy_filled` 체결)** 가 모집단이다(중요 04).
+                        executions: dict[str, dict], *, policy: str,
+                        intent_blocked: dict[str, str] | None = None) -> list[dict]:
+    """계좌별 후보 목록 — **공통 주문 의도(동결 주문)** 가 모집단이다(중요 04 · 05).
 
-    예전에는 적격 토론 보고서(`by_signal`)의 행만 돌며 `pending_buy`(의도)를 `buy_filled`(체결)로
-    바꿔 읽었다. 그래서 ① 보고서가 없는 날의 정량 체결이 두 계좌에서 모두 사라지고 ② 체결되지 않은
-    주문에 수익률이 붙었다(감사 재현 04-(a)(c)). 기획서 §4.8.1 은 "토론을 돌리지 않은 날에도 정량
+    [v1.3.5 · 중요 04] 예전에는 적격 토론 보고서(`by_signal`)의 행만 돌며 `pending_buy`(의도)를
+    `buy_filled`(체결)로 바꿔 읽었다. 그래서 ① 보고서가 없는 날의 정량 체결이 두 계좌에서 모두
+    사라지고 ② 체결되지 않은 주문에 수익률이 붙었다. 기획서 §4.8.1 은 "토론을 돌리지 않은 날에도 정량
     트랙은 계속 채점된다"고 못 박는다.
 
-    - `quant_only` — 원장 체결 전부.
+    [v1.3.6 · 감사 5331ab7-05] 모집단을 **정량 계좌의 `buy_filled` 로 제한하지 않는다.**
+    `(종목, 대상 세션)` 별 **동결 주문 의도**(`live.order_slots`)에서 출발해 두 계좌가 **각자의 현금·
+    보유·섹터 캡**으로 독립 체결·평가된다. 그래서 A 의 섹터 캡에 막혀 `no_action` 이 된 후보도 B 가
+    자기 여유로 평가할 수 있다(예전에는 그런 후보가 두 계좌 모두에서 사라졌다).
+
+    후보로 올리는 것은 **원장이 실제로 판정한 의도** 뿐이다.
+    - `buy_filled` — 체결된 동결 주문(체결가·손절가를 원장에서 그대로 받는다).
+    - **섹터 캡 차단** — `settle` 이 `no_action` 으로 남긴 주문 중 사유가 섹터 상한인 건. 남은 이유가
+      시장·범위(밴드 이탈·차단·잠금)인 주문은 두 계좌 모두 대상이 아니므로 빠진다.
+
+    - `quant_only` — 공통 의도 전부.
     - `codex_debated` — 그 위에 **토론이 보류·하향한 건만** 뺀다. 토론이 없거나 편입되지 않았으면
       (`view.eligible` 거짓) 정량과 **같은 행동**을 한다(자체 현금·섹터 한도로 독립 운용).
     """
     out: list[dict] = []
-    for record in records or []:
-        sid = str(record.get("signal_id"))
+    blocked = {str(k): str(v) for k, v in (intent_blocked or {}).items() if v}
+    by_sid = {str(r.get("signal_id")): r for r in records or []}
+    for sid, slot in _frozen_buy_intents(records).items():
+        record = by_sid.get(sid)
+        if record is None:
+            continue
         event = executions.get(sid) or {}
         track = event.get("quant_track") or {}
-        if track.get("execution_event") != "buy_filled" or track.get("fill_price") is None:
+        filled = (track.get("execution_event") == "buy_filled"
+                  and track.get("fill_price") is not None)
+        block_reason = blocked.get(sid) or _sector_cap_block(event)
+        cap_blocked = (not filled) and block_reason == "SECTOR_CAP"
+        if not (filled or cap_blocked):
             continue
         view = by_signal.get(sid) or {}
         if view.get("eligible"):
@@ -1041,28 +1314,69 @@ def _account_candidates(by_signal: dict[str, dict], records: list[dict],
         weight = track.get("weight")
         if weight in (None, 0):
             weight = position.get("tranche_weight") or 0.0
-        entry_day = _as_date(str(event.get("at") or "")[:10]) or _as_date(record.get("target_session"))
+        entry_day = (_as_date(str(event.get("at") or "")[:10])
+                     or _as_date(record.get("target_session"))
+                     or _as_date(str(slot.get("target_session") or "")[:10]))
         out.append({"signal_id": sid, "ticker": record.get("ticker") or view.get("ticker"),
                     "sector": record.get("sector") or "", "entry_day": entry_day,
-                    "weight": weight, "fill_price": track.get("fill_price"),
+                    "weight": weight,
+                    # 캡에 막힌 의도는 체결가가 없다 — 모의 계좌가 시가 + 슬리피지로 직접 산다.
+                    "fill_price": track.get("fill_price") if filled else None,
                     "stop_price": track.get("stop_price"),
-                    "stop_distance": position.get("stop_distance")})
+                    "stop_distance": position.get("stop_distance"),
+                    "intent_blocked": "SECTOR_CAP" if cap_blocked else None})
     out.sort(key=lambda c: (str(c.get("entry_day")), str(c.get("signal_id"))))
     return out
+
+
+def _sector_cap_block(event: dict | None) -> str | None:
+    """`settle` 이 남긴 구조화 사유는 없으므로 `no_action` 사유 문구을 보조 증거로 읽는다.
+
+    실행기는 `settlement["settled"]` 의 `reason` 을 `intent_blocked` 로 직접 넘길 수 있다(그쪽이 우선).
+    """
+    if str(((event or {}).get("quant_track") or {}).get("execution_event") or "") != "no_action":
+        return None
+    note = str((event or {}).get("note") or "")
+    if "섹터" in note and "상한" in note and "4.12" in note:
+        return "SECTOR_CAP"
+    return None
+
+
+def _frozen_buy_intents(records: list[dict]) -> dict[str, dict]:
+    """`(종목, 대상 세션)` 동결 주문 중 **`pending_buy` 인 것** → `{signal_id: slot}`.
+
+    회차·동결 규칙은 `live.order_slots` 하나만 쓴다 — 여기서 다시 구현하면 두 곳이 갈라진다.
+    동결 뒤 도착해 `held` 된 회차는 슬롯이 아니므로 후보로 올라오지 않는다.
+    """
+    try:
+        from engine.ledger import live as live_mod
+        slots = live_mod.order_slots(records or [])
+    except Exception:                       # noqa: BLE001 — 슬롯을 못 만들면 후보 없음(배치를 죽이지 않는다)
+        return {}
+    frozen: dict[str, dict] = {}
+    for slot in slots.values():
+        if str(slot.get("intent") or "") != "pending_buy":
+            continue
+        sid = str(slot.get("signal_id") or "")
+        if sid:
+            frozen[sid] = slot
+    return frozen
 
 
 def policy_accounts(by_signal: dict[str, dict], records: list[dict],
                     executions: dict[str, dict], panels: dict, as_of: date, *,
                     initial_cash: float = ACCOUNT_INITIAL_CASH,
                     costs: dict | None = None, horizon_td: int = CLUSTER_TD,
-                    params: dict | None = None) -> dict:
+                    params: dict | None = None,
+                    intent_blocked: dict[str, str] | None = None) -> dict:
     """`quant_only`·`codex_debated` 두 계좌를 **같은 규칙**으로 돌려 순자산·MDD 를 낸다."""
     risk = (params or {}).get("risk") or {}
     max_position = float(risk.get("max_position") or 0.05)
     max_sector = float(risk.get("max_sector") or 0.25)
     accounts: dict[str, dict] = {}
     for key in ACCOUNT_KEYS:
-        candidates = _account_candidates(by_signal, records, executions, policy=key)
+        candidates = _account_candidates(by_signal, records, executions, policy=key,
+                                         intent_blocked=intent_blocked)
         accounts[key] = simulate_policy_account(candidates, panels, as_of, initial_cash=initial_cash,
                                                 costs=costs, horizon_td=horizon_td,
                                                 max_position=max_position, max_sector=max_sector)
@@ -1134,7 +1448,8 @@ def compute_debate_comparison(by_signal: dict[str, dict], records: list[dict],
                               regime_lookup: dict[str, str] | None = None,
                               now: datetime | None = None,
                               initial_cash: float = ACCOUNT_INITIAL_CASH,
-                              costs: dict | None = None) -> dict:
+                              costs: dict | None = None,
+                              intent_blocked: dict[str, str] | None = None) -> dict:
     """`debate_comparison.json` — **두 계좌의 순자산 차이**와 **페어 손익**을 따로 낸다(4.8 · P1-3).
 
     - `policy_diff_pp = 100 × (R_debated − R_quant)` — 같은 초기 현금·시세·비용 규칙으로 운용한
@@ -1143,6 +1458,10 @@ def compute_debate_comparison(by_signal: dict[str, dict], records: list[dict],
       페어 합계를 "순효과"라는 한 숫자로 계좌 성과 자리에 올렸다.
     - 하위 호퐌 키(`avoided_loss`·`missed_gain`·`net`·`net_after_cost`·`net_pp`·`net_after_cost_pp`)는
       **페어 기준 값**으로 유지한다(화면·기존 코드 호환).
+
+    [v1.3.6 · 감사 5331ab7-05] 분기 행의 **계좌 시뮬레이션 창을 그 분기로 고정**한다 — 그 분기 `eval_day`
+    상한(`min(as_of, 분기말)`)과 그 분기에 진입한 레코드만 넘긴다. 예전에는 전체 기간의 레코드를
+    넘겨 **Q1 점수가 4월(Q2) 체결에 좌우됐다**(감사 재현 05-C).
     """
     executions = executions or {}
     panels = panels or {}
@@ -1178,7 +1497,7 @@ def compute_debate_comparison(by_signal: dict[str, dict], records: list[dict],
             **outcome,
         })
     account_filters = {"initial_cash": initial_cash, "costs": costs, "horizon_td": horizon_td,
-                       "params": params}
+                       "params": params, "intent_blocked": intent_blocked}
     accounts = policy_accounts(by_signal, records, executions, panels, eval_day, **account_filters)
     overall = _bucket(pairs, accounts)
     by_regime: dict[str, dict] = {}
@@ -1200,11 +1519,27 @@ def compute_debate_comparison(by_signal: dict[str, dict], records: list[dict],
     for key in sorted(quarters):
         sids = {p["signal_id"] for p in quarters[key]}
         subset = {k: v for k, v in (by_signal or {}).items() if k in sids}
-        quarter_accounts = policy_accounts(subset, records, executions, panels, eval_day,
+        # [05] 그 분기 창으로 시뮬레이션을 **고정**한다 — 뒤 분기 체결이 앞 분기 점수를 오염시키지 않는다.
+        window = quarter_window(key)
+        quarter_records = list(records or [])
+        quarter_eval = eval_day
+        if window is not None:
+            start, end = window
+            quarter_eval = min(eval_day, end)
+            quarter_records = [
+                r for r in records or []
+                if (day := _entry_day_of(r, executions.get(str(r.get("signal_id"))))) is not None
+                and start <= day <= end]
+        quarter_accounts = policy_accounts(subset, quarter_records, executions, panels, quarter_eval,
                                            **account_filters)
         row = _bucket(quarters[key], quarter_accounts)
         row["quarter"] = key
         row["policy_diff"] = {"policy_diff_pp": _policy_diff_pp(quarter_accounts)}
+        row["eval_day"] = quarter_eval.isoformat()
+        if window is not None:
+            row["window"] = {"start": window[0].isoformat(), "end": window[1].isoformat(),
+                             "capped_at": quarter_eval.isoformat(),
+                             "n_records": len(quarter_records)}
         row["verdict"] = _verdict(row["n_graded"], row["n_eff"],
                                   (row["policy_diff"]["policy_diff_pp"] or 0.0) / 100.0,
                                   bool(row["drawdown"]["defense_improved"]))

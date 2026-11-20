@@ -487,6 +487,16 @@ allow:
   - calibration_window
   - n_retried
   - retry_pending
+  # [5331ab7-11] 채널별 전달 상태·재시도 요약 — 상태 이름·건수뿐(본문·수신자 없음)
+  - n_retry_suppressed
+  - retry_pending_inactive
+  - sent
+  - pending_retry
+  - unconfigured
+  - retried
+  # [통합 재검토] 크기 상한으로 목록에서 빠진 건수·요약 행 표식(값은 건수·상태뿐)
+  - omitted
+  - compact
   - latency_seconds
   - attempt_at
   - channel

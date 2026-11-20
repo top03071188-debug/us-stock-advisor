@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from datetime import date, datetime, timedelta, timezone
@@ -37,9 +38,20 @@ from engine.data.xbrl_fundamentals import (
     valuation_multiplier,
 )
 from engine.metrics.fundamentals import AnnualFundamentals, qc_wacc
-from engine.utils.dates import KST
+from engine.utils.dates import KST, add_trading_days
 
 DEFAULT_UNIVERSE = Path("config/universe.yaml")
+#: 발행 원장 — 국면 표본의 **실제 원천**이다(발행 시점에 기록된 국면 + 만기일).
+DEFAULT_LEDGER_RECORDS = Path("data/ledger/records.jsonl")
+#: 일별 동결 입력 아카이브 — 국면 라벨이 없는 구 레코드의 국면을 **그 시점 값으로** 복원한다.
+DEFAULT_SNAPSHOT_ROOT = Path("data/snapshots")
+#: 국면 표본 기간 — 기획서 3.10 의 "해당 국면 백테스트 표본"은 3개월 채점 기준이다.
+REGIME_SAMPLE_HORIZONS = {"1w": 5, "1m": 21, "3m": 63, "6m": 126}
+DEFAULT_REGIME_SAMPLE_HORIZON = "3m"
+#: A 등급 하한(기획서 3.10). 판정은 `pipeline.regime_sample_ok` 가 하지만, 공급 문서에도 같은 값을 적는다.
+MIN_REGIME_SAMPLE = 30
+#: 구 레코드의 국면을 되살릴 때 읽을 아카이브 상한 — 실행 시간을 묶어 둔다(입력 1건 ≈ 1MB).
+MAX_ARCHIVE_LOOKUPS = 120
 NEWS_MAX_AGE_HOURS = 48
 MACRO_TO_VALUES = {
     "DFF": "dff", "T10Y2Y": "t10y2y", "BAMLH0A0HYM2": "hy_oas_bp",
@@ -453,14 +465,191 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
     return fundamentals, valuation
 
 
+def load_ledger_records(path: str | Path = DEFAULT_LEDGER_RECORDS) -> list[dict]:
+    """발행 원장(`records.jsonl`) — 한 줄에 한 신호. 없는 파일·깨진 줄은 건너뛴다."""
+    p = Path(path)
+    if not p.exists():
+        return []
+    rows: list[dict] = []
+    try:
+        lines = p.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return []
+    for line in lines:
+        text = line.strip()
+        if not text:
+            continue
+        try:
+            row = json.loads(text)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(row, dict) and row.get("as_of"):
+            rows.append(row)
+    return rows
+
+
+def _regime_label(value) -> str | None:
+    """레코드의 국면 값(`"neutral"` 또는 `{"regime": "neutral", ...}`) → 국면 이름."""
+    if isinstance(value, dict):
+        value = value.get("regime")
+    text = str(value or "").strip().lower()
+    return text or None
+
+
+def _archive_regime(snapshot_id: str | None, day: date | None, snapshots_root: Path,
+                    cache: dict, budget: list[int]) -> str | None:
+    """구 레코드의 국면을 **그 시점 동결 입력**으로 복원한다(사후 집계가 아니다).
+
+    `data/snapshots/{snapshot_id}/inputs.json` 의 `macro`·`macro_previous` 는 그 결정 시점의
+    빈티지 값이다. 사후에 최신 거시값으로 다시 분류하면 그 시점에 알 수 없었던 값이 들어간다.
+    투표가 3개 미만(`verified: false`)이면 국면을 단정하지 않고 `None` 을 돌려준다.
+    """
+    key = str(snapshot_id or (day.isoformat() if day else "")) or None
+    if key is None:
+        return None
+    if key in cache:
+        return cache[key]
+    if budget[0] <= 0:
+        return None
+    candidates: list[Path] = []
+    if snapshot_id:
+        candidates.append(snapshots_root / str(snapshot_id))
+    if day is not None:
+        base = snapshots_root / day.isoformat()
+        candidates.append(base)
+        if base.parent.exists():
+            candidates.extend(sorted(base.parent.glob(f"{day.isoformat()}-r*"), reverse=True))
+    regime = None
+    for folder in candidates:
+        path = folder / "inputs.json"
+        if not path.exists():
+            continue
+        budget[0] -= 1
+        try:
+            inputs = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            break
+        from engine.decide.macro import classify_regime  # noqa: PLC0415 — 순환 임포트 방지
+        view = classify_regime((inputs or {}).get("macro"), (inputs or {}).get("macro_previous"))
+        regime = view.regime if view.verified else None
+        break
+    cache[key] = regime
+    return regime
+
+
+def _panel_last_bar(panel) -> date | None:
+    """패널의 마지막 봉 날짜 — 이 시점에 **관측할 수 있었던** 마지막 값의 기준이다."""
+    if panel is None or getattr(panel, "frame", None) is None or panel.frame.empty:
+        return None
+    last = panel.frame.index[-1]
+    return last.date() if hasattr(last, "date") else None
+
+
+def regime_sample_counts(as_of: date, panels: dict | None = None, *,
+                         records_path: str | Path = DEFAULT_LEDGER_RECORDS,
+                         snapshots_root: str | Path = DEFAULT_SNAPSHOT_ROOT,
+                         horizon: str = DEFAULT_REGIME_SAMPLE_HORIZON,
+                         min_n: int = MIN_REGIME_SAMPLE) -> dict:
+    """국면별 **시점 확정 표본 수** — 신뢰도 A 게이트(기획서 3.10)에 공급하는 실제 집계.
+
+    원천은 발행 원장(`data/ledger/records.jsonl`)이다: 각 신호는 발행 시점의 국면과 `as_of` 를
+    남기고, 채점 기간(`horizon`, 기본 3개월 = 63거래일)의 만기일은 `as_of` 에서 거래일로 계산된다.
+    표본으로 세는 조건은 세 가지다.
+
+    1. **국면이 그 시점에 정해져 있다** — 레코드의 `regime`(발행 시점 기록) 또는 그 스냅샷의
+       동결 입력(`inputs.json`)으로 복원. 복원도 안 되면 `no_regime` 으로 뺐다(추정 국면 금지).
+    2. **만기가 `as_of` 보다 이전이다** — `maturity < as_of`. 이후에 만기가 오는 신호는 표본이
+       아니다(시점 계약: 미래 만기 표본을 빌려 오지 않는다).
+    3. **그 만기 봉을 실제로 관측할 수 있었다** — 현재 수집 패널(마감까지 잘린 프레임)의 마지막
+       봉이 만기일 이상. 봉이 없으면 `no_price` 로 뺐다(관측 못 한 채점을 표본으로 세지 않는다).
+
+    그래서 30건 미만이면 실제 수치만큼 `B` 상한이 유지되고, 30건 이상 쌓이면 같은 배선에서 A 경로가
+    자동으로 열린다. 판정은 `engine.decide.pipeline.regime_sample_ok` 가 한다.
+    """
+    h = int(REGIME_SAMPLE_HORIZONS.get(str(horizon), REGIME_SAMPLE_HORIZONS[DEFAULT_REGIME_SAMPLE_HORIZON]))
+    horizon_name = str(horizon) if str(horizon) in REGIME_SAMPLE_HORIZONS else DEFAULT_REGIME_SAMPLE_HORIZON
+    root = Path(snapshots_root)
+    by_regime: dict[str, dict] = {name: {"n": 0, "min_n": int(min_n), "matured_as_of": as_of.isoformat(),
+                                         "horizon": horizon_name, "horizon_td": h,
+                                         "source": "ledger_records"}
+                                  for name in ("risk_on", "neutral", "risk_off")}
+    counts = {"records": 0, "matured": 0, "duplicate": 0, "no_regime": 0,
+              "not_matured": 0, "no_price": 0}
+    records = load_ledger_records(records_path)
+    counts["records"] = len(records)
+    cache: dict = {}
+    budget = [MAX_ARCHIVE_LOOKUPS]
+    seen: set[str] = set()
+    observed_through: date | None = None
+    for panel in (panels or {}).values():
+        last = _panel_last_bar(panel)
+        if last is not None and (observed_through is None or last > observed_through):
+            observed_through = last
+    reason = None
+    if not Path(records_path).exists():
+        reason = "ledger_missing"
+    for record in records:
+        try:
+            day = date.fromisoformat(str(record.get("as_of"))[:10])
+        except ValueError:
+            counts["no_regime"] += 1
+            continue
+        ticker = str(record.get("ticker") or "").upper()
+        signal_key = str(record.get("signal_id") or f"{day.isoformat()}:{ticker}:{record.get('snapshot_id')}")
+        if signal_key in seen:
+            counts["duplicate"] += 1
+            continue
+        seen.add(signal_key)
+        regime = _regime_label(record.get("regime")) or _archive_regime(
+            record.get("snapshot_id"), day, root, cache, budget)
+        if regime not in by_regime:
+            counts["no_regime"] += 1
+            continue
+        maturity = add_trading_days(day, h)
+        # 시점 계약: `as_of` 이전에 만기가 끝난 신호만 표본이다(같은 날 만기 포함 금지).
+        if maturity >= as_of:
+            counts["not_matured"] += 1
+            continue
+        last_bar = _panel_last_bar((panels or {}).get(ticker))
+        if last_bar is None or last_bar < maturity:
+            counts["no_price"] += 1
+            continue
+        by_regime[regime]["n"] += 1
+        counts["matured"] += 1
+    if counts["records"] == 0 and reason is None:
+        reason = "no_records"
+    return {
+        "as_of": as_of.isoformat(),
+        "matured_as_of": as_of.isoformat(),
+        "observed_through": None if observed_through is None else observed_through.isoformat(),
+        "horizon": horizon_name,
+        "horizon_td": h,
+        "min_n": int(min_n),
+        "source": "ledger_matured_signals",
+        "verified": bool(counts["matured"] > 0),
+        "reason": reason,
+        "by_regime": by_regime,
+        "counts": counts,
+        "note_ko": ("발행 원장의 국면·만기·관측 봉으로 센 표본이다 — 사후 집계·폴드 총수를 쓰지 않는다. "
+                    "30건 미만인 국면은 A 상한(B)이 유지된다."),
+    }
+
+
 def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFAULT_UNIVERSE,
             mode: str = "live", now: datetime | None = None,
-            today: date | None = None) -> dict:
+            today: date | None = None,
+            *, ledger_records: str | Path | None = None,
+            snapshots_root: str | Path | None = None,
+            regime_sample_horizon: str = DEFAULT_REGIME_SAMPLE_HORIZON) -> dict:
     """라이브 데이터셋. `source: live`, 실패 내역은 `diagnostics.degraded` 에 남는다.
 
     `mode` 는 경계 계약(§4.2)의 키워드다 — `run_daily` 는 기본값(`live`)을 그대로 쓴다.
     거시는 라이브·재생이 **같은 경로**(마감 빈티지 점조회)를 쓴다(v1.3.3).
     `today` 는 "오늘" 의 기준일이다(기본: 실제 오늘) — 오늘 실행에서만 fast_info 시총을 허용한다.
+
+    `ledger_records`·`snapshots_root`·`regime_sample_horizon` 은 국면 표본 공급(감사 5331ab7-12)의
+    입력 경로다. 기본값은 저장소의 `data/ledger/records.jsonl`·`data/snapshots` 이며, 발행 원장이
+    없으면 빈 표본(`n: 0`)을 돌려준다 — 없는 표본을 통과로 바꾸지 않는다.
     """
     config = load_universe(universe_path)
     rows = list(config.get("tickers") or [])
@@ -569,6 +758,33 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
     diag["market_cap_basis"] = (
         "cutoff_close_x_diluted_shares" if as_of < (today or datetime.now(KST).date())
         else "fast_info_market_cap")
+    # 감사 5331ab7-12: 국면 표본을 **실제 원장**에서 세어 공급한다. 실패해도 배치는 계속되고,
+    # 표본을 못 채우면 `None`(=B 상한)으로 남는다 — 모르는 것을 통과로 쓰지 않는다.
+    try:
+        sample = regime_sample_counts(
+            as_of, panels,
+            records_path=ledger_records or DEFAULT_LEDGER_RECORDS,
+            snapshots_root=snapshots_root or DEFAULT_SNAPSHOT_ROOT,
+            horizon=regime_sample_horizon)
+    except Exception as exc:  # noqa: BLE001 — 표본 공급 실패가 수집 실패는 아니다
+        sample = {"as_of": as_of.isoformat(), "matured_as_of": as_of.isoformat(),
+                  "observed_through": None, "horizon": regime_sample_horizon,
+                  "horizon_td": REGIME_SAMPLE_HORIZONS.get(regime_sample_horizon),
+                  "min_n": MIN_REGIME_SAMPLE, "source": "ledger_matured_signals",
+                  "verified": False, "reason": f"regime_sample_error:{type(exc).__name__}",
+                  "by_regime": {}, "counts": {"records": 0}}
+    from engine.decide.macro import classify_regime  # noqa: PLC0415 — 순환 임포트 방지
+    regime_view = classify_regime(macro, macro_prev)
+    current = regime_view.regime if regime_view.verified else None
+    sample["regime"] = current
+    picked = (sample.get("by_regime") or {}).get(current) if current else None
+    sample["n"] = (picked or {}).get("n") if isinstance(picked, dict) else None
+    diag["regime_sample"] = {
+        "source": sample.get("source"), "regime": current, "n": sample.get("n"),
+        "min_n": sample.get("min_n"), "matured_as_of": sample.get("matured_as_of"),
+        "horizon": sample.get("horizon"), "reason": sample.get("reason"),
+        "counts": sample.get("counts"),
+    }
     return {
         "as_of": as_of.isoformat(),
         "universe": universe,
@@ -580,6 +796,7 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
         "news": news,
         "fundamentals": fundamentals,
         "valuation_inputs": valuation,
+        "regime_sample": sample,
         "source": "live",
         "diagnostics": diag,
         "benchmark": benchmark,
