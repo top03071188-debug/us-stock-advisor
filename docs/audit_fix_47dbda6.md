@@ -314,3 +314,71 @@ set -a; . ./.env; set +a                              # SEC_USER_AGENT 에 괄�
 .venv/bin/python scripts/build_public_data.py          # web/data/* (allowlist 필터·200KB 상한)
 git add -A && .venv/bin/python scripts/check_commit_scope.py --staged
 ```
+
+---
+
+## 8. v1.3.2 — `v_score` 완만 감쇠 · 감점 2종 · 10년 EV/EBIT 백분위 (2026-11-20)
+
+§6.1에서 "Phase 4 후보"로 미뤄 둔 두 가지(`v_penalties` 배관, `v_score` 구간)를 **기획서 v1.3.2**로 확정해 구현했다.
+
+### 8.1 `v_score` — −20% 아래를 0점으로 누르지 않는다
+
+```text
+margin ≥ 0          : V = 50 + margin × (50 / 0.30)            # 0% = 50, +30% = 100 (그대로)
+−0.20 ≤ margin < 0  : V = 50 + margin × (35 / 0.20)            # 0% = 50, −20% = 15
+margin < −0.20      : V = 15 + (margin + 0.20) × (15 / 1.80)   # −20% = 15, −200% = 0
+V_final             = clamp(V − v_penalties, 0, 100)
+```
+
+- 왜: v1.3.1은 −20% 이하를 전부 0점으로 잘라 **워치리스트 22종목 전부 V=0** 이었다(실측 GOOGL −349% · ADBE −40%).
+  변별력도 없고 감점(−4/−10)이 들어갈 자리도 없었다. 양수 안전마진(매수 임계 +15~+25%)의 점수는 바뀌지 않는다.
+
+### 8.2 감점 2종
+
+| 감점 | 조건 | 값 | 부수 효과 |
+|---|---|---|---|
+| `v_penalty_dcf` | `abs(IV_dcf_bull − IV_dcf_bear) / (2 × IV_dcf_base) ≥ 0.40` — 성장률 0.5·1.5배 시나리오에 IV가 **편측 ±40% 이상** 변동 | **−4** | `v_confidence = "C"`, `v_confidence_reason = "DCF_HIGH_SENSITIVITY"` |
+| `v_penalty_hist` | `abs(IV_median − IV_hist_ev_ebit) / IV_hist_ev_ebit ≥ 0.20` — 모델 IV와 10년 역사적 밸류에이션 내재가치가 20% 이상 괴리 | **−10** | — |
+
+- `valuation.dcf_sensitivity()`의 정의를 `(bull−bear)/base`(전폭)에서 **`abs(bull−bear)/(2·base)`(편측 ±비율)** 로 고쳤다.
+  기획서 문장(±40%)과 단위가 맞지 않던 부분이다.
+- DCF를 폐기한 종목(`FCFF ≤ 0`)은 민감도를 계산하지 않고 신뢰도 C만 유지한다(이미 C — 감점 없음).
+
+### 8.3 10년 EV/EBIT 백분위 (룩어헤드 차단)
+
+- `annual_revisions()` — companyfacts의 **모든 연차 개정**(10-K/A·재작성 비교치 포함)을 `available_at`과 함께 남긴다.
+  `annual_facts()`가 결정 시점의 최신 값 하나만 남기는 것과 달리, 과거 스냅샷마다 "그때 보이던 값"을 고르기 위해서다.
+- 스냅샷은 최근 10년의 **21거래일 간격**(+ 마지막 봉). 각 `t`에서 **그 봉이 공개된 시각(`available_at`)** 까지 접수된
+  재무 중 **최신 회계연도**의 `EBIT·순부채·주식수`를 쓴다 → `EV_t = sadj_close(t) × 주식수(결정 시점 기준) + 순부채_t`.
+- 주식수 태그가 그 해에 없으면 `순이익 ÷ 희석 EPS`로 복원하되, **최근 주식수의 0.3~3배**를 벗어나면 버린다
+  (GOOGL companyfacts에 분할 전 기준 `112.2` 같은 값이 섞여 있다).
+- EBIT 태그가 없는 기업(MRK·CVX 등)은 `세전이익 + 이자비용` 근사를 회계연도 후보로 함께 쓴다.
+- 산출: `ev_ebit_percentile`(0~100) → `EntryContext.ev_ebit_percentile` → **S1 과열(밸류) ≥ 90**,
+  `iv_hist_ev_ebit = (10년 중앙 EV/EBIT × 정상화 EBIT − 순부채) / 희석주식수` → 20% 괴리 감점.
+- 유효 회계연도 **3년 미만**이면 `None`(감점 0). 6~9년차 상장 종목은 그 이력으로 계산하고, 5년 미만 가격만 HG-04에서 탈락한다.
+- S1의 `pe_percentile`(0.90 비율)와 백분위(0~100)의 **단위 불일치**도 고쳤다 — 99 백분위가 0.90과 비교돼 절대 발동하지 않았다.
+
+### 8.4 배관
+
+`collect(가격 10년·XBRL 10년)` → `valuation_multiplier(hist=)` → `universe row(v_penalties·ev_ebit_percentile·dcf_sensitivity)` →
+`screener.Candidate.v_penalties` → `score_candidate` → `run_screen` → `pipeline.build_views`(2층 V도 같은 감점) →
+`record["valuation"]` → `public_allowlist`(신규 13키) → `web/app.js` ③ 밸류에이션 밴드.
+
+### 8.5 검증 (로컬, 2026-11-20)
+
+- `pytest -m "not network"`: **390 passed, 4 deselected** (신규 `tests/test_valuation_penalties_and_10y.py` 16건 포함).
+- `ruff check engine scripts tests`: All checks passed. `validate_outputs`·`build_public_data` 통과.
+- 실데이터 재스크린(2026-11-20): 워치리스트 **22종목 유지**, 편입·편출 0. 변별력 회복 —
+
+| 종목 | V (v1.3.1) | V (v1.3.2) | 감점 | 10년 EV/EBIT 백분위 | 정렬점수 변화 |
+|---|---|---|---|---|---|
+| ADBE | 0.0 | **3.36** | −10 | 1.65 (10.8배 / 중앙 43.2배) | 62.50 → **63.51** |
+| DIS | 0.0 | **3.76** | −10 | 8.24 | 49.30 → **50.45** |
+| UPS | 0.0 | **4.06** | −10 | 39.67 | 30.01 → **31.23** |
+| HON | 0.0 | **4.00** | 0 | 계산 불가(이력 2년) | 40.95 → **42.16** |
+| CVX | 0.0 | **0.90** | −10 | 68.37 | 33.43 → **33.71** |
+| GOOGL | 0.0 | 0.0 | −10 | 58.70 | 63.67 (변동 없음) |
+
+- **−10 감점이 22종목 중 21종목에 적용**됐다. 모델 IV(DCF·EPV·Graham 중앙값)가 시장의 10년 배수보다 구조적으로 낮아
+  괴리가 20%를 넘기 때문이다(ADBE 76%, GOOGL 56%). 규칙대로의 결과이고, 임계(20%)는 `config/params_v001.yaml`에서
+  조정 가능한 값으로 남겼다. HON만 이력 부족으로 감점 0이다.

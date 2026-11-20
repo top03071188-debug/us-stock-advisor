@@ -72,6 +72,9 @@ def build_candidates(data: dict) -> list[Candidate]:
             xbrl_completeness=float(row.get("xbrl_completeness") if row.get("xbrl_completeness") is not None else 1.0),
             fundamentals=(data.get("fundamentals") or {}).get(ticker),
             margin=margin,
+            v_penalties=float(row.get("v_penalties") or 0.0),
+            ev_ebit_percentile=(float(row["ev_ebit_percentile"])
+                                if row.get("ev_ebit_percentile") is not None else None),
             peg=row.get("peg"),
             revenue_cagr=row.get("revenue_cagr"),
         ))

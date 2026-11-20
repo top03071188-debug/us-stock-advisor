@@ -6,7 +6,8 @@
 - 키가 없으면 그 소스는 `missing_key` 로 표시하고 건너뛴다(크래시 금지).
 - 뉴스 48시간 규칙(2.7): `published_at ≤ decision_at` 이고 48시간 안의 기사만 판독 대상으로 남긴다.
 - 재무(SEC XBRL)는 `filed ≤ decision_at.date()` 연차 공시만 써서 look-ahead 를 막는다(4.5).
-- 가격 이력 기본 6년 — HG-04(5년/1,260행) 게이트를 실데이터로 채우기 위해서다.
+- 가격 이력 기본 **10년** — HG-04(5년/1,260행) 게이트를 실데이터로 채우면서, 10년 EV/EBIT 백분위
+  (v1.3.2 §3.2.3)를 계산할 수 있는 창을 확보한다.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from engine.data.sec_edgar import SecClient, acceptance_index, parse_submissions
 from engine.data.xbrl_fundamentals import (
     beta_from_prices,
     build_fundamentals,
+    ev_ebit_history,
     peg_basis,
     peg_growth,
     peg_ratio,
@@ -63,11 +65,12 @@ def _note(diag: dict, source: str, status: str, detail: str | None = None) -> No
 
 
 def collect_prices(tickers: list[str], as_of: date, decision_at: datetime, diag: dict,
-                   history_years: int = 6) -> dict:
+                   history_years: int = 10) -> dict:
     """yfinance 일봉 → `PricePanel`(3종 가격). 종목 단위 실패는 건너뛰고 사유를 남긴다.
 
-    `history_years=6`(≈1,500 거래일) — 5년 이력 게이트(HG-04, `min_history_rows=1260`)를
-    실데이터로 충족하기 위해서다. 3년 미만 상장 종목은 있는 행만큼만 받아 HG-04 로 탈락한다.
+    `history_years=10`(≈2,500 거래일) — 5년 이력 게이트(HG-04, `min_history_rows=1260`)를
+    실데이터로 충족하면서, 10년 EV/EBIT 백분위·중앙값(v1.3.2)을 계산할 창을 만든다.
+    3년 미만 상장 종목은 있는 행만큼만 받아 HG-04 로 탈락하고, 6~9년차 종목은 그 이력으로 계산한다.
     """
     import yfinance as yf
 
@@ -337,7 +340,7 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
                          cik_by_ticker: dict[str, int] | None = None,
                          acceptance: dict[str, dict[str, datetime]] | None = None
                          ) -> tuple[dict, dict]:
-    """SEC XBRL 연차 재무(6년) + 밸류에이션.
+    """SEC XBRL 연차 재무(10년) + 밸류에이션 + 10년 EV/EBIT 역사.
 
     Returns: (`fundamentals` = ticker→AnnualFundamentals, `valuation_inputs` = ticker→{iv_mult, iv_low, iv_high,
     iv_dcf, iv_epv, iv_graham, methods, median_method, wacc, net_debt, shares_used, fundamental_sources, ...})
@@ -391,7 +394,10 @@ def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
         if panel is not None and bench is not None and not panel.frame.empty and not bench.frame.empty:
             beta = beta_from_prices(panel.frame["sadj_close"], bench.frame["sadj_close"])
         growth, growth_basis = peg_growth(f)
-        mult, mdetail = valuation_multiplier(f, price, sectors.get(ticker), beta, rf)
+        # v1.3.2: 10년 역사 EV/EBIT — 과거 스냅샷마다 `available_at` 이전 재무만 쓰는 계산(룩어헤드 차단).
+        hist = ev_ebit_history(payload, None if panel is None else panel.frame, decision_at,
+                               acceptance=(acceptance or {}).get(ticker), splits=splits)
+        mult, mdetail = valuation_multiplier(f, price, sectors.get(ticker), beta, rf, hist=hist)
         valuation[ticker] = {
             "iv_mult": mult,
             "peg": peg_ratio(f, price, growth) if price else None,
@@ -494,6 +500,15 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
             "median_method": v.get("median_method"),
             "wacc_qc": v.get("wacc_qc"),
             "wacc_valuation": v.get("wacc"),
+            "v_penalties": v.get("v_penalties"),
+            "v_penalty_dcf": v.get("v_penalty_dcf"),
+            "v_penalty_hist": v.get("v_penalty_hist"),
+            "v_confidence": v.get("v_confidence"),
+            "v_confidence_reason": v.get("v_confidence_reason"),
+            "dcf_sensitivity": v.get("dcf_sensitivity"),
+            "ev_ebit_percentile": v.get("ev_ebit_percentile"),
+            "ev_ebit_median_10y": v.get("ev_ebit_median_10y"),
+            "iv_hist_ev_ebit": v.get("iv_hist_ev_ebit"),
             "peg": v.get("peg"),
             "revenue_cagr": v.get("revenue_cagr"),
             "xbrl_completeness": v.get("xbrl_completeness", 0.0),

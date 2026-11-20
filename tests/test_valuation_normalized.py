@@ -45,11 +45,11 @@ def googl():
     return f, diag, payload
 
 
-def test_collects_six_years_but_scores_five(googl):
-    """ΔNWC 5년 시계열을 만들려면 6년 운전자본이 필요하다 — 점수·게이트는 5년 기준."""
+def test_collects_ten_years_but_scores_five(googl):
+    """v1.3.2: XBRL 10년을 모으지만 점수·게이트는 여전히 **앞 5년** 기준이다."""
     _, diag, _ = googl
-    assert len(diag["fiscal_years"]) == 6
-    assert len(diag["delta_nwc_series"]) == 5
+    assert len(diag["fiscal_years"]) == 10
+    assert len(diag["delta_nwc_series"]) == 9
     assert diag["completeness"] == pytest.approx(0.9778)   # 앞 5년 × 필수 9항목
 
 

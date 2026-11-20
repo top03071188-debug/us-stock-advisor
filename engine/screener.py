@@ -27,7 +27,8 @@ class Candidate:
     accounting_flags: list[str] = field(default_factory=list)   # 8-K 4.02·감사의견·상폐통지
     fundamentals: AnnualFundamentals | None = None
     margin: float | None = None            # 안전마진(B3 기준, sadj 가격)
-    v_penalties: float = 0.0
+    v_penalties: float = 0.0               # v1.3.2: DCF 민감도 −4 · 역사 백분위 괴리 −10
+    ev_ebit_percentile: float | None = None  # 10년 EV/EBIT 백분위(0~100)
     peg: float | None = None
     revenue_cagr: float | None = None
     roic_wacc_2q_negative: bool = False
@@ -81,6 +82,8 @@ def score_candidate(c: Candidate) -> dict:
         "sector": c.sector,
         "q": round(q["q"], 2),
         "v": v,
+        "v_penalties": round(float(c.v_penalties or 0.0), 2),
+        "ev_ebit_percentile": c.ev_ebit_percentile,
         "g": g.get("g"),
         "rank_score": rank,
         "parts": q["parts"],

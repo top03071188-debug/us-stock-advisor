@@ -29,7 +29,16 @@ valuation:
   growth_cap: 0.15
   margin_full_score: 0.30
   margin_zero_score: -0.20
-  historical_percentile_penalty: 0.10
+  # v1.3.2 — v_score 완만 감쇠 + 감점 2종(코드 상수와 같은 값: engine/metrics/valuation.py)
+  v_score_minus20: 15.0          # −20% = 15점(예전 0점)
+  v_score_minus200: 0.0          # −200% 이하 = 0점
+  dcf_sensitivity_max: 0.40      # 이 이상이면 V 신뢰도 C + 감점 −4
+  dcf_penalty_points: 4.0
+  historical_divergence_max: 0.20  # 모델 IV 와 10년 EV/EBIT 중앙값 내재가치의 허용 괴리
+  historical_penalty_points: 10.0
+  historical_percentile_penalty: 0.10   # (v1.3.1 표기 유지) = historical_penalty_points 10점
+  ev_ebit_percentile_hot: 90.0   # S1 과열(밸류) — 10년 백분위 90 이상
+  history_years: 10              # 가격·XBRL 이력 년수(5년 미만 상장만 HG-04 탈락)
   per_share_output: true         # 모든 IV를 USD/share 로 반환 [고정]
   net_debt_adjust: true          # EV → 순부채·비지배지분 조정 [고정]
   suspended_sectors: [Financials, banks, insurance, reits]   # 가치평가 신호 보류 [고정]

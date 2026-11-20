@@ -386,7 +386,33 @@ function valuationBand(valuation) {
       el("span", { text: `IV_high ${fmtMoney(v.iv_high)}` }),
     ]),
     el("p", { class: "tiny", text: `현재가 ${fmtMoney(v.price)} (raw_as_traded) · IV 는 USD/share` }),
+    valuationPenaltyNotes(v),
   ]);
+}
+
+/* v1.3.2 — V 감점 내역: DCF 민감도(−4) · 10년 EV/EBIT 백분위 · 역사적 괴리(−10) */
+function valuationPenaltyNotes(v) {
+  const items = [];
+  if (isNum(v.dcf_sensitivity)) {
+    items.push(`DCF 민감도 ±${(v.dcf_sensitivity * 100).toFixed(0)}%`
+      + (isNum(v.v_penalty_dcf) && v.v_penalty_dcf > 0 ? ` → 신뢰도 C · 감점 −${v.v_penalty_dcf}` : " (허용 ±40% 이내)"));
+  } else if (v.dcf_dropped) {
+    items.push(`DCF 폐기(${v.dcf_dropped}) → 신뢰도 ${v.v_confidence || "C"}`);
+  }
+  if (isNum(v.ev_ebit_percentile)) {
+    items.push(`10년 EV/EBIT 백분위 ${v.ev_ebit_percentile.toFixed(0)}`
+      + (isNum(v.ev_ebit_median_10y) ? ` (10년 중앙 ${v.ev_ebit_median_10y.toFixed(1)}배)` : "")
+      + (v.ev_ebit_percentile >= 90 ? " · 과열 구간(S1)" : ""));
+  } else {
+    items.push("10년 EV/EBIT 백분위 계산 불가(이력 부족)");
+  }
+  if (isNum(v.v_penalty_hist) && v.v_penalty_hist > 0) {
+    items.push(`역사적 EV/EBIT 대비 IV 괴리 ${isNum(v.hist_divergence) ? (v.hist_divergence * 100).toFixed(0) + "%" : "20%+"}`
+      + ` → 감점 −${v.v_penalty_hist}`);
+  }
+  const total = isNum(v.v_penalties) ? v.v_penalties : 0;
+  items.push(`V 감점 합계 −${total}${total === 0 ? " (감점 없음)" : ""}`);
+  return el("p", { class: "tiny", text: `감점 근거 · ${items.join(" · ")}` });
 }
 
 function svgChart(chart) {

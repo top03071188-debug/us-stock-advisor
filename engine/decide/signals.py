@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from engine.backtest.execution import OrderNotPlaceable, build_entry_band, entry_plan
 from engine.decide.macro import RegimeView
 from engine.decide.sizing import size_position
+from engine.metrics.valuation import EV_EBIT_PERCENTILE_HOT
 
 GRADE_ORDER = {"NONE": 0, "WATCH": 1, "BUY": 2, "STRONG_BUY": 3}
 NEWS_STATES = ("not_read", "insufficient_evidence", "read_done")
@@ -350,9 +351,13 @@ def evaluate_exit(ctx: EntryContext, holding: dict, regime="neutral",
     view = _regime_view(regime)
     cfg = (params or {}).get("exit", {})
     margin = None if ctx.valuation_suspended else margin_of_safety(ctx.iv_median, ctx.sadj_close)
+    # `pe_percentile` 는 0.90(비율)로 정의돼 있고, `ev_ebit_percentile` 는 0~100(백분위)이다.
+    # 단위를 섞으면 99 백분위도 0.90 과 비교해 절대 발동하지 않는다 — 한 곳에서 맞춘다.
+    pct_cut = float(cfg.get("pe_percentile", EV_EBIT_PERCENTILE_HOT / 100.0))
+    pct_cut = pct_cut * 100.0 if pct_cut <= 1.0 else pct_cut
     s1 = None if ctx.valuation_suspended else bool(
         (margin is not None and margin <= float(cfg.get("margin_overheat", -0.15))) or
-        (ctx.ev_ebit_percentile is not None and ctx.ev_ebit_percentile >= float(cfg.get("pe_percentile", 0.90)))
+        (ctx.ev_ebit_percentile is not None and float(ctx.ev_ebit_percentile) >= pct_cut)
     )
     s2 = bool(ctx.rsi14 is not None and float(ctx.rsi14) >= float(cfg.get("rsi_overheat", 72)) and
               ctx.pct_b is not None and float(ctx.pct_b) >= 1.0 and

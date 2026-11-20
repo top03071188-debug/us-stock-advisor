@@ -428,6 +428,7 @@ def build_watchlist(watch: dict | None) -> dict:
         "as_of": watch.get("as_of"),
         "count": watch.get("count", len(watch.get("watchlist") or [])),
         "watchlist": [{k: w.get(k) for k in ("ticker", "sector", "q", "v", "g", "rank_score",
+                                             "v_penalties", "ev_ebit_percentile",
                                              "valuation_suspended")}
                       for w in watch.get("watchlist") or []],
         "entered": [{k: e.get(k) for k in ("ticker", "sector", "rank_score", "reason_ko")}

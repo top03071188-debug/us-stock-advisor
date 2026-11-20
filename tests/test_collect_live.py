@@ -1,4 +1,4 @@
-"""test_collect_live — 라이브 수집 배선(가격 6년·메타·XBRL·스크린 편입)을 네트워크 없이 검증."""
+"""test_collect_live — 라이브 수집 배선(가격 10년·메타·XBRL·스크린 편입)을 네트워크 없이 검증."""
 
 from __future__ import annotations
 
@@ -24,8 +24,9 @@ def _panel(price: float = 100.0, days: int = 1300, seed: int = 5):
     return build_price_frame("AAA", hist, splits)
 
 
-def test_collect_prices_defaults_to_six_years():
-    assert inspect.signature(collect_prices).parameters["history_years"].default == 6
+def test_collect_prices_defaults_to_ten_years():
+    # v1.3.2: 10년 EV/EBIT 백분위를 계산하려면 10년 일봉이 필요하다(HG-04 는 여전히 5년).
+    assert inspect.signature(collect_prices).parameters["history_years"].default == 10
 
 
 def test_exchange_codes_map_to_gate_names():

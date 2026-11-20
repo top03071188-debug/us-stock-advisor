@@ -38,6 +38,21 @@ allow:
   - valuation_suspended
   - sector
   - weight
+  # v1.3.2: V 감점·DCF 민감도·10년 EV/EBIT 백분위(파생 지표 — 원문·계좌 정보 없음)
+  - v_penalties
+  - v_penalty_dcf
+  - v_penalty_hist
+  - v_confidence
+  - v_confidence_reason
+  - dcf_sensitivity
+  - ev_ebit_percentile
+  - ev_ebit_median_10y
+  - ev_ebit_current
+  - ev_ebit_samples
+  - ev_ebit_years
+  - ev_ebit_window
+  - iv_hist_ev_ebit
+  - hist_divergence
   # 요약·메타데이터
   - thesis_ko
   - one_line_ko

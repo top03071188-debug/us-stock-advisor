@@ -219,6 +219,8 @@ class TickerView:
     valuation_detail: dict | None = None
     iv_band_basis: str | None = None
     split_factor: float = 1.0
+    v_penalties: float = 0.0                   # v1.3.2: DCF 민감도 −4 · 역사 백분위 괴리 −10
+    ev_ebit_percentile: float | None = None    # 10년 EV/EBIT 백분위(0~100) → S1 과열
 
 
 def _num(value) -> float | None:
@@ -270,7 +272,11 @@ def build_views(data: dict, as_of: date) -> list[TickerView]:
                     band_basis = "fallback_15pct"
         margin = None if (iv_median is None or sec["valuation_suspended"]) else margin_of_safety(
             iv_median, ind["sadj_close"])
-        v = None if margin is None else round(v_score(margin), 2)
+        # v1.3.2: 감점은 1층(워치리스트)과 **같은 값**을 쓴다 — 두 층의 V 가 갈라지면 순위와 등급이 모순된다.
+        v_penalties = float(vdetail.get("v_penalties") or 0.0)
+        ev_ebit_percentile = (float(vdetail["ev_ebit_percentile"])
+                              if vdetail.get("ev_ebit_percentile") is not None else None)
+        v = None if margin is None else round(v_score(margin, v_penalties), 2)
         g = None
         if not sec["valuation_suspended"]:
             # 데이터셋이 G 점수를 직접 주면 그것을 쓴다(픽스처). 라이브는 PEG·성장률로 계산한다.
@@ -301,6 +307,7 @@ def build_views(data: dict, as_of: date) -> list[TickerView]:
             valuation_suspended=bool(sec["valuation_suspended"]),
             suspended_reason=sec["reason"], structure=structure,
             valuation_detail=vdetail, iv_band_basis=band_basis, split_factor=split_factor,
+            v_penalties=v_penalties, ev_ebit_percentile=ev_ebit_percentile,
         ))
     return views
 
@@ -368,6 +375,7 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             atr_pct=ind.get("atr_pct"),
             iv_median=view.iv_median,
             iv_high=view.iv_high,
+            ev_ebit_percentile=view.ev_ebit_percentile,
             q=view.q,
             v=view.v,
             g=view.g,
@@ -383,6 +391,8 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         evaluation = evaluate_entry(ctx, regime=regime, params=params)
         watchlist.append({
             "ticker": view.ticker, "sector": view.sector, "q": view.q, "v": view.v, "g": view.g,
+            "v_penalties": round(float((view.valuation_detail or {}).get("v_penalties") or 0.0), 2),
+            "ev_ebit_percentile": (view.valuation_detail or {}).get("ev_ebit_percentile"),
             "rank_score": None if (view.v is None or view.g is None) else round(
                 0.5 * view.q + 0.3 * float(view.v) + 0.2 * float(view.g), 3),
             "valuation_suspended": view.valuation_suspended,
@@ -482,6 +492,15 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
             "net_debt": _f(detail.get("net_debt")),
             "wacc_valuation": _f(detail.get("wacc")),
             "v_confidence": detail.get("v_confidence"),
+            "v_confidence_reason": detail.get("v_confidence_reason"),
+            "v_penalties": _f(detail.get("v_penalties")),
+            "v_penalty_dcf": _f(detail.get("v_penalty_dcf")),
+            "v_penalty_hist": _f(detail.get("v_penalty_hist")),
+            "dcf_sensitivity": _f(detail.get("dcf_sensitivity")),
+            "ev_ebit_percentile": _f(detail.get("ev_ebit_percentile")),
+            "ev_ebit_median_10y": _f(detail.get("ev_ebit_median_10y")),
+            "iv_hist_ev_ebit": _f(detail.get("iv_hist_ev_ebit")),
+            "hist_divergence": _f(detail.get("hist_divergence")),
             "dcf_dropped": detail.get("dcf_dropped"),
         }
         record["news_state"] = view.news_state

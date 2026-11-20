@@ -1,4 +1,4 @@
-"""engine.data.xbrl_fundamentals — SEC XBRL companyfacts → `AnnualFundamentals`(최근 6 회계연도).
+"""engine.data.xbrl_fundamentals — SEC XBRL companyfacts → `AnnualFundamentals`(최근 10 회계연도).
 
 [고정] look-ahead 차단(4.5, R06)
 - 연차 재무는 **`form` 이 10-K 계열 · `fp` = FY** 인 항목만 쓴다. 분기(10-Q) 값은 연차 집계에 섞지 않는다.
@@ -76,6 +76,8 @@ ANNUAL_TAGS: dict[str, list[str]] = {
         "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
     ],
     "diluted_shares": ["WeightedAverageNumberOfDilutedSharesOutstanding"],
+    # v1.3.2: 10년 EV/EBIT 백분위용 — 주식수 태그가 최근 몇 년만 있는 기업(예: GOOGL)의 폴백
+    "eps_diluted": ["EarningsPerShareDiluted"],
     "interest_expense": [
         "InterestExpense",
         "InterestExpenseNonoperating",
@@ -101,7 +103,7 @@ ANNUAL_TAGS: dict[str, list[str]] = {
 #: 기간(flow) 항목 — 시작·끝이 있어야 하고 1년(±)이어야 한다. 나머지는 시점(instant) 항목.
 FLOW_METRICS = frozenset({
     "revenue", "ebit", "net_income", "ocf", "capex", "depreciation",
-    "diluted_shares", "interest_expense", "pretax_income", "tax_expense",
+    "diluted_shares", "interest_expense", "pretax_income", "tax_expense", "eps_diluted",
 })
 
 #: HG-11(XBRL 완전성 ≥ 90%) 판정에 쓰는 필수 항목 — 게이트·점수 계산이 실제로 읽는 것들.
@@ -480,7 +482,7 @@ def _ttm_net_income(payload: dict, decision_at: date | datetime, fy_end: date,
 
 def build_fundamentals(payload: dict, decision_at: date | datetime,
                        acceptance: dict[str, datetime | str] | None = None,
-                       years: int = 6, splits: list[dict] | None = None
+                       years: int = 10, splits: list[dict] | None = None
                        ) -> tuple[AnnualFundamentals | None, dict]:
     """companyfacts → (AnnualFundamentals, 진단).
 
@@ -616,6 +618,231 @@ def build_fundamentals(payload: dict, decision_at: date | datetime,
     diag["ttm_eps"] = None if not np.isfinite(f.ttm_eps) else round(float(f.ttm_eps), 4)
     diag["fundamental_sources"] = _fundamental_sources(facts, fy)
     return f, diag
+
+
+def annual_revisions(payload: dict, acceptance: dict[str, datetime | str] | None = None
+                     ) -> dict[str, dict[date, list[dict]]]:
+    """companyfacts → `{metric: {회계연도 말일: [개정 이력]}}`.
+
+    `annual_facts` 는 결정 시점의 **최신 값 하나**만 남기지만, 10년 시계열을 과거 시점마다
+    재현하려면 "그 시점에 알 수 있었던 값"이 필요하다. 그래서 여기서는 같은 태그·기간·form
+    필터를 쓰되 **모든 개정(10-K/A·재작성 비교치 포함)을 `available_at` 과 함께** 남긴다.
+    """
+    gaap = ((payload.get("facts") or {}).get("us-gaap") or {})
+    out: dict[str, dict[date, list[dict]]] = {}
+    for metric, tags in ANNUAL_TAGS.items():
+        per: dict[date, list[dict]] = {}
+        for rank, tag in enumerate(tags):
+            block = gaap.get(tag) or {}
+            for unit, entries in (block.get("units") or {}).items():
+                if unit not in ("USD", "USD/shares", "shares"):
+                    continue
+                for e in entries:
+                    if str(e.get("form") or "") not in ANNUAL_FORMS:
+                        continue
+                    if str(e.get("fp") or "") != "FY":
+                        continue
+                    filed_raw = str(e.get("filed") or "")
+                    if not filed_raw:
+                        continue
+                    end = _as_date(e.get("end"))
+                    val = e.get("val")
+                    if end is None or val is None:
+                        continue
+                    start = _as_date(e.get("start"))
+                    if metric in FLOW_METRICS:
+                        if start is None or not _within_a_year(start, end):
+                            continue
+                    elif start is not None and (end - start).days > 10:
+                        continue
+                    try:
+                        value = float(val)
+                    except (TypeError, ValueError):
+                        continue
+                    accn = str(e.get("accn") or "") or None
+                    acc = (acceptance or {}).get(accn) if accn else None
+                    available = _as_dt(acc) if acc is not None else None
+                    filed = _as_date(filed_raw)
+                    if available is None:
+                        available = datetime.combine(filed or end, time(23, 59, 59), tzinfo=timezone.utc)
+                    per.setdefault(end, []).append({
+                        "available_at": available, "value": value, "rank": rank,
+                        "accn": accn, "filed": filed,
+                    })
+        if per:
+            out[metric] = per
+    return out
+
+
+def _visible(revisions: dict[str, dict[date, list[dict]]], metric: str, fy: date,
+             cutoff: datetime) -> dict | None:
+    """`fy` 회계연도의 `metric` 중 **`cutoff` 까지 공개된 최신 값**(같으면 태그 우선순위)."""
+    best: dict | None = None
+    for rev in (revisions.get(metric) or {}).get(fy, []):
+        if rev["available_at"] > cutoff:
+            continue
+        if (best is None or rev["available_at"] > best["available_at"]
+                or (rev["available_at"] == best["available_at"] and rev["rank"] < best["rank"])):
+            best = rev
+    return best
+
+
+def _fy_row_at(revisions: dict[str, dict[date, list[dict]]], fy: date, cutoff: datetime,
+               splits: list[dict] | None, decision_date: date,
+               ref_shares: float | None = None) -> dict | None:
+    """시점 `cutoff` 에 알 수 있었던 `fy` 의 `EBIT·순부채·주식수`(백만 달러·백만 주).
+
+    주식수 태그가 그 해에 없으면 `순이익 / 희석 EPS` 로 복원한다. 단 **최근 주식수(백만 주)의
+    0.3~3배**를 벗어나면 단위 오류·이상치로 보고 버린다(예: GOOGL companyfacts 의 `112.2` EPS 행처럼
+    분할 전 기준으로 남은 값).
+    """
+    ebit = _visible(revisions, "ebit", fy, cutoff)
+    ebit_value = ebit["value"] if ebit else None
+    if ebit_value is None:
+        pretax = _visible(revisions, "pretax_income", fy, cutoff)
+        interest = _visible(revisions, "interest_expense", fy, cutoff)
+        if pretax is not None and interest is not None:
+            ebit_value = pretax["value"] + interest["value"]
+    shares_rev = _visible(revisions, "diluted_shares", fy, cutoff)
+    share_filed = shares_rev.get("filed") if shares_rev else None
+    shares_value = _norm_share_count(shares_rev["value"]) if shares_rev else None
+    if shares_rev is None:
+        eps = _visible(revisions, "eps_diluted", fy, cutoff)
+        ni = _visible(revisions, "net_income", fy, cutoff)
+        if eps is not None and ni is not None and eps["value"] > 0 and ni["value"] > 0:
+            implied = float(ni["value"]) / float(eps["value"])       # 주 단위
+            if ref_shares is None or 0.3 <= (implied / 1e6) / float(ref_shares) <= 3.0:
+                shares_value = implied
+                share_filed = eps.get("filed")
+    if ebit_value is None or shares_value is None:
+        return None
+    long_debt = _visible(revisions, "long_term_debt", fy, cutoff)
+    short_debt = _visible(revisions, "short_term_debt", fy, cutoff)
+    cash_rev = _visible(revisions, "cash", fy, cutoff)
+    debt = (long_debt["value"] if long_debt else 0.0) + (short_debt["value"] if short_debt else 0.0)
+    cash = cash_rev["value"] if cash_rev else 0.0
+    marketable = _visible(revisions, "marketable_securities", fy, cutoff)
+    if marketable is None:
+        agg = _visible(revisions, "cash_and_st_investments", fy, cutoff)
+        if agg is not None and agg["value"] >= cash:
+            marketable_value = agg["value"] - cash
+        else:
+            marketable_value = 0.0
+    else:
+        marketable_value = marketable["value"]
+    shares_raw, _basis = _share_basis(shares_value, fy, share_filed, splits, decision_date)
+    if not np.isfinite(shares_raw) or shares_raw <= 0:
+        return None
+    return {
+        "fy": fy,
+        "ebit": _to_millions(ebit_value),
+        "net_debt": _to_millions(float(debt) - float(cash) - float(marketable_value)),
+        "diluted_shares": _to_millions(shares_raw),
+    }
+
+
+def ev_ebit_history(payload: dict, frame, decision_at: date | datetime,
+                    acceptance: dict[str, datetime | str] | None = None,
+                    splits: list[dict] | None = None, *, min_valid_years: int = 3,
+                    step_days: int = 21, lookback_years: int = 10,
+                    include_samples: bool = False) -> dict:
+    """10년 역사적 `EV/EBIT` 분포 → 현재 백분위·중앙값·역사적 내재 주당가치 입력.
+
+    [고정] 룩어헤드 차단: 스냅샷 날짜 `t` 의 **그 봉이 공개된 시각**(`available_at`)까지 접수된
+    재무만 쓴다. 값도 그 시점에 보이던 개정본을 고르므로, 나중에 제출된 10-K·재작성이
+    과거 판단에 섞이지 않는다. 시가총액은 `sadj_close(t) × 주식수(결정 시점 기준)` — 가격도
+    주식수도 같은 분할 조정 기준이라 과거 시점에도 일관된다.
+
+    유효 이력이 `min_valid_years`(3)년 미만이면 계산하지 않고 `None` 을 돌려준다
+    (6~9년차 상장 종목은 그 이력으로 계산하고, 정말 짧은 이력만 폴백한다).
+    """
+    empty = {"ev_ebit_percentile": None, "ev_ebit_current": None, "ev_ebit_median_10y": None,
+             "ev_ebit_samples": 0, "ev_ebit_years": 0, "ev_ebit_window": None,
+             "iv_hist_ev_ebit": None, "reason": "insufficient_history"}
+    if frame is None or getattr(frame, "empty", True) or "sadj_close" not in frame.columns:
+        return empty
+    revisions = annual_revisions(payload, acceptance)
+    # EBIT 태그가 없는 기업(제약·산업재 다수)은 세전이익+이자비용으로 근사를 쓰므로 회계연도 후보에 함께 넣는다.
+    fiscal_years = sorted(set(revisions.get("ebit") or {}) | set(revisions.get("pretax_income") or {}))
+    if not fiscal_years:
+        return empty
+    decision_date = decision_at.date() if isinstance(decision_at, datetime) else decision_at
+    ref_shares = None
+    share_hist = revisions.get("diluted_shares") or {}
+    if share_hist:
+        newest_fy = max(share_hist)
+        ref_shares = _norm_share_count(share_hist[newest_fy][-1]["value"]) / 1e6
+
+    prices = frame[["sadj_close", "available_at"]].dropna(subset=["sadj_close"])
+    if prices.empty:
+        return empty
+    window_start = pd.Timestamp(prices.index[-1]) - pd.DateOffset(years=lookback_years)
+    if prices.index[0] > window_start:
+        window_start = prices.index[0]
+    window = prices.loc[prices.index >= window_start]
+    if window.empty:
+        return empty
+    picks = list(window.index[::max(1, int(step_days))])
+    if picks[-1] != window.index[-1]:
+        picks.append(window.index[-1])
+
+    samples: list[float] = []
+    sample_rows: list[dict] = []
+    used_years: set[date] = set()
+    current: float | None = None
+    for t in picks:
+        bar = prices.loc[t]
+        cutoff = pd.Timestamp(bar["available_at"])
+        cutoff = (cutoff.tz_localize("UTC") if cutoff.tzinfo is None else cutoff.tz_convert("UTC")).to_pydatetime()
+        row = None
+        for fy in sorted((d for d in fiscal_years if d < t.date()), reverse=True):
+            row = _fy_row_at(revisions, fy, cutoff, splits, decision_date, ref_shares)
+            if row is not None:
+                break
+        if row is None:
+            continue
+        ebit_m, nd, sh = row["ebit"], row["net_debt"], row["diluted_shares"]
+        if not (np.isfinite(ebit_m) and ebit_m > 0 and np.isfinite(sh) and sh > 0 and np.isfinite(nd)):
+            continue
+        ratio = (float(bar["sadj_close"]) * float(sh) + float(nd)) / float(ebit_m)
+        if not np.isfinite(ratio) or ratio <= 0:
+            continue
+        samples.append(float(ratio))
+        used_years.add(row["fy"])
+        if include_samples:
+            sample_rows.append({"date": t.date().isoformat(), "fy": row["fy"].isoformat(),
+                                "ev_ebit": round(float(ratio), 4), "ebit": ebit_m,
+                                "shares": sh, "net_debt": nd})
+        current = float(ratio)
+
+    if len(used_years) < min_valid_years or len(samples) < 12 or current is None:
+        return {**empty, "ev_ebit_samples": len(samples), "ev_ebit_years": len(used_years),
+                **(dict(sample_rows=sample_rows) if include_samples else {})}
+
+    median = float(statistics.median(samples))
+    percentile = round(100.0 * sum(1 for r in samples if r <= current) / len(samples), 2)
+    return {
+        "ev_ebit_percentile": percentile,
+        "ev_ebit_current": round(current, 4),
+        "ev_ebit_median_10y": round(median, 4),
+        "ev_ebit_samples": len(samples),
+        "ev_ebit_years": len(used_years),
+        "ev_ebit_window": f"{picks[0].date().isoformat()}~{picks[-1].date().isoformat()}",
+        "iv_hist_ev_ebit": None,   # 호출자가 정상화 EBIT·순부채·주식수로 채운다
+        "reason": None,
+        **(dict(sample_rows=sample_rows) if include_samples else {}),
+    }
+
+
+def historical_iv(median_ev_ebit: float | None, ebit_norm: float | None, net_debt: float | None,
+                  diluted_shares: float | None) -> float | None:
+    """`iv_hist_ev_ebit = (median EV/EBIT × 정상화 EBIT − 순부채) ÷ 희석주식수` (USD/share)."""
+    vals = (median_ev_ebit, ebit_norm, net_debt, diluted_shares)
+    if any(v is None or not np.isfinite(float(v)) for v in vals):
+        return None
+    if float(median_ev_ebit) <= 0 or float(ebit_norm) <= 0 or float(diluted_shares) <= 0:
+        return None
+    return float((float(median_ev_ebit) * float(ebit_norm) - float(net_debt)) / float(diluted_shares))
 
 
 def _fundamental_sources(facts: dict[str, dict[date, Fact]], fy: list[date]) -> list[dict]:
@@ -826,14 +1053,18 @@ def _value_without_dcf(inp, sector: str | None) -> dict:
 
 def valuation_multiplier(f: AnnualFundamentals, price: float, sector: str | None,
                          beta: float | None, risk_free: float, growth_cap: float = 0.15,
-                         delta_nwc: float | None = None) -> tuple[float | None, dict]:
+                         delta_nwc: float | None = None, hist: dict | None = None
+                         ) -> tuple[float | None, dict]:
     """`iv_mult` = IV_median(USD/share) ÷ 현재가. 계산 불가면 (None, 사유).
 
     `run_screen.build_candidates` 와 `pipeline.build_views` 는 `iv = price × iv_mult` 로 쓰므로
     **주당 내재가치를 여기서 한 번만** 계산해 배수로 넘긴다(단위는 USD/share 유지).
     방법별 IV·밴드·중앙값 선정 근거를 **버리지 않고** 함께 돌려준다(R04).
     """
-    from engine.metrics.valuation import ValuationInputs, classify_sector, value_company  # noqa: PLC0415
+    from engine.metrics.valuation import (  # noqa: PLC0415
+        DCF_SENSITIVITY_MAX, HIST_DIVERGENCE_MAX, V_PENALTY_DCF, V_PENALTY_HIST,
+        ValuationInputs, classify_sector, dcf_sensitivity, value_company,
+    )
 
     f = sanitize_fundamentals(f)   # 스냅샷 복원값(None)도 받아들인다
 
@@ -931,6 +1162,50 @@ def valuation_multiplier(f: AnnualFundamentals, price: float, sector: str | None
         detail["iv_dcf"] = {"base": res.get("iv_dcf"),
                           "bear": _per_share(res["ev_dcf_bear"]),
                           "bull": _per_share(res["ev_dcf_bull"])}
+
+    # ── v1.3.2 §3.2.3: DCF 민감도 · 10년 EV/EBIT 백분위 · V 감점 ─────────────────────────
+    # ① DCF 민감도: 성장률 0.5·1.5배 시나리오의 편측 변동폭이 ±40% 이상이면 신뢰도 C + −4점.
+    dcf = detail.get("iv_dcf") or {}
+    sens: float | None = None
+    if not detail.get("dcf_dropped") and all(dcf.get(k) is not None for k in ("base", "bear", "bull")):
+        try:
+            sens = float(dcf_sensitivity(dcf["bear"], dcf["bull"], dcf["base"]))
+        except (TypeError, ValueError):
+            sens = None
+    penalty_dcf = V_PENALTY_DCF if (sens is not None and sens >= DCF_SENSITIVITY_MAX) else 0.0
+    v_confidence = res.get("v_confidence")
+    v_confidence_reason = res.get("v_confidence_reason")
+    if penalty_dcf:
+        v_confidence = "C"
+        v_confidence_reason = "DCF_HIGH_SENSITIVITY"
+
+    # ② 10년 EV/EBIT 중앙값 기반 내재가치와 모델 IV 가 20% 이상 괴리하면 −10점.
+    hist = dict(hist or {})
+    iv_hist = hist.get("iv_hist_ev_ebit")
+    if iv_hist is None and hist.get("ev_ebit_median_10y") is not None:
+        iv_hist = historical_iv(hist["ev_ebit_median_10y"], detail.get("ebit_normalized"),
+                                net_debt, float(shares))
+    divergence: float | None = None
+    if iv_hist is not None and float(iv_hist) > 0:
+        divergence = abs(float(iv) - float(iv_hist)) / float(iv_hist)
+    penalty_hist = V_PENALTY_HIST if (divergence is not None and divergence >= HIST_DIVERGENCE_MAX) else 0.0
+    detail.update({
+        "dcf_sensitivity": round(sens, 4) if (sens is not None and np.isfinite(sens)) else None,
+        "v_penalty_dcf": penalty_dcf,
+        "v_penalty_hist": penalty_hist,
+        "v_penalties": float(penalty_dcf + penalty_hist),
+        "v_confidence": v_confidence,
+        "v_confidence_reason": v_confidence_reason,
+        "ev_ebit_percentile": hist.get("ev_ebit_percentile"),
+        "ev_ebit_current": hist.get("ev_ebit_current"),
+        "ev_ebit_median_10y": hist.get("ev_ebit_median_10y"),
+        "ev_ebit_samples": hist.get("ev_ebit_samples"),
+        "ev_ebit_years": hist.get("ev_ebit_years"),
+        "ev_ebit_window": hist.get("ev_ebit_window"),
+        "ev_ebit_reason": hist.get("reason"),
+        "iv_hist_ev_ebit": None if iv_hist is None else round(float(iv_hist), 4),
+        "hist_divergence": None if divergence is None else round(divergence, 4),
+    })
     return float(iv / price), detail
 
 

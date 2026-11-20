@@ -74,7 +74,9 @@ def test_dead_method_is_dropped():
 def test_v_score_mapping():
     assert v_score(0.0) == pytest.approx(50)
     assert v_score(0.30) == pytest.approx(100)
-    assert v_score(-0.20) == pytest.approx(0)
+    # v1.3.2: −20% = 15점(예전 0점), −200% = 0점 — 완만 감쇠
+    assert v_score(-0.20) == pytest.approx(15)
+    assert v_score(-2.00) == pytest.approx(0)
     # 감점은 0~100으로 자른다
     assert v_score(0.30, penalties=20) == pytest.approx(80)
     assert v_score(0.0, penalties=99) == pytest.approx(0)

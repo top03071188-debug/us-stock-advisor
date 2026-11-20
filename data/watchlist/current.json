@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "as_of": "2026-11-20",
-  "generated_at": "2026-11-20T03:58:02.250970Z",
+  "generated_at": "2026-11-20T04:35:26.243578Z",
   "params_version": "params_v001",
   "watchlist": [
     {
@@ -9,6 +9,8 @@
       "sector": "Communication Services",
       "q": 90.55,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 58.7,
       "g": 91.97,
       "rank_score": 63.669,
       "parts": {
@@ -38,9 +40,11 @@
       "ticker": "ADBE",
       "sector": "Information Technology",
       "q": 85.0,
-      "v": 0.0,
+      "v": 3.36,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 1.65,
       "g": 100.0,
-      "rank_score": 62.5,
+      "rank_score": 63.508,
       "parts": {
         "roic_spread": 30.0,
         "roe_stability": 0.0,
@@ -69,6 +73,8 @@
       "sector": "Communication Services",
       "q": 89.77,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 21.49,
       "g": 79.25,
       "rank_score": 60.735,
       "parts": {
@@ -99,6 +105,8 @@
       "sector": "Information Technology",
       "q": 77.54,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 6.61,
       "g": 100.0,
       "rank_score": 58.77,
       "parts": {
@@ -129,6 +137,8 @@
       "sector": "Information Technology",
       "q": 82.43,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 23.14,
       "g": 65.86,
       "rank_score": 54.387,
       "parts": {
@@ -158,9 +168,11 @@
       "ticker": "DIS",
       "sector": "Communication Services",
       "q": 58.6,
-      "v": 0.0,
+      "v": 3.82,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 8.24,
       "g": 100.0,
-      "rank_score": 49.3,
+      "rank_score": 50.446,
       "parts": {
         "roic_spread": 4.12,
         "roe_stability": 14.01,
@@ -189,6 +201,8 @@
       "sector": "Information Technology",
       "q": 97.68,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 89.26,
       "g": 0.0,
       "rank_score": 48.84,
       "parts": {
@@ -219,6 +233,8 @@
       "sector": "Consumer Staples",
       "q": 95.44,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 44.63,
       "g": 0.0,
       "rank_score": 47.72,
       "parts": {
@@ -249,6 +265,8 @@
       "sector": "Materials",
       "q": 72.67,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 41.94,
       "g": 53.28,
       "rank_score": 46.991,
       "parts": {
@@ -279,6 +297,8 @@
       "sector": "Industrials",
       "q": 76.35,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 67.77,
       "g": 30.49,
       "rank_score": 44.273,
       "parts": {
@@ -309,6 +329,8 @@
       "sector": "Information Technology",
       "q": 85.0,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 84.3,
       "g": 0.0,
       "rank_score": 42.5,
       "parts": {
@@ -335,10 +357,44 @@
       "suspend_reason": null
     },
     {
+      "ticker": "HON",
+      "sector": "Industrials",
+      "q": 81.9,
+      "v": 4.03,
+      "v_penalties": 0.0,
+      "ev_ebit_percentile": null,
+      "g": 0.0,
+      "rank_score": 42.159,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 15.0,
+        "fcf_margin": 14.23,
+        "fcf_quality": 12.11,
+        "balance_sheet": 0.56,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.1352891803897589,
+        "roe_stdev": 0.024167871947302886,
+        "fcf_margin": 0.14226319241652047,
+        "fcf_to_ni": 0.9422379494524746,
+        "net_debt_ebitda": 2.359642669469259,
+        "interest_cover": NaN,
+        "dilution_3y": -0.11309684698202505,
+        "wacc_qc": 0.05451656122678788,
+        "roic": 0.173470199575042,
+        "wacc_valuation": 0.08
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
       "ticker": "MRK",
       "sector": "Health Care",
       "q": 83.58,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 19.01,
       "g": 0.0,
       "rank_score": 41.79,
       "parts": {
@@ -365,40 +421,12 @@
       "suspend_reason": null
     },
     {
-      "ticker": "HON",
-      "sector": "Industrials",
-      "q": 81.9,
-      "v": 0.0,
-      "g": 0.0,
-      "rank_score": 40.95,
-      "parts": {
-        "roic_spread": 30.0,
-        "roe_stability": 15.0,
-        "fcf_margin": 14.23,
-        "fcf_quality": 12.11,
-        "balance_sheet": 0.56,
-        "dilution": 10.0
-      },
-      "metrics": {
-        "roic_spread": 0.1352891803897589,
-        "roe_stdev": 0.024167871947302886,
-        "fcf_margin": 0.14226319241652047,
-        "fcf_to_ni": 0.9422379494524746,
-        "net_debt_ebitda": 2.359642669469259,
-        "interest_cover": NaN,
-        "dilution_3y": -0.11309684698202505,
-        "wacc_qc": 0.05451656122678788,
-        "roic": 0.173470199575042,
-        "wacc_valuation": 0.08
-      },
-      "valuation_suspended": false,
-      "suspend_reason": null
-    },
-    {
       "ticker": "JNJ",
       "sector": "Health Care",
       "q": 80.69,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 41.32,
       "g": 0.0,
       "rank_score": 40.345,
       "parts": {
@@ -429,6 +457,8 @@
       "sector": "Consumer Staples",
       "q": 79.8,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 90.08,
       "g": 0.0,
       "rank_score": 39.9,
       "parts": {
@@ -459,6 +489,8 @@
       "sector": "Consumer Staples",
       "q": 78.13,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 82.64,
       "g": 0.0,
       "rank_score": 39.065,
       "parts": {
@@ -489,6 +521,8 @@
       "sector": "Materials",
       "q": 67.76,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 71.07,
       "g": 0.0,
       "rank_score": 33.88,
       "parts": {
@@ -518,9 +552,11 @@
       "ticker": "CVX",
       "sector": "Energy",
       "q": 66.86,
-      "v": 0.0,
+      "v": 0.94,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 68.37,
       "g": 0.0,
-      "rank_score": 33.43,
+      "rank_score": 33.712,
       "parts": {
         "roic_spread": 10.93,
         "roe_stability": 9.65,
@@ -549,6 +585,8 @@
       "sector": "Consumer Staples",
       "q": 66.56,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 96.69,
       "g": 0.0,
       "rank_score": 33.28,
       "parts": {
@@ -579,6 +617,8 @@
       "sector": "Consumer Discretionary",
       "q": 64.61,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 57.02,
       "g": 0.0,
       "rank_score": 32.305,
       "parts": {
@@ -608,9 +648,11 @@
       "ticker": "UPS",
       "sector": "Industrials",
       "q": 60.02,
-      "v": 0.0,
+      "v": 4.06,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 39.67,
       "g": 0.0,
-      "rank_score": 30.01,
+      "rank_score": 31.228,
       "parts": {
         "roic_spread": 30.0,
         "roe_stability": 0.0,
@@ -639,6 +681,8 @@
       "sector": "Consumer Discretionary",
       "q": 57.87,
       "v": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 74.29,
       "g": 0.0,
       "rank_score": 28.935,
       "parts": {
@@ -881,26 +925,7 @@
     "Energy": 1,
     "Consumer Discretionary": 2
   },
-  "entered": [
-    {
-      "ticker": "NVDA",
-      "sector": "Information Technology",
-      "rank_score": 58.77,
-      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
-    },
-    {
-      "ticker": "TSLA",
-      "sector": "Consumer Discretionary",
-      "rank_score": 28.935,
-      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
-    },
-    {
-      "ticker": "WMT",
-      "sector": "Consumer Staples",
-      "rank_score": 33.28,
-      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
-    }
-  ],
+  "entered": [],
   "exited": [],
   "notes": "통과 종목 0개도 정상 결과다(최소 개수 강제 없음).",
   "source": "live"

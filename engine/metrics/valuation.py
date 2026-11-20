@@ -200,17 +200,36 @@ def margin_of_safety(iv_median: float, price: float) -> float:
     return (iv_median - price) / iv_median
 
 
+#: v1.3.2 감점·신뢰도 규칙(§3.2.3, 부록 D)
+V_PENALTY_DCF = 4.0              # DCF 민감도 큼 — V 신뢰도 C 강등과 함께 적용
+V_PENALTY_HIST = 10.0            # 10년 역사적 EV/EBIT 중앙값 대비 IV 20% 이상 괴리
+DCF_SENSITIVITY_MAX = 0.40       # 성장률 변화에 IV 가 ±40% 이상 흔들리면 민감도 큼
+HIST_DIVERGENCE_MAX = 0.20       # IV 와 역사적 밸류에이션 내재가치의 괴리 허용폭
+EV_EBIT_PERCENTILE_HOT = 90.0    # S1 과열(밸류) — 10년 EV/EBIT 백분위 90 이상
+
+
 def v_score(margin: float, penalties: float = 0.0) -> float:
-    """안전마진 → 0~100 (3.2.3): 0% = 50, +30% = 100, −20% = 0 (구간별 선형)."""
+    """안전마진 → 0~100 (v1.3.2 §3.2.3) — 세 구간 선형 + 감점.
+
+    0% = 50, +30% = 100 / 0% = 50, −20% = 15 / −20% = 15, −200% = 0.
+    −20% 아래를 0 으로 눌러 버리면 고평가 종목이 전부 같은 0점이 되어
+    (ADBE −40% 와 GOOGL −349%) 변별력이 사라지고 감점(−4/−10)도 반영될 자리가 없었다.
+    """
     if margin >= 0:
         score = 50.0 + margin * (50.0 / 0.30)
+    elif margin >= -0.20:
+        score = 50.0 + margin * (35.0 / 0.20)
     else:
-        score = 50.0 + margin * (50.0 / 0.20)
+        score = 15.0 + (margin + 0.20) * (15.0 / 1.80)
     return _clamp(score - penalties, 0.0, 100.0)
 
 
 def dcf_sensitivity(iv_bear: float, iv_bull: float, iv_base: float) -> float:
-    """성장률 ±5%p(0.5·1.5배)에 IV 가 얼마나 흔들리는가."""
+    """성장률 변화에 IV 가 **편측으로** 얼마나 흔들리는가(§3.2.3).
+
+    `abs(iv_bull − iv_bear) / (2 × iv_base)` — 성장률 0.5·1.5배 시나리오의 폭을
+    기본값 기준의 ±비율로 환산한다. 0.40 이상이면 "±40% 이상 변동" = 민감도 큼.
+    """
     if iv_base <= 0:
         return float("inf")
-    return (iv_bull - iv_bear) / iv_base
+    return abs(float(iv_bull) - float(iv_bear)) / (2.0 * float(iv_base))
