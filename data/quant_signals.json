@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-19T22:02:11Z",
+  "generated_at": "2026-11-20T02:09:38.190219Z",
   "data_cutoff_at": "2026-11-19T22:00:00Z",
   "signal_published_at": "2026-11-19T22:02:11Z",
   "order_cutoff_at": "2026-11-20T14:25:00Z",
   "as_of": "2026-11-20",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-  "code_commit": "init",
-  "status": "awaiting_first_run",
+  "snapshot_id": "sha256:18829873dfe319eb3e36055f2372dbe4e55dc11af487c9adcabcf4450448be92",
+  "code_commit": "3b8083f",
+  "status": "degraded",
   "mode": "postclose",
-  "source": "none",
+  "source": "live",
   "regime": {
     "regime": "neutral",
     "votes": {},
@@ -34,6 +34,47 @@
   "blocked": [],
   "watchlist": [],
   "watchlist_count": 0,
+  "position_checks": [],
+  "diagnostics": {
+    "mode": "live",
+    "sources": {
+      "yfinance": {
+        "status": "ok",
+        "detail": null
+      },
+      "fred": {
+        "status": "degraded",
+        "detail": "유효 시리즈 없음"
+      },
+      "sec": {
+        "status": "ok",
+        "detail": null
+      },
+      "finnhub": {
+        "status": "ok",
+        "detail": null
+      }
+    },
+    "degraded": [
+      "fred:degraded"
+    ],
+    "macro_series": [
+      "BAMLH0A0HYM2",
+      "CPIAUCSL",
+      "CPILFESL",
+      "DFF",
+      "DGS10",
+      "DGS2",
+      "DTWEXBGS",
+      "T10Y2Y",
+      "UNRATE",
+      "VIXCLS",
+      "WALCL"
+    ]
+  },
+  "charts": {},
+  "next_trading_day": "2026-11-23",
+  "watchlist_source": "data/watchlist/current.json",
   "ledger_summary": {
     "schema_version": 1,
     "as_of": "2026-11-20",
@@ -45,30 +86,270 @@
       "ic_3m": null,
       "win_rate": null,
       "mean_excess": null,
-      "benchmark_connected": false,
-      "note_ko": "채점 표본 없음"
+      "benchmark_connected": true,
+      "note_ko": null
     },
     "strategy": {
       "label_ko": "전략(모의 계좌)",
       "equity_index": 1.0,
       "cash_pct": 1.0,
       "invested_pct": 0.0,
-      "n_positions": 0
+      "avg_exposure": 0.0,
+      "n_positions": 0,
+      "note_ko": "신호가 맞아도 현금이 놀면 계좌 성과는 다르다(4.12)."
     },
-    "horizons": {},
-    "folds": {},
+    "horizons": {
+      "1w": {
+        "horizon": "1w",
+        "n": 0,
+        "agreement": null,
+        "agreement_mean": null,
+        "ic": null,
+        "win_rate": null,
+        "mean_excess": null,
+        "profit_factor": null
+      },
+      "1m": {
+        "horizon": "1m",
+        "n": 0,
+        "agreement": null,
+        "agreement_mean": null,
+        "ic": null,
+        "win_rate": null,
+        "mean_excess": null,
+        "profit_factor": null
+      },
+      "3m": {
+        "horizon": "3m",
+        "n": 0,
+        "agreement": null,
+        "agreement_mean": null,
+        "ic": null,
+        "win_rate": null,
+        "mean_excess": null,
+        "profit_factor": null
+      },
+      "6m": {
+        "horizon": "6m",
+        "n": 0,
+        "agreement": null,
+        "agreement_mean": null,
+        "ic": null,
+        "win_rate": null,
+        "mean_excess": null,
+        "profit_factor": null
+      }
+    },
+    "folds": {
+      "as_of": "2026-11-19",
+      "holdout_start": "2026-08-19",
+      "holdout_end": "2026-11-18",
+      "window_months": 12,
+      "horizons": {
+        "1m": {
+          "horizon_td": 21,
+          "eligible_folds": [
+            "F1",
+            "F2",
+            "F3",
+            "F4"
+          ],
+          "count": 4,
+          "min_folds": 3,
+          "sufficient": true,
+          "folds": [
+            {
+              "fold_id": "F1",
+              "start": "2025-08-19",
+              "maturity": "2025-09-18",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 21
+            },
+            {
+              "fold_id": "F2",
+              "start": "2025-11-19",
+              "maturity": "2025-12-19",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 21
+            },
+            {
+              "fold_id": "F3",
+              "start": "2026-02-19",
+              "maturity": "2026-03-20",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 21
+            },
+            {
+              "fold_id": "F4",
+              "start": "2026-05-19",
+              "maturity": "2026-06-18",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 21
+            }
+          ]
+        },
+        "3m": {
+          "horizon_td": 63,
+          "eligible_folds": [
+            "F1",
+            "F2",
+            "F3"
+          ],
+          "count": 3,
+          "min_folds": 3,
+          "sufficient": true,
+          "folds": [
+            {
+              "fold_id": "F1",
+              "start": "2025-08-19",
+              "maturity": "2025-11-17",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 63
+            },
+            {
+              "fold_id": "F2",
+              "start": "2025-11-19",
+              "maturity": "2026-02-23",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 63
+            },
+            {
+              "fold_id": "F3",
+              "start": "2026-02-19",
+              "maturity": "2026-05-20",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 63
+            },
+            {
+              "fold_id": "F4",
+              "start": "2026-05-19",
+              "maturity": "2026-08-19",
+              "eligible": false,
+              "truncated": true,
+              "observed_days": 62
+            }
+          ]
+        },
+        "6m": {
+          "horizon_td": 126,
+          "eligible_folds": [
+            "F1",
+            "F2"
+          ],
+          "count": 2,
+          "min_folds": 3,
+          "sufficient": false,
+          "folds": [
+            {
+              "fold_id": "F1",
+              "start": "2025-08-19",
+              "maturity": "2026-02-19",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 126
+            },
+            {
+              "fold_id": "F2",
+              "start": "2025-11-19",
+              "maturity": "2026-05-22",
+              "eligible": true,
+              "truncated": false,
+              "observed_days": 126
+            },
+            {
+              "fold_id": "F3",
+              "start": "2026-02-19",
+              "maturity": "2026-08-20",
+              "eligible": false,
+              "truncated": true,
+              "observed_days": 124
+            },
+            {
+              "fold_id": "F4",
+              "start": "2026-05-19",
+              "maturity": "2026-11-17",
+              "eligible": false,
+              "truncated": true,
+              "observed_days": 62
+            }
+          ]
+        }
+      },
+      "blocked": [
+        "6m"
+      ]
+    },
     "pilot": {
       "verdict": "보류",
-      "reason_ko": "채점 표본 0건 — 판정 보류(4.7.3)"
+      "reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
+      "n_eff": 0,
+      "metrics": [
+        {
+          "key": "n_eff",
+          "label_ko": "유효 표본 N_eff",
+          "value": 0,
+          "threshold": "≥ 15",
+          "pass": false
+        },
+        {
+          "key": "net_after_cost",
+          "label_ko": "비용 후 순수익(SPY 대비)",
+          "value": null,
+          "threshold": "> 0",
+          "pass": null
+        },
+        {
+          "key": "cash_equivalent",
+          "label_ko": "유사 현금비중 벤치마크 대비",
+          "value": null,
+          "threshold": "> 0",
+          "pass": null
+        },
+        {
+          "key": "tail_loss",
+          "label_ko": "손실 구간(하위 20%) 평균",
+          "value": null,
+          "threshold": "≥ -0.08",
+          "pass": null
+        }
+      ]
     },
-    "params_history": [],
+    "params_history": [
+      {
+        "version": "params_v001",
+        "created_at": "2026-11-19",
+        "parent_version": null,
+        "gate_result": {
+          "status": "active",
+          "note_ko": "워크포워드 보정은 PR 로만 반영한다(4.3)"
+        },
+        "changed": [],
+        "note_ko": "초기 버전 — 보정 이력 없음"
+      }
+    ],
     "signal_history": [],
-    "debate_effect": {
-      "pairs": 0,
-      "net_pp": null,
-      "verdict": "표본 0건 — 판정 보류"
+    "holdout": {
+      "holdout_start": "2026-08-20",
+      "holdout_end": "2026-11-19",
+      "months": 3,
+      "locked": true,
+      "evaluations": 0,
+      "last_evaluation": null,
+      "next_open": "2027-01-01",
+      "note_ko": "홀드아웃은 분기 1회만 열립니다 — 다음 개봉 2027-01-01"
     },
-    "note_ko": "아직 실전 배치가 한 번도 돌지 않았습니다 — 신호가 비어 있는 것이 정상입니다."
+    "graded_sample": [],
+    "settlement": {
+      "settled": [],
+      "pending": []
+    }
   },
   "portfolio": {
     "as_of": "2026-11-20",
@@ -79,7 +360,7 @@
   },
   "pilot_eval": {
     "verdict": "보류",
-    "reason_ko": "채점 표본 0건 — 판정 보류(4.7.3)",
+    "reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
     "n_eff": 0,
     "metrics": [
       {
@@ -112,12 +393,5 @@
       }
     ]
   },
-  "charts": {},
-  "position_checks": [],
-  "diagnostics": {
-    "mode": "init",
-    "degraded": [],
-    "sources": {}
-  },
-  "note_ko": "아직 실전 배치가 한 번도 돌지 않았습니다 — 신호가 비어 있는 것이 정상입니다."
+  "prices_as_of": "2026-11-19"
 }

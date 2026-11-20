@@ -12,7 +12,7 @@
       "value": 0,
       "threshold": "≥ 15",
       "pass": false,
-      "note_ko": "신호 0건"
+      "note_ko": "63거래일 클러스터 0개(신호 0건)"
     },
     {
       "key": "net_after_cost",
@@ -20,7 +20,7 @@
       "value": null,
       "threshold": "> 0",
       "pass": null,
-      "note_ko": "채점 표본 없음"
+      "note_ko": "평균 초과 None − 비용 0.0034"
     },
     {
       "key": "cash_equivalent",
@@ -28,7 +28,7 @@
       "value": null,
       "threshold": "> 0",
       "pass": null,
-      "note_ko": "계좌 곡선 없음"
+      "note_ko": null
     },
     {
       "key": "tail_loss",
@@ -36,10 +36,17 @@
       "value": null,
       "threshold": "≥ -0.08",
       "pass": null,
-      "note_ko": "채점 표본 없음"
+      "note_ko": null
     }
   ],
   "verdict": "보류",
-  "verdict_reason_ko": "채점 표본 0건 — 판정 보류(4.7.3)",
+  "verdict_reason_ko": "지표 3개 계산 불가(net_after_cost, cash_equivalent, tail_loss) — 판정 보류(4.7.3)",
+  "benchmark_return": NaN,
+  "risk_free": 0.0,
+  "costs": {
+    "slippage": 10.0,
+    "commission": 2.0,
+    "fx": 5.0
+  },
   "note_ko": "55점·승률 52% 는 참고치다 — 게이트는 이 4지표로만 판단한다."
 }
