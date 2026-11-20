@@ -6,8 +6,8 @@
 name: daily-postclose
 
 on:
-  # schedule:
-  #   - cron: "0 22 * * *"      # 07:00 KST (미국 장 마감 1~2시간 후)
+  schedule:
+    - cron: "0 22 * * *"      # 07:00 KST (미국 장 마감 1~2시간 후)
   workflow_dispatch:
 
 concurrency:
