@@ -1,0 +1,2 @@
+# 체결 이벤트(append-only)가 쌓이는 디렉터리. 첫 체결 전에도 워크플로의 'git add data/ledger/executions/' 가
+# pathspec 오류로 죽지 않도록 이 파일만 둔다(데이터 아님).

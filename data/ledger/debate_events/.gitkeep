@@ -1,0 +1,2 @@
+# 토론 이벤트가 쌓이는 디렉터리. 첫 이벤트 전에도 워크플로의 'git add data/ledger/debate_events/' 가
+# pathspec 오류로 죽지 않도록 이 파일만 둔다(데이터 아님).
