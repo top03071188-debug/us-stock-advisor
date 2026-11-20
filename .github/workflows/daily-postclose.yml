@@ -1,7 +1,15 @@
-# daily-postclose.yml — Phase 4 실운영 일일 배치 & Pages 배포 (P2-1 반영)
+# daily-postclose.yml — Phase 4 실운영 일일 배치 & Pages 배포 (P2-1 · 감사 11 반영)
 #
 # Actions 가 GITHUB_TOKEN 으로 푸시한 커밋은 push 워크플로를 시작시키지 않는다.
 # 그래서 데이터를 만드는 이 워크플로는 같은 실행 안에서 Pages 배포까지 끝낸다.
+#
+# [감사 11] 장애(시세 전체 실패) 실행은 스냅샷을 만들지 않는다. 예전에는 그 상태로
+# `archive_snapshot.py package` 가 FileNotFoundError 로 죽고, `set -euo pipefail` 때문에
+# 뒤의 커밋·Pages 빌드가 통째로 사라져 `data/health.json`(장애 배지)이 사이트에 못 갔다.
+# 지금은 `run_daily.py` 가 남기는 출력으로 단계를 나눈다:
+#   · snapshot_created == 'true' 인 실행만 스냅샷 패키징·아카이브 업로드
+#   · health·알림·position_events·web/data 는 장애 실행에서도 **항상** 커밋·배포
+#   · 계약 검증 실패는 정상 실행에서만 차단한다(장애 기록까지 막지 않는다)
 name: daily-postclose
 
 on:
@@ -46,18 +54,45 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: python scripts/run_daily.py --mode postclose   # outputs: snapshot_id, snapshot_id_short
+        # outputs: run_outcome(normal|outage|rejected), status_written, snapshot_created,
+        #          snapshot_state, snapshot_id, snapshot_id_short, status, n_signals, n_blocked,
+        #          data_status, outage_id
+        run: python scripts/run_daily.py --mode postclose
+      - name: Report run outcome
+        run: |
+          echo "run_outcome=${{ steps.pipeline.outputs.run_outcome }}"
+          echo "data_status=${{ steps.pipeline.outputs.data_status }}"
+          echo "snapshot_created=${{ steps.pipeline.outputs.snapshot_created }} (state=${{ steps.pipeline.outputs.snapshot_state }})"
       - name: Validate output schemas
+        id: validate
+        # 장애 실행은 전일 정상 파일을 그대로 두므로 검증 실패가 **상태 발행을 막지 않는다**.
+        continue-on-error: true
         run: python scripts/validate_outputs.py
+      - name: Validation gate (정상 실행만 차단)
+        if: steps.pipeline.outputs.run_outcome != 'outage' && steps.validate.outcome == 'failure'
+        run: |
+          echo "::error::계약 검증 실패 — 정상 실행은 배포하지 않는다(장애 기록은 이미 남겼다)"
+          exit 1
       - name: Archive snapshot (private repo, append-only, sha256 verified)
+        # 감사 11: 스냅샷이 실제로 있을 때만 패키징·업로드한다.
+        if: steps.pipeline.outputs.snapshot_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.ARCHIVE_REPO_TOKEN }}      # 아카이브 저장소에만 권한을 준 PAT
           ARCHIVE_REPO: ${{ vars.PRIVATE_ARCHIVE_REPO }}   # 예: top03071188-debug/us-stock-advisor-archive (비공개)
           SNAPSHOT_SHORT: ${{ steps.pipeline.outputs.snapshot_id_short }}
         run: |
           set -euo pipefail
+          set +e
           python scripts/archive_snapshot.py package --out dist_archive \
             --name "snapshot_$(date -u +%F)_${SNAPSHOT_SHORT}"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 3 ]; then
+            echo "::warning::스냅샷 없음 — 아카이브를 건너뛴다(장애 배치)"
+            exit 0
+          elif [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
           TGZ=$(ls dist_archive/snapshot_*.tgz)
           gh release view snapshots-2026 --repo "$ARCHIVE_REPO" --json assets > /tmp/assets.json 2>/dev/null || \
             gh release create snapshots-2026 --repo "$ARCHIVE_REPO" \
@@ -75,10 +110,19 @@ jobs:
             exit 1
           fi
       - name: Redact quotes for commit
+        # 파일이 없으면(첫 실행) 조용히 넘어간다 — 장애 실행도 같은 경로를 지난다.
         run: |
-          python scripts/redact_quotes.py --mode sha256 \
-            data/quant_signals.json data/ledger/records.jsonl
+          FILES=()
+          for p in data/quant_signals.json data/ledger/records.jsonl; do
+            [ -f "$p" ] && FILES+=("$p")
+          done
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "리댁트 대상 없음(첫 실행)"
+            exit 0
+          fi
+          python scripts/redact_quotes.py --mode sha256 "${FILES[@]}"
       - name: Commit contract data (allowlist only, Phase 4 산출물 포함)
+        # 장애 실행도 health·알림·position_events 를 커밋한다 — 사이트가 장애를 보여 줄 수 있게.
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"
@@ -110,6 +154,7 @@ jobs:
           git diff --cached --quiet || git commit -m "data: quant signals $(date -u +%F)"
           git push
       - name: Build public data (allowlist only)
+        # 발행 세트 매니페스트(deploy_manifest.json)까지 여기서 만든다 — 장애 시에도 실행.
         run: python scripts/build_public_data.py
       - uses: actions/upload-pages-artifact@v3
         with: { path: web }

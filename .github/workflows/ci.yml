@@ -11,7 +11,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       BASE_REF: ${{ github.base_ref }}
     steps:
@@ -44,9 +44,52 @@ jobs:
             exit 0
           fi
           python scripts/check_commit_scope.py --paths "${TARGETS[@]}"
+      - name: Base-branch scope guard (PR 코드의 검사기를 신뢰하지 않는다 — 감사 10)
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          # 기본 브랜치의 검사기·허용 목록으로 PR 워킹트리를 검사한다.
+          # PR 이 `scripts/check_commit_scope.py` 나 `config/public_allowlist.yaml` 을 고쳐
+          # 자기 변경을 통과시키는 길을 막는다(감사 10).
+          rm -rf /tmp/trusted && mkdir -p /tmp/trusted
+          if ! git archive "origin/${BASE_REF}" 2>/dev/null | tar -x -C /tmp/trusted \
+             || [ ! -f /tmp/trusted/scripts/check_commit_scope.py ]; then
+            echo "::warning::기본 브랜치 검증기를 받지 못해 현재 체크아웃의 검사기를 쓴다"
+            cp -r scripts config /tmp/trusted/
+          fi
+          if [ -n "${BASE_REF:-}" ]; then
+            mapfile -t TARGETS < <(git diff --name-only --diff-filter=ACMR "origin/${BASE_REF}...HEAD" | sort -u)
+          else
+            mapfile -t TARGETS < <(git ls-files)
+          fi
+          if [ "${#TARGETS[@]}" -eq 0 ]; then
+            echo "검사 대상 0건"
+            exit 0
+          fi
+          python /tmp/trusted/scripts/check_commit_scope.py \
+            --allowlist /tmp/trusted/config/public_allowlist.yaml \
+            --root . --paths "${TARGETS[@]}"
       - name: Public data build guard
         run: |
           python scripts/build_public_data.py \
             --signals data/samples/quant_signals.example.json \
             --folds data/walkforward/folds/summary.json \
             --out /tmp/public_data
+      - name: PWA set manifest smoke (web/sw.js 문법·구조)
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+
+          out = pathlib.Path("/tmp/public_data/deploy_manifest.json")
+          if not out.exists():
+              print("deploy_manifest.json 이 없다", file=sys.stderr)
+              sys.exit(1)
+          manifest = json.loads(out.read_text(encoding="utf-8"))
+          core = ("meta.json", "signals/today.json", "health.json", "debate.json",
+                  "notifications.json", "ledger/summary.json")
+          missing = [name for name in core if name not in manifest["files"]]
+          if missing or not manifest.get("bundle_version"):
+              print(f"매니페스트 불완전: missing={missing}", file=sys.stderr)
+              sys.exit(1)
+          print(f"manifest ok — bundle {manifest['bundle_version']}")
+          PY

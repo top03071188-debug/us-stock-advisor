@@ -1,6 +1,10 @@
 # deploy.yml — 사람이 푸시한 커밋과 수동 실행 전용 (2.2.4).
 # Actions 가 GITHUB_TOKEN 으로 푸시한 커밋은 push 워크플로를 시작시키지 않는다.
 # 그래서 데이터를 만드는 워크플로(daily-postclose 등)는 같은 실행 안에서 배포까지 끝낸다.
+#
+# [감사 11·12] 장애 상태 파일과 발행 세트 매니페스트도 배포 입력이다 — health·알림만 바뀐 푸시도
+# Pages 가 갱신돼야 "이번 세션 판단 보류" 배지가 보인다. `build_public_data.py` 가
+# `web/data/deploy_manifest.json`(파일별 sha256 + 통합 bundle_version)을 함께 만든다.
 name: deploy
 
 on:
@@ -9,9 +13,13 @@ on:
     paths:
       - "web/**"
       - "data/quant_signals.json"
+      - "data/quant_signals.degraded.json"
       - "data/debate_reports.json"
       - "data/health.json"
+      - "data/notifications_latest.json"
       - "data/ledger/debate_comparison.json"
+      - "data/ledger/debate_events/**"
+      - "data/ledger/position_events.jsonl"
       - "scripts/build_public_data.py"
       - "config/public_allowlist.yaml"
   workflow_dispatch:
@@ -40,7 +48,29 @@ jobs:
           python scripts/build_public_data.py \
             --signals data/quant_signals.json \
             --folds data/walkforward/folds/summary.json \
+            --debate-events data/ledger/debate_events \
             --out web/data
+      - name: Manifest integrity (파일별 sha256 대조)
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, sys
+
+          root = pathlib.Path("web/data")
+          manifest = json.loads((root / "deploy_manifest.json").read_text(encoding="utf-8"))
+          problems = []
+          for name, entry in manifest["files"].items():
+              path = root / name
+              if not path.exists():
+                  problems.append(f"missing {name}")
+                  continue
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              if digest != entry["sha256"]:
+                  problems.append(f"sha256 mismatch {name}")
+          if problems:
+              print("\n".join(problems), file=sys.stderr)
+              sys.exit(1)
+          print(f"manifest ok — {len(manifest['files'])} files, bundle {manifest['bundle_version']}")
+          PY
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
