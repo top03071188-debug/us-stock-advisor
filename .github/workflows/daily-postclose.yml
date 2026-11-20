@@ -1,8 +1,7 @@
-# daily-postclose.yml — 기획서 6.3 의 정본 예시.
+# daily-postclose.yml — Phase 4 실운영 일일 배치 & Pages 배포 (P2-1 반영)
 #
-# Phase 1에는 아직 `scripts/run_daily.py`(수집→신호)가 없으므로 **schedule 은 꺼 두었다**.
-# Phase 3 에서 run_daily.py 가 들어오면 아래 cron 주석을 풀고 그대로 쓴다.
-# 배포는 이 실행 안에서 끝낸다 — GITHUB_TOKEN 푸시는 push 워크플로를 시작시키지 않는다(2.2.4).
+# Actions 가 GITHUB_TOKEN 으로 푸시한 커밋은 push 워크플로를 시작시키지 않는다.
+# 그래서 데이터를 만드는 이 워크플로는 같은 실행 안에서 Pages 배포까지 끝낸다.
 name: daily-postclose
 
 on:
@@ -45,6 +44,8 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: python scripts/run_daily.py --mode postclose   # outputs: snapshot_id, snapshot_id_short
       - name: Validate output schemas
         run: python scripts/validate_outputs.py
@@ -61,7 +62,6 @@ jobs:
           gh release view snapshots-2026 --repo "$ARCHIVE_REPO" --json assets > /tmp/assets.json 2>/dev/null || \
             gh release create snapshots-2026 --repo "$ARCHIVE_REPO" \
               --title "Snapshots 2026" --notes "walk-forward 재현용 원본 (비공개)"
-          # `gh release upload --skip-existing` 은 존재하지 않는 플래그다(gh 2.102.0 확인).
           # ① 같은 이름 asset이 있는지 먼저 조회 → ② 있으면 sha256 대조(불일치 시 중단)
           # → ③ 없을 때만 --clobber 없이 업로드한다.
           set +e
@@ -78,13 +78,34 @@ jobs:
         run: |
           python scripts/redact_quotes.py --mode sha256 \
             data/quant_signals.json data/ledger/records.jsonl
-      - name: Commit contract data (allowlist only)
+      - name: Commit contract data (allowlist only, Phase 4 산출물 포함)
         run: |
+          set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quant_signals.json data/ledger/records.jsonl data/ledger/portfolio/ \
-                  data/ledger/executions/ data/ledger/debate_events/ data/ledger/debate_comparison.json \
-                  data/ledger/pilot_eval.json data/params_history.json
+          CANDIDATES=(
+            data/quant_signals.json
+            data/quant_signals.degraded.json
+            data/health.json
+            data/pipeline_limits.json
+            data/notifications_latest.json
+            data/notifications_log.json
+            data/params_history.json
+            data/walkforward/stress.json
+            data/ledger/records.jsonl
+            data/ledger/position_events.jsonl
+            data/ledger/portfolio/
+            data/ledger/executions/
+            data/ledger/debate_events/
+            data/ledger/debate_comparison.json
+            data/ledger/debate_summary.json
+            data/ledger/pilot_eval.json
+          )
+          for p in "${CANDIDATES[@]}"; do
+            if [ -e "$p" ]; then
+              git add "$p"
+            fi
+          done
           python scripts/check_commit_scope.py --staged
           git diff --cached --quiet || git commit -m "data: quant signals $(date -u +%F)"
           git push
@@ -95,6 +116,9 @@ jobs:
   deploy:
     needs: report
     runs-on: ubuntu-latest
-    environment: github-pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/deploy-pages@v4
+      - id: deployment
+        uses: actions/deploy-pages@v4

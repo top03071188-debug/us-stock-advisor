@@ -12,8 +12,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      BASE_REF: ${{ github.base_ref }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -23,14 +27,23 @@ jobs:
       - name: Lint
         run: |
           pip install ruff==0.6.9
-          ruff check engine scripts tests || true   # Phase 1: 경고만, 차단은 아래 테스트가 한다
+          ruff check .
       - name: Unit & look-ahead tests (offline)
         run: python -m pytest -m "not network" -q
-      - name: Commit scope guard (.env·quote·원시가 경로)
+      - name: Commit scope guard (전체 변경/추적 경로 — P1-2)
         run: |
-          python scripts/check_commit_scope.py --paths \
-            config/params_v001.yaml config/public_allowlist.yaml \
-            data/walkforward/folds/summary.json data/calibration/attempts.json
+          set -euo pipefail
+          if [ -n "${BASE_REF:-}" ]; then
+            git fetch --no-tags origin "${BASE_REF}" || true
+            mapfile -t TARGETS < <(git diff --name-only --diff-filter=ACMR "origin/${BASE_REF}...HEAD" | sort -u)
+          else
+            mapfile -t TARGETS < <(git ls-files)
+          fi
+          if [ "${#TARGETS[@]}" -eq 0 ]; then
+            echo "검사 대상 0건"
+            exit 0
+          fi
+          python scripts/check_commit_scope.py --paths "${TARGETS[@]}"
       - name: Public data build guard
         run: |
           python scripts/build_public_data.py \
