@@ -14,6 +14,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -285,6 +286,29 @@ def test_assemble_complete_report_reflects_codex_version(tmp_path: Path, monkeyp
     out = capsys.readouterr().out
     assert '"status": "complete"' in out
     assert "파일 검증 통과" in out
+
+
+def test_assemble_never_stamps_validation_before_completion(tmp_path: Path,
+                                                           monkeypatch: pytest.MonkeyPatch) -> None:
+    """수정 A: `--assemble` 산출물의 `report_validated_at` 은 `completed_at` 보다 앞설 수 없다.
+
+    초 단위로 절사한 검증 시각을 따로 적으면 완료 시각의 마이크로초가 잘려 0.53초 역전이 되고,
+    트랙 1 이 `VALIDATED_BEFORE_COMPLETED` 로 편입을 거부한다(2026-11-20 GOOGL 실측).
+    """
+    monkeypatch.setenv("CODEX_VERSION", "cloud-agent")
+    signals_path = write_signals(tmp_path, make_signals())
+    rounds = write_rounds(tmp_path / "rounds" / "MSFT")
+    reports = tmp_path / "debate_reports.json"
+
+    assert _assemble(tmp_path, signals_path, rounds) == 0
+
+    report = read_doc(reports)["reports"][0]
+    completed = datetime.fromisoformat(report["completed_at"])
+    validated = datetime.fromisoformat(report["validation"]["report_validated_at"])
+    assert validated >= completed, (report["completed_at"], report["validation"]["report_validated_at"])
+    assert report["validation"]["report_validated_at"] == report["completed_at"]
+    assert report["late"] is False and report["invalid"] is False
+    assert validate_reports_file(reports) == []
 
 
 def test_assemble_reuses_saved_context_without_rebuild(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
