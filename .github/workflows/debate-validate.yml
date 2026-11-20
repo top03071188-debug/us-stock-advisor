@@ -14,10 +14,14 @@
 #      (`.github/workflows/`, `engine/ledger/`, `config/params*`, `web/`, `scripts/` 등).
 #      리포트는 기계가 만든 산출물이므로, 그 PR 로 코드·파라미터·워크플로를 함께 바꾸지 못하게 한다.
 #
-# [감사 10] **PR 코드의 검사기를 신뢰하지 않는다.** PR 이 `scripts/check_commit_scope.py` 나
-#   `config/public_allowlist.yaml` 을 함께 고치면 검사가 무의미해진다. 그래서 검증기·허용 목록은
-#   **기본 브랜치(origin/<base>)의 체크아웃**에서 가져와 실행하고, 검사 대상만 PR 워킹트리로 넘긴다
-#   (`--root "$GITHUB_WORKSPACE" --allowlist /tmp/trusted/config/public_allowlist.yaml`).
+# [감사 10 · T4] **PR 의 코드와 의존성 잠금을 실행하지 않는다.** 예전에는 PR 체크아웃에서
+#   `pip install -r requirements.lock` 을 먼저 돌렸다 — PR 이 그 파일(또는 설치 훅)을 고치면
+#   이후 모든 검사가 PR 이 준비한 환경에서 돌았다. 지금의 신뢰 경계는 이렇다:
+#     ① 환경(의존성·검증기·허용 목록·테스트)은 **기본 브랜치**(`github.base_ref`)의 `git archive` 사본
+#       (`/tmp/trusted`)에서만 가져온다. 설치는 `/tmp/trusted/requirements.lock` 으로 한다.
+#     ② 스키마·계약 검사에 쓰는 리포트는 PR 이 저장한 **단일 blob**(`git show <head>:data/debate_reports.json`)
+#       으로만 꺼낸다 — PR 워킹트리의 코드는 실행하지 않고, 리포트는 **데이터로만** 읽는다.
+#     ③ 경로 가드·계약 검증은 모두 `/tmp/trusted` 의 검사기로 돌린다(PR 코드로 자기 검사를 바꾸지 못하게).
 name: debate-validate
 
 on:
@@ -39,6 +43,9 @@ jobs:
     timeout-minutes: 15
     env:
       BASE_REF: ${{ github.base_ref }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,17 +53,42 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-      - name: Install (locked)
-        run: pip install -r requirements.lock
+          # `cache: pip` 를 쓰지 않는다 — 캐시 키가 PR 의 requirements.lock 이 되고,
+          # 그 캐시를 통해 PR 환경이 검사 단계로 새어 들어올 여지를 남기지 않는다.
+
+      - name: Trusted verifier checkout (기본 브랜치)
+        # 검사기·허용 목록·검증기·의존성 잠금은 **기본 브랜치**에서만 가져온다.
+        run: |
+          set -euo pipefail
+          BASE="${BASE_REF:-$DEFAULT_BRANCH}"
+          echo "base=${BASE}" >> "$GITHUB_ENV"
+          git fetch --no-tags origin "+refs/heads/${BASE}:refs/remotes/origin/${BASE}"
+          rm -rf /tmp/trusted && mkdir -p /tmp/trusted
+          git archive "origin/${BASE}" | tar -x -C /tmp/trusted
+          test -f /tmp/trusted/scripts/check_commit_scope.py
+          test -f /tmp/trusted/config/public_allowlist.yaml
+          test -f /tmp/trusted/requirements.lock
+          test -f /tmp/trusted/codex_debate/run_debate.py
+          echo "기본 브랜치 검증기 준비 완료: origin/${BASE}"
+
+      - name: Install (locked) — 기본 브랜치 requirements.lock
+        # PR 의 requirements.lock·설치 코드는 **절대 실행하지 않는다**(감사 10 · T4).
+        run: pip install -r /tmp/trusted/requirements.lock
 
       - name: Collect changed paths (PR 전체)
         id: changed
         run: |
           set -euo pipefail
-          if [ -n "${BASE_REF:-}" ]; then
-            git fetch --no-tags origin "${BASE_REF}" || true
-            git diff --name-only "origin/${BASE_REF}...HEAD" | sort -u > changed.txt
+          if [ -n "${PR_NUMBER:-}" ]; then
+            # PR head 커밋을 **명시적으로** 받는다(포크 PR 도 refs/pull/<n>/head 로 받을 수 있다).
+            git fetch --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/remotes/pr-head"
+            PR_SHA="$(git rev-parse refs/remotes/pr-head)"
+            if [ -n "${PR_HEAD_SHA:-}" ] && [ "$PR_SHA" != "$PR_HEAD_SHA" ]; then
+              echo "받은 PR head($PR_SHA)가 이벤트의 head($PR_HEAD_SHA)와 다르다 — 검사를 중단한다" >&2
+              exit 1
+            fi
+            echo "pr_sha=${PR_SHA}" >> "$GITHUB_OUTPUT"
+            git diff --name-only "origin/${BASE}...${PR_SHA}" | sort -u > changed.txt
           else
             git diff --name-only HEAD~1...HEAD | sort -u > changed.txt || : > changed.txt
           fi
@@ -64,16 +96,35 @@ jobs:
           cat changed.txt
           echo "count=$(wc -l < changed.txt)" >> "$GITHUB_OUTPUT"
 
-      - name: Trusted verifier checkout (기본 브랜치)
-        # 검사기·허용 목록은 **기본 브랜치**에서 가져온다 — PR 코드로 자기 검사를 바꾸지 못하게.
+      - name: Extract PR report blob (리포트·매니페스트 단일 blob만)
+        # 검증 대상은 **PR 이 저장한 그 바이트** 하나다 — PR 트리의 코드·의존성은 쓰지 않는다.
         if: github.event_name == 'pull_request'
+        env:
+          PR_SHA: ${{ steps.changed.outputs.pr_sha }}
         run: |
           set -euo pipefail
-          rm -rf /tmp/trusted && mkdir -p /tmp/trusted
-          git archive "origin/${BASE_REF}" | tar -x -C /tmp/trusted
-          test -f /tmp/trusted/scripts/check_commit_scope.py
-          test -f /tmp/trusted/config/public_allowlist.yaml
-          echo "기본 브랜치 검증기 준비 완료: origin/${BASE_REF}"
+          mkdir -p /tmp/pr/data/debate
+          for f in data/debate_reports.json data/debate/manifest.json; do
+            if git cat-file -e "${PR_SHA}:${f}" 2>/dev/null; then
+              git show "${PR_SHA}:${f}" > "/tmp/pr/${f}"
+              bytes=$(wc -c < "/tmp/pr/${f}")
+              echo "PR blob: ${f} (${bytes} bytes)"
+              # [통합 재검토] 빈 파일(0바이트·공백뿐)은 "리포트를 다 지운 PR"이다 — 계약 검증의
+              # JSON 파싱 실패로만 드러나면 원인이 흐려진다. append-only 원장이므로 먼저 막는다.
+              if [ "${f}" = "data/debate_reports.json" ] && [ "$(tr -d '[:space:]' < "/tmp/pr/${f}" | wc -c)" -eq 0 ]; then
+                echo "::error::PR 이 리포트 파일을 비웠다 — 발행 이력을 삭제하는 PR 은 검증하지 않는다" >&2
+                exit 1
+              fi
+            else
+              # [통합 재검토] 삭제(edge case) — 기본 브랜치에 있던 리포트를 지우는 PR 은 통과시키지 않는다.
+              BASE_OR_DEFAULT="${BASE_REF:-$DEFAULT_BRANCH}"
+              if git cat-file -e "origin/${BASE_OR_DEFAULT}:${f}" 2>/dev/null; then
+                echo "::error::PR 이 ${f} 를 삭제했다 — 리포트는 append-only 다(삭제 PR 금지)" >&2
+                exit 1
+              fi
+              echo "PR blob 없음(삭제·미변경): ${f}"
+            fi
+          done
 
       - name: Public scope — 기본 브랜치 검증기로 PR 전체 경로 검사 (P1-2 · 감사 10)
         run: |
@@ -84,29 +135,28 @@ jobs:
             exit 0
           fi
           if [ -f /tmp/trusted/scripts/check_commit_scope.py ]; then
-            GUARD=/tmp/trusted/scripts/check_commit_scope.py
-            ALLOW=/tmp/trusted/config/public_allowlist.yaml
+            python /tmp/trusted/scripts/check_commit_scope.py --allowlist /tmp/trusted/config/public_allowlist.yaml --root "$GITHUB_WORKSPACE" --paths "${CHANGED[@]}"
           else
             # 기본 브랜치를 받을 수 없는 수동 실행(workflow_dispatch) — 현재 체크아웃으로 검사한다.
             echo "::warning::기본 브랜치 검증기를 받지 못해 현재 체크아웃의 검사기를 쓴다"
-            GUARD=scripts/check_commit_scope.py
-            ALLOW=config/public_allowlist.yaml
+            python scripts/check_commit_scope.py --allowlist config/public_allowlist.yaml --root "$GITHUB_WORKSPACE" --paths "${CHANGED[@]}"
           fi
-          python "$GUARD" --allowlist "$ALLOW" --root "$GITHUB_WORKSPACE" --paths "${CHANGED[@]}"
 
-      - name: Reports contract (부록 G) — 기본 브랜치 검증기
+      - name: Reports contract (부록 G) — 기본 브랜치 검증기 · PR 단일 blob
         run: |
           set -euo pipefail
-          REPORTS="$GITHUB_WORKSPACE/data/debate_reports.json"
+          REPORTS=/tmp/pr/data/debate_reports.json
+          if [ ! -f "$REPORTS" ]; then
+            # 리포트를 바꾸지 않은 PR(코드만)은 현재 체크아웃의 파일로 계약만 확인한다.
+            REPORTS="$GITHUB_WORKSPACE/data/debate_reports.json"
+          fi
           if [ ! -f "$REPORTS" ]; then
             echo "아직 토론 리포트가 없다 — 첫 실행 전이면 정상"
             exit 0
           fi
-          if [ -f /tmp/trusted/codex_debate/run_debate.py ]; then
-            cd /tmp/trusted && python -m codex_debate.run_debate --validate-only --reports "$REPORTS"
-          else
-            python -m codex_debate.run_debate --validate-only --reports "$REPORTS"
-          fi
+          echo "검증 대상: ${REPORTS}"
+          # 검증기는 **기본 브랜치 코드**다 — PR 코드를 import 하지 않는다.
+          cd /tmp/trusted && python -m codex_debate.run_debate --validate-only --reports "$REPORTS"
 
       - name: Debate-result PR path guard — 리포트·매니페스트 외 변경 차단 (P1-2)
         run: |
@@ -146,16 +196,26 @@ jobs:
           print(f"경로 가드 통과 ({len(changed)}개 경로)")
           PY
 
-      - name: Debate tests (PR 코드 — 회귀 확인용)
-        # 차단 근거는 위의 **기본 브랜치 검증기**다. 이 단계는 PR 코드 자체의 회귀를 알려 준다.
-        run: python -m pytest -q tests/test_phase4_debate.py
+      - name: Debate tests (기본 브랜치 — 계약 회귀 확인)
+        # PR 코드를 실행하지 않는다. 리포트 PR 이 깨뜨린 것은 위의 계약 검사가 잡는다.
+        run: cd /tmp/trusted && python -m pytest -q tests/test_phase4_debate.py
 
-      - name: No raw article body or context in commit
+      - name: No raw article body or context in commit (PR head 기준)
+        env:
+          PR_SHA: ${{ steps.changed.outputs.pr_sha }}
         run: |
-          if git ls-files --error-unmatch data/debate/context >/dev/null 2>&1; then
-            echo "data/debate/ 는 로컬 전용이다(커밋 금지)" && exit 1
-          fi
-          if git ls-files --error-unmatch data/debate/context.json >/dev/null 2>&1; then
-            echo "data/debate/ 는 로컬 전용이다(커밋 금지)" && exit 1
+          set -euo pipefail
+          if [ -n "${PR_SHA:-}" ]; then
+            # PR 이 **커밋하려는** 트리를 본다 — 워크플로 체크아웃 트리와 섞지 않는다.
+            if git ls-tree -r --name-only "$PR_SHA" | grep -qE '^data/debate/(context|context/|context\.json|raw)'; then
+              echo "data/debate/ 는 로컬 전용이다(커밋 금지)" && git ls-tree -r --name-only "$PR_SHA" | grep -E '^data/debate/(context|context/|context\.json|raw)' && exit 1
+            fi
+          else
+            if git ls-files --error-unmatch data/debate/context >/dev/null 2>&1; then
+              echo "data/debate/ 는 로컬 전용이다(커밋 금지)" && exit 1
+            fi
+            if git ls-files --error-unmatch data/debate/context.json >/dev/null 2>&1; then
+              echo "data/debate/ 는 로컬 전용이다(커밋 금지)" && exit 1
+            fi
           fi
           echo "context/본문 발췌 커밋 0건"
