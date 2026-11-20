@@ -329,10 +329,38 @@ function postToServiceWorker(message, timeoutMs = 1500) {
   });
 }
 
+function currentAppAssetVersion() {
+  const script = Array.from(document.scripts || []).find((s) => /app\.js(\?|$)/.test(s.src || ""));
+  if (!script) return null;
+  try {
+    return new URL(script.src, location.href).searchParams.get("v");
+  } catch (err) {
+    return null;
+  }
+}
+
+function reloadOnceForSw(targetVersion) {
+  const key = "us_stock_sw_reloaded_v";
+  const marker = String(targetVersion || "changed");
+  try {
+    if (sessionStorage.getItem(key) === marker) return false;
+    sessionStorage.setItem(key, marker);
+  } catch (err) {
+    // sessionStorage 차단 환경에서는 자동 리로드를 생략해 루프를 피한다.
+    return false;
+  }
+  location.reload();
+  return true;
+}
+
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return null;
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (hadController) reloadOnceForSw("controller");
+  });
   try {
-    return await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+    return await navigator.serviceWorker.register("./sw.js", { scope: "./", updateViaCache: "none" });
   } catch (err) {
     return null;
   }
@@ -387,6 +415,10 @@ function renderBundle(info) {
 async function loadPublicSet() {
   const prepared = await postToServiceWorker({ type: "prepare-set" }, 9000);
   if (prepared && prepared.ok && Array.isArray(prepared.files) && prepared.files.length) {
+    const appVer = currentAppAssetVersion();
+    if (prepared.sw_version && appVer && prepared.sw_version !== appVer) {
+      reloadOnceForSw(prepared.sw_version);
+    }
     return {
       docs: parseFiles(prepared.files),
       info: { source: "network", bundle_version: prepared.bundle_version,

@@ -22,9 +22,9 @@
 "use strict";
 
 /** 서비스워커·셸 캐시 키 — sw.js 가 바뀌면 올린다. */
-const SW_VERSION = "phase4-5";
+const SW_VERSION = "phase4-6";
 /** index.html 의 `?v=` 와 **같은** 값 — 셸 자산 URL 은 html 이 소유한다(둘을 함께 올린다). */
-const ASSET_VERSION = "phase4-5";
+const ASSET_VERSION = "phase4-6";
 const SHELL_CACHE = `shell-${SW_VERSION}`;
 const SHELL_PREFIX = "shell-";
 const SET_PREFIX = "set-";
@@ -274,22 +274,42 @@ async function handleData(request) {
 }
 
 async function handleShell(request) {
-  const cached = await caches.match(request);
-  if (cached) {
-    fetch(request)
-      .then((response) => {
-        if (response && response.ok) {
-          caches.open(SHELL_CACHE).then((cache) => cache.put(request, response.clone()));
-        }
-      })
-      .catch(() => undefined);
-    return cached;
+  const url = new URL(request.url);
+  const isHtml = request.mode === "navigate"
+    || url.pathname.endsWith("/")
+    || url.pathname.endsWith("/index.html");
+  if (isHtml) {
+    // HTML 문서는 항상 네트워크 우선 — 구버전 index.html 이 새 데이터 형식(debate_details 등)과
+    // 섞이는 현상을 막는다. (`mode === "navigate"` Request 는 init 과 함께 복제할 수 없으므로 URL 문자열 사용)
+    // 오프라인/네트워크 오류 시에만 현재 셸 캐시로 폴백한다.
+    try {
+      const response = await fetch(request.url, { cache: "no-store" });
+      if (response && response.ok) {
+        const cache = await caches.open(SHELL_CACHE);
+        await cache.put(request.url, response.clone());
+        return response;
+      }
+    } catch (err) {
+      // 오프라인 폴백으로 내려간다.
+    }
+    const cache = await caches.open(SHELL_CACHE);
+    const cached = (await cache.match(request.url)) || (await cache.match(request));
+    if (cached) return cached;
+    const fallback = await cache.match("./index.html");
+    return fallback || (await caches.match("./index.html")) || Response.error();
   }
+  // `?v=` 가 붙은 정적 자산(CSS/JS)과 아이콘·매니페스트는 현재 셸 캐시에서만 찾는다.
+  const cache = await caches.open(SHELL_CACHE);
+  const cached = await cache.match(request);
+  if (cached) return cached;
   try {
-    return await fetch(request);
+    const response = await fetch(request);
+    if (response && response.ok) {
+      await cache.put(request, response.clone());
+    }
+    return response;
   } catch (err) {
-    const fallback = await caches.match("./index.html");
-    return fallback || Response.error();
+    return Response.error();
   }
 }
 
