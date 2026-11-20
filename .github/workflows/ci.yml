@@ -32,5 +32,8 @@ jobs:
             config/params_v001.yaml config/public_allowlist.yaml \
             data/walkforward/folds/summary.json data/calibration/attempts.json
       - name: Public data build guard
-        run: python scripts/build_public_data.py --signals data/samples/quant_signals.example.json \
-               --folds data/walkforward/folds/summary.json --out /tmp/public_data
+        run: |
+          python scripts/build_public_data.py \
+            --signals data/samples/quant_signals.example.json \
+            --folds data/walkforward/folds/summary.json \
+            --out /tmp/public_data
