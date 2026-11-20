@@ -16,6 +16,15 @@ Codex Cloud 에는 `codex` CLI·`auth.json` 이 없어 `codex_debate/run_debate.
     CODEX_VERSION=cloud-agent python scripts/assemble_cloud.py --assemble \
         --tickers MSFT --rounds /tmp/rounds/MSFT --drop-incomplete
 
+    # 3) 조립 + PR — 검증을 통과하면 GitHub REST(HTTPS)로 단일 파일 PR 까지 연다(git push·gh 불필요)
+    CODEX_VERSION=cloud-agent python scripts/assemble_cloud.py --assemble \
+        --tickers MSFT --rounds /tmp/rounds/MSFT --drop-incomplete --create-pr
+
+`--create-pr` 는 `data/debate_reports.json` **한 파일**만 담은 브랜치를 만들어 PR 을 연다.
+Cloud 에서 `git push`·`gh` 가 403 이어도 HTTP 시크릿(Network secret)이 `Authorization: Bearer …`
+자리의 placeholder 를 실제 토큰으로 바꿔 주므로 api.github.com 만으로 끝난다. 토큰은
+`GH_PAT`·`GH_TOKEN`·`GITHUB_TOKEN` 순서로 찾고 **출력·로그·에러 메시지에 남기지 않는다**.
+
 주의:
 - `data/debate/context/`·`data/debate_reports.json` 은 실행 산출물이다. 커밋은 범위 가드가 막는다.
 - `provider` 는 스키마 허용값(`codex|openai`)이라 `codex` 로 두고, 실행 방식은 `codex.version`(환경변수
@@ -28,11 +37,18 @@ Codex Cloud 에는 `codex` CLI·`auth.json` 이 없어 `codex_debate/run_debate.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
+import os
+import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
+from urllib.parse import quote
+
+import requests
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -66,6 +82,17 @@ from codex_debate.validate import (  # noqa: E402
 )
 
 SKILLS: tuple[str, ...] = INVESTOR_SKILLS
+
+# ── GitHub REST (--create-pr) ────────────────────────────────────────────
+#: `--repo` 를 주지 않고 `origin` 원격도 못 읽었을 때 쓰는 기본값.
+DEFAULT_REPO = "top03071188-debug/us-stock-advisor"
+API_ROOT = "https://api.github.com"
+USER_AGENT = "us-stock-advisor-cloud"
+#: 토큰 탐색 순서 — 비어 있지 않은 첫 값.
+TOKEN_ENV_VARS: tuple[str, ...] = ("GH_PAT", "GH_TOKEN", "GITHUB_TOKEN")
+HTTP_TIMEOUT_S = 30
+#: PR 에 올리는 파일의 저장소 경로(리포트 파일이 저장소 밖에 있으면 이 경로를 쓴다).
+REPORTS_REPO_PATH = "data/debate_reports.json"
 
 
 # ── 입출력 ────────────────────────────────────────────────────────────────
@@ -284,6 +311,209 @@ def _assemble(args: argparse.Namespace, signals: dict) -> int:
             print("  -", error, file=sys.stderr)
         return 2
     print(f"OK — {len(done)}건 처리, 파일 검증 통과: {out}")
+    if args.create_pr:
+        as_of = str(signals.get("as_of") or (doc.get("inputs") or {}).get("as_of") or "")
+        return _create_pr(out, doc, done, as_of, args)
+    return 0
+
+
+# ── GitHub PR (--create-pr) ──────────────────────────────────────────────
+class GitHubError(RuntimeError):
+    """GitHub REST 호출 실패. 메시지에 **토큰·요청 헤더를 담지 않는다**(로그로 새지 않게)."""
+
+
+def _redact(text: str, token: str | None) -> str:
+    """메시지에 토큰 모양 문자열이 섞였으면 가린다 — 마지막 안전망."""
+    if token and token in text:
+        return text.replace(token, "***")
+    return text
+
+
+def _resolve_token() -> str | None:
+    """`GH_PAT` → `GH_TOKEN` → `GITHUB_TOKEN` 중 비어 있지 않은 첫 값."""
+    for name in TOKEN_ENV_VARS:
+        value = str(os.environ.get(name) or "").strip()
+        if value:
+            return value
+    return None
+
+
+def _repo_slug(remote_url: str) -> str | None:
+    """원격 URL → `owner/repo`. https·ssh(scp) 형식 둘 다, 모양이 다르면 None."""
+    text = remote_url.strip()
+    if not text:
+        return None
+    if "://" in text:
+        rest = text.split("://", 1)[1]
+        text = rest.split("/", 1)[1] if "/" in rest else ""
+    elif ":" in text:
+        text = text.split(":", 1)[1]
+    text = text.strip("/")
+    if text.endswith(".git"):
+        text = text[:-4]
+    parts = [part for part in text.split("/") if part]
+    if len(parts) < 2:
+        return None
+    return f"{parts[-2]}/{parts[-1]}"
+
+
+def _repo_from_remote() -> str | None:
+    """`git remote get-url origin` 에서 저장소를 읽는다 — 실패하면 None(호출자가 기본값을 쓴다)."""
+    try:
+        proc = subprocess.run(["git", "remote", "get-url", "origin"], cwd=str(REPO_ROOT),
+                              capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if proc.returncode != 0:
+        return None
+    return _repo_slug(proc.stdout)
+
+
+def _resolve_repo(specified: str | None) -> str:
+    """`--repo` → `origin` 원격 → 기본값 순서로 저장소를 정한다."""
+    value = str(specified or "").strip().strip("/")
+    if value:
+        return value
+    return _repo_from_remote() or DEFAULT_REPO
+
+
+def _reports_repo_path(reports_path: Path) -> str:
+    """PR 에 올릴 저장소 경로 — 저장소 밖(임시 파일)이면 기본 경로를 쓴다."""
+    try:
+        return reports_path.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+    except (ValueError, OSError):
+        return REPORTS_REPO_PATH
+
+
+def _branch_name(as_of: str, tickers: Sequence[str]) -> str:
+    """`debate/{as_of}-{tickers_slug}-{utc_hhmmss}` — 같은 날 재실행해도 브랜치가 겹치지 않는다."""
+    def _slug(text: str) -> str:
+        return re.sub(r"[^A-Za-z0-9-]+", "-", text).strip("-").lower()
+
+    stamp = datetime.now(timezone.utc).strftime("%H%M%S")
+    return f"debate/{_slug(as_of) or 'unknown'}-{_slug('-'.join(tickers)) or 'reports'}-{stamp}"
+
+
+def _pr_body(doc: dict, tickers: Sequence[str], as_of: str, path: str) -> str:
+    """조립된 리포트 목록을 PR 본문 마크다운으로 — 판정·상태·건수뿐(원문·계좌 정보 없음)."""
+    wanted = set(tickers)
+    rows = [row for row in doc.get("reports") or [] if str(row.get("ticker") or "") in wanted]
+    lines = [
+        f"Codex Cloud 대행 조립 — `{path}` 갱신 ({as_of})",
+        "",
+        "| report_id | ticker | status | news_state | skills_kept | late |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        validation = row.get("validation") or {}
+        lines.append("| {rid} | {ticker} | {status} | {news} | {skills} | {late} |".format(
+            rid=row.get("report_id") or "-", ticker=row.get("ticker") or "-",
+            status=row.get("status") or "-", news=row.get("news_state") or "-",
+            skills=validation.get("skills_kept", "-"), late=row.get("late")))
+    lines += ["", "생성: `scripts/assemble_cloud.py --assemble … --create-pr` — 저장소 검증 함수를 통과한 파일만 올린다."]
+    return "\n".join(lines)
+
+
+def _endpoint(path: str) -> str:
+    """로그에 남길 경로 — 쿼리(브랜치 이름 등)는 그대로, 토큰은 원래 들어가지 않는다."""
+    return path if path.startswith("https://") else f"{API_ROOT}{path}"
+
+
+def _error_detail(response) -> str:
+    """HTTP 에러 본문에서 `message` 만 뽑는다(헤더·토큰은 애초에 여기에 없다)."""
+    detail = ""
+    try:
+        body = response.json()
+    except ValueError:
+        body = None
+    if isinstance(body, dict):
+        detail = str(body.get("message") or "")
+        errors = body.get("errors")
+        if errors:
+            detail += f" ({str(errors)[:200]})"
+    elif body is None:
+        try:
+            detail = str(response.text or "")[:200]
+        except Exception:  # noqa: BLE001 — 본문을 못 읽어도 실패 메시지는 남긴다
+            detail = ""
+    detail = " ".join(detail.split())
+    return f" {detail[:300]}" if detail else ""
+
+
+def _api(method: str, path: str, token: str, payload: dict | None = None,
+         allow_404: bool = False) -> dict | None:
+    """GitHub REST 한 번 — `Bearer` 인증(Cloud HTTP 시크릿 placeholder 치환 경로)만 쓴다."""
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": USER_AGENT,
+    }
+    try:
+        response = requests.request(method, _endpoint(path), headers=headers, json=payload,
+                                    timeout=HTTP_TIMEOUT_S)
+    except requests.RequestException as exc:
+        # 원인 예외에는 요청 헤더(토큰)가 달려 있다 — 체인을 끊고 이름만 남긴다.
+        raise GitHubError(f"{method} {_endpoint(path)} — 요청 실패({type(exc).__name__})") from None
+    if allow_404 and response.status_code == 404:
+        return None
+    if response.status_code >= 400:
+        raise GitHubError(f"{method} {_endpoint(path)} — HTTP {response.status_code}{_error_detail(response)}")
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    return body if isinstance(body, dict) else None
+
+
+def _create_pr(out: Path, doc: dict, tickers: Sequence[str], as_of: str, args: argparse.Namespace) -> int:
+    """검증을 통과한 리포트 파일 하나로 브랜치를 만들어 PR 을 연다(성공 시 `PR_CREATED` 출력)."""
+    token = _resolve_token()
+    if not token:
+        print("GitHub 토큰이 없다 — " + "·".join(TOKEN_ENV_VARS) + " 중 하나를 환경변수로 넣어라"
+              "(값은 출력·로그에 남기지 않는다). 조립 결과는 저장·검증된 상태다: " + str(out), file=sys.stderr)
+        return 2
+
+    repo = _resolve_repo(args.repo)
+    base = (args.base or "main").strip() or "main"
+    path = _reports_repo_path(out)
+    title = (args.pr_title or "").strip() or f"debate: {', '.join(tickers)} @ {as_of}"
+    branch = _branch_name(as_of, tickers)
+    print(f"PR 준비 — repo {repo}, base {base}, branch {branch}, file {path}")
+
+    try:
+        ref = _api("GET", f"/repos/{repo}/git/ref/heads/{base}", token) or {}
+        base_sha = str((ref.get("object") or {}).get("sha") or "")
+        if not base_sha:
+            raise GitHubError(f"기준 브랜치 SHA 를 찾지 못했다 — {repo}@{base}")
+
+        existing = _api("GET", f"/repos/{repo}/contents/{path}?ref={quote(base, safe='')}",
+                        token, allow_404=True)
+        existing_sha = str((existing or {}).get("sha") or "") or None
+
+        _api("POST", f"/repos/{repo}/git/refs", token,
+             payload={"ref": f"refs/heads/{branch}", "sha": base_sha})
+
+        commit: dict[str, Any] = {"message": title, "branch": branch,
+                                  "content": base64.b64encode(out.read_bytes()).decode("ascii")}
+        if existing_sha:
+            commit["sha"] = existing_sha
+        _api("PUT", f"/repos/{repo}/contents/{path}", token, payload=commit)
+
+        pr = _api("POST", f"/repos/{repo}/pulls", token,
+                  payload={"title": title, "head": branch, "base": base,
+                           "body": _pr_body(doc, tickers, as_of, path)}) or {}
+    except GitHubError as exc:
+        print(f"PR 생성 실패 — {_redact(str(exc), token)}", file=sys.stderr)
+        print(f"조립 결과는 그대로 남아 있다(로컬 검증 통과): {out}", file=sys.stderr)
+        return 1
+
+    url = str(pr.get("html_url") or "")
+    number = pr.get("number")
+    if not url:
+        print(f"PR 응답에 html_url 이 없다 — 브랜치 {branch} 의 PR 생성 여부를 확인하라", file=sys.stderr)
+        return 1
+    print(f"PR_CREATED: #{number} {url}" if number else f"PR_CREATED: {url}")
     return 0
 
 
@@ -309,6 +539,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--min-valid-skills", type=int, default=3, help="1R 정족수(기본 3)")
     parser.add_argument("--max-tickers", type=int, default=6, help="--top 의 상한(기본 6)")
     parser.add_argument("--model", default=None, help="모델 이름(리포트의 model_version)")
+    parser.add_argument("--create-pr", action="store_true",
+                        help="조립·파일 검증 뒤 GitHub REST 로 단일 파일 PR 을 연다(--assemble 전용)")
+    parser.add_argument("--repo", default=None,
+                        help=f"PR 대상 저장소(기본: origin 원격, 없으면 {DEFAULT_REPO})")
+    parser.add_argument("--base", default="main", help="기준 브랜치(기본 main)")
+    parser.add_argument("--pr-title", default=None, help="PR 제목(기본 `debate: {TICKERS} @ {as_of}`)")
     return parser
 
 
@@ -325,6 +561,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     if args.prepare:
+        if args.create_pr:
+            print("--create-pr 는 조립(--assemble) 모드에서만 쓴다", file=sys.stderr)
+            return 2
         if not args.tickers and args.top is None:
             print("--prepare 에는 --tickers 또는 --top 이 필요하다", file=sys.stderr)
             return 2

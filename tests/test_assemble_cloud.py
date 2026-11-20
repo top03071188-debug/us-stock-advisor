@@ -11,7 +11,9 @@
 
 from __future__ import annotations
 
+import base64
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -408,3 +410,223 @@ def test_argument_requirements(tmp_path: Path, argv: list[str]) -> None:
 def test_missing_signals_file(tmp_path: Path) -> None:
     assert assemble_cloud.main(["--prepare", "--tickers", "MSFT", "--signals", str(tmp_path / "none.json"),
                                 "--context-dir", str(tmp_path / "context")]) == 2
+
+
+# ── 5. --create-pr (GitHub REST) ─────────────────────────────────────────
+#: 토큰 대역 — 실제 토큰 접두사(`ghp_`·`github_pat_`)는 코드에 쓰지 않는다(범위 가드가 잡는다).
+PR_TOKEN = "tkn_" + "A1b2C3d4E5f6G7h8I9j0K1l2"
+BASE_SHA = "b" * 40
+BLOB_SHA = "c" * 40
+PR_URL = "https://github.com/acme/repo/pull/42"
+PR_REPO = "acme/repo"
+CONTENTS_PATH = "/repos/acme/repo/contents/data/debate_reports.json"
+TOKEN_VARS = ("GH_PAT", "GH_TOKEN", "GITHUB_TOKEN")
+
+
+class FakeResponse:
+    def __init__(self, status_code: int, payload: object = None) -> None:
+        self.status_code = status_code
+        self._payload = payload
+
+    def json(self) -> object:
+        if self._payload is None:
+            raise ValueError("no json body")
+        return self._payload
+
+    @property
+    def text(self) -> str:
+        return "" if self._payload is None else json.dumps(self._payload, ensure_ascii=False)
+
+
+class FakeGitHub:
+    """`requests.request` 대역 — 호출 순서·헤더·payload 를 기록하고 정해진 응답을 돌려준다."""
+
+    def __init__(self, *, existing: bool = True, fail: tuple[str, int] | None = None,
+                 pr_payload: dict | None = None) -> None:
+        self.calls: list[dict] = []
+        self.existing = existing
+        self.fail = fail
+        self.pr_payload = pr_payload or {"number": 42, "html_url": PR_URL}
+
+    def __call__(self, method: str, url: str, headers: dict | None = None,
+                 timeout: int | None = None, **kwargs) -> FakeResponse:
+        self.calls.append({"method": method, "url": url, "headers": dict(headers or {}),
+                           "json": kwargs.get("json"), "timeout": timeout})
+        if self.fail is not None and self.fail[0] in url:
+            return FakeResponse(self.fail[1], {"message": "Resource not accessible by integration"})
+        if method == "GET" and "/git/ref/heads/" in url:
+            return FakeResponse(200, {"object": {"sha": BASE_SHA}})
+        if method == "GET" and "/contents/" in url:
+            return FakeResponse(200, {"sha": BLOB_SHA}) if self.existing else FakeResponse(404, {"message": "Not Found"})
+        if method == "POST" and url.endswith("/git/refs"):
+            return FakeResponse(201, {"ref": "refs/heads/x", "object": {"sha": BASE_SHA}})
+        if method == "PUT" and "/contents/" in url:
+            return FakeResponse(200, {"commit": {"sha": "d" * 40}})
+        if method == "POST" and url.endswith("/pulls"):
+            return FakeResponse(201, self.pr_payload)
+        return FakeResponse(500, {"message": "unexpected request"})
+
+    @property
+    def paths(self) -> list[tuple[str, str]]:
+        return [(call["method"], call["url"].split("api.github.com", 1)[-1]) for call in self.calls]
+
+
+def clear_tokens(monkeypatch: pytest.MonkeyPatch) -> None:
+    """호스트 환경의 토큰이 테스트로 새어 들어오지 않게 지운다."""
+    for name in TOKEN_VARS:
+        monkeypatch.delenv(name, raising=False)
+
+
+def _pr_setup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fake: FakeGitHub, *extra: str) -> tuple[int, Path]:
+    signals_path = write_signals(tmp_path, make_signals())
+    rounds = write_rounds(tmp_path / "rounds" / "MSFT")
+    reports = tmp_path / "debate_reports.json"
+    monkeypatch.setattr(assemble_cloud.requests, "request", fake)
+    code = _assemble(tmp_path, signals_path, rounds, "--create-pr", "--repo", PR_REPO, *extra)
+    return code, reports
+
+
+def test_create_pr_updates_existing_file_in_order(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                                 capsys: pytest.CaptureFixture[str]) -> None:
+    clear_tokens(monkeypatch)
+    monkeypatch.setenv("GH_TOKEN", PR_TOKEN)
+    fake = FakeGitHub(existing=True)
+
+    code, reports = _pr_setup(tmp_path, monkeypatch, fake)
+
+    assert code == 0
+    assert fake.paths == [
+        ("GET", "/repos/acme/repo/git/ref/heads/main"),
+        ("GET", "/repos/acme/repo/contents/data/debate_reports.json?ref=main"),
+        ("POST", "/repos/acme/repo/git/refs"),
+        ("PUT", "/repos/acme/repo/contents/data/debate_reports.json"),
+        ("POST", "/repos/acme/repo/pulls"),
+    ]
+    for call in fake.calls:
+        assert call["headers"]["Authorization"] == f"Bearer {PR_TOKEN}"
+        assert call["headers"]["Accept"] == "application/vnd.github+json"
+        assert call["headers"]["X-GitHub-Api-Version"] == "2022-11-28"
+        assert call["headers"]["User-Agent"] == "us-stock-advisor-cloud"
+        assert call["timeout"] == 30
+
+    branch = fake.calls[2]["json"]["ref"].removeprefix("refs/heads/")
+    assert re.fullmatch(r"debate/2026-11-20-msft-\d{6}", branch), branch
+    assert fake.calls[2]["json"]["sha"] == BASE_SHA
+
+    commit = fake.calls[3]["json"]
+    assert commit["branch"] == branch and commit["sha"] == BLOB_SHA
+    assert commit["message"] == "debate: MSFT @ 2026-11-20"
+    assert base64.b64decode(commit["content"]) == reports.read_bytes()
+
+    pull = fake.calls[4]["json"]
+    assert pull["base"] == "main" and pull["head"] == branch
+    assert pull["title"] == "debate: MSFT @ 2026-11-20"
+    assert "2026-11-20-MSFT-debate-01" in pull["body"] and "| MSFT |" in pull["body"]
+
+    out = capsys.readouterr().out
+    assert f"PR_CREATED: #42 {PR_URL}" in out
+    assert validate_reports_file(reports) == []
+
+
+def test_create_pr_new_file_sends_no_sha(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                         capsys: pytest.CaptureFixture[str]) -> None:
+    """기준 브랜치에 파일이 없으면(404) 새 파일로 만든다 — `sha` 를 보내면 422 가 난다."""
+    clear_tokens(monkeypatch)
+    monkeypatch.setenv("GH_PAT", PR_TOKEN)
+    fake = FakeGitHub(existing=False)
+
+    code, _ = _pr_setup(tmp_path, monkeypatch, fake)
+
+    assert code == 0
+    assert "sha" not in fake.calls[3]["json"]
+    assert f"PR_CREATED: #42 {PR_URL}" in capsys.readouterr().out
+
+
+def test_create_pr_uses_custom_title_and_base(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    clear_tokens(monkeypatch)
+    monkeypatch.setenv("GITHUB_TOKEN", PR_TOKEN)
+    fake = FakeGitHub()
+
+    code, _ = _pr_setup(tmp_path, monkeypatch, fake, "--pr-title", "debate: MSFT 수동 회차", "--base", "release")
+
+    assert code == 0
+    assert fake.paths[0] == ("GET", "/repos/acme/repo/git/ref/heads/release")
+    assert fake.calls[3]["json"]["message"] == "debate: MSFT 수동 회차"
+    assert fake.calls[4]["json"]["base"] == "release"
+
+
+def test_create_pr_without_token_exits_2_and_calls_nothing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                                           capsys: pytest.CaptureFixture[str]) -> None:
+    clear_tokens(monkeypatch)
+    fake = FakeGitHub()
+
+    code, reports = _pr_setup(tmp_path, monkeypatch, fake)
+
+    assert code == 2
+    assert fake.calls == []
+    captured = capsys.readouterr()
+    assert "GitHub 토큰이 없다" in captured.err and "GH_TOKEN" in captured.err
+    assert "PR_CREATED" not in captured.out
+    assert reports.exists() and validate_reports_file(reports) == []  # 로컬 결과는 남는다
+
+
+@pytest.mark.parametrize("failure", [("/git/refs", 403), ("/pulls", 422)])
+def test_create_pr_http_failure_keeps_file_and_hides_token(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                                           capsys: pytest.CaptureFixture[str],
+                                                           failure: tuple[str, int]) -> None:
+    match, status = failure
+    clear_tokens(monkeypatch)
+    monkeypatch.setenv("GH_TOKEN", PR_TOKEN)
+    fake = FakeGitHub(fail=(match, status))
+
+    code, reports = _pr_setup(tmp_path, monkeypatch, fake)
+
+    assert code == 1
+    captured = capsys.readouterr()
+    assert PR_TOKEN not in captured.out and PR_TOKEN not in captured.err
+    assert f"HTTP {status}" in captured.err
+    assert reports.exists() and validate_reports_file(reports) == []
+    assert "PR_CREATED" not in captured.out
+
+
+def test_create_pr_missing_html_url_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                          capsys: pytest.CaptureFixture[str]) -> None:
+    clear_tokens(monkeypatch)
+    monkeypatch.setenv("GH_TOKEN", PR_TOKEN)
+    fake = FakeGitHub(pr_payload={"number": 42})
+
+    code, _ = _pr_setup(tmp_path, monkeypatch, fake)
+
+    assert code == 1
+    assert "html_url" in capsys.readouterr().err
+
+
+def test_create_pr_rejected_in_prepare_mode(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    clear_tokens(monkeypatch)
+    monkeypatch.setenv("GH_TOKEN", PR_TOKEN)
+    signals_path = write_signals(tmp_path, make_signals())
+
+    code = assemble_cloud.main(["--prepare", "--tickers", "MSFT", "--create-pr", "--signals", str(signals_path),
+                                "--context-dir", str(tmp_path / "context"), "--no-fetch-body"])
+
+    assert code == 2
+
+
+def test_repo_resolution_falls_back_to_remote_then_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(assemble_cloud, "_repo_from_remote", lambda: "remote/owner-repo")
+    assert assemble_cloud._resolve_repo(None) == "remote/owner-repo"
+    assert assemble_cloud._resolve_repo("  acme/repo/  ") == "acme/repo"
+
+    monkeypatch.setattr(assemble_cloud, "_repo_from_remote", lambda: None)
+    assert assemble_cloud._resolve_repo(None) == assemble_cloud.DEFAULT_REPO
+
+
+def test_repo_slug_from_remote_forms() -> None:
+    # scp 형식은 이메일과 같은 모양(`@`)이라 리터럴로 쓰지 않는다 — 범위 가드가 개인정보로 오인한다.
+    scp_remote = "git" + "@" + "github.com:acme/repo.git"
+    assert assemble_cloud._repo_slug("https://github.com/acme/repo.git") == "acme/repo"
+    assert assemble_cloud._repo_slug("https://github.com/acme/repo") == "acme/repo"
+    assert assemble_cloud._repo_slug("ssh://git.host:2222/acme/repo.git") == "acme/repo"
+    assert assemble_cloud._repo_slug(scp_remote) == "acme/repo"
+    assert assemble_cloud._repo_slug("not-a-remote") is None
+    assert assemble_cloud._repo_slug("") is None
