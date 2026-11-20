@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-20T04:09:22.254269Z",
+  "generated_at": "2026-11-20T04:39:39.140926Z",
   "data_cutoff_at": "2026-11-19T22:00:00Z",
-  "signal_published_at": "2026-11-20T04:08:24Z",
+  "signal_published_at": "2026-11-20T04:38:32Z",
   "order_cutoff_at": "2026-11-20T14:25:00Z",
   "as_of": "2026-11-20",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-  "code_commit": "666ed4a",
+  "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+  "code_commit": "365b712",
   "status": "normal",
   "mode": "postclose",
   "source": "live",
@@ -32,8 +32,8 @@
   },
   "ingest": {
     "data_cutoff_at": "2026-11-19T22:00:00Z",
-    "inputs_ingested_at": "2026-11-20T04:08:51.427374Z",
-    "lag_seconds": 22131.4,
+    "inputs_ingested_at": "2026-11-20T04:39:00.467365Z",
+    "lag_seconds": 23940.5,
     "after_cutoff": true,
     "available_at_source": "first_ingested_at"
   },
@@ -47,7 +47,7 @@
       "entry_score": 58.24,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:08:24Z",
+      "signal_published_at": "2026-11-20T04:38:32Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -147,8 +147,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-      "code_commit": "666ed4a",
+      "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+      "code_commit": "365b712",
       "trade_grade": "WATCH",
       "components": {
         "quality": 82.43,
@@ -178,6 +178,15 @@
         "net_debt": -36549.0,
         "wacc_valuation": 0.0978,
         "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.0,
+        "ev_ebit_percentile": 23.14,
+        "ev_ebit_median_10y": 27.8525,
+        "iv_hist_ev_ebit": 413.8644,
+        "hist_divergence": 0.6899,
         "dcf_dropped": null
       },
       "news_state": "not_read",
@@ -300,7 +309,7 @@
       "entry_score": 62.76,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:08:24Z",
+      "signal_published_at": "2026-11-20T04:38:32Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -400,8 +409,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-      "code_commit": "666ed4a",
+      "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+      "code_commit": "365b712",
       "trade_grade": "WATCH",
       "components": {
         "quality": 77.54,
@@ -431,6 +440,15 @@
         "net_debt": -2137.0,
         "wacc_valuation": 0.1331,
         "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.2832,
+        "ev_ebit_percentile": 6.61,
+        "ev_ebit_median_10y": 56.3662,
+        "iv_hist_ev_ebit": 75.9013,
+        "hist_divergence": 0.7835,
         "dcf_dropped": null
       },
       "news_state": "not_read",
@@ -556,10 +574,10 @@
       "ticker": "ADBE",
       "type": "WATCH",
       "grade": "B",
-      "entry_score": 64.56,
+      "entry_score": 65.4,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:08:24Z",
+      "signal_published_at": "2026-11-20T04:38:32Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -640,8 +658,8 @@
         }
       ],
       "investor_scores": {
-        "buffett": -34.0,
-        "graham": -29.0,
+        "buffett": -30.3,
+        "graham": -25.6,
         "lynch": 100.0,
         "druckenmiller": 60.0
       },
@@ -659,12 +677,12 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-      "code_commit": "666ed4a",
+      "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+      "code_commit": "365b712",
       "trade_grade": "WATCH",
       "components": {
         "quality": 85.0,
-        "valuation": 0.0,
+        "valuation": 3.36,
         "timing": 85.29,
         "macro": 80.0,
         "growth": 100.0
@@ -690,6 +708,15 @@
         "net_debt": -385.0,
         "wacc_valuation": 0.08,
         "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.1116,
+        "ev_ebit_percentile": 1.65,
+        "ev_ebit_median_10y": 43.1572,
+        "iv_hist_ev_ebit": 673.022,
+        "hist_divergence": 0.7643,
         "dcf_dropped": null
       },
       "news_state": "not_read",
@@ -812,7 +839,7 @@
       "entry_score": 57.57,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:08:24Z",
+      "signal_published_at": "2026-11-20T04:38:32Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -912,8 +939,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-      "code_commit": "666ed4a",
+      "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+      "code_commit": "365b712",
       "trade_grade": "WATCH",
       "components": {
         "quality": 97.68,
@@ -943,6 +970,15 @@
         "net_debt": 6954.0,
         "wacc_valuation": 0.0961,
         "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.2443,
+        "ev_ebit_percentile": 89.26,
+        "ev_ebit_median_10y": 14.9554,
+        "iv_hist_ev_ebit": 50.6541,
+        "hist_divergence": 0.3934,
         "dcf_dropped": null
       },
       "news_state": "not_read",
@@ -1069,7 +1105,7 @@
       "entry_score": 65.78,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:08:24Z",
+      "signal_published_at": "2026-11-20T04:38:32Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1169,8 +1205,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-      "code_commit": "666ed4a",
+      "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+      "code_commit": "365b712",
       "trade_grade": "WATCH",
       "components": {
         "quality": 90.55,
@@ -1200,6 +1236,15 @@
         "net_debt": -78300.0,
         "wacc_valuation": 0.1064,
         "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.0,
+        "ev_ebit_percentile": 58.7,
+        "ev_ebit_median_10y": 23.9942,
+        "iv_hist_ev_ebit": 171.7778,
+        "hist_divergence": 0.6461,
         "dcf_dropped": null
       },
       "news_state": "not_read",
@@ -1322,7 +1367,7 @@
       "entry_score": 62.03,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:08:24Z",
+      "signal_published_at": "2026-11-20T04:38:32Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1408,8 +1453,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-      "code_commit": "666ed4a",
+      "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+      "code_commit": "365b712",
       "trade_grade": "WATCH",
       "components": {
         "quality": 89.77,
@@ -1439,6 +1484,15 @@
         "net_debt": -22848.0,
         "wacc_valuation": 0.0974,
         "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.0,
+        "ev_ebit_percentile": 21.49,
+        "ev_ebit_median_10y": 24.6359,
+        "iv_hist_ev_ebit": 456.3521,
+        "hist_divergence": 0.6531,
         "dcf_dropped": null
       },
       "news_state": "not_read",
@@ -1561,7 +1615,7 @@
       "entry_score": 55.45,
       "as_of": "2026-11-20",
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "signal_published_at": "2026-11-20T04:08:24Z",
+      "signal_published_at": "2026-11-20T04:38:32Z",
       "signal_published_planned_at": "2026-11-19T22:02:11Z",
       "order_cutoff_at": "2026-11-20T14:25:00Z",
       "target_session": "2026-11-20",
@@ -1661,8 +1715,8 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:5058a21f45617defda226983560437127347211fae650706f4ec63926a084280",
-      "code_commit": "666ed4a",
+      "snapshot_id": "sha256:0514e276c6b26e6fb49be5a6fd1d653ea3fed89c7943523298e11a9890bd6e6c",
+      "code_commit": "365b712",
       "trade_grade": "WATCH",
       "components": {
         "quality": 76.35,
@@ -1692,6 +1746,15 @@
         "net_debt": 26230.0,
         "wacc_valuation": 0.08,
         "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.1712,
+        "ev_ebit_percentile": 67.77,
+        "ev_ebit_median_10y": 20.597,
+        "iv_hist_ev_ebit": 430.7583,
+        "hist_divergence": 0.5934,
         "dcf_dropped": null
       },
       "news_state": "not_read",
@@ -1820,6 +1883,8 @@
       "q": 85.0,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 84.3,
       "rank_score": 42.5,
       "valuation_suspended": false,
       "wacc_qc": 0.0712,
@@ -1832,6 +1897,8 @@
       "q": 82.43,
       "v": 0.0,
       "g": 65.86,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 23.14,
       "rank_score": 54.387,
       "valuation_suspended": false,
       "wacc_qc": 0.0878,
@@ -1844,6 +1911,8 @@
       "q": 77.54,
       "v": 0.0,
       "g": 100.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 6.61,
       "rank_score": 58.77,
       "valuation_suspended": false,
       "wacc_qc": 0.0895,
@@ -1854,9 +1923,11 @@
       "ticker": "ADBE",
       "sector": "Information Technology",
       "q": 85.0,
-      "v": 0.0,
+      "v": 3.36,
       "g": 100.0,
-      "rank_score": 62.5,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 1.65,
+      "rank_score": 63.508,
       "valuation_suspended": false,
       "wacc_qc": 0.0741,
       "wacc_valuation": 0.08,
@@ -1868,6 +1939,8 @@
       "q": 97.68,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 89.26,
       "rank_score": 48.84,
       "valuation_suspended": false,
       "wacc_qc": 0.0764,
@@ -1880,6 +1953,8 @@
       "q": 90.55,
       "v": 0.0,
       "g": 91.97,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 58.7,
       "rank_score": 63.669,
       "valuation_suspended": false,
       "wacc_qc": 0.0868,
@@ -1892,6 +1967,8 @@
       "q": 89.77,
       "v": 0.0,
       "g": 79.25,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 21.49,
       "rank_score": 60.735,
       "valuation_suspended": false,
       "wacc_qc": 0.0809,
@@ -1902,9 +1979,11 @@
       "ticker": "DIS",
       "sector": "Communication Services",
       "q": 58.6,
-      "v": 0.0,
+      "v": 3.82,
       "g": 100.0,
-      "rank_score": 49.3,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 8.24,
+      "rank_score": 50.446,
       "valuation_suspended": false,
       "wacc_qc": 0.0777,
       "wacc_valuation": 0.08,
@@ -1916,6 +1995,8 @@
       "q": 57.87,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 74.29,
       "rank_score": 28.935,
       "valuation_suspended": false,
       "wacc_qc": 0.0882,
@@ -1928,6 +2009,8 @@
       "q": 64.61,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 57.02,
       "rank_score": 32.305,
       "valuation_suspended": false,
       "wacc_qc": 0.0491,
@@ -1940,6 +2023,8 @@
       "q": 66.56,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 96.69,
       "rank_score": 33.28,
       "valuation_suspended": false,
       "wacc_qc": 0.0768,
@@ -1952,6 +2037,8 @@
       "q": 95.44,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 44.63,
       "rank_score": 47.72,
       "valuation_suspended": false,
       "wacc_qc": 0.0738,
@@ -1964,6 +2051,8 @@
       "q": 79.8,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 90.08,
       "rank_score": 39.9,
       "valuation_suspended": false,
       "wacc_qc": 0.0629,
@@ -1976,6 +2065,8 @@
       "q": 78.13,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 82.64,
       "rank_score": 39.065,
       "valuation_suspended": false,
       "wacc_qc": 0.084,
@@ -1988,6 +2079,8 @@
       "q": 80.69,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 41.32,
       "rank_score": 40.345,
       "valuation_suspended": false,
       "wacc_qc": 0.0755,
@@ -2000,6 +2093,8 @@
       "q": 83.58,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 19.01,
       "rank_score": 41.79,
       "valuation_suspended": false,
       "wacc_qc": 0.0683,
@@ -2010,9 +2105,11 @@
       "ticker": "CVX",
       "sector": "Energy",
       "q": 66.86,
-      "v": 0.0,
+      "v": 0.94,
       "g": 0.0,
-      "rank_score": 33.43,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 68.37,
+      "rank_score": 33.712,
       "valuation_suspended": false,
       "wacc_qc": 0.0814,
       "wacc_valuation": 0.08,
@@ -2024,6 +2121,8 @@
       "q": 76.35,
       "v": 0.0,
       "g": 30.49,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 67.77,
       "rank_score": 44.273,
       "valuation_suspended": false,
       "wacc_qc": 0.0587,
@@ -2034,9 +2133,11 @@
       "ticker": "HON",
       "sector": "Industrials",
       "q": 81.9,
-      "v": 0.0,
+      "v": 4.03,
       "g": 0.0,
-      "rank_score": 40.95,
+      "v_penalties": 0.0,
+      "ev_ebit_percentile": null,
+      "rank_score": 42.159,
       "valuation_suspended": false,
       "wacc_qc": 0.0545,
       "wacc_valuation": 0.08,
@@ -2046,9 +2147,11 @@
       "ticker": "UPS",
       "sector": "Industrials",
       "q": 60.02,
-      "v": 0.0,
+      "v": 4.06,
       "g": 0.0,
-      "rank_score": 30.01,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 39.67,
+      "rank_score": 31.228,
       "valuation_suspended": false,
       "wacc_qc": 0.0602,
       "wacc_valuation": 0.08,
@@ -2060,6 +2163,8 @@
       "q": 72.67,
       "v": 0.0,
       "g": 53.28,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 41.94,
       "rank_score": 46.991,
       "valuation_suspended": false,
       "wacc_qc": 0.0721,
@@ -2072,6 +2177,8 @@
       "q": 67.76,
       "v": 0.0,
       "g": 0.0,
+      "v_penalties": 10.0,
+      "ev_ebit_percentile": 71.07,
       "rank_score": 33.88,
       "valuation_suspended": false,
       "wacc_qc": 0.0562,
@@ -2126,8 +2233,8 @@
     "macro_missing_series": [],
     "macro_ingest": {
       "data_cutoff_at": "2026-11-19T22:00:00Z",
-      "inputs_ingested_at": "2026-11-20T04:08:51.427374Z",
-      "lag_seconds": 22131.4,
+      "inputs_ingested_at": "2026-11-20T04:39:00.467365Z",
+      "lag_seconds": 23940.5,
       "after_cutoff": true,
       "available_at_source": "first_ingested_at"
     },
@@ -2141,7 +2248,11 @@
           "2024-09-28",
           "2023-09-30",
           "2022-09-24",
-          "2021-09-25"
+          "2021-09-25",
+          "2020-09-26",
+          "2019-09-28",
+          "2018-09-29",
+          "2017-09-30"
         ],
         "reason": null,
         "shares_used": [
@@ -2192,6 +2303,38 @@
             "basis": "as_reported",
             "accn": "0000320193-23-000106",
             "filed": "2023-11-03"
+          },
+          {
+            "fy": "2020-09-26",
+            "raw": 17528.214,
+            "adjusted": 17528.214,
+            "basis": "as_reported",
+            "accn": "0000320193-22-000108",
+            "filed": "2022-10-28"
+          },
+          {
+            "fy": "2019-09-28",
+            "raw": 18595.651,
+            "adjusted": 18595.651,
+            "basis": "restated",
+            "accn": "0000320193-21-000105",
+            "filed": "2021-10-29"
+          },
+          {
+            "fy": "2018-09-29",
+            "raw": 20000.435,
+            "adjusted": 20000.435,
+            "basis": "restated",
+            "accn": "0000320193-20-000096",
+            "filed": "2020-10-30"
+          },
+          {
+            "fy": "2017-09-30",
+            "raw": 5251.692,
+            "adjusted": 21006.768,
+            "basis": "split_adjusted",
+            "accn": "0000320193-19-000119",
+            "filed": "2019-10-31"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2204,7 +2347,11 @@
           "2024-06-30",
           "2023-06-30",
           "2022-06-30",
-          "2021-06-30"
+          "2021-06-30",
+          "2020-06-30",
+          "2019-06-30",
+          "2018-06-30",
+          "2017-06-30"
         ],
         "reason": null,
         "shares_used": [
@@ -2255,6 +2402,38 @@
             "basis": "as_reported",
             "accn": "0000950170-23-035122",
             "filed": "2023-07-27"
+          },
+          {
+            "fy": "2020-06-30",
+            "raw": 7683.0,
+            "adjusted": 7683.0,
+            "basis": "as_reported",
+            "accn": "0001564590-22-026876",
+            "filed": "2022-07-28"
+          },
+          {
+            "fy": "2019-06-30",
+            "raw": 7753.0,
+            "adjusted": 7753.0,
+            "basis": "as_reported",
+            "accn": "0001564590-21-039151",
+            "filed": "2021-07-29"
+          },
+          {
+            "fy": "2018-06-30",
+            "raw": 7794.0,
+            "adjusted": 7794.0,
+            "basis": "as_reported",
+            "accn": "0001564590-20-034944",
+            "filed": "2020-07-30"
+          },
+          {
+            "fy": "2017-06-30",
+            "raw": 7832.0,
+            "adjusted": 7832.0,
+            "basis": "as_reported",
+            "accn": "0001564590-19-027952",
+            "filed": "2019-08-01"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2267,7 +2446,11 @@
           "2024-01-28",
           "2023-01-29",
           "2022-01-30",
-          "2021-01-31"
+          "2021-01-31",
+          "2020-01-26",
+          "2019-01-27",
+          "2018-01-28",
+          "2017-01-29"
         ],
         "reason": null,
         "shares_used": [
@@ -2318,6 +2501,38 @@
             "basis": "split_adjusted",
             "accn": "0001045810-23-000017",
             "filed": "2023-02-24"
+          },
+          {
+            "fy": "2020-01-26",
+            "raw": 2472.0,
+            "adjusted": 24720.0,
+            "basis": "split_adjusted",
+            "accn": "0001045810-22-000036",
+            "filed": "2022-03-18"
+          },
+          {
+            "fy": "2019-01-27",
+            "raw": 625.0,
+            "adjusted": 25000.0,
+            "basis": "split_adjusted",
+            "accn": "0001045810-21-000010",
+            "filed": "2021-02-26"
+          },
+          {
+            "fy": "2018-01-28",
+            "raw": 632.0,
+            "adjusted": 25280.0,
+            "basis": "split_adjusted",
+            "accn": "0001045810-20-000010",
+            "filed": "2020-02-20"
+          },
+          {
+            "fy": "2017-01-29",
+            "raw": 649.0,
+            "adjusted": 25960.0,
+            "basis": "split_adjusted",
+            "accn": "0001045810-19-000023",
+            "filed": "2019-02-21"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2330,7 +2545,11 @@
           "2023-10-29",
           "2022-10-30",
           "2021-10-31",
-          "2020-11-01"
+          "2020-11-01",
+          "2019-11-03",
+          "2018-11-04",
+          "2017-10-29",
+          "2016-10-30"
         ],
         "reason": null,
         "shares_used": [
@@ -2381,6 +2600,38 @@
             "basis": "split_adjusted",
             "accn": "0001730168-22-000118",
             "filed": "2022-12-16"
+          },
+          {
+            "fy": "2019-11-03",
+            "raw": 419.0,
+            "adjusted": 4190.0,
+            "basis": "split_adjusted",
+            "accn": "0001730168-21-000153",
+            "filed": "2021-12-17"
+          },
+          {
+            "fy": "2018-11-04",
+            "raw": 431.0,
+            "adjusted": 4310.0,
+            "basis": "split_adjusted",
+            "accn": "0001730168-20-000226",
+            "filed": "2020-12-18"
+          },
+          {
+            "fy": "2017-10-29",
+            "raw": 421.0,
+            "adjusted": 4210.0,
+            "basis": "split_adjusted",
+            "accn": "0001730168-19-000144",
+            "filed": "2019-12-20"
+          },
+          {
+            "fy": "2016-10-30",
+            "raw": 383.0,
+            "adjusted": 3830.0,
+            "basis": "split_adjusted",
+            "accn": "0001730168-18-000084",
+            "filed": "2018-12-21"
           }
         ],
         "xbrl_acceptance_missing": false
@@ -2393,7 +2644,11 @@
           "2024-05-31",
           "2023-05-31",
           "2022-05-31",
-          "2021-05-31"
+          "2021-05-31",
+          "2020-05-31",
+          "2019-05-31",
+          "2018-05-31",
+          "2017-05-31"
         ],
         "reason": null,
         "shares_used": [
@@ -2444,6 +2699,38 @@
             "basis": "as_reported",
             "accn": "0000950170-23-028914",
             "filed": "2023-06-20"
+          },
+          {
+            "fy": "2020-05-31",
+            "raw": 3294.0,
+            "adjusted": 3294.0,
+            "basis": "as_reported",
+            "accn": "0001564590-22-023675",
+            "filed": "2022-06-21"
+          },
+          {
+            "fy": "2019-05-31",
+            "raw": 3732.0,
+            "adjusted": 3732.0,
+            "basis": "as_reported",
+            "accn": "0001564590-21-033616",
+            "filed": "2021-06-21"
+          },
+          {
+            "fy": "2018-05-31",
+            "raw": 4238.0,
+            "adjusted": 4238.0,
+            "basis": "as_reported",
+            "accn": "0001564590-20-030125",
+            "filed": "2020-06-22"
+          },
+          {
+            "fy": "2017-05-31",
+            "raw": 4217.0,
+            "adjusted": 4217.0,
+            "basis": "as_reported",
+            "accn": "0001564590-19-023119",
+            "filed": "2019-06-21"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2456,7 +2743,11 @@
           "2023-12-01",
           "2022-12-02",
           "2021-12-03",
-          "2020-11-27"
+          "2020-11-27",
+          "2019-11-29",
+          "2018-11-30",
+          "2017-12-01",
+          "2016-12-02"
         ],
         "reason": null,
         "shares_used": [
@@ -2507,6 +2798,38 @@
             "basis": "as_reported",
             "accn": "0000796343-23-000007",
             "filed": "2023-01-17"
+          },
+          {
+            "fy": "2019-11-29",
+            "raw": 491.6,
+            "adjusted": 491.6,
+            "basis": "as_reported",
+            "accn": "0000796343-22-000032",
+            "filed": "2022-01-21"
+          },
+          {
+            "fy": "2018-11-30",
+            "raw": 497.8,
+            "adjusted": 497.8,
+            "basis": "as_reported",
+            "accn": "0000796343-21-000004",
+            "filed": "2021-01-15"
+          },
+          {
+            "fy": "2017-12-01",
+            "raw": 501.123,
+            "adjusted": 501.123,
+            "basis": "as_reported",
+            "accn": "0000796343-20-000013",
+            "filed": "2020-01-21"
+          },
+          {
+            "fy": "2016-12-02",
+            "raw": 504.299,
+            "adjusted": 504.299,
+            "basis": "as_reported",
+            "accn": "0000796343-19-000019",
+            "filed": "2019-01-25"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2519,7 +2842,11 @@
           "2024-07-27",
           "2023-07-29",
           "2022-07-30",
-          "2021-07-31"
+          "2021-07-31",
+          "2020-07-25",
+          "2019-07-27",
+          "2018-07-28",
+          "2017-07-29"
         ],
         "reason": null,
         "shares_used": [
@@ -2570,6 +2897,38 @@
             "basis": "as_reported",
             "accn": "0000858877-23-000023",
             "filed": "2023-09-07"
+          },
+          {
+            "fy": "2020-07-25",
+            "raw": 4254.0,
+            "adjusted": 4254.0,
+            "basis": "as_reported",
+            "accn": "0000858877-22-000013",
+            "filed": "2022-09-08"
+          },
+          {
+            "fy": "2019-07-27",
+            "raw": 4453.0,
+            "adjusted": 4453.0,
+            "basis": "as_reported",
+            "accn": "0000858877-21-000013",
+            "filed": "2021-09-09"
+          },
+          {
+            "fy": "2018-07-28",
+            "raw": 4881.0,
+            "adjusted": 4881.0,
+            "basis": "as_reported",
+            "accn": "0000858877-20-000010",
+            "filed": "2020-09-03"
+          },
+          {
+            "fy": "2017-07-29",
+            "raw": 5049.0,
+            "adjusted": 5049.0,
+            "basis": "as_reported",
+            "accn": "0000858877-19-000012",
+            "filed": "2019-09-05"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2582,7 +2941,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -2633,6 +2996,38 @@
             "basis": "unverified",
             "accn": null,
             "filed": null
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2645,7 +3040,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -2696,6 +3095,38 @@
             "basis": "as_reported",
             "accn": "0001326801-23-000013",
             "filed": "2023-02-02"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 2876.0,
+            "adjusted": 2876.0,
+            "basis": "as_reported",
+            "accn": "0001326801-22-000018",
+            "filed": "2022-02-03"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 2921.0,
+            "adjusted": 2921.0,
+            "basis": "as_reported",
+            "accn": "0001326801-21-000014",
+            "filed": "2021-01-28"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 2956.0,
+            "adjusted": 2956.0,
+            "basis": "as_reported",
+            "accn": "0001326801-20-000013",
+            "filed": "2020-01-30"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 2925.0,
+            "adjusted": 2925.0,
+            "basis": "as_reported",
+            "accn": "0001326801-19-000009",
+            "filed": "2019-01-31"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2708,7 +3139,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -2759,6 +3194,38 @@
             "basis": "split_adjusted",
             "accn": "0001065280-23-000035",
             "filed": "2023-01-26"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 451.765,
+            "adjusted": 4517.65,
+            "basis": "split_adjusted",
+            "accn": "0001065280-22-000036",
+            "filed": "2022-01-27"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 451.244,
+            "adjusted": 4512.44,
+            "basis": "split_adjusted",
+            "accn": "0001065280-21-000040",
+            "filed": "2021-01-28"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 446.814,
+            "adjusted": 4468.14,
+            "basis": "split_adjusted",
+            "accn": "0001065280-20-000040",
+            "filed": "2020-01-29"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 438.652,
+            "adjusted": 4386.52,
+            "basis": "split_adjusted",
+            "accn": "0001065280-19-000043",
+            "filed": "2019-01-29"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2771,7 +3238,11 @@
           "2024-09-28",
           "2023-09-30",
           "2022-10-01",
-          "2021-10-02"
+          "2021-10-02",
+          "2020-10-03",
+          "2019-09-28",
+          "2018-09-29",
+          "2017-09-30"
         ],
         "reason": null,
         "shares_used": [
@@ -2822,6 +3293,38 @@
             "basis": "as_reported",
             "accn": "0001744489-23-000216",
             "filed": "2023-11-21"
+          },
+          {
+            "fy": "2020-10-03",
+            "raw": 1808.0,
+            "adjusted": 1808.0,
+            "basis": "as_reported",
+            "accn": "0001744489-22-000213",
+            "filed": "2022-11-29"
+          },
+          {
+            "fy": "2019-09-28",
+            "raw": 1666.0,
+            "adjusted": 1666.0,
+            "basis": "as_reported",
+            "accn": "0001744489-21-000220",
+            "filed": "2021-11-24"
+          },
+          {
+            "fy": "2018-09-29",
+            "raw": 1507.0,
+            "adjusted": 1507.0,
+            "basis": "as_reported",
+            "accn": "0001744489-20-000197",
+            "filed": "2020-11-25"
+          },
+          {
+            "fy": "2017-09-30",
+            "raw": 1578.0,
+            "adjusted": 1578.0,
+            "basis": "as_reported",
+            "accn": "0001744489-19-000225",
+            "filed": "2019-11-20"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2834,7 +3337,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -2885,6 +3392,38 @@
             "basis": "restated",
             "accn": "0001018724-23-000004",
             "filed": "2023-02-03"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 504.0,
+            "adjusted": 10080.0,
+            "basis": "split_adjusted",
+            "accn": "0001018724-22-000005",
+            "filed": "2022-02-04"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 500.0,
+            "adjusted": 10000.0,
+            "basis": "split_adjusted",
+            "accn": "0001018724-21-000004",
+            "filed": "2021-02-03"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 493.0,
+            "adjusted": 9860.0,
+            "basis": "split_adjusted",
+            "accn": "0001018724-20-000004",
+            "filed": "2020-01-31"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 484.0,
+            "adjusted": 9680.0,
+            "basis": "split_adjusted",
+            "accn": "0001018724-19-000004",
+            "filed": "2019-02-01"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2897,7 +3436,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -2948,6 +3491,38 @@
             "basis": "restated",
             "accn": "0000950170-23-001409",
             "filed": "2023-01-31"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 887.0,
+            "adjusted": 2661.0,
+            "basis": "split_adjusted",
+            "accn": "0000950170-22-000796",
+            "filed": "2022-02-07"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 853.0,
+            "adjusted": 2559.0,
+            "basis": "split_adjusted",
+            "accn": "0001564590-21-004599",
+            "filed": "2021-02-08"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 166.0,
+            "adjusted": 2490.0,
+            "basis": "split_adjusted",
+            "accn": "0001564590-20-004475",
+            "filed": "2020-02-13"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 144.212,
+            "adjusted": 2163.18,
+            "basis": "split_adjusted",
+            "accn": "0001564590-19-003165",
+            "filed": "2019-02-19"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -2960,7 +3535,11 @@
           "2024-01-28",
           "2023-01-29",
           "2022-01-30",
-          "2021-01-31"
+          "2021-01-31",
+          "2020-02-02",
+          "2019-02-03",
+          "2018-01-28",
+          "2017-01-29"
         ],
         "reason": null,
         "shares_used": [
@@ -3011,6 +3590,38 @@
             "basis": "as_reported",
             "accn": "0000354950-23-000059",
             "filed": "2023-03-15"
+          },
+          {
+            "fy": "2020-02-02",
+            "raw": 1097.0,
+            "adjusted": 1097.0,
+            "basis": "as_reported",
+            "accn": "0000354950-22-000070",
+            "filed": "2022-03-23"
+          },
+          {
+            "fy": "2019-02-03",
+            "raw": 1143.0,
+            "adjusted": 1143.0,
+            "basis": "as_reported",
+            "accn": "0000354950-21-000089",
+            "filed": "2021-03-24"
+          },
+          {
+            "fy": "2018-01-28",
+            "raw": 1184.0,
+            "adjusted": 1184.0,
+            "basis": "as_reported",
+            "accn": "0000354950-20-000015",
+            "filed": "2020-03-25"
+          },
+          {
+            "fy": "2017-01-29",
+            "raw": 1234.0,
+            "adjusted": 1234.0,
+            "basis": "as_reported",
+            "accn": "0000354950-19-000010",
+            "filed": "2019-03-28"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3023,7 +3634,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3074,6 +3689,38 @@
             "basis": "as_reported",
             "accn": "0000063908-23-000012",
             "filed": "2023-02-24"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 764.9,
+            "adjusted": 764.9,
+            "basis": "as_reported",
+            "accn": "0000063908-22-000011",
+            "filed": "2022-02-24"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 785.6,
+            "adjusted": 785.6,
+            "basis": "as_reported",
+            "accn": "0000063908-21-000013",
+            "filed": "2021-02-23"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 815.5,
+            "adjusted": 815.5,
+            "basis": "as_reported",
+            "accn": "0000063908-20-000022",
+            "filed": "2020-02-26"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 861.2,
+            "adjusted": 861.2,
+            "basis": "as_reported",
+            "accn": "0000063908-19-000010",
+            "filed": "2019-02-22"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3086,7 +3733,11 @@
           "2024-05-31",
           "2023-05-31",
           "2022-05-31",
-          "2021-05-31"
+          "2021-05-31",
+          "2020-05-31",
+          "2019-05-31",
+          "2018-05-31",
+          "2017-05-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3137,6 +3788,38 @@
             "basis": "as_reported",
             "accn": "0000320187-23-000039",
             "filed": "2023-07-20"
+          },
+          {
+            "fy": "2020-05-31",
+            "raw": 1591.6,
+            "adjusted": 1591.6,
+            "basis": "as_reported",
+            "accn": "0000320187-22-000038",
+            "filed": "2022-07-21"
+          },
+          {
+            "fy": "2019-05-31",
+            "raw": 1618.4,
+            "adjusted": 1618.4,
+            "basis": "as_reported",
+            "accn": "0000320187-21-000028",
+            "filed": "2021-07-20"
+          },
+          {
+            "fy": "2018-05-31",
+            "raw": 1659.1,
+            "adjusted": 1659.1,
+            "basis": "as_reported",
+            "accn": "0000320187-20-000047",
+            "filed": "2020-07-24"
+          },
+          {
+            "fy": "2017-05-31",
+            "raw": 1692.0,
+            "adjusted": 1692.0,
+            "basis": "as_reported",
+            "accn": "0000320187-19-000051",
+            "filed": "2019-07-23"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3149,7 +3832,11 @@
           "2024-01-31",
           "2023-01-31",
           "2022-01-31",
-          "2021-01-31"
+          "2021-01-31",
+          "2020-01-31",
+          "2019-01-31",
+          "2018-01-31",
+          "2017-01-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3200,6 +3887,38 @@
             "basis": "split_adjusted",
             "accn": "0000104169-23-000020",
             "filed": "2023-03-17"
+          },
+          {
+            "fy": "2020-01-31",
+            "raw": 2868.0,
+            "adjusted": 8604.0,
+            "basis": "split_adjusted",
+            "accn": "0000104169-22-000012",
+            "filed": "2022-03-18"
+          },
+          {
+            "fy": "2019-01-31",
+            "raw": 2945.0,
+            "adjusted": 8835.0,
+            "basis": "split_adjusted",
+            "accn": "0000104169-21-000033",
+            "filed": "2021-03-19"
+          },
+          {
+            "fy": "2018-01-31",
+            "raw": 3010.0,
+            "adjusted": 9030.0,
+            "basis": "split_adjusted",
+            "accn": "0000104169-20-000011",
+            "filed": "2020-03-20"
+          },
+          {
+            "fy": "2017-01-31",
+            "raw": 3112.0,
+            "adjusted": 9336.0,
+            "basis": "split_adjusted",
+            "accn": "0000104169-19-000016",
+            "filed": "2019-03-28"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3212,7 +3931,11 @@
           "2024-06-30",
           "2023-06-30",
           "2022-06-30",
-          "2021-06-30"
+          "2021-06-30",
+          "2020-06-30",
+          "2019-06-30",
+          "2018-06-30",
+          "2017-06-30"
         ],
         "reason": null,
         "shares_used": [
@@ -3263,6 +3986,38 @@
             "basis": "as_reported",
             "accn": "0000080424-23-000073",
             "filed": "2023-08-04"
+          },
+          {
+            "fy": "2020-06-30",
+            "raw": 2625.8,
+            "adjusted": 2625.8,
+            "basis": "as_reported",
+            "accn": "0000080424-22-000064",
+            "filed": "2022-08-05"
+          },
+          {
+            "fy": "2019-06-30",
+            "raw": 2539.5,
+            "adjusted": 2539.5,
+            "basis": "as_reported",
+            "accn": "0000080424-21-000100",
+            "filed": "2021-08-06"
+          },
+          {
+            "fy": "2018-06-30",
+            "raw": 2656.7,
+            "adjusted": 2656.7,
+            "basis": "as_reported",
+            "accn": "0000080424-20-000059",
+            "filed": "2020-08-07"
+          },
+          {
+            "fy": "2017-06-30",
+            "raw": 2740.4,
+            "adjusted": 2740.4,
+            "basis": "as_reported",
+            "accn": "0000080424-19-000050",
+            "filed": "2019-08-06"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3275,7 +4030,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3326,6 +4085,38 @@
             "basis": "as_reported",
             "accn": "0000021344-23-000011",
             "filed": "2023-02-21"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 4314.0,
+            "adjusted": 4314.0,
+            "basis": "as_reported",
+            "accn": "0000021344-22-000009",
+            "filed": "2022-02-22"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 4299.0,
+            "adjusted": 4299.0,
+            "basis": "as_reported",
+            "accn": "0000021344-21-000008",
+            "filed": "2021-02-25"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 4324.0,
+            "adjusted": 4324.0,
+            "basis": "as_reported",
+            "accn": "0000021344-20-000006",
+            "filed": "2020-02-24"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 4367.0,
+            "adjusted": 4367.0,
+            "basis": "as_reported",
+            "accn": "0000021344-19-000014",
+            "filed": "2019-02-21"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3338,7 +4129,11 @@
           "2023-12-30",
           "2022-12-31",
           "2021-12-25",
-          "2020-12-26"
+          "2020-12-26",
+          "2019-12-28",
+          "2018-12-29",
+          "2017-12-30",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3389,6 +4184,38 @@
             "basis": "as_reported",
             "accn": "0000077476-23-000007",
             "filed": "2023-02-09"
+          },
+          {
+            "fy": "2019-12-28",
+            "raw": 1407.0,
+            "adjusted": 1407.0,
+            "basis": "as_reported",
+            "accn": "0000077476-22-000010",
+            "filed": "2022-02-10"
+          },
+          {
+            "fy": "2018-12-29",
+            "raw": 1425.0,
+            "adjusted": 1425.0,
+            "basis": "as_reported",
+            "accn": "0000077476-21-000007",
+            "filed": "2021-02-11"
+          },
+          {
+            "fy": "2017-12-30",
+            "raw": 1438.0,
+            "adjusted": 1438.0,
+            "basis": "as_reported",
+            "accn": "0000077476-20-000015",
+            "filed": "2020-02-13"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 1452.0,
+            "adjusted": 1452.0,
+            "basis": "as_reported",
+            "accn": "0000077476-19-000017",
+            "filed": "2019-02-15"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3401,7 +4228,11 @@
           "2024-09-01",
           "2023-09-03",
           "2022-08-28",
-          "2021-08-29"
+          "2021-08-29",
+          "2020-08-30",
+          "2019-09-01",
+          "2018-09-02",
+          "2017-09-03"
         ],
         "reason": null,
         "shares_used": [
@@ -3452,6 +4283,38 @@
             "basis": "as_reported",
             "accn": "0000909832-23-000042",
             "filed": "2023-10-11"
+          },
+          {
+            "fy": "2020-08-30",
+            "raw": 443.901,
+            "adjusted": 443.901,
+            "basis": "as_reported",
+            "accn": "0000909832-22-000021",
+            "filed": "2022-10-05"
+          },
+          {
+            "fy": "2019-09-01",
+            "raw": 442.923,
+            "adjusted": 442.923,
+            "basis": "as_reported",
+            "accn": "0000909832-21-000014",
+            "filed": "2021-10-06"
+          },
+          {
+            "fy": "2018-09-02",
+            "raw": 441.834,
+            "adjusted": 441.834,
+            "basis": "as_reported",
+            "accn": "0000909832-20-000017",
+            "filed": "2020-10-07"
+          },
+          {
+            "fy": "2017-09-03",
+            "raw": 440.937,
+            "adjusted": 440.937,
+            "basis": "as_reported",
+            "accn": "0000909832-18-000013",
+            "filed": "2018-10-26"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3464,7 +4327,11 @@
           "2023-12-31",
           "2023-01-01",
           "2022-01-02",
-          "2021-01-03"
+          "2021-01-03",
+          "2019-12-29",
+          "2018-12-30",
+          "2017-12-31",
+          "2017-01-01"
         ],
         "reason": null,
         "shares_used": [
@@ -3515,6 +4382,38 @@
             "basis": "as_reported",
             "accn": "0000200406-23-000016",
             "filed": "2023-02-16"
+          },
+          {
+            "fy": "2019-12-29",
+            "raw": 2684.3,
+            "adjusted": 2684.3,
+            "basis": "as_reported",
+            "accn": "0000200406-22-000022",
+            "filed": "2022-02-17"
+          },
+          {
+            "fy": "2018-12-30",
+            "raw": 2728.7,
+            "adjusted": 2728.7,
+            "basis": "as_reported",
+            "accn": "0000200406-21-000008",
+            "filed": "2021-02-22"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 2745.3,
+            "adjusted": 2745.3,
+            "basis": "as_reported",
+            "accn": "0000200406-20-000010",
+            "filed": "2020-02-18"
+          },
+          {
+            "fy": "2017-01-01",
+            "raw": 2788.9,
+            "adjusted": 2788.9,
+            "basis": "as_reported",
+            "accn": "0000200406-19-000009",
+            "filed": "2019-02-20"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3527,7 +4426,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3578,6 +4481,38 @@
             "basis": "as_reported",
             "accn": "0000731766-23-000008",
             "filed": "2023-02-24"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 966.0,
+            "adjusted": 966.0,
+            "basis": "as_reported",
+            "accn": "0000731766-22-000008",
+            "filed": "2022-02-15"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 983.0,
+            "adjusted": 983.0,
+            "basis": "as_reported",
+            "accn": "0000731766-21-000013",
+            "filed": "2021-03-01"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 985.0,
+            "adjusted": 985.0,
+            "basis": "as_reported",
+            "accn": "0000731766-20-000006",
+            "filed": "2020-02-14"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 968.0,
+            "adjusted": 968.0,
+            "basis": "as_reported",
+            "accn": "0000731766-19-000005",
+            "filed": "2019-02-12"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3590,7 +4525,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3641,6 +4580,38 @@
             "basis": "as_reported",
             "accn": "0000059478-23-000082",
             "filed": "2023-02-22"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 935.684,
+            "adjusted": 935.684,
+            "basis": "as_reported",
+            "accn": "0000059478-22-000068",
+            "filed": "2022-02-23"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 1033.667,
+            "adjusted": 1033.667,
+            "basis": "as_reported",
+            "accn": "0000059478-21-000083",
+            "filed": "2021-02-17"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 1052.023,
+            "adjusted": 1052.023,
+            "basis": "as_reported",
+            "accn": "0000059478-20-000057",
+            "filed": "2020-02-19"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 1061.825,
+            "adjusted": 1061.825,
+            "basis": "as_reported",
+            "accn": "0000059478-19-000082",
+            "filed": "2019-02-19"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3653,7 +4624,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3704,6 +4679,38 @@
             "basis": "restated",
             "accn": "0001628280-23-005061",
             "filed": "2023-02-24"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 2580.0,
+            "adjusted": 2580.0,
+            "basis": "restated",
+            "accn": "0000310158-22-000003",
+            "filed": "2022-02-25"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 2679.0,
+            "adjusted": 2807.592,
+            "basis": "split_adjusted",
+            "accn": "0000310158-21-000004",
+            "filed": "2021-02-25"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 2748.0,
+            "adjusted": 2879.904,
+            "basis": "split_adjusted",
+            "accn": "0000310158-20-000005",
+            "filed": "2020-02-26"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 2787.0,
+            "adjusted": 2920.776,
+            "basis": "split_adjusted",
+            "accn": "0000310158-19-000014",
+            "filed": "2019-02-27"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3716,7 +4723,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3767,6 +4778,38 @@
             "basis": "as_reported",
             "accn": "0001551152-23-000011",
             "filed": "2023-02-17"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 1484.0,
+            "adjusted": 1484.0,
+            "basis": "as_reported",
+            "accn": "0001551152-22-000007",
+            "filed": "2022-02-18"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 1546.0,
+            "adjusted": 1546.0,
+            "basis": "as_reported",
+            "accn": "0001551152-21-000008",
+            "filed": "2021-02-19"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 1603.0,
+            "adjusted": 1603.0,
+            "basis": "as_reported",
+            "accn": "0001551152-20-000007",
+            "filed": "2020-02-21"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 1631.0,
+            "adjusted": 1631.0,
+            "basis": "as_reported",
+            "accn": "0001551152-19-000008",
+            "filed": "2019-02-27"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3786,7 +4829,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3837,6 +4884,38 @@
             "basis": "as_reported",
             "accn": "0000093410-23-000009",
             "filed": "2023-02-23"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 1895.0,
+            "adjusted": 1895.0,
+            "basis": "as_reported",
+            "accn": "0000093410-22-000019",
+            "filed": "2022-02-24"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 1914.0,
+            "adjusted": 1914.0,
+            "basis": "as_reported",
+            "accn": "0000093410-21-000009",
+            "filed": "2021-02-25"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 1898.0,
+            "adjusted": 1898.0,
+            "basis": "as_reported",
+            "accn": "0000093410-20-000010",
+            "filed": "2020-02-21"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 1873.0,
+            "adjusted": 1873.0,
+            "basis": "as_reported",
+            "accn": "0000093410-19-000008",
+            "filed": "2019-02-22"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3849,7 +4928,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3900,6 +4983,38 @@
             "basis": "as_reported",
             "accn": "0000018230-23-000011",
             "filed": "2023-02-15"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 567.5,
+            "adjusted": 567.5,
+            "basis": "as_reported",
+            "accn": "0000018230-22-000050",
+            "filed": "2022-02-16"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 599.4,
+            "adjusted": 599.4,
+            "basis": "as_reported",
+            "accn": "0000018230-21-000063",
+            "filed": "2021-02-17"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 599.3,
+            "adjusted": 599.3,
+            "basis": "as_reported",
+            "accn": "0000018230-20-000056",
+            "filed": "2020-02-19"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 584.3,
+            "adjusted": 584.3,
+            "basis": "as_reported",
+            "accn": "0000018230-19-000034",
+            "filed": "2019-02-14"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3912,7 +5027,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -3963,6 +5082,38 @@
             "basis": "split_adjusted",
             "accn": "0000040545-23-000023",
             "filed": "2023-02-10"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 1091.0,
+            "adjusted": 1751.1564629999996,
+            "basis": "split_adjusted",
+            "accn": "0000040545-22-000008",
+            "filed": "2022-02-11"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 8691.0,
+            "adjusted": 13949.863262999996,
+            "basis": "split_adjusted",
+            "accn": "0000040545-21-000011",
+            "filed": "2021-02-12"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 8687.0,
+            "adjusted": 13943.442890999997,
+            "basis": "split_adjusted",
+            "accn": "0000040545-20-000009",
+            "filed": "2020-02-24"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 9130.0,
+            "adjusted": 15240.679053599999,
+            "basis": "split_adjusted",
+            "accn": "0000040545-19-000014",
+            "filed": "2019-02-26"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -3975,7 +5126,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4026,6 +5181,38 @@
             "basis": "split_adjusted",
             "accn": "0000773840-23-000013",
             "filed": "2023-02-10"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 730.3,
+            "adjusted": 774.8483,
+            "basis": "split_adjusted",
+            "accn": "0000773840-22-000018",
+            "filed": "2022-02-11"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 753.0,
+            "adjusted": 798.933,
+            "basis": "split_adjusted",
+            "accn": "0000773840-21-000015",
+            "filed": "2021-02-12"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 772.1,
+            "adjusted": 819.1981,
+            "basis": "split_adjusted",
+            "accn": "0000773840-20-000009",
+            "filed": "2020-02-14"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 775.3,
+            "adjusted": 822.5933,
+            "basis": "split_adjusted",
+            "accn": "0000930413-19-000366",
+            "filed": "2019-02-08"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4038,7 +5225,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4089,6 +5280,38 @@
             "basis": "as_reported",
             "accn": "0001090727-23-000006",
             "filed": "2023-02-21"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 869.0,
+            "adjusted": 869.0,
+            "basis": "as_reported",
+            "accn": "0001090727-22-000007",
+            "filed": "2022-02-22"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 870.0,
+            "adjusted": 870.0,
+            "basis": "as_reported",
+            "accn": "0001090727-21-000013",
+            "filed": "2021-02-22"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 875.0,
+            "adjusted": 875.0,
+            "basis": "as_reported",
+            "accn": "0001090727-20-000005",
+            "filed": "2020-02-20"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 887.0,
+            "adjusted": 887.0,
+            "basis": "as_reported",
+            "accn": "0001090727-19-000006",
+            "filed": "2019-02-21"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4101,7 +5324,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4152,6 +5379,38 @@
             "basis": "as_reported",
             "accn": "0000012927-23-000007",
             "filed": "2023-01-27"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 565.4,
+            "adjusted": 565.4,
+            "basis": "as_reported",
+            "accn": "0000012927-22-000010",
+            "filed": "2022-01-31"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 585.5,
+            "adjusted": 585.5,
+            "basis": "as_reported",
+            "accn": "0000012927-21-000011",
+            "filed": "2021-02-01"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 610.0,
+            "adjusted": 610.0,
+            "basis": "as_reported",
+            "accn": "0000012927-20-000014",
+            "filed": "2020-01-31"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 642.8,
+            "adjusted": 642.8,
+            "basis": "as_reported",
+            "accn": "0000012927-19-000010",
+            "filed": "2019-02-08"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4164,7 +5423,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4215,6 +5478,38 @@
             "basis": "as_reported",
             "accn": "0000019617-23-000231",
             "filed": "2023-02-21"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 3230.4,
+            "adjusted": 3230.4,
+            "basis": "as_reported",
+            "accn": "0000019617-22-000272",
+            "filed": "2022-02-22"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 3414.0,
+            "adjusted": 3414.0,
+            "basis": "as_reported",
+            "accn": "0000019617-21-000236",
+            "filed": "2021-02-23"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 3576.8,
+            "adjusted": 3576.8,
+            "basis": "as_reported",
+            "accn": "0000019617-20-000257",
+            "filed": "2020-02-25"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 3690.0,
+            "adjusted": 3690.0,
+            "basis": "as_reported",
+            "accn": "0000019617-19-000054",
+            "filed": "2019-02-26"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4227,7 +5522,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4278,6 +5577,38 @@
             "basis": "as_reported",
             "accn": "0000070858-23-000092",
             "filed": "2023-02-22"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 9442.9,
+            "adjusted": 9442.9,
+            "basis": "as_reported",
+            "accn": "0000070858-22-000062",
+            "filed": "2022-02-22"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 10236.9,
+            "adjusted": 10236.9,
+            "basis": "as_reported",
+            "accn": "0000070858-21-000023",
+            "filed": "2021-02-24"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 10778.4,
+            "adjusted": 10778.4,
+            "basis": "as_reported",
+            "accn": "0000070858-20-000011",
+            "filed": "2020-02-19"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 11046.8,
+            "adjusted": 11046.8,
+            "basis": "as_reported",
+            "accn": "0000070858-19-000012",
+            "filed": "2019-02-26"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4290,7 +5621,11 @@
           "2024-09-30",
           "2023-09-30",
           "2022-09-30",
-          "2021-09-30"
+          "2021-09-30",
+          "2020-09-30",
+          "2019-09-30",
+          "2018-09-30",
+          "2017-09-30"
         ],
         "reason": null,
         "shares_used": [
@@ -4341,6 +5676,38 @@
             "basis": "unverified",
             "accn": null,
             "filed": null
+          },
+          {
+            "fy": "2020-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2019-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2018-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
+          },
+          {
+            "fy": "2017-09-30",
+            "raw": null,
+            "adjusted": null,
+            "basis": "unverified",
+            "accn": null,
+            "filed": null
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4353,7 +5720,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4404,6 +5775,38 @@
             "basis": "as_reported",
             "accn": "0001141391-23-000020",
             "filed": "2023-02-14"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 1022.0,
+            "adjusted": 1022.0,
+            "basis": "as_reported",
+            "accn": "0001141391-22-000023",
+            "filed": "2022-02-11"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 1047.0,
+            "adjusted": 1047.0,
+            "basis": "as_reported",
+            "accn": "0001141391-21-000018",
+            "filed": "2021-02-12"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 1072.0,
+            "adjusted": 1072.0,
+            "basis": "as_reported",
+            "accn": "0001141391-20-000032",
+            "filed": "2020-02-14"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 1101.0,
+            "adjusted": 1101.0,
+            "basis": "as_reported",
+            "accn": "0001141391-17-000014",
+            "filed": "2017-02-15"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4416,7 +5819,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4467,6 +5874,38 @@
             "basis": "as_reported",
             "accn": "0001628280-23-005434",
             "filed": "2023-02-28"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 545.17,
+            "adjusted": 545.17,
+            "basis": "as_reported",
+            "accn": "0001628280-22-004180",
+            "filed": "2022-02-28"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 334.127,
+            "adjusted": 334.127,
+            "basis": "as_reported",
+            "accn": "0001628280-21-003574",
+            "filed": "2021-03-01"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 289.114,
+            "adjusted": 289.114,
+            "basis": "as_reported",
+            "accn": "0001707925-20-000015",
+            "filed": "2020-03-02"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 287.757,
+            "adjusted": 287.757,
+            "basis": "as_reported",
+            "accn": "0001628280-19-003050",
+            "filed": "2019-03-18"
           }
         ],
         "xbrl_acceptance_missing": false
@@ -4479,7 +5918,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4530,6 +5973,38 @@
             "basis": "restated",
             "accn": "0000089800-23-000007",
             "filed": "2023-02-22"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 280.3,
+            "adjusted": 280.3,
+            "basis": "restated",
+            "accn": "0000089800-22-000007",
+            "filed": "2022-02-17"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 94.98807,
+            "adjusted": 284.96421,
+            "basis": "split_adjusted",
+            "accn": "0000089800-21-000010",
+            "filed": "2021-02-19"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 94.927213,
+            "adjusted": 284.781639,
+            "basis": "split_adjusted",
+            "accn": "0000089800-20-000005",
+            "filed": "2020-02-21"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 94.488086,
+            "adjusted": 283.464258,
+            "basis": "split_adjusted",
+            "accn": "0000089800-19-000004",
+            "filed": "2019-02-22"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4542,7 +6017,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2012-12-31",
+          "2011-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4593,6 +6072,38 @@
             "basis": "as_reported",
             "accn": "0000753308-23-000019",
             "filed": "2023-02-17"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 1941.9,
+            "adjusted": 1941.9,
+            "basis": "restated",
+            "accn": "0000753308-22-000014",
+            "filed": "2022-02-18"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 1907.9,
+            "adjusted": 1907.9,
+            "basis": "restated",
+            "accn": "0000753308-21-000014",
+            "filed": "2021-02-12"
+          },
+          {
+            "fy": "2012-12-31",
+            "raw": 419.2,
+            "adjusted": 1676.8,
+            "basis": "split_adjusted",
+            "accn": "0000753308-15-000079",
+            "filed": "2015-02-20"
+          },
+          {
+            "fy": "2011-12-31",
+            "raw": 419.0,
+            "adjusted": 1676.0,
+            "basis": "split_adjusted",
+            "accn": "0000753308-14-000025",
+            "filed": "2014-02-24"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4605,7 +6116,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2016-12-31",
+          "2015-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4656,6 +6171,38 @@
             "basis": "as_reported",
             "accn": "0001326160-23-000073",
             "filed": "2023-02-27"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 729.0,
+            "adjusted": 729.0,
+            "basis": "as_reported",
+            "accn": "0001326160-22-000072",
+            "filed": "2022-02-24"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 708.0,
+            "adjusted": 708.0,
+            "basis": "as_reported",
+            "accn": "0001326160-21-000063",
+            "filed": "2021-02-25"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 691.0,
+            "adjusted": 691.0,
+            "basis": "as_reported",
+            "accn": "0001326160-19-000057",
+            "filed": "2019-02-28"
+          },
+          {
+            "fy": "2015-12-31",
+            "raw": 694.0,
+            "adjusted": 694.0,
+            "basis": "as_reported",
+            "accn": "0001326160-18-000036",
+            "filed": "2018-02-23"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4668,7 +6215,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4719,6 +6270,38 @@
             "basis": "as_reported",
             "accn": "0001053507-23-000023",
             "filed": "2023-02-23"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 445.52,
+            "adjusted": 445.52,
+            "basis": "as_reported",
+            "accn": "0001053507-22-000017",
+            "filed": "2022-02-25"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 442.96,
+            "adjusted": 442.96,
+            "basis": "as_reported",
+            "accn": "0001053507-21-000026",
+            "filed": "2021-02-25"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 431.688,
+            "adjusted": 431.688,
+            "basis": "as_reported",
+            "accn": "0001053507-20-000028",
+            "filed": "2020-02-25"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 429.283,
+            "adjusted": 429.283,
+            "basis": "as_reported",
+            "accn": "0001053507-17-000009",
+            "filed": "2017-02-27"
           }
         ],
         "xbrl_acceptance_missing": true
@@ -4731,7 +6314,11 @@
           "2023-12-31",
           "2022-12-31",
           "2021-12-31",
-          "2020-12-31"
+          "2020-12-31",
+          "2019-12-31",
+          "2018-12-31",
+          "2017-12-31",
+          "2016-12-31"
         ],
         "reason": null,
         "shares_used": [
@@ -4782,6 +6369,38 @@
             "basis": "as_reported",
             "accn": "0001564590-23-001902",
             "filed": "2023-02-14"
+          },
+          {
+            "fy": "2019-12-31",
+            "raw": 654.903,
+            "adjusted": 654.903,
+            "basis": "as_reported",
+            "accn": "0001564590-22-004436",
+            "filed": "2022-02-09"
+          },
+          {
+            "fy": "2018-12-31",
+            "raw": 590.239,
+            "adjusted": 590.239,
+            "basis": "as_reported",
+            "accn": "0001564590-21-005312",
+            "filed": "2021-02-11"
+          },
+          {
+            "fy": "2017-12-31",
+            "raw": 552.3,
+            "adjusted": 552.3,
+            "basis": "as_reported",
+            "accn": "0001564590-20-004096",
+            "filed": "2020-02-11"
+          },
+          {
+            "fy": "2016-12-31",
+            "raw": 546.666,
+            "adjusted": 546.666,
+            "basis": "as_reported",
+            "accn": "0001564590-19-002872",
+            "filed": "2019-02-13"
           }
         ],
         "xbrl_acceptance_missing": true
