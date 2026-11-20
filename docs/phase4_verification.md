@@ -204,6 +204,20 @@ Public data build guard(34파일 생성, 금지 키 0건). `deploy` 는 `build` 
 ## 6. 남은 작업 / 미검증
 
 1. `.github/workflows/` 3종(ci·daily-postclose·debate-validate) 갱신 — 권한 있는 경로(웹 업로드) 필요.
-2. 실데이터 배치(`daily-postclose` 수동 실행)로 2·3차 정산·`position_events.jsonl`·토론 편입 실측.
-3. `data/debate_reports.json` 은 **PC/Cloud 토론 실행 후 커밋**되어야 채워진다(현재 0건 = 화면 "토론 없음" 정상).
-4. 파일럿 `N_eff`·두 계좌 `policy_diff_pp` 는 표본이 쌓여야 판정된다(현재 `보류`).
+2. **`daily-postclose.yml` 의 `git add` 목록이 부족하다** — 이번 Phase 4가 새로 쓰는 파일 중 아래가 빠져 있다
+   (지금은 러너 체크아웃에만 쓰이고 사라진다 → 공개 `web/data/health.json` 의 `as_of`·`last_attempt_at`·
+   `last_success_at` 이 `null` 로 나간다. 라이브 사이트에서 확인함).
+
+   ```text
+   data/health.json                    # P2-1 실행 상태부 (현재 미커밋 → 상태 배너 입력이 빈다)
+   data/ledger/position_events.jsonl   # 이번 배선 ①·③ (2·3차·손절·익절·취소 세션 이벤트)
+   data/notifications_latest.json      # 알림 요약 (build_public_data 입력)
+   data/notifications_log.json         # 채널별 발송·재시도 기록 (P2-1)
+   data/ledger/debate_summary.json     # 토론 편입 요약
+   data/pipeline_limits.json · data/walkforward/stress.json
+   ```
+
+   (`data/snapshots/` 는 gitignore 대상이라 제외, `data/debate_reports.json` 은 PC/Cloud 토론 실행 후 사람이 커밋)
+3. 실데이터 배치(`daily-postclose` 수동 실행)로 2·3차 정산·`position_events.jsonl`·토론 편입 실측.
+4. `data/debate_reports.json` 은 **PC/Cloud 토론 실행 후 커밋**되어야 채워진다(현재 0건 = 화면 "토론 없음" 정상).
+5. 파일럿 `N_eff`·두 계좌 `policy_diff_pp` 는 표본이 쌓여야 판정된다(현재 `보류`).
