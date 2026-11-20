@@ -14,7 +14,7 @@
 <link rel="manifest" href="./manifest.json" />
 <link rel="icon" href="./icon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="./icon.svg" />
-<link rel="stylesheet" href="./styles.css?v=phase4-1" />
+<link rel="stylesheet" href="./styles.css?v=phase4-2" />
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -43,6 +43,8 @@
   <!-- ───── 오늘 ───── -->
   <section class="view" id="view-today" role="tabpanel" aria-labelledby="tab-today">
     <div id="freshness"></div>
+    <div id="bundle-banner"></div>
+    <div id="data-status-banner"></div>
     <div id="notify-banner"></div>
     <div id="regime-banner"></div>
     <section class="card" aria-labelledby="h-signals">
@@ -93,6 +95,7 @@
     </section>
     <section class="card" aria-labelledby="h-debate">
       <h2 id="h-debate">AI 토론 효과 (A/B) <span class="tiny">quant_only vs codex_debated</span></h2>
+      <div id="policy-effect"></div>
       <div id="debate-effect"></div>
     </section>
     <section class="card" aria-labelledby="h-live-positions">
@@ -129,6 +132,6 @@
   <p class="tiny"><a href="./data/meta.json">데이터 계약(meta.json)</a></p>
 </footer>
 
-<script src="./app.js?v=phase4-1"></script>
+<script src="./app.js?v=phase4-2"></script>
 </body>
 </html>

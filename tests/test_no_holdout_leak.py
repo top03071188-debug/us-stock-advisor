@@ -67,9 +67,22 @@ def test_min_folds_argument_is_respected():
     assert set(plan["summary"]["blocked"]) == {"1m", "3m", "6m"}
 
 
+#: [v1.3.4 · P0-4] 관측은 만기·홀드아웃 경계·신호 수·코드·스냅샷 없이는 수락되지 않는다.
+OBS_META = dict(maturity_date="2026-02-15", holdout_start="2026-08-20", signal_count=30,
+                code_version="abc123", snapshot_id="sha256:s1", horizon_td=63)
+
+
+def _obs(fold_id: str, score: float, ic: float = 0.05, mdd: float = -0.10,
+         **kw) -> FoldObservation:
+    meta = dict(OBS_META)
+    meta.update({k: v for k, v in kw.items() if k in meta})
+    extra = {k: v for k, v in kw.items() if k not in meta}
+    return FoldObservation(fold_id, score, ic, mdd, **meta, **extra)
+
+
 def test_truncated_fold_cannot_enter_objective():
-    obs = [FoldObservation("F1", 62.0, 0.08, -0.09),
-           FoldObservation("F4", 58.0, 0.05, -0.12, eligible=False, truncated=True)]
+    obs = [_obs("F1", 62.0, ic=0.08, mdd=-0.09),
+           _obs("F4", 58.0, ic=0.05, mdd=-0.12, eligible=False, truncated=True)]
     with pytest.raises(ValueError):
         objective(obs, {}, {})
     with pytest.raises(ValueError):
@@ -84,7 +97,7 @@ def test_truncated_results_are_reference_only():
 
 def _constant_evaluator(bonus: float = 0.0):
     """후보와 무관하게 같은 폴드를 돌려주는 러너(개선이 없다 → 수락되면 안 된다)."""
-    obs = [FoldObservation(f"F{i}", 60.0 + i + bonus, 0.04, -0.10) for i in range(1, 4)]
+    obs = [_obs(f"F{i}", 60.0 + i + bonus, ic=0.04) for i in range(1, 4)]
 
     def _run(_params: dict) -> list[FoldObservation]:
         return obs
@@ -94,7 +107,7 @@ def _constant_evaluator(bonus: float = 0.0):
 
 def test_calibration_skips_when_folds_insufficient():
     # 폴드가 3개 미만이면 보류 — 고정 관측을 직접 넘기는 구 호출도 같은 규칙이다
-    rec = calibrate([FoldObservation("F1", 60.0, 0.05, -0.10)], {}, min_folds=3)
+    rec = calibrate([_obs("F1", 60.0)], {}, min_folds=3)
     assert rec["accepted"] is False
     assert rec["reason"] == "INSUFFICIENT_FOLDS"
 

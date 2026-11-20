@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codex_debate/schemas/round3_chair.schema.json",
+  "title": "codex_debate round3 — 위원회 의장 종합",
+  "description": "3R committee_chair 출력. 새 근거를 도입하지 못하고, 가격은 allowed.prices 안에서만 고른다. 자유 서술은 one_line_ko 1개(200자)뿐이다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "consensus",
+    "dissent",
+    "grade_recommendation",
+    "entry_plan_refs",
+    "exit_refs",
+    "conflict",
+    "one_line_ko"
+  ],
+  "properties": {
+    "consensus": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {"type": "string", "maxLength": 200}
+    },
+    "dissent": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {"type": "string", "maxLength": 200}
+    },
+    "grade_recommendation": {
+      "type": "string",
+      "enum": ["STRONG_BUY", "BUY", "WATCH", "NONE"]
+    },
+    "entry_plan_refs": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {"type": "number"}
+    },
+    "exit_refs": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {"type": "number"}
+    },
+    "conflict": {"type": "boolean"},
+    "one_line_ko": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

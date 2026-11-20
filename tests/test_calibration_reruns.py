@@ -13,6 +13,19 @@ BASE = {"w_quality": 0.30, "w_valuation": 0.25, "w_timing": 0.20, "w_macro": 0.1
 BOOST_PARAM = "w_valuation"
 
 
+#: [v1.3.4 · P0-4] 수락 계약이 **필수 메타**를 요구한다 — 테스트 관측도 실제와 같은 모양으로 만든다.
+OBS_META = dict(maturity_date="2026-02-15", holdout_start="2026-08-20", signal_count=30,
+                code_version="abc123", snapshot_id="sha256:s1", horizon_td=63)
+
+
+def _obs(fold_id: str, score: float, ic: float = 0.05, mdd: float = -0.10,
+         **kw) -> FoldObservation:
+    meta = dict(OBS_META)
+    meta.update({k: v for k, v in kw.items() if k in meta})
+    extra = {k: v for k, v in kw.items() if k not in meta}
+    return FoldObservation(fold_id, score, ic, mdd, **meta, **extra)
+
+
 def evaluator(*, fold_scores, calls: list | None = None):
     """파라미터가 바뀌면 폴드 점수가 달라지는 가짜 러너.
 
@@ -23,8 +36,7 @@ def evaluator(*, fold_scores, calls: list | None = None):
         if calls is not None:
             calls.append(dict(params))
         lifted = abs(float(params.get(BOOST_PARAM, BASE[BOOST_PARAM])) - BASE[BOOST_PARAM]) > 1e-12
-        return [FoldObservation(f"F{i}", score, 0.05, -0.10)
-                for i, score in enumerate(fold_scores(lifted), start=1)]
+        return [_obs(f"F{i}", score) for i, score in enumerate(fold_scores(lifted), start=1)]
 
     return _run
 
@@ -97,9 +109,9 @@ def test_calibration_rejects_candidate_with_truncated_fold():
     def runner(params: dict) -> list[FoldObservation]:
         lifted = abs(float(params.get(BOOST_PARAM, BASE[BOOST_PARAM])) - BASE[BOOST_PARAM]) > 1e-12
         if lifted:
-            return [FoldObservation("F1", 63.0, 0.05, -0.10),
-                    FoldObservation("F4", 63.0, 0.05, -0.10, eligible=False, truncated=True)]
-        return [FoldObservation(f"F{i}", 60.0, 0.05, -0.10) for i in range(1, 4)]
+            return [_obs("F1", 63.0),
+                    _obs("F4", 63.0, eligible=False, truncated=True)]
+        return [_obs(f"F{i}", 60.0) for i in range(1, 4)]
 
     record = calibrate(runner, BASE, min_folds=3, stress_pass=lambda _params: True)
     assert record["accepted"] is False

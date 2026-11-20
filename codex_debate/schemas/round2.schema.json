@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codex_debate/schemas/round2.schema.json",
+  "title": "codex_debate round2 — 교차 반박",
+  "description": "2R 스킬 1개의 출력. 타 3인의 1R을 읽고 1회 이상 반박하고 점수를 수정한다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "score", "changed", "rebuttals", "conflict_points"],
+  "properties": {
+    "skill": {
+      "type": "string",
+      "enum": ["buffett", "lynch", "druckenmiller", "gates_13f"]
+    },
+    "score": {
+      "type": "number",
+      "minimum": -100,
+      "maximum": 100
+    },
+    "changed": {"type": "boolean"},
+    "rebuttals": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target_skill", "point", "quote_or_number_ref"],
+        "properties": {
+          "target_skill": {
+            "type": "string",
+            "enum": ["buffett", "lynch", "druckenmiller", "gates_13f"]
+          },
+          "point": {"type": "string", "maxLength": 400},
+          "quote_or_number_ref": {"type": "string", "maxLength": 200}
+        }
+      }
+    },
+    "conflict_points": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {"type": "string", "maxLength": 300}
+    }
+  }
+}

@@ -11,8 +11,9 @@ from engine.backtest.walk_forward import agreement_components
 from engine.decide.signals import target_band
 from engine.ledger.grade import (HORIZONS_TD, grade_record, realized_mdd, summarize_grades,
                                  weighted_agreement)
-from engine.ledger.record import (RecordError, append_immutable, assert_publish_record, debate_event,
-                                 execution_event, load_records, merged_view, publish_record, reanchor_event)
+from engine.ledger.debate import debate_event as debate_event_of
+from engine.ledger.record import (RecordError, append_immutable, assert_publish_record, execution_event,
+                                 load_records, merged_view, publish_record, reanchor_event)
 from engine.utils.dates import trading_days
 
 CUT = "2026-05-14T22:00:00Z"
@@ -128,16 +129,31 @@ def test_reanchor_keeps_original_rows():
 
 
 def test_debate_event_appends_separately():
-    ev = debate_event(signal_id="s", snapshot_id="sha", report_id="r1", intent="pending_hold_cash",
-                      completed_at=datetime(2026, 5, 14, 23, 15, tzinfo=timezone.utc),
-                      recorded_at=datetime(2026, 5, 15, 23, 26, tzinfo=timezone.utc),
-                      eligible=True, late=False)
+    """[v1.3.4 · P1-2] 편입 이벤트는 `engine.ledger.debate` 가 **직접 판정**해 만든다.
+
+    예전 `record.debate_event()` 는 호출자가 넣은 `eligible`·`late` 를 그대로 기록했다 —
+    호출자가 틀리면 마감 뒤 검증된 결과도 통과로 남는다. 새 경로는 인자를 받지 않고 시각 계약을
+    다시 계산한다(그래서 `record.debate_event` 는 저장소에서 사라졌다).
+    """
+    r = record()
+    report = {
+        "report_id": "r1", "ticker": r["ticker"], "signal_id": r["signal_id"],
+        "snapshot_id": r["snapshot_id"], "status": "complete", "intent": "pending_hold_cash",
+        "completed_at": "2026-05-14T23:15:00Z", "order_cutoff_at": OC,
+        "signal_published_at": PUB,
+        "round3": {"chair": {"grade_recommendation": "WATCH"}},
+    }
+    ev = debate_event_of(report, r, at=datetime(2026, 5, 14, 23, 26, tzinfo=timezone.utc))
     assert ev["events"][0]["track"] == "codex_debated"
     assert ev["events"][0]["eligible"] is True and ev["events"][0]["late"] is False
-    with pytest.raises(RecordError):
-        debate_event(signal_id="s", snapshot_id="sha", report_id="r1", intent="hold",
-                     completed_at=datetime.now(timezone.utc), recorded_at=datetime.now(timezone.utc),
-                     eligible=True, late=False)
+    assert ev["events"][0]["report_validated_at"] == "2026-05-14T23:26:00Z"
+    # 마감 뒤에 검증된 보고서는 통과하지 못한다 — 보고서의 "마감 전 완료" 주장만 믿지 않는다
+    late = debate_event_of(report, r, at=datetime(2026, 5, 15, 15, 0, tzinfo=timezone.utc))
+    assert late["events"][0]["eligible"] is False and late["events"][0]["late"] is True
+    assert late["events"][0]["event"] == "debate_rejected"
+    with pytest.raises((ImportError, AttributeError)):
+        from engine.ledger import record as record_mod  # noqa: PLC0415 — 삭제된 구 경로 확인
+        record_mod.debate_event
 
 
 def test_target_band_defensive_flag_survives_serialization():

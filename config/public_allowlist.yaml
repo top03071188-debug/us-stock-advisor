@@ -453,6 +453,53 @@ allow:
   - debate_display
   - debate_effect_verdict
 
+  # ── Phase 4 트랙 B: 실행 상태·발행 세트·토론 리스크 분리·페어/정책 효과 분리 (P1-1·P1-3·P2-1) ──
+  # 값은 여전히 상태·식별자·파생 비율뿐이다. 원시 시계열·본문·수량·평단은 추가하지 않는다.
+  - build_at
+  - bundle_version
+  - last_attempt_at
+  - last_success_at
+  - last_failure_at
+  - outage_id
+  - data_status
+  - reason
+  - kept_previous_signals
+  - outage_previous_as_of
+  - outage_previous_status
+  - debate_structural_risk
+  - debate_risk_gate_applied
+  - confidence_cap
+  - policy_diff_pp
+  - pair_summary
+  - retroactive_dropped
+  - retroactive_dropped_pairs
+  - retroactive
+  - execution_at
+  - report_validated_at
+  - content_hash
+  - retrieved_at
+  - normalizer_version
+  - excluded_news
+  - injection_scope
+  - injection_blocking
+  - patterns
+  - quarantined
+  - calibration_window
+  - n_retried
+  - retry_pending
+  - latency_seconds
+  - attempt_at
+  - channel
+  - attempts
+  - detail
+
+  # ── Phase 4 최종 배선: 동결 전 WATCH·차단으로 취소된 1차 주문(P0-3) ──
+  # 식별자·사유·시각뿐이다(수량·평단 없음).
+  - order_cancellations
+  - order_cancellations_count
+  - superseded_by
+  - frozen_at
+
 deny_keys:                       # 하나라도 있으면 커밋·배포 실패 [고정]
   - quote
   - evidence_quote

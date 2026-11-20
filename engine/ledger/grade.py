@@ -17,6 +17,9 @@
   SPY 가 없으면 `D` 는 `None` 이고 가중치를 재정규화한다(0%로 대체하지 않는다).
 - `maturity_date ≥ holdout_start` 인 폴드는 **적격이 아니다** — `truncated: true` + `observed_days` 로
   참고 표시만 하고 보정 목적함수에 넣지 않는다(4.2.1, 4.3).
+- **[v1.3.4 · P0-4] 그 적격 판정은 `mode="calibration"` 에서만 적용한다.** Paper 운용(`mode="paper"`)은
+  발행 때 고정한 기준 봉과 만기 봉 관측으로만 채점한다 — 이미 만기된 신호가 백테스트 홀드아웃 때문에
+  `truncated` 로 빠지면 성적표·파일럿 표본이 통째로 비어 버린다(감사 P0-4).
 - 체결이 없는 결정(`hold_cash`)도 **가상 체결가**로 채점한다(4.7.2).
 """
 
@@ -153,15 +156,27 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
                  benchmark_returns: dict[str, float] | float | None = None,
                  holdout_start: date | str | None = None,
                  horizons: dict[str, int] | None = None,
-                 benchmark_return: float | None = None) -> dict:
+                 benchmark_return: float | None = None,
+                 mode: str = "calibration") -> dict:
     """한 신호의 기간별 채점. 만기 봉이 없으면 그 기간은 `complete: false` 로 남긴다.
 
     `benchmark_returns` 는 **신호별·기간별 SPY 총수익**이다(dict). `benchmark_return` 은 전 기간에
     같은 값을 쓰는 편의 인자다.
+
+    [v1.3.4 · P0-4] `mode` 로 **Paper 채점**과 **보정 코퍼스 자격**을 나른다.
+
+    - `mode="paper"`(기본 운용): 발행 때 고정한 기준 봉과 **만기 봉 관측**으로만 판정한다.
+      `holdout_start` 를 줘도 무시하며 `truncated` 는 항상 `False` — 이미 만기된 Paper 신호가
+      백테스트 홀드아웃 경계 때문에 성적표에서 빠지던 결함을 없앤다(감사 P0-4).
+    - `mode="calibration"`: 백테스트 보정용. 만기가 홀드아웃 경계를 거스르면 `truncated: true`,
+      `eligible: false` 로 **참고 표시만** 한다(기존 동작 보존).
     """
     horizons = horizons or HORIZONS_TD
+    mode = str(mode or "paper").lower()
+    if mode not in ("paper", "calibration"):
+        raise ValueError(f"알 수 없는 채점 모드: {mode!r} (paper | calibration)")
     holdout = None
-    if holdout_start is not None:
+    if mode != "paper" and holdout_start is not None:
         holdout = holdout_start if isinstance(holdout_start, date) else date.fromisoformat(str(holdout_start))
     df = _normalize_bars(bars or [])
     as_of = date.fromisoformat(str(record["as_of"])[:10])
@@ -201,8 +216,9 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
             out[name] = {
                 "horizon_td": h, "maturity": maturity.isoformat(), "eligible": False,
                 "truncated": True, "matured": False, "complete": False, "observed_days": int(observed),
+                "status": "truncated_for_calibration",
                 "agreement": None, "return": None, "excess_return": None,
-                "note": "홀드아웃 경계에서 잘림 — 참고용 표시만, 보정 목적함수 제외(4.2.1)",
+                "note": "홀드아웃 경계에서 잘린 — 참고용 표시만, 보정 목적함수 제외(4.2.1)",
             }
             continue
         win = _window(df, as_of, maturity)
@@ -215,6 +231,7 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
                 "horizon_td": h, "maturity": maturity.isoformat(), "eligible": True,
                 "truncated": False, "matured": False, "complete": False,
                 "observed_days": int(observed), "reason": POST_MATURITY_REASON,
+                "status": "post_maturity_fill",
                 "post_maturity_fill": True, "entry_session": entry_session.isoformat(),
                 "agreement": None, "return": None, "excess_return": None,
                 "note": NOTE_POST_MATURITY,
@@ -225,6 +242,7 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
                 "horizon_td": h, "maturity": maturity.isoformat(), "eligible": True,
                 "truncated": False, "matured": False, "complete": False,
                 "observed_days": observed,
+                "status": "data_missing" if df.empty else "not_matured",
                 "agreement": None, "return": None, "excess_return": None,
                 "note": ("가격 데이터 없음 — 채점 불가" if df.empty else NOTE_NOT_MATURED),
             }
@@ -273,6 +291,7 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
             "truncated": False,
             "matured": True,
             "complete": True,
+            "status": "complete",
             "observed_days": observed,
             "basis": basis,
             "return_basis": "total_return_adj",
@@ -299,6 +318,7 @@ def grade_record(record: dict, execution: dict | None = None, bars: list[dict] |
         "as_of": record["as_of"],
         "grade": record.get("grade"),
         "confidence": record.get("grade"),
+        "mode": mode,
         "action": action,
         "basis": basis,
         "entry_session": entry_session.isoformat(),

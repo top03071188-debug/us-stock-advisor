@@ -84,6 +84,12 @@ class FoldObservation:
         return (self.horizon_td, self.fold_id, self.maturity_date)
 
 
+#: [v1.3.4 · P0-4] 수락 계약의 **필수 메타** — 하나라도 없으면 그 후보는 버린다.
+#: 예전에는 전부 기본값 `None` 이라 빠진 항목의 검사가 **조용히 생략**됐다(감사 P0-4).
+REQUIRED_OBSERVATION_FIELDS = ("maturity_date", "holdout_start", "signal_count",
+                               "code_version", "snapshot_id")
+
+
 #: 후보 파라미터 → 폴드 관측 목록. 보정은 이 러너를 **후보마다** 부른다.
 FoldEvaluator = Callable[[dict], list[FoldObservation]]
 
@@ -97,13 +103,25 @@ def guard_truncated(observations: list[FoldObservation]) -> list[FoldObservation
 
 
 def check_observation_contract(observations: list[FoldObservation],
-                               min_signals: int = MIN_SIGNALS_PER_FOLD) -> None:
+                               min_signals: int = MIN_SIGNALS_PER_FOLD,
+                               require_metadata: bool = True) -> None:
     """폴드 관측의 수락 계약 검사 — 위반이면 `ValueError`(그 후보는 버린다).
 
+    - **[v1.3.4 · P0-4] 필수 메타 누락 금지** — `maturity_date`·`holdout_start`·`signal_count`·
+      `code_version`·`snapshot_id` 가 비어 있으면 그 관측으로는 경계·표본·버전을 검사할 수 없다.
+      예전 코드는 기본값 `None` 을 "검사 안 함"으로 읽어 조용히 통과시켰다. 이제 **거절**한다.
     - 같은 키(`horizon, fold_id, maturity`)의 중복 관측 금지
     - `maturity_date >= holdout_start` 는 홀드아웃 경계 침범
-    - `signal_count` 가 알려져 있고 `min_signals` 미만이면 표본 부족
+    - `signal_count` 가 `min_signals` 미만이면 표본 부족
     """
+    if require_metadata:
+        missing = [(o.fold_id, [name for name in REQUIRED_OBSERVATION_FIELDS
+                                if getattr(o, name, None) in (None, "")]) for o in observations]
+        incomplete = [(fold, names) for fold, names in missing if names]
+        if incomplete:
+            raise ValueError(
+                "폴드 관측 메타 누락: " + "; ".join(f"{fold}:{','.join(names)}" for fold, names in incomplete[:6])
+                + " — 만기·홀드아웃 경계·신호 수·코드·스냅샷이 없으면 적격성을 판정할 수 없다(4.2.7·P0-4)")
     keys = [o.key() for o in observations]
     duplicates = sorted({key for key in keys if keys.count(key) > 1})
     if duplicates:
@@ -293,17 +311,24 @@ def _mean_agreement(obs: list[FoldObservation]) -> float:
 def calibrate(evaluate, base_params: dict, min_folds: int = 3, accept_gain: float = 2.0,
               accept_folds: int = 2, l2_lambda: float = 0.5,
               stress_pass: Callable[[dict], bool] | None = None,
-              min_signals: int = MIN_SIGNALS_PER_FOLD) -> dict:
+              min_signals: int = MIN_SIGNALS_PER_FOLD,
+              require_metadata: bool = True) -> dict:
     """후보별 폴드 재실행 → 수락 계약(감사 10 강화). 수락하지 않아도 **이유를 남긴다**.
 
     `evaluate(params) -> list[FoldObservation]` 가 후보마다 폴드를 다시 돌린다.
+
+    [v1.3.4 · P0-4] `require_metadata=True`(기본)면 필수 메타가 빠진 관측은 **후보를 버린다**.
+    빠진 항목을 "검사 안 함"으로 읽지 않는다 — 경계·표본·버전을 확인할 수 없는 후보는 수락할 수 없다.
+    `require_metadata=False` 는 **단위테스트·구 호출 전용**이다(운용 경로에서 쓰면 된다).
     """
     runner = _as_evaluator(evaluate)
     base_obs = guard_truncated(runner(dict(base_params)))
     record: dict = {"n_folds": len(base_obs), "accepted": False, "reason": None,
-                    "candidates": [], "params": base_params}
+                    "candidates": [], "params": base_params,
+                    "require_metadata": bool(require_metadata)}
     try:
-        check_observation_contract(base_obs, min_signals=min_signals)
+        check_observation_contract(base_obs, min_signals=min_signals,
+                                   require_metadata=require_metadata)
     except ValueError as exc:
         record["reason"] = f"INVALID_FOLDS({exc})"
         return record
@@ -317,7 +342,8 @@ def calibrate(evaluate, base_params: dict, min_folds: int = 3, accept_gain: floa
         cand = rebalance_weights(cand)
         try:
             obs = guard_truncated(runner(dict(cand)))
-            check_observation_contract(obs, min_signals=min_signals)
+            check_observation_contract(obs, min_signals=min_signals,
+                                       require_metadata=require_metadata)
             pairs = align_observations(base_obs, obs)
         except ValueError as exc:            # 후보 실행이 계약을 어기면 그 후보만 버린다
             record["candidates"].append({"params": cand, "error": str(exc)[:160]})

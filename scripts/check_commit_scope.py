@@ -62,6 +62,16 @@ def _iter_keys(obj, prefix=""):
 #: 부모가 이 키면 자식 키는 "단위·스키마 이름"이다 — SEC XBRL companyfacts 의 단위(`units.shares`).
 UNIT_CONTAINERS = {"units"}
 
+#: `*.schema.json` 안에서 부모가 이 키면 자식 키는 **필드 선언**이다(데이터가 아니다).
+#  토론 1R 출력 스키마는 원문 `quote` 필드를 **선언**해야 하고(검증 뒤 해시로 바뀐다),
+#  그 선언 자체는 인용문을 담지 않는다. 그래서 스키마 파일의 `properties`/`required`/`$defs`
+#  아래 이름만 건너뛴다 — 일반 JSON 데이터의 같은 키는 계속 막힌다.
+SCHEMA_CONTAINERS = {"properties", "required", "$defs", "definitions", "patternProperties"}
+
+
+def _is_schema_file(path: Path) -> bool:
+    return path.name.endswith(".schema.json")
+
 
 def check_text(path: Path, text: str, rules: dict) -> list[str]:
     problems: list[str] = []
@@ -78,7 +88,10 @@ def check_text(path: Path, text: str, rules: dict) -> list[str]:
         except json.JSONDecodeError:
             problems.append(f"{path}: JSON 파싱 실패")
     if data is not None:
-        keys = {k for k, parent in _iter_keys(data) if parent not in UNIT_CONTAINERS}
+        schema = _is_schema_file(path)
+        keys = {k for k, parent in _iter_keys(data)
+                if parent not in UNIT_CONTAINERS
+                and not (schema and parent in SCHEMA_CONTAINERS)}
         bad = sorted(keys & deny_keys)
         if bad:
             problems.append(f"{path}: forbidden keys {bad}")

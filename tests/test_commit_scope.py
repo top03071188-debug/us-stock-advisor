@@ -148,3 +148,25 @@ def test_quote_digest_is_normalized_and_stable():
     b = redact_quotes.quote_digest("같은 문장입니다")
     assert a == b
     assert len(a) == 64
+
+
+def test_schema_file_declaration_is_structure_not_data(tmp_path):
+    """`*.schema.json` 의 `properties.quote` 는 **필드 선언**이다 — 데이터 파일의 같은 키는 계속 막는다."""
+    schema = tmp_path / "round1.schema.json"
+    schema.write_text(json.dumps({"$schema": "https://json-schema.org/draft/2020-12/schema",
+                                  "properties": {"news_read": {"items": {
+                                      "properties": {"quote": {"type": "string"}}}}}},
+                                 ensure_ascii=False), encoding="utf-8")
+    assert check_commit_scope.check_paths([str(schema)], _rules()) == []
+
+    # 같은 이름이 아니라 확장자가 .schema.json 이 아닌 데이터 파일은 그대로 차단된다
+    data = tmp_path / "round1.json"
+    data.write_text(json.dumps({"properties": {"quote": "실적이 예상을 크게 웃돌았다"}},
+                               ensure_ascii=False), encoding="utf-8")
+    assert check_commit_scope.check_paths([str(data)], _rules())
+
+    # 스키마 파일이라도 값 안의 이메일 패턴은 계속 걸린다
+    leaky = tmp_path / "leaky.schema.json"
+    leaky.write_text(json.dumps({"examples": ["someone@" + "example.net"]}, ensure_ascii=False),
+                     encoding="utf-8")
+    assert check_commit_scope.check_paths([str(leaky)], _rules())

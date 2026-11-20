@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codex_debate/schemas/debate_reports.schema.json",
+  "title": "data/debate_reports.json — 토론 리포트 파일 계약 (기획서 부록 G)",
+  "description": "공개 저장소에 커밋되는 파일이므로 기사 인용 원문(quote)·본문 발췌·목표가(target_price)를 담지 않는다. quote 대신 quote_sha256·quote_verified·quote_chars 만 남긴다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "codex", "inputs", "reports"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "generated_at": {"type": "string", "minLength": 10},
+    "codex": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["version", "model"],
+      "properties": {
+        "version": {"type": "string"},
+        "model": {"type": "string"}
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["quant_signals_commit", "as_of", "context_hash", "prompt_hash"],
+      "properties": {
+        "quant_signals_commit": {"type": "string"},
+        "as_of": {"type": "string"},
+        "context_hash": {"type": "string"},
+        "prompt_hash": {"type": "string"}
+      }
+    },
+    "reports": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/report"}
+    }
+  },
+  "$defs": {
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report_id", "ticker", "signal_id", "snapshot_id", "as_of",
+        "data_cutoff_at", "signal_published_at", "order_cutoff_at", "completed_at",
+        "late", "invalid", "status", "round1", "round2", "round3", "scores",
+        "validation", "quant_grade", "display_grade", "intent",
+        "auto_downgrade_applied", "track"
+      ],
+      "properties": {
+        "report_id": {"type": "string", "minLength": 5},
+        "ticker": {"type": "string", "minLength": 1, "maxLength": 10},
+        "signal_id": {"type": "string", "minLength": 1},
+        "snapshot_id": {"type": "string", "minLength": 1},
+        "as_of": {"type": "string", "minLength": 8},
+        "data_cutoff_at": {"type": "string", "minLength": 10},
+        "signal_published_at": {"type": "string", "minLength": 10},
+        "order_cutoff_at": {"type": "string", "minLength": 10},
+        "completed_at": {"type": "string", "minLength": 10},
+        "late": {"type": "boolean"},
+        "invalid": {"type": "boolean"},
+        "status": {
+          "type": "string",
+          "enum": ["complete", "partial", "failed", "quorum_failed", "stopped_by_limit"]
+        },
+        "round1": {"type": "array", "items": {"$ref": "#/$defs/round1_entry"}},
+        "round2": {"type": "array", "items": {"$ref": "#/$defs/round2_entry"}},
+        "round3": {"type": ["object", "null"], "additionalProperties": false,
+          "properties": {
+            "guard": {"type": ["object", "null"], "additionalProperties": false,
+              "required": ["veto_codes", "additional_blocks", "structural_risk", "reasoning", "opinion"],
+              "properties": {
+                "veto_codes": {"type": "array", "items": {"type": "string"}},
+                "additional_blocks": {"type": "array", "items": {"type": "string"}},
+                "structural_risk": {"type": "number", "minimum": 0, "maximum": 100},
+                "reasoning": {"type": "string", "maxLength": 800},
+                "opinion": {"type": "string", "enum": ["clear", "caution", "block_new", "block_all"]}
+              }
+            },
+            "chair": {"type": ["object", "null"], "additionalProperties": false,
+              "required": ["consensus", "dissent", "grade_recommendation", "entry_plan_refs",
+                "exit_refs", "conflict", "one_line_ko"],
+              "properties": {
+                "consensus": {"type": "array", "items": {"type": "string"}},
+                "dissent": {"type": "array", "items": {"type": "string"}},
+                "grade_recommendation": {"type": ["string", "null"],
+                  "enum": ["STRONG_BUY", "BUY", "WATCH", "NONE", null]},
+                "entry_plan_refs": {"type": "array", "items": {"type": "number"}},
+                "exit_refs": {"type": "array", "items": {"type": "number"}},
+                "conflict": {"type": "boolean"},
+                "one_line_ko": {"type": "string", "maxLength": 200}
+              }
+            }
+          }
+        },
+        "scores": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "round1": {"type": ["number", "null"]},
+              "round2": {"type": ["number", "null"]}
+            }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["skills_in", "skills_kept", "quotes_checked", "quotes_dropped",
+            "numbers_checked", "numbers_rejected"],
+          "properties": {
+            "skills_in": {"type": "integer", "minimum": 0},
+            "skills_kept": {"type": "integer", "minimum": 0},
+            "quotes_checked": {"type": "integer", "minimum": 0},
+            "quotes_dropped": {"type": "integer", "minimum": 0},
+            "numbers_checked": {"type": "integer", "minimum": 0},
+            "numbers_rejected": {"type": "integer", "minimum": 0},
+            "drop_reasons": {"type": "array", "items": {"type": "string"}},
+            "confidence_cap": {"type": ["string", "null"], "enum": ["A", "B", "C", null]}
+          }
+        },
+        "quant_grade": {"type": "string", "enum": ["STRONG_BUY", "BUY", "WATCH", "NONE"]},
+        "display_grade": {"type": "string", "enum": ["STRONG_BUY", "BUY", "WATCH", "NONE"]},
+        "intent": {"type": "string", "enum": ["pending_buy", "pending_hold_cash", "no_action"]},
+        "auto_downgrade_applied": {"type": "boolean"},
+        "track": {"type": "string", "enum": ["codex_debated", "quant_only"]},
+        "news_state": {"type": "string", "enum": ["not_read", "insufficient_evidence", "read_done"]},
+        "structural_risk": {"type": "number", "minimum": 0, "maximum": 100},
+        "injection_detected": {"type": "boolean"},
+        "context_hash": {"type": "string"},
+        "prompt_hash": {"type": "string"},
+        "provider": {"type": "string", "enum": ["codex", "openai"]},
+        "context_sha256": {"type": "string"}
+      }
+    },
+    "round1_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "score", "stance", "confidence", "reasons", "news_read"],
+      "properties": {
+        "skill": {"type": "string", "enum": ["buffett", "lynch", "druckenmiller", "gates_13f"]},
+        "score": {"type": "number", "minimum": -100, "maximum": 100},
+        "stance": {"type": "string", "enum": ["buy", "hold", "sell"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "reasons": {"type": "array", "maxItems": 3, "items": {"type": "string"}},
+        "news_read": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["news_id", "durability", "quote_sha256", "quote_verified", "quote_chars"],
+            "properties": {
+              "news_id": {"type": "string"},
+              "durability": {"type": "string", "enum": ["one_off", "structural", "unknown"]},
+              "impact": {"type": "string", "enum": ["positive", "negative", "neutral", "unknown"]},
+              "severity": {"type": "number", "minimum": 0, "maximum": 100},
+              "quote_sha256": {"type": "string"},
+              "quote_verified": {"type": "boolean"},
+              "quote_chars": {"type": "integer", "minimum": 0, "maximum": 200},
+              "rationale_ko": {"type": "string", "maxLength": 400}
+            }
+          }
+        }
+      }
+    },
+    "round2_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "score", "changed", "rebuttals", "conflict_points"],
+      "properties": {
+        "skill": {"type": "string", "enum": ["buffett", "lynch", "druckenmiller", "gates_13f"]},
+        "score": {"type": "number", "minimum": -100, "maximum": 100},
+        "changed": {"type": "boolean"},
+        "rebuttals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["target_skill", "point", "quote_or_number_ref"],
+            "properties": {
+              "target_skill": {"type": "string", "enum": ["buffett", "lynch", "druckenmiller", "gates_13f"]},
+              "point": {"type": "string", "maxLength": 400},
+              "quote_or_number_ref": {"type": "string", "maxLength": 200}
+            }
+          }
+        },
+        "conflict_points": {"type": "array", "items": {"type": "string", "maxLength": 300}}
+      }
+    }
+  }
+}

@@ -34,6 +34,16 @@ from engine.utils.dates import next_trading_day, trading_day_count
 DEFAULT_PARAMS = Path("config/params_v001.yaml")
 EVIDENCE_REQUIRED = ("fundamental", "sec_filing")
 
+#: A 등급 요건(3.10 · 감사 P1-1).
+#: - `MIN_VERIFIED_QUOTES`: 검증된 인용(해시 대조 통과)이 최소 1건 있어야 한다.
+#: - `MIN_INDEPENDENT_SOURCES`: 독립 출처(서로 다른 `source`/`url`)가 최소 2곳.
+#: - `MIN_REGIME_SAMPLE`: 해당 국면 표본 수 하한(`regime_sample` 을 **넘겼을 때만** 적용).
+MIN_VERIFIED_QUOTES = 1
+MIN_INDEPENDENT_SOURCES = 2
+MIN_REGIME_SAMPLE = 8
+#: 토론이 건드리지 않는 정량 기본 구조적 리스크(가드 V09 기준 70 미만).
+QUANT_STRUCTURAL_RISK = 10.0
+
 
 def load_params(path: str | Path = DEFAULT_PARAMS) -> dict:
     with open(path, encoding="utf-8") as f:
@@ -142,31 +152,101 @@ def evidence_items(ticker: str, filings: list[dict], news: list[dict], fundament
                       "available_at": reference.get("acceptance_datetime"),
                       "accession": reference.get("accession"), "role": "reference"})
     if news and news_state != "not_read":
-        n = news[0]
-        item = {"type": "news", "url": n.get("url"), "headline": n.get("headline"),
-                "source": n.get("source"), "published_at": n.get("published_at"),
-                "available_at": n.get("published_at")}
-        if n.get("quote_sha256"):
-            item["quote_sha256"] = n["quote_sha256"]
-            item["quote_verified"] = bool(n.get("quote_verified", True))
-        items.append(item)
+        # 기사 **버전**(해시·수집 시각·정규화 버전)을 근거에 함께 남긴다 — 나중에 "어떤 판을 읽었나"를
+        # 대조할 수 없으면 인용 검증도 재현할 수 없다(감사 P1-1).
+        for n in news[:3]:
+            item = {"type": "news", "url": n.get("url"), "headline": n.get("headline"),
+                    "source": n.get("source"), "published_at": n.get("published_at"),
+                    "available_at": n.get("published_at")}
+            sha = n.get("quote_sha256")
+            # 해시가 없으면 **명시적으로** `False` 를 쓴다 — 키 누락을 "통과"로 읽지 않게(감사 P1-1).
+            item["quote_verified"] = bool(sha) and n.get("quote_verified") is not False
+            if sha:
+                item["quote_sha256"] = sha
+            for key in ("content_hash", "retrieved_at", "normalizer_version"):
+                if n.get(key):
+                    item[key] = n[key]
+            items.append(item)
     if len(items) >= 3:
         items.append({"type": "market", "metric": "atr_pct", "value_kind": "ratio"})
     return items
 
 
-def confidence_grade(evidence: list[dict], news_state: str) -> str:
-    """신뢰도 A/B/C (3.10) — `A 데이터·근거 충족` 라벨의 근거."""
-    types = {e.get("type") for e in evidence}
-    verified_ok = all(e.get("quote_verified") is not False for e in evidence)
-    if not verified_ok or news_state == "insufficient_evidence":
-        return "C"
+def verified_quote_items(evidence: list[dict]) -> list[dict]:
+    """`quote_verified is True` **엄격 검사**를 통과한 인용 항목만(누락은 통과가 아니다)."""
+    return [e for e in evidence or []
+            if e.get("type") == "news" and e.get("quote_verified") is True and e.get("quote_sha256")]
+
+
+def failed_quote_items(evidence: list[dict]) -> list[dict]:
+    """해시를 주장했는데 검증되지 않은 인용 — 있으면 등급은 C(3.10)."""
+    return [e for e in evidence or []
+            if e.get("type") == "news" and e.get("quote_sha256") and e.get("quote_verified") is not True]
+
+
+def independent_source_count(evidence: list[dict], sources=None) -> int:
+    """독립 출처 수 — 같은 매체의 기사 2건은 1곳으로 센다(`source`, 없으면 `url`)."""
+    if sources is not None:
+        return len({str(s).strip().lower() for s in sources if str(s or "").strip()})
+    seen = set()
+    for e in evidence or []:
+        if e.get("type") != "news":
+            continue
+        key = str(e.get("source") or "").strip().lower() or str(e.get("url") or "").strip().lower()
+        if key:
+            seen.add(key)
+    return len(seen)
+
+
+def regime_sample_ok(regime_sample=None) -> tuple[bool, str | None]:
+    """해당 국면 표본 충족 여부.
+
+    `None`(미전달)이면 **하위 호환**으로 통과시킨다 — 호출자가 국면 이력을 모르는 경로(Phase 1~3
+    픽스처·기존 테스트)를 깨지 않기 위해서다. 값이 오면 `int` 또는
+    `{"n": 12, "min_n": 8}`·`{"count": 12, "min": 8}` 형태를 받는다.
+    """
+    if regime_sample is None:
+        return True, None
+    if isinstance(regime_sample, dict):
+        n = regime_sample.get("n", regime_sample.get("count", regime_sample.get("samples")))
+        minimum = regime_sample.get("min_n", regime_sample.get("min", MIN_REGIME_SAMPLE))
+    else:
+        n, minimum = regime_sample, MIN_REGIME_SAMPLE
+    try:
+        n_int, min_int = int(n), int(minimum)
+    except (TypeError, ValueError):
+        return False, "regime_sample_invalid"
+    if n_int < min_int:
+        return False, f"regime_sample_lt_{min_int}"
+    return True, None
+
+
+def confidence_grade(evidence: list[dict], news_state: str, *, regime_sample=None,
+                     verified_quotes=None, sources=None) -> str:
+    """신뢰도 A/B/C (3.10) — `A 데이터·근거 충족` 라벨의 근거.
+
+    A 는 **주장이 아니라 검증으로** 얻는다(감사 P1-1):
+    ① 핵심 근거(`fundamental`·`sec_filing`) ② `news_state == "read_done"`
+    ③ 검증된 인용(해시 대조 통과) ≥1 ④ 독립 출처 ≥2 ⑤ (넘겼을 때) 해당 국면 표본 충족.
+    하나라도 모자라면 B, 근거 구조가 없거나 인용 검증이 실패하면 C.
+
+    `verified_quotes`·`sources` 를 주면 그 값을 쓴다(토론 리포트처럼 근거 목록이 따로 있는 경로).
+    주지 않으면 `evidence` 에서 센다 — **해시 없는 뉴스는 통과가 아니라 미검증**이다.
+    """
+    items = list(evidence or [])
+    types = {e.get("type") for e in items}
     core = all(t in types for t in EVIDENCE_REQUIRED)
-    if core and news_state == "read_done" and len(evidence) >= 3:
+    if failed_quote_items(items) or news_state == "insufficient_evidence":
+        return "C"
+    if not core:
+        return "C"
+    verified = list(verified_quotes) if verified_quotes is not None else verified_quote_items(items)
+    distinct = independent_source_count(items, sources)
+    sample_ok, _ = regime_sample_ok(regime_sample)
+    if (news_state == "read_done" and len(verified) >= MIN_VERIFIED_QUOTES
+            and distinct >= MIN_INDEPENDENT_SOURCES and sample_ok and len(items) >= 3):
         return "A"
-    if core:
-        return "B"
-    return "C"
+    return "B"
 
 
 CONFIDENCE_RANK = {"A": 3, "B": 2, "C": 1}
@@ -355,6 +435,8 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
     """
     views = build_views(data, as_of, debate)
     regime = classify_regime(data.get("macro"), data.get("macro_previous"))
+    debate_cfg = (params or {}).get("debate") or {}
+    auto_downgrade_enabled = bool(debate_cfg.get("auto_downgrade_enabled", False))
     held = held or []
     held_tickers = {h["ticker"] for h in held}
     sector_weights = dict(sector_weights or {})
@@ -390,12 +472,17 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         )
         veto = veto_check(veto_in)
         deb = (debate or {}).get(view.ticker) or {}
-        structural_risk = 10.0
+        # P1-1 정책 분리: 토론의 `structural_risk` 는 **자동 하향이 켜졌을 때만** 정량 게이트에 들어간다.
+        # 기본값(auto_downgrade_enabled=false)에서는 `debate_structural_risk` 로만 남겨
+        # `quant_only` 기준선(B5·quant_grade)을 토론이 오염시키지 않게 한다(감사 P1-1-b).
+        debate_risk: float | None = None
         if deb.get("structural_risk") is not None:
             try:
-                structural_risk = max(0.0, min(100.0, float(deb["structural_risk"])))
+                debate_risk = max(0.0, min(100.0, float(deb["structural_risk"])))
             except (TypeError, ValueError):
-                structural_risk = 10.0
+                debate_risk = None
+        apply_debate_risk = bool(auto_downgrade_enabled) and debate_risk is not None
+        structural_risk = debate_risk if apply_debate_risk else QUANT_STRUCTURAL_RISK
         ctx = EntryContext(
             ticker=view.ticker,
             raw_close=ind["raw_close"],
@@ -481,7 +568,17 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         # 신뢰도 등급 + 분할 계획 — 토론이 붙어도 등급은 **내려가기만** 한다(3.10)
         conf = worse_confidence(confidence_grade(view.evidence, view.news_state),
                                 confidence_grade(view.evidence, view.news_state_base))
+        # C + 뉴스 근거 부족은 **등급·의도 모두 WATCH 상한**이다(감사 P1-1).
+        # 신호 등급은 `signals.evaluate_entry` 가 이미 내리지만, 발행 레코드의 `quant_intent`
+        # 까지 같은 규칙으로 묶어야 화면·원장·토론 트랙이 서로 다른 말을 하지 않는다.
+        evidence_cap = conf == "C" and view.news_state == "insufficient_evidence"
         buy = evaluation.get("signal") == "BUY"
+        if evidence_cap and buy:
+            evaluation = {**evaluation, "signal": "WATCH",
+                          "failed_gates": list(evaluation.get("failed_gates") or []) + ["CONFIDENCE_C_CAP"],
+                          "cap_reasons": list(evaluation.get("cap_reasons") or [])
+                          + ["뉴스 근거 부족(C) → 매수 상한 WATCH(3.9.4)"]}
+            buy = False
         plan = None
         if buy:
             plan = build_entry_plan(ctx, evaluation, regime=regime, params=params,
@@ -530,6 +627,10 @@ def build_payload(data: dict, *, as_of: date, mode: str, params: dict, params_ve
         )
         record["trade_grade"] = evaluation.get("grade")
         record["components"] = evaluation.get("components")
+        # P1-1 정책 분리 배지: 토론 리스크는 **기록**하되 자동 하향이 꺼져 있으면 게이트를 바꾸지 않는다.
+        record["debate_structural_risk"] = None if debate_risk is None else round(float(debate_risk), 2)
+        record["debate_risk_gate_applied"] = bool(apply_debate_risk)
+        record["confidence_cap"] = ("WATCH" if evidence_cap else None)
         detail = view.valuation_detail or {}
         dcf_detail = detail.get("iv_dcf") or {}
         record["valuation"] = {

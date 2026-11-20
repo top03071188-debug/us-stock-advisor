@@ -95,9 +95,54 @@ def eligible_samples(records: list[dict], graded: list[dict],
 
 def total_cost(*, slippage_bps: float = 10.0, commission_bps: float = 2.0, fx_bps: float = 5.0,
                round_trips: float = 2.0) -> float:
-    """비용 후 순수익에서 빼는 값(비율). 기본 왕복 2회 가정."""
+    """[구 경로] 왕복 전액 가정(비율) — 모든 비용을 한 번에 넣는다.
+
+    [v1.3.4 · P1-3] 파일럿 판정에는 쓰지 않는다. 진입 슬리피지는 **이미 체결가에 들어 있으므로**
+    이 값에서 다시 빼면 이중 차감이다(재현: 손익 −0.0999% → −0.4399%). 거래별로 실제 반영된
+    비용만 빼려면 `unreflected_cost()` 를 쓴다. 외부 호환을 위해 함수는 남긴다.
+    """
     bps = (slippage_bps + commission_bps + fx_bps) * round_trips
     return round(bps / 10_000.0, 8)
+
+
+def unreflected_cost(costs: dict | None = None, *, entry_slippage_in_fill: bool = True,
+                     round_trips: float = 2.0) -> dict:
+    """**아직 체결가에 반영되지 않은** 비용만 계산한다(P1-3 · 4.7.3 ②).
+
+    원장의 체결가는 `시가 × (1 + 슬리피지)` 이다(`live.settle`). 그래서 진입 슬리피지는 손익에
+    이미 들어 있다. 남은 것은 ① 청산 슬리피지 ② 왕복 수수료 ③ 왕복 환전 스프레드다.
+
+    `entry_slippage_in_fill=False` 면 진입 슬리피지도 미반영으로 보고 더한다(슬리피지 0 체결 등).
+    """
+    costs = costs or DEFAULT_COST_BPS
+    slip = float(costs.get("slippage", 10.0))
+    commission = float(costs.get("commission", 2.0)) * round_trips
+    fx = float(costs.get("fx", 5.0)) * round_trips
+    entry = 0.0 if entry_slippage_in_fill else slip
+    exit_slip = slip
+    total_bps = entry + exit_slip + commission + fx
+    return {
+        "entry_slippage_bps": round(entry, 4),
+        "exit_slippage_bps": round(exit_slip, 4),
+        "commission_bps": round(commission, 4),
+        "fx_bps": round(fx, 4),
+        "total_bps": round(total_bps, 4),
+        "total": round(total_bps / 10_000.0, 8),
+        "entry_slippage_in_fill": bool(entry_slippage_in_fill),
+    }
+
+
+def _entry_slippage_in_fill(execution: dict | None) -> bool:
+    """그 체결의 진입 슬리피지가 체결가에 반영됐는가 — `quant_track.slippage_bps` 로 판단한다."""
+    if not execution:
+        return True                     # 체결 이벤트가 없으면 가상 체결가(기본 가정 유지)
+    track = execution.get("quant_track") or {}
+    if track.get("fill_price") is None:
+        return True
+    try:
+        return float(track.get("slippage_bps") or 0.0) > 0
+    except (TypeError, ValueError):
+        return True
 
 
 def tail_loss(returns: list[float], quantile: float = TAIL_QUANTILE) -> dict:
@@ -155,9 +200,17 @@ def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | No
             mdds.append(float(h["mdd"]))
 
     ne = n_eff(eligible)
-    cost = total_cost(slippage_bps=costs.get("slippage", 10.0),
-                      commission_bps=costs.get("commission", 2.0),
-                      fx_bps=costs.get("fx", 5.0))
+    # [v1.3.4 · P1-3] 거래별 **미반영 비용**만 뺐다. 거래 0건이면 비용도 0원이다.
+    sample_costs: list[float] = []
+    for sample in eligible:
+        sid = str(sample.get("signal_id"))
+        execution = (executions or {}).get(sid)
+        sample_costs.append(unreflected_cost(
+            costs, entry_slippage_in_fill=_entry_slippage_in_fill(execution))["total"])
+    cost = 0.0 if not sample_costs else round(sum(sample_costs) / len(sample_costs), 8)
+    entry_in_fill = all(_entry_slippage_in_fill((executions or {}).get(str(s.get("signal_id"))))
+                        for s in eligible) if eligible else True
+    breakdown = unreflected_cost(costs, entry_slippage_in_fill=entry_in_fill)
     net = None if not excess else round(sum(excess) / len(excess) - cost, 6)
     exposure = None if not portfolio else portfolio.get("avg_exposure")
     strat_total = None if not portfolio else portfolio.get("total_return")
@@ -171,8 +224,11 @@ def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | No
                 f"체결·3개월 만기 {ne['n_eff']}개(발행 신호 {len(records or [])}건 중 유효 {len(eligible)}건)"),
         _metric("net_after_cost", "비용 후 순수익(SPY 대비)", net, "> 0",
                 None if net is None else bool(net > 0),
-                ("유효 표본 0건 — 계산 불가" if no_sample else
-                 f"평균 초과 {None if not excess else round(sum(excess) / len(excess), 6)} − 비용 {cost}")),
+                ("유효 표본 0건 — 계산 불가(비용 0원)" if no_sample else
+                 f"평균 초과 {None if not excess else round(sum(excess) / len(excess), 6)}"
+                 f" − 미반영 비용 {cost}(청산 슬리피지 {breakdown['exit_slippage_bps']}bp"
+                 f"·수수료 {breakdown['commission_bps']}bp·환전 {breakdown['fx_bps']}bp;"
+                 f" 진입 슬리피지는 체결가에 반영됨)")),
         _metric("cash_equivalent", "유사 현금비중 벤치마크 대비", cash_excess, "> 0",
                 None if cash_excess is None else bool(cash_excess > 0),
                 # 값이 있으면 계산된 것이다 — 표본이 없다는 문구를 값 옆에 붙이지 않는다.
@@ -210,6 +266,10 @@ def evaluate_pilot(records: list[dict], graded: list[dict], portfolio: dict | No
         "benchmark_return": benchmark_return,
         "risk_free": risk_free,
         "costs": costs,
+        "cost_applied": cost,
+        "cost_breakdown": breakdown,
+        "cost_note_ko": ("진입 슬리피지는 체결가에 이미 포함 — 청산 슬리피지·왕복 수수료·환전만 뺀다"
+                         "(P1-3). 유효 표본 0건이면 비용을 부과하지 않는다."),
         "note_ko": "55점·승률 52% 는 참고치다 — 게이트는 이 4지표로만 판단한다.",
     }
 

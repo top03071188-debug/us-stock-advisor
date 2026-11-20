@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codex_debate/schemas/round1.schema.json",
+  "title": "codex_debate round1 — 독립 분석",
+  "description": "1R 투자자 스킬 1개의 출력. codex exec --output-schema 로 강제한다(strict: 모든 필드 필수, additionalProperties=false).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "score", "stance", "confidence", "reasons", "news_read"],
+  "properties": {
+    "skill": {
+      "type": "string",
+      "enum": ["buffett", "lynch", "druckenmiller", "gates_13f"]
+    },
+    "score": {
+      "type": "number",
+      "minimum": -100,
+      "maximum": 100
+    },
+    "stance": {
+      "type": "string",
+      "enum": ["buy", "hold", "sell"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "reasons": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {"type": "string", "maxLength": 400}
+    },
+    "news_read": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["news_id", "url", "durability", "impact", "severity", "quote", "rationale_ko"],
+        "properties": {
+          "news_id": {"type": "string", "minLength": 1, "maxLength": 80},
+          "url": {"type": "string", "minLength": 1, "maxLength": 400},
+          "durability": {
+            "type": "string",
+            "enum": ["one_off", "structural", "unknown"]
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["positive", "negative", "neutral", "unknown"]
+          },
+          "severity": {"type": "number", "minimum": 0, "maximum": 100},
+          "quote": {"type": "string", "maxLength": 200},
+          "rationale_ko": {"type": "string", "maxLength": 400}
+        }
+      }
+    }
+  }
+}

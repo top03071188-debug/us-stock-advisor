@@ -260,8 +260,106 @@ function renderFreshness(meta) {
   host.append(...rows);
 }
 
-function renderNotifyBanner(notif, debate, today) {
-  const host = clear($("notify-banner"));
+/* ── 실행 상태(P2-1) — `전일 정상 데이터`와 `이번 세션 판단`을 구분한다 ────────── */
+const DATA_STATUS_LABEL = {
+  ok: { text: "정상 갱신", cls: "is-ok" },
+  degraded: { text: "일부 소스 실패 — 판단은 계속", cls: "is-warn" },
+  outage: { text: "이번 세션 판단 보류 — 마지막 성공 데이터 표시 중", cls: "is-bad" },
+};
+
+function renderDataStatus(meta, health) {
+  const host = clear($("data-status-banner"));
+  const h = health || {};
+  const status = h.data_status || (meta && meta.data_status) || (meta && meta.status) || "";
+  const info = DATA_STATUS_LABEL[status];
+  const attempt = h.last_attempt_at || (meta && meta.last_attempt_at);
+  const success = h.last_success_at || (meta && meta.last_success_at);
+  const outageId = h.outage_id || (meta && meta.outage_id);
+  if (!info) {
+    if (attempt || success) {
+      host.append(el("p", { class: "tiny", text:
+        `마지막 시도 ${fmtKo(attempt)} · 마지막 성공 ${fmtKo(success)}` }));
+    }
+    return;
+  }
+  host.append(el("div", { class: `banner ${info.cls}` }, [
+    el("strong", { text: info.text }),
+    el("span", { class: "tiny", text: status === "outage"
+      ? ` · 직전 정상 신호 ${meta && meta.as_of ? `${meta.as_of} 기준` : "그대로"} 표시 · 마지막 성공 ${fmtKo(success)}`
+      : ` · 마지막 시도 ${fmtKo(attempt)}` }),
+  ]));
+  // `last_attempt_at`(이번 시도)과 `last_success_at`(마지막 성공)은 **다른 값**이다 — 둘을 나란히 보여 준다.
+  host.append(el("p", { class: "tiny", text:
+    `시도 ${fmtKo(attempt)} · 성공 ${fmtKo(success)} · 마감 ${fmtKo(h.data_cutoff_at || (meta && meta.data_cutoff_at))}`
+    + (h.target_session ? ` · 대상 세션 ${h.target_session}` : "")
+    + (outageId ? ` · 장애 ${outageId}` : "") }));
+}
+
+/* ── 발행 세트(P2-1) — 서비스워커 캐시가 같은 세트인지 확인한다 ───────────────── */
+function shortBundle(bundle) {
+  if (!bundle) return "—";
+  const [, snap] = String(bundle).split("|");
+  return String(snap || bundle).replace("sha256:", "").slice(0, 12);
+}
+
+function postToServiceWorker(message) {
+  return new Promise((resolve) => {
+    if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) {
+      resolve(null);
+      return;
+    }
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => resolve(null), 1500);
+    channel.port1.onmessage = (event) => {
+      clearTimeout(timer);
+      resolve(event.data || null);
+    };
+    try {
+      navigator.serviceWorker.controller.postMessage(message, [channel.port2]);
+    } catch (err) {
+      clearTimeout(timer);
+      resolve(null);
+    }
+  });
+}
+
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return null;
+  try {
+    return await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+  } catch (err) {
+    return null;
+  }
+}
+
+async function syncBundleSet(meta) {
+  const host = clear($("bundle-banner"));
+  const bundle = (meta && meta.bundle_version) || null;
+  const reply = await postToServiceWorker({ type: "set-bundle-version", bundle_version: bundle });
+  if (!reply) {
+    host.append(el("p", { class: "tiny", text:
+      `발행 세트 ${shortBundle(bundle)} · 오프라인 열람은 새로고침 뒤에 준비됩니다` }));
+    return;
+  }
+  if (reply.mismatch) {
+    host.append(el("div", { class: "banner is-warn" }, [
+      el("strong", { text: "이전/혼합 세트" }),
+      el("span", { class: "tiny", text:
+        ` 캐시된 세트(${shortBundle(reply.previous_bundle_version)})와 현재 발행 세트(${shortBundle(bundle)})가 다릅니다 — 새로고침하면 지금 세트로 맞춥니다.` }),
+    ]));
+    return;
+  }
+  if (reply.last_served === "cache") {
+    host.append(el("div", { class: "banner is-warn" }, [
+      el("strong", { text: "오프라인 — 캐시된 세트 표시 중" }),
+      el("span", { class: "tiny", text: ` 세트 ${shortBundle(reply.bundle_version || bundle)} · 연결되면 새로고침하세요.` }),
+    ]));
+    return;
+  }
+  host.append(el("p", { class: "tiny", text: `발행 세트 ${shortBundle(bundle)} · 오프라인 열람 준비됨` }));
+}
+
+function renderNotifyBanner(notif, debate, today) {  const host = clear($("notify-banner"));
   const events = (notif && notif.new) || [];
   const signals = (today && today.signals) || [];
   const covered = (debate && debate.by_ticker) || {};
@@ -1038,6 +1136,8 @@ function renderDebateEffect(debate) {
 
   host.append(el("p", {}, [badge(`자동 하향 ${enabled ? "ON" : "OFF"}`, enabled ? "warn" : "info"),
     el("span", { class: "tiny", text: " · 기본값은 false — 검증 전에는 표시·기록만 바꿉니다(3.11.8)" })]));
+  // 페어 손익 표 — 두 계좌의 **순자산 차이**(policy-effect)와 섞지 않는다(4.8 · P1-3).
+  host.append(el("p", { class: "tiny", text: "아래는 **페어 손익**입니다 — 계좌 전체의 순자산 차이는 위 `계좌 정책 순효과` 칸에서 따로 읽습니다." }));
 
   if (pairs < 30 || nEff < 15) {
     // 작은 표본의 숫자를 자신 있게 보여 주는 것이 가장 위험하다(5.4)
@@ -1097,6 +1197,46 @@ function ppText(value) {
   return `${num > 0 ? "+" : ""}${num.toFixed(2)}%p`;
 }
 
+/**
+ * 계좌 정책 순효과(P1-3) — `quant_only` 와 `codex_debated` **두 모의 계좌의 순자산 차이**다.
+ * 페어 손익(회피손실·놓친수익)과 다른 질문이므로 한 칸으로 섞지 않는다.
+ */
+function renderPolicyEffect(debate) {
+  const host = clear($("policy-effect"));
+  const comparison = (debate && debate.comparison) || {};
+  const policy = comparison.policy_diff_pp;
+  const pair = comparison.pair_summary || {};
+  host.append(el("h3", { text: "계좌 정책 순효과 (두 모의 계좌의 순자산 차이)" }));
+  if (!isNum(policy)) {
+    host.append(el("p", { class: "big-verdict warn", text: "산출 전 — 표시 보류" }));
+    host.append(el("p", { class: "tiny", text:
+      "두 계좌(정량 단독 / 토론 포함)의 순자산 곡선이 쌓여야 계산됩니다. "
+      + "페어 손익과 다른 값이라 여기에 대신 쓰지 않습니다(4.8 · P1-3)." }));
+  } else {
+    host.append(el("p", { class: "big-verdict " + (policy > 0 ? "ok" : policy < 0 ? "bad" : "warn"),
+      text: `정책 순효과 ${ppText(policy)}` }));
+    host.append(el("p", { class: "tiny", text: "비용 후 · 같은 기간 두 계좌 차이" }));
+  }
+  host.append(el("div", { class: "metric-grid" }, [
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "페어 회피 손실" }),
+      el("div", { class: "metric-value", text: ppText(pair.avoided_loss_pp ?? comparison.avoided_loss_pp) }),
+      el("p", { class: "tiny", text: "안 산 게 옳았던 몫(페어)" })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "페어 놓친 수익" }),
+      el("div", { class: "metric-value", text: ppText(-Math.abs(Number(pair.missed_gain_pp ?? comparison.missed_gain_pp ?? 0))) }),
+      el("p", { class: "tiny", text: "안 산 게 손해였던 몫(페어)" })]),
+    el("div", { class: "metric-cell" }, [el("div", { class: "metric-label", text: "페어 비용 후" }),
+      el("div", { class: "metric-value", text: ppText(pair.net_after_cost_pp ?? comparison.net_after_cost_pp) }),
+      el("p", { class: "tiny", text: `페어 ${pair.pairs ?? comparison.n_graded_pairs ?? 0}건` })]),
+  ]));
+  // 소급 페어는 **표시만** 하고 비교에서는 뺀다(P0-2) — 숫자는 `counts` 쪽과 같은 값이다.
+  const retroactiveDropped = Number(comparison.retroactive_dropped
+    || (comparison.counts || {}).retroactive_dropped || 0);
+  if (retroactiveDropped > 0) {
+    host.append(el("p", { class: "tiny", text:
+      `소급 페어 ${retroactiveDropped}건은 비교에서 뺐습니다 — 편입 검증보다 먼저 체결된 주문입니다.` }));
+  }
+}
+
 function renderLivePositions(portfolio, health) {
   const host = clear($("live-positions"));
   const positions = (portfolio && portfolio.positions) || [];
@@ -1146,6 +1286,7 @@ function renderLedger(summary, portfolio, records, pilotEval, debate, health) {
   renderPilot(summary, pilotEval);
   renderHistory(summary, records);
   renderParams(summary);
+  renderPolicyEffect(debate);
   renderDebateEffect(debate);
   renderLivePositions(portfolio, health);
 }
@@ -1315,12 +1456,14 @@ async function boot() {
 
   renderStatus(meta);
   renderFreshness(meta);
+  renderDataStatus(meta, health);
   renderNotifyBanner(notif, debate, today);
   renderRegime(meta);
   renderToday(today, config);
   renderLedger(summary, portfolio, records, (summary && summary.pilot) || null, debate, health);
   renderRadar(radar, watch, config, today);
   fillTickerSelect(today, watch);
+  syncBundleSet(meta);
 
   if (!state.bound) {
     state.bound = true;
@@ -1333,6 +1476,9 @@ async function boot() {
   const route = parseHash();
   setRoute(route, state.ticker);
 }
+
+// 서비스워커 등록 — 오프라인 열람·발행 세트 캐시(P2-1). 실패해도 화면은 그대로 동작한다.
+registerServiceWorker();
 
 boot().catch((err) => {
   const host = $("signals");

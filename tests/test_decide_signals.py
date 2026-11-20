@@ -214,3 +214,132 @@ def test_default_params_match_spec_numbers():
     assert p["scaling"]["entry"] == [0.40, 0.30, 0.30]
     ev = evaluate_entry(ctx(), "neutral", params=p)
     assert ev["signal"] == "BUY"
+
+
+# ── 감사 P1-1: 신뢰도 A 요건 · structural_risk 정책 분리 · C 상한 ─────────────────
+from datetime import date  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from engine.data import fixtures  # noqa: E402
+from engine.decide.pipeline import (  # noqa: E402
+    MIN_INDEPENDENT_SOURCES,
+    build_payload,
+    confidence_grade,
+    evidence_items,
+    independent_source_count,
+    load_params,
+    regime_sample_ok,
+    verified_quote_items,
+)
+
+ROOT = Path(__file__).resolve().parents[1]
+AS_OF = date(2026, 11, 20)
+TIMES = {"data_cutoff_at": "2026-11-19T22:00:00Z",
+         "signal_published_at": "2026-11-20T02:34:58Z",
+         "order_cutoff_at": "2026-11-20T14:25:00Z",
+         "target_session": "2026-11-20"}
+
+
+def _core_evidence(**news) -> list[dict]:
+    base = [{"type": "fundamental", "metric": "quality_composite", "value_kind": "score_0_100"},
+            {"type": "sec_filing", "form": "10-Q", "role": "reference"},
+            {"type": "market", "metric": "atr_pct", "value_kind": "ratio"}]
+    if news:
+        base.insert(2, {"type": "news", **news})
+    return base
+
+
+def _payload(data: dict | None = None, params: dict | None = None, debate: dict | None = None) -> dict:
+    data = data or fixtures.dataset(AS_OF)
+    return build_payload(data, as_of=AS_OF, mode="postclose",
+                         params=params or load_params(ROOT / "config" / "params_v001.yaml"),
+                         params_version="params_v001", code_commit="test", snapshot_id="sha256:test",
+                         status="sample", three_times=TIMES, debate=debate)
+
+
+def test_confidence_grade_signature_is_backward_compatible():
+    evidence = _core_evidence(source="Wire", url="https://a/1", quote_verified=True, quote_sha256="x")
+    assert confidence_grade(evidence, "read_done") == "B"   # 출처 1곳 → A 아님
+    assert confidence_grade(evidence=_core_evidence(), news_state="not_read") == "B"
+    assert confidence_grade(_core_evidence(), "read_done", regime_sample={"n": 30}) == "B"
+
+
+def test_missing_quote_hash_is_not_a_pass():
+    """해시 없는 뉴스는 '통과'가 아니라 미검증이다 — A 를 줄 수 없다(감사 P1-1-a)."""
+    items = evidence_items("AAA", [{"form": "10-Q", "url": "https://sec/1", "filed_date": "2026-11-01",
+                                    "acceptance_datetime": "2026-11-01T20:00:00Z", "accession": "acc-1"}],
+                           [{"headline": "h", "source": "Wire", "url": "https://a/1",
+                             "published_at": "2026-11-19T20:00:00Z"}],
+                           {"metric": "x"}, "read_done", AS_OF.isoformat())
+    news = [item for item in items if item["type"] == "news"]
+    assert news and news[0]["quote_verified"] is False         # 키 누락이 아니라 명시 False
+    assert verified_quote_items(items) == []
+    assert confidence_grade(items, "read_done") == "B"
+
+
+def test_grade_a_needs_verified_quote_two_sources_and_regime_sample():
+    a = _core_evidence(source="WireA", url="https://a/1", quote_verified=True, quote_sha256="x")
+    b = {"type": "news", "source": "WireB", "url": "https://b/2", "quote_verified": True,
+         "quote_sha256": "y"}
+    evidence = _core_evidence() + [a[2], b]
+    assert confidence_grade(evidence, "read_done") == "A"
+    # 같은 매체 두 건은 독립 출처 2곳이 아니다
+    same_source = [a[2], {**b, "source": "WireA"}]
+    assert independent_source_count(same_source) == 1 < MIN_INDEPENDENT_SOURCES
+    assert confidence_grade(_core_evidence()[:2] + same_source, "read_done") == "B"
+    # 국면 표본이 모자라면 A 가 아니라 B
+    assert confidence_grade(evidence, "read_done", regime_sample={"n": 3}) == "B"
+    assert confidence_grade(evidence, "read_done", regime_sample={"n": 12, "min_n": 10}) == "A"
+    assert confidence_grade(evidence, "read_done", regime_sample=4) == "B"
+
+
+def test_failed_quote_and_insufficient_evidence_are_c():
+    failed = _core_evidence(source="Wire", url="https://a/1", quote_verified=False, quote_sha256="x")
+    assert confidence_grade(failed, "read_done") == "C"
+    ok = _core_evidence(source="Wire", url="https://a/1", quote_verified=True, quote_sha256="x")
+    assert confidence_grade(ok, "insufficient_evidence") == "C"
+    assert confidence_grade(ok, "not_read") == "B"
+
+
+def test_regime_sample_helper_documents_backward_compatibility():
+    assert regime_sample_ok(None) == (True, None)      # 미전달 → 하위 호환(기존 호출 보존)
+    assert regime_sample_ok(3)[0] is False
+    assert regime_sample_ok({"count": 20}) == (True, None)
+    assert regime_sample_ok("nonsense")[0] is False
+
+
+def test_debate_structural_risk_does_not_change_quant_grade_when_auto_downgrade_off():
+    """P1-1-b: 자동 하향이 꺼져 있으면 토론 리스크는 기록·배지만, 정량 등급은 그대로."""
+    debate = {"FIXA": {"ticker": "FIXA", "structural_risk": 58.0, "eligible": True}}
+    baseline = next(r for r in _payload()["signals"] if r["ticker"] == "FIXA")
+    record = next(r for r in _payload(debate=debate)["signals"] if r["ticker"] == "FIXA")
+    assert baseline["trade_grade"] == "BUY" and record["trade_grade"] == "BUY"
+    assert record["decision"] == "BUY" and record["quant_intent"] == "pending_buy"
+    assert record["debate_structural_risk"] == 58.0
+    assert record["debate_risk_gate_applied"] is False
+    assert "B5" not in (record["gate_summary"]["failed"] or [])
+
+
+def test_debate_structural_risk_applies_to_gate_when_auto_downgrade_on():
+    params = load_params(ROOT / "config" / "params_v001.yaml")
+    params["debate"]["auto_downgrade_enabled"] = True
+    debate = {"FIXA": {"ticker": "FIXA", "structural_risk": 58.0, "eligible": True}}
+    record = next(r for r in _payload(params=params, debate=debate)["signals"] if r["ticker"] == "FIXA")
+    assert record["decision"] == "WATCH" and record["quant_intent"] == "no_action"
+    assert record["debate_risk_gate_applied"] is True
+    assert "B5" in (record["gate_summary"]["failed"] or [])
+
+
+def test_c_grade_with_insufficient_evidence_caps_watch_and_intent():
+    """C + 뉴스 근거 부족은 발행 등급·의도 모두 WATCH 상한이다(P1-1)."""
+    payload = _payload()
+    capped = [r for r in payload["signals"] if r["news_state"] == "insufficient_evidence"]
+    assert capped, "픽스처에 근거 부족 종목이 있어야 이 계약을 검증할 수 있다"
+    for record in capped:
+        assert record["grade"] == "C"
+        assert record["decision"] == "WATCH"
+        assert record["quant_intent"] == "no_action"
+        assert record["confidence_cap"] == "WATCH"
+    # 근거 부족이 아닌 종목에는 상한 표시가 붙지 않는다
+    assert all(r["confidence_cap"] is None for r in payload["signals"]
+               if r["news_state"] != "insufficient_evidence")

@@ -281,3 +281,15 @@ button.linkish {
   color: var(--info); font: inherit; font-weight: 700; cursor: pointer; min-height: 44px;
 }
 button.linkish:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
+
+/* ── Phase 4-2: 실행 상태·발행 세트·정책 효과 (감사 P1-3 · P2-1) ──────────────── */
+/* 성적표 카드 안에서 `계좌 정책 순효과`(두 계좌 순자산 차이)와 `페어 손익`을 나눠 읽게 한다. */
+#policy-effect h3,
+#debate-effect h3 { margin: 10px 0 6px; font-size: 12px; color: var(--muted); font-weight: 700; }
+#policy-effect .metric-grid { margin-top: 6px; }
+#policy-effect .big-verdict { margin: 2px 0 0; }
+/* 장애·세트 배지는 배너 안에서 한 줄로 접히게 — 좁은 화면에서 문장이 잘리지 않는다. */
+#data-status-banner .banner,
+#bundle-banner .banner { flex-wrap: wrap; }
+#data-status-banner .banner .tiny,
+#bundle-banner .banner .tiny { flex-basis: 100%; }

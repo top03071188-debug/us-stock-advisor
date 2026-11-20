@@ -277,31 +277,15 @@ def reanchor_event(*, signal_id: str, snapshot_id: str, at, first_fill: float,
     }
 
 
-def debate_event(*, signal_id: str, snapshot_id: str, report_id: str, intent: str,
-                 completed_at, recorded_at, eligible: bool, late: bool,
-                 auto_downgrade_applied: bool = False) -> dict:
-    """토론 편입 이벤트 — 발행 레코드가 아니라 이 파일에만 쌓는다(3.11.8)."""
-    if intent not in INTENTS:
-        raise RecordError(f"알 수 없는 토론 intent: {intent!r}")
-    return {
-        "signal_id": signal_id,
-        "snapshot_id": snapshot_id,
-        "events": [{
-            "event": "debate_attached",
-            "report_id": report_id,
-            "track": "codex_debated",
-            "intent": intent,
-            "completed_at": _iso(completed_at),
-            "recorded_at": _iso(recorded_at),
-            "eligible": bool(eligible),
-            "late": bool(late),
-            "auto_downgrade_applied": bool(auto_downgrade_applied),
-        }],
-    }
-
+# P1-2 [v1.3.4]: 예전 `record.debate_event()`(호출자가 `eligible`·`late` 를 넘기던 구 경로)는
+# **삭제**했다. 편입 이벤트는 `engine.ledger.debate.debate_event(report, record, …)` 가 시각 계약을
+# 스스로 계산해 만든다 — 같은 규칙이 두 벌로 갈라지면 "호출자가 틀린 값"이 그대로 기록된다.
 
 #: `{as_of}-{ticker}-{BUY|WATCH}-{회차 3자리}`
 SIGNAL_SEQ_RE = re.compile(r"^(?P<base>.+)-(?P<seq>\d{3})$")
+
+#: 발행 묶음을 가르는 "판단" 축 — 같은 날 같은 종목이라도 BUY/WATCH/차단은 **다른 발행**이다.
+RELEASE_KINDS = ("BUY", "WATCH", "BLOCKED")
 
 
 def split_signal_id(signal_id: str) -> tuple[str, int]:
@@ -312,45 +296,72 @@ def split_signal_id(signal_id: str) -> tuple[str, int]:
     return match.group("base"), int(match.group("seq"))
 
 
-def release_group(record: dict) -> tuple[str, str, str]:
-    """같은 발행 묶음의 키 — `(as_of, ticker, type)`. 회차만 다른 같은 종목·같은 날의 발행."""
-    return (str(record.get("as_of") or ""), str(record.get("ticker") or ""), str(record.get("type") or ""))
+def release_group(record: dict) -> tuple[str, str]:
+    """같은 발행 묶음의 키 — `(as_of, ticker)`.
+
+    [v1.3.4 · P0-1] 예전 키는 `(as_of, ticker, type)` 이었다. 그래서 같은 날 같은 종목의 판단이
+    BUY→WATCH 로 바뀌어도 **다른 묶음**이 되어 이전 BUY 를 대체하지 못했고, 최신 판단이 WATCH 인데
+    BUY 가 그대로 체결됐다(감사 P0-1 재현: 체결 1건, 기대 0건). 판단 종류는 **회차 내용**이지
+    묶음이 아니다 — 한 종목·한 날의 회차는 하나의 계보를 이룬다.
+    """
+    return (str(record.get("as_of") or ""), str(record.get("ticker") or ""))
 
 
 def release_fingerprint(record: dict) -> tuple:
-    """같은 발행인지 판단하는 **입력 지문** — 발행 시각·스냅샷 경로가 아니라 판단 입력·컷오프·파라미터.
+    """같은 발행인지 판단하는 **입력 지문** — 판단 입력·컷오프·파라미터·**판단 종류**.
 
     `inputs_hash`(입력·보유·섹터비중·파라미터의 canonical 해시)가 있으면 그 값이 기준이다.
     구 레코드처럼 없으면 `(snapshot_id, data_cutoff_at, params_version)` 로 대신한다.
+
+    [v1.3.4] 판단 종류(`type`)·의도(`quant_intent`)·등급도 지문에 넣는다. 입력이 같아도
+    BUY→WATCH 로 바뀐 재실행은 **새 발행**이어야 하는데, 예전 지문은 입력만 보아
+    "같은 발행"으로 재사용했다. `run_request_id` 가 있으면 요청 자체를 구분자로 더한다
+    (별개 요청의 재전송을 같은 발행으로 접지 않는다).
     """
+    decision = (str(record.get("type") or "").upper(), str(record.get("quant_intent") or ""),
+                str(record.get("grade") or ""))
+    request = record.get("run_request_id") or ""
     if record.get("inputs_hash"):
-        return ("inputs_hash", str(record["inputs_hash"]))
+        return ("inputs_hash", str(record["inputs_hash"]), *decision, str(request))
     return ("legacy", str(record.get("snapshot_id") or ""),
-            str(record.get("data_cutoff_at") or ""), str(record.get("params_version") or ""))
+            str(record.get("data_cutoff_at") or ""), str(record.get("params_version") or ""),
+            *decision, str(request))
 
 
 def resolve_release(record: dict, existing: list[dict]) -> dict:
     """새 발행본의 회차를 정한다 — `append_immutable` 과 충돌하지 않게.
 
-    - 같은 `(as_of, ticker, type)` 의 기존 발행 중 **입력 지문이 같은 것** 이 있으면 그 발행본을 재사용
-      한다(`duplicate=True`, `signal_id` 는 기존 것). 같은 날 같은 입력으로 다시 돌린 재시도다.
-    - 지문이 다르면(입력·컷오프·파라미터가 바뀌어 **새로 확정**된 발행) 다음 회차 접미사(`002`, `003`…)를
-      붙이고 `supersedes` 로 직전 발행본을 가리킨다. ``…-001`` 을 다른 내용으로 덮어쓰지 않는다.
+    [v1.3.4 · P0-1] 두 가지를 고친다.
+
+    1. **이미 대체된 발행본은 절대 재사용하지 않는다.** 같은 `(as_of, ticker)` 계보에서 다른 회차가
+       `supersedes` 로 가리킨 발행본은 "과거"다. 입력 A→B→A 에서 마지막 A 가 이미 B 에 대체된
+       A-001 을 다시 고르면 ① 화면에는 대체된 회차가 나가고 ② 실제 체결은 더 이상 최신이 아닌 회차가
+       된다(감사 P0-1 재현). 지금 유효한 회차 중에서만 지문을 비교하고, 아니면 **새 회차(003)** 를 만든다.
+    2. 같은 `run_request_id` 의 **재전송**일 때만 원 응답을 재사용한다. 요청 id 가 다르면 같은 입력이라도
+       새 요청이므로 새 회차다.
 
     Returns: `{"signal_id", "revision", "supersedes", "duplicate", "reused_from"}`
     """
     group = release_group(record)
     same = [r for r in existing if release_group(r) == group]
+    superseded = superseded_ids(existing)
+    live = [r for r in same if str(r.get("signal_id")) not in superseded]
     fingerprint = release_fingerprint(record)
-    for old in sorted(same, key=lambda r: split_signal_id(str(r.get("signal_id")))[1], reverse=True):
-        if release_fingerprint(old) == fingerprint:
-            return {"signal_id": str(old.get("signal_id")), "revision": int(old.get("revision") or 1),
-                    "supersedes": old.get("supersedes"), "duplicate": True,
-                    "reused_from": str(old.get("signal_id"))}
+    request_id = str(record.get("run_request_id") or "")
+    for old in sorted(live, key=lambda r: split_signal_id(str(r.get("signal_id")))[1], reverse=True):
+        if release_fingerprint(old) != fingerprint:
+            continue
+        if request_id and str(old.get("run_request_id") or "") not in ("", request_id):
+            continue        # 다른 요청의 재전송 — 원 응답을 주지 않는다
+        return {"signal_id": str(old.get("signal_id")), "revision": int(old.get("revision") or 1),
+                "supersedes": old.get("supersedes"), "duplicate": True,
+                "reused_from": str(old.get("signal_id"))}
     base, _ = split_signal_id(str(record.get("signal_id") or ""))
     last_seq = max((split_signal_id(str(r.get("signal_id")))[1] for r in same), default=0)
     revision = last_seq + 1
-    latest = max(same, key=lambda r: split_signal_id(str(r.get("signal_id")))[1]) if same else None
+    latest = max(live, key=lambda r: split_signal_id(str(r.get("signal_id")))[1]) if live else None
+    if latest is None and same:
+        latest = max(same, key=lambda r: split_signal_id(str(r.get("signal_id")))[1])
     return {"signal_id": f"{base}-{revision:03d}", "revision": revision,
             "supersedes": str(latest.get("signal_id")) if latest is not None else None,
             "duplicate": False, "reused_from": None}
@@ -364,6 +375,76 @@ def superseded_ids(records: list[dict]) -> set[str]:
         if old:
             out.add(str(old))
     return out
+
+
+def live_releases(records: list[dict], *, as_of: str | None = None,
+                  ticker: str | None = None) -> list[dict]:
+    """지금 유효한(아무도 대체하지 않은) 발행본 — 회차 번호 오름차순.
+
+    `as_of`·`ticker` 를 주면 그 묶음만 본다. WATCH·차단 회차 생성과 정산이 같은 기준을 쓴다.
+    """
+    superseded = superseded_ids(records)
+    rows = [r for r in records or [] if str(r.get("signal_id")) not in superseded]
+    if as_of is not None:
+        rows = [r for r in rows if str(r.get("as_of") or "")[:10] == str(as_of)[:10]]
+    if ticker is not None:
+        rows = [r for r in rows if str(r.get("ticker") or "") == str(ticker)]
+    return sorted(rows, key=lambda r: split_signal_id(str(r.get("signal_id")))[1])
+
+
+def superseding_release(existing: list[dict], *, ticker: str, as_of: str, type: str,
+                        data_cutoff_at, signal_published_at, order_cutoff_at,
+                        target_session: str | None = None, grade: str = "NONE",
+                        entry_score: float = 0.0, reason_ko: str = "",
+                        snapshot_id: str = "", params_version: str = "params_v001",
+                        code_commit: str = "", inputs_hash: str | None = None,
+                        run_request_id: str | None = None,
+                        generated_price: float | None = None,
+                        target_band: dict | None = None) -> dict:
+    """[v1.3.4 · P0-1] WATCH·차단(BLOCKED)도 **회차로 기록**해 직전 BUY 를 대체한다.
+
+    예전에는 BUY 가 아닌 판단이 발행 레코드를 만들지 않아, 같은 날 판단이 WATCH·차단으로 바뀌어도
+    이전 BUY 가 원장에 그대로 남아 다음 세션 시가에 체결됐다(감사 P0-1 재현). 이 헬퍼는
+    `quant_intent="no_action"` 인 최소 발행 레코드를 만들어 `resolve_release()` 로 회차를 받고
+    `supersedes` 로 직전 회차를 가리키게 한다. 발행 레코드는 여전히 **불변**이다 — 원장에 append 만 한다.
+
+    `existing` 에서 같은 `(as_of, ticker)` 의 직전 발행을 찾아 가격·밴드를 물려받는다(없으면 제네릭).
+    """
+    kind = str(type or "").upper()
+    if kind not in RELEASE_KINDS[1:]:
+        raise RecordError(f"superseding_release 는 WATCH·BLOCKED 만 만든다: {type!r}")
+    prior = live_releases(existing, as_of=as_of, ticker=ticker)
+    template = prior[-1] if prior else {}
+    price = generated_price
+    if price is None:
+        price = template.get("generated_price")
+    band = target_band or (template.get("target_band") if template else None)
+    if price is None and band:
+        price = float((band or {}).get("base_price") or 0.0) or None
+    if price is None:
+        raise RecordError("superseding_release 에 generated_price 또는 이전 발행본이 필요하다")
+    price = float(price)
+    band = dict(band or {"lo": price * 1.10, "hi": price * 1.30, "horizon_td": 63,
+                         "base_price": price})
+    record = publish_record(
+        signal_id=f"{as_of}-{ticker}-{kind}-001", ticker=ticker, type=kind,
+        grade=str(grade or "NONE"), entry_score=float(entry_score or 0.0), as_of=as_of,
+        data_cutoff_at=data_cutoff_at, signal_published_at=signal_published_at,
+        order_cutoff_at=order_cutoff_at, target_session=target_session,
+        generated_price=price, target_band=band, expected_mdd=None,
+        thesis_ko=reason_ko or ("관찰 — 신규 진입 없음" if kind == "WATCH" else "차단 — 신규 진입 없음"),
+        plan_weight=0.0, stop_distance=0.0, quant_intent="no_action",
+        snapshot_id=snapshot_id, params_version=params_version, code_commit=code_commit,
+        inputs_hash=inputs_hash,
+    )
+    if run_request_id:
+        record["run_request_id"] = str(run_request_id)
+    release = resolve_release(record, existing)
+    record["signal_id"] = release["signal_id"]
+    record["revision"] = int(release["revision"])
+    record["supersedes"] = release["supersedes"]
+    record["release_kind"] = kind
+    return record
 
 
 def append_immutable(path: str | Path, record: dict, key: str = "signal_id") -> Path:

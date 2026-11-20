@@ -92,13 +92,48 @@ def _json_size(obj) -> int:
 
 
 # ────────────────────────────── 각 파일 ──────────────────────────────
-def build_meta(signals: dict | None, debate: dict | None, debate_comparison: dict | None = None) -> dict:
+def bundle_version(signals: dict | None) -> str | None:
+    """발행 세트 식별자 = `inputs_hash` + `snapshot_id`(P2-1).
+
+    서비스워커가 같은 세트만 캐시하고, 세트가 바뀌면 "이전/혼합 세트" 배지를 띄우는 기준이다.
+    """
     signals = signals or {}
+    inputs_hash = str(signals.get("inputs_hash") or "")
+    snapshot = str(signals.get("snapshot_id") or "")
+    if not inputs_hash and not snapshot:
+        return None
+    return f"{inputs_hash or 'no-inputs'}|{snapshot or 'no-snapshot'}"
+
+
+def data_status_of(value, default: str = "ok") -> str:
+    """실행 상태를 공개 계약(`ok` | `degraded` | `outage`)으로 정규화한다(P2-1)."""
+    text = str(value or "").strip().lower()
+    if text in ("ok", "normal", "complete", "sample"):
+        return "ok"
+    if text in ("degraded", "stale", "partial"):
+        return "degraded"
+    if text in ("outage", "failed", "down"):
+        return "outage"
+    return default if text else default
+
+
+def build_meta(signals: dict | None, debate: dict | None, debate_comparison: dict | None = None,
+               health: dict | None = None) -> dict:
+    signals = signals or {}
+    health = health or {}
     regime = signals.get("regime") or {}
     source = signals.get("source")
     diagnostics = signals.get("diagnostics") or {}
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        # P2-1: `generated_at` 은 **신호 확정 시각**이다. 웹 빌드 시각으로 덮어쓰면 장애일에도
+        # 전일 정상 신호가 "방금 갱신된 데이터"처럼 보인다. 빌드 시각은 `build_at` 에 따로 둔다.
+        "generated_at": signals.get("signal_published_at") or signals.get("generated_at"),
+        "build_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "bundle_version": bundle_version(signals),
+        "data_status": data_status_of(health.get("data_status") or signals.get("status")),
+        "last_attempt_at": health.get("last_attempt_at") or health.get("last_run_at"),
+        "last_success_at": health.get("last_success_at"),
+        "outage_id": health.get("outage_id"),
         "params_version": signals.get("params_version"),
         "snapshot_id": signals.get("snapshot_id"),
         "status": signals.get("status", "awaiting_first_run"),
@@ -146,6 +181,8 @@ SIGNAL_PUBLIC_FIELDS = (
     "conflict", "news_state", "position", "target_band", "expected_mdd", "invalidation",
     "gate_summary", "sizing_note_ko", "params_version", "snapshot_id", "track", "veto",
     "news", "filings", "risk", "evidence", "entry_plan",
+    # P1-1: 토론 리스크는 게이트와 **분리해** 보여 준다(자동 하향 off 에서는 배지·기록만).
+    "debate_structural_risk", "debate_risk_gate_applied", "confidence_cap",
 )
 
 
@@ -493,7 +530,37 @@ COMPARISON_FIELDS = (
     "avoided_loss_pp", "missed_gain_pp", "net_pp", "net_after_cost_pp",
     "avoidance_accuracy", "drawdown", "pairs", "by_regime", "quarters",
     "consecutive_quarters", "verdict", "verdict_ko", "note_ko", "counts",
+    # P1-3 화면 분리: 계좌 두 개의 **순자산 차이**(정책 효과)와 **페어 손익**(보류·회피)은 다른 값이다.
+    "policy_diff_pp", "pair_summary", "retroactive_dropped", "retroactive_dropped_pairs",
+    # 두 계좌의 기간 수익률·MDD — "정책 순효과"가 어느 두 값의 차이인지 화면이 바로 보여 준다.
+    "R_quant", "R_debated", "quant_mdd", "debate_mdd",
 )
+#: `pair_summary` 가 없을 때(구 비교 파일) 채우는 하위 호환 기본값 — 페어 손익만 담는다.
+EMPTY_PAIR_SUMMARY = {"pairs": 0, "n_graded": 0, "n_eff": 0, "avoided_loss": 0.0,
+                      "missed_gain": 0.0, "pair_net": 0.0, "pair_net_pp": 0.0,
+                      "avoidance_accuracy": None}
+
+
+def pair_summary_of(comparison: dict) -> dict:
+    """페어 손익 요약 — 회피 손실·놓친 수익·비용 후 손익만(계좌 성과와 분리한 표).
+
+    비교 모듈(`engine.ledger.debate`)이 자체 `pair_summary` 를 내면 **그것을 그대로 쓴다**.
+    구 파일처럼 없는 경우에만 같은 키 모양으로 최소한을 재구성한다.
+    """
+    source = comparison or {}
+    existing = source.get("pair_summary")
+    if isinstance(existing, dict) and existing:
+        return {**EMPTY_PAIR_SUMMARY, **existing}
+    summary = dict(EMPTY_PAIR_SUMMARY)
+    for key in ("n_graded_pairs", "n_eff", "avoided_loss", "missed_gain", "avoidance_accuracy"):
+        if source.get(key) is not None:
+            summary[{"n_graded_pairs": "n_graded"}.get(key, key)] = source[key]
+    graded = source.get("n_graded_pairs") or 0
+    summary["pairs"] = int(source.get("divergent_pairs") or graded or 0)
+    summary["pair_net"] = source.get("net") or 0.0
+    summary["pair_net_pp"] = source.get("net_pp") or 0.0
+    return summary
+
 
 NO_DEBATE_COMPARISON = {
     "schema_version": 1, "as_of": None, "horizon_td": 63, "auto_downgrade_enabled": False,
@@ -503,6 +570,9 @@ NO_DEBATE_COMPARISON = {
     "avoidance_accuracy": None, "pairs": [], "by_regime": {}, "quarters": [],
     "consecutive_quarters": 0, "verdict": debate_mod.VERDICT_INSUFFICIENT,
     "note_ko": "토론 비교 표본 없음 — 행동이 갈린 페어가 아직 없다(토론 0건이면 정상).",
+    # 계좌 정책 효과는 **두 모의 계좌의 순자산 차이**다 — 페어 손익과 섞지 않는다(4.8 · P1-3).
+    "policy_diff_pp": None,
+    "pair_summary": EMPTY_PAIR_SUMMARY,
 }
 
 MAX_DEBATE_REPORTS = 40
@@ -539,6 +609,10 @@ def build_debate(reports_doc: dict | None, records: list[dict] | None,
     source = comparison or {}
     summary = {k: source.get(k) for k in COMPARISON_FIELDS if k in source}
     summary.update({k: v for k, v in NO_DEBATE_COMPARISON.items() if k not in summary})
+    summary["pair_summary"] = pair_summary_of(source)
+    # `policy_diff_pp` 는 **계좌 순자산 차이**다. 산출 주체는 비교 모듈이고, 없으면 None 으로 둔다
+    # (페어 손익으로 대신 채우지 않는다 — 그게 감사 P1-3 이 지적한 혼합이다).
+    summary["policy_diff_pp"] = source.get("policy_diff_pp")
     return {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -556,15 +630,26 @@ def build_debate(reports_doc: dict | None, records: list[dict] | None,
     }
 
 
-def build_health(health: dict | None) -> dict:
-    """`web/data/health.json` — 규칙이 실제로 작동했는지 보는 지표(3.5)."""
+def build_health(health: dict | None, signals: dict | None = None) -> dict:
+    """`web/data/health.json` — 규칙이 실제로 작동했는지 보는 지표(3.5) + 실행 상태(P2-1)."""
     health = health or {}
+    signals = signals or {}
     return {
         "schema_version": 1,
         "as_of": health.get("as_of"),
-        "generated_at": health.get("generated_at"),
+        # 생성 시각은 **신호 확정 시각**(빌드 시각이 아니다) — 장애일에도 시장 데이터 시각은 그대로다.
+        "generated_at": signals.get("signal_published_at") or health.get("generated_at"),
+        "build_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "bundle_version": bundle_version(signals),
         "status": health.get("status"),
-        "data_status": health.get("data_status") or health.get("status"),
+        "data_status": data_status_of(health.get("data_status") or health.get("status")
+                                      or signals.get("status")),
+        "last_attempt_at": health.get("last_attempt_at") or health.get("last_run_at"),
+        "last_success_at": health.get("last_success_at"),
+        "data_cutoff_at": health.get("data_cutoff_at") or signals.get("data_cutoff_at"),
+        "target_session": health.get("target_session") or signals.get("target_session"),
+        "outage_id": health.get("outage_id"),
+        "reason": health.get("reason"),
         "degraded": health.get("degraded") or [],
         "positions_open": health.get("positions_open", 0),
         "tranches_filled": health.get("tranches_filled", 0),
@@ -573,6 +658,9 @@ def build_health(health: dict | None) -> dict:
         "trim_count": health.get("trim_count", 0),
         "stop_reentry_blocked_count": health.get("stop_reentry_blocked_count", 0),
         "blocked_reentries": (health.get("blocked_reentries") or [])[:20],
+        # 동결 전 WATCH·차단으로 취소된 1차 주문(P0-3) — 원장 색인·감사 근거를 화면에도 남긴다.
+        "order_cancellations_count": health.get("order_cancellations_count", 0),
+        "order_cancellations": (health.get("order_cancellations") or [])[:20],
         "forced_exits": health.get("forced_exits") or {},
         "cash_pct": health.get("cash_pct"),
         "last_run_at": health.get("last_run_at"),
@@ -608,7 +696,7 @@ def build(signals: dict | None, folds: dict | None, records: list[dict] | None, 
     out: dict[str, dict] = {}
     debate_doc = build_debate(debate_reports, records, debate_comparison, params,
                               (signals or {}).get("as_of"))
-    out["meta.json"] = build_meta(signals, debate_reports, debate_comparison)
+    out["meta.json"] = build_meta(signals, debate_reports, debate_comparison, health)
     out["signals/today.json"] = build_today(signals)
     out["ledger/summary.json"] = build_ledger(signals, records, portfolio_state, folds=folds,
                                               params_history=params_history, pilot_eval=pilot_eval)
@@ -619,7 +707,7 @@ def build(signals: dict | None, folds: dict | None, records: list[dict] | None, 
     out["folds.json"] = build_folds(folds)
     out["watchlist.json"] = build_watchlist(watch)
     out["debate.json"] = debate_doc
-    out["health.json"] = build_health(health)
+    out["health.json"] = build_health(health, signals)
     out["notifications.json"] = build_notifications(notifications)
 
     watch_rows = {w.get("ticker"): w for w in (watch or {}).get("watchlist") or []}

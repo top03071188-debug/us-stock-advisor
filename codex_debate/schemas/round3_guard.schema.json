@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "codex_debate/schemas/round3_guard.schema.json",
+  "title": "codex_debate round3 — 리스크 가드 심사",
+  "description": "3R risk_guard 출력. Veto 12종 심사·추가 차단 제안·구조적 위험도. 코드 Veto 를 해제하는 필드는 존재하지 않는다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["veto_codes", "additional_blocks", "structural_risk", "reasoning", "opinion"],
+  "properties": {
+    "veto_codes": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "string",
+        "enum": [
+          "EARNINGS_WINDOW",
+          "DATA_STALE",
+          "STRUCTURAL_8K",
+          "GOING_CONCERN",
+          "LIQUIDITY",
+          "MACRO_EXTREME",
+          "SECTOR_CAP",
+          "POSITION_CAP",
+          "THESIS_BREAK",
+          "SPLIT_ANOMALY",
+          "NEWS_INJECTION",
+          "EVIDENCE_MISSING"
+        ]
+      }
+    },
+    "additional_blocks": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {"type": "string", "maxLength": 60}
+    },
+    "structural_risk": {"type": "number", "minimum": 0, "maximum": 100},
+    "reasoning": {"type": "string", "minLength": 1, "maxLength": 800},
+    "opinion": {
+      "type": "string",
+      "enum": ["clear", "caution", "block_new", "block_all"]
+    }
+  }
+}

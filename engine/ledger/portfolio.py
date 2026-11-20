@@ -132,6 +132,8 @@ class Position:
     iv_high: float | None = None
     tranches_filled: list[int] = field(default_factory=list)
     trim_done: set[str] = field(default_factory=set)
+    #: 분할익절 기준 수량 — 1차 체결 수량으로 고정(3.5 · P0-3). 분할 시 함께 조정된다.
+    trim_basis_qty: float = 0.0
 
     def as_dict(self) -> dict:
         return {
@@ -433,6 +435,10 @@ class PortfolioSimulator:
                     pos.stop_price /= ratio
                     pos.trailing_high /= ratio
                     pos.initial_stop /= ratio
+                    pos.trim_basis_qty *= ratio
+                    # [v1.3.4 · P0-3] 익절 목표가도 같은 비율로 내린다 — $120 이면 2:1 분할 뒤 $60.
+                    if pos.iv_high is not None:
+                        pos.iv_high = float(pos.iv_high) / ratio
                 for order in self.orders:
                     if order.ticker != ca.ticker:
                         continue
@@ -440,13 +446,16 @@ class PortfolioSimulator:
                         order.first_fill /= ratio
                     if order.stop_price is not None:
                         order.stop_price /= ratio
+                    if order.iv_high is not None:
+                        order.iv_high = float(order.iv_high) / ratio
                     for t in order.tranches:
                         if t.limit_price is not None and t.filled_price is None:
                             t.limit_price /= ratio
                 self._event(day, "corporate_action", ca.ticker, kind="split", ratio=ratio,
                             shares=_r(pos.shares, 6) if pos else None,
                             avg_cost=_r(pos.avg_cost, 6) if pos else None,
-                            stop_price=_r(pos.stop_price, 6) if pos else None)
+                            stop_price=_r(pos.stop_price, 6) if pos else None,
+                            iv_high=_r(pos.iv_high, 6) if pos else None)
             elif ca.kind == "dividend":
                 pos = self.positions.get(ca.ticker)
                 if pos is not None and ca.dps > 0:
@@ -472,12 +481,18 @@ class PortfolioSimulator:
         existing_shares = pos.shares if pos else 0.0
         existing_avg = pos.avg_cost if pos else price
         stop_price = pos.stop_price if pos else price * (1.0 - (order.stop_distance or 0.0))
+        # [v1.3.4 · P0-3] 섹터 상한 — 같은 섹터 **다른 종목**의 평가액을 빼고 남은 여유까지만 체결한다.
+        sector_value = sum(p.shares * float((marks or {}).get(t, self._last_close.get(t, p.avg_cost)))
+                           for t, p in self.positions.items()
+                           if t != order.ticker and (p.sector or "") == (order.sector or ""))
         check = recheck_planned_loss(existing_shares, existing_avg, stop_price, requested, price,
                                      equity, cash=self.cash, max_position=self.max_position,
-                                     risk_per_trade=self.risk_per_trade, min_shares=self.min_shares)
+                                     risk_per_trade=self.risk_per_trade, min_shares=self.min_shares,
+                                     max_sector=self.max_sector, sector_value=sector_value)
         if check["action"] == "reject":
             self._event(day, "tranche_rejected", order.ticker, tranche=tranche.index,
-                        reason=check["reason"], requested_shares=_r(requested, 6),
+                        reason=check["reason"], capped_by=check.get("capped_by"),
+                        requested_shares=_r(requested, 6),
                         planned_loss_pct=check.get("planned_loss_pct"))
             tranche.active = False
             if order.status == "pending":
@@ -500,7 +515,7 @@ class PortfolioSimulator:
                            stop_distance=float(order.stop_distance or 0.0), trailing_high=price,
                            opened_at=day, signal_id=order.signal_id,
                            initial_stop=price * (1.0 - (order.stop_distance or 0.0)),
-                           iv_high=order.iv_high)
+                           iv_high=order.iv_high, trim_basis_qty=shares)
             self.positions[order.ticker] = pos
         else:
             pos.avg_cost = (pos.avg_cost * pos.shares + shares * price) / (pos.shares + shares)
@@ -517,7 +532,7 @@ class PortfolioSimulator:
         self._event(day, "buy_filled", order.ticker, tranche=tranche.index, price=_r(price, 6),
                     shares=_r(shares, 6), weight=_r(shares * price / equity, 6),
                     stop_price=_r(pos.stop_price, 6), planned_loss_pct=check.get("planned_loss_pct"),
-                    recheck=check["action"], reason=reason)
+                    recheck=check["action"], reason=reason, fill_basis="daily_ohlc_assumption")
 
     def _reanchor(self, order: BuyOrder, pos: Position, day: date) -> None:
         """1차 **실제 체결가** 기준으로 2·3차 지정가를 다시 적는다(plan_reanchor)."""
@@ -527,9 +542,13 @@ class PortfolioSimulator:
             drop = -0.07 if tranche.index == 2 else -0.14
             tranche.limit_price = round(first * (1.0 + drop), 6)
             if tranche.index == 3 and tranche.limit_price <= pos.initial_stop:
-                tranche.active = False
-                tranche.note = "3차 지정가가 초기 손절가 이하 → 무효"
-            plan.append({"tranche": tranche.index, "limit": tranche.limit_price, "active": tranche.active})
+                # [v1.3.4 · A-7] 지정가는 손절선 아래라 무효지만, 3차의 200일선 트리거는 살린다
+                #   (기획서 3.5의 두 번째 조건). 전부 끄면 기본 파라미터에서 3차가 영원히 걸리지 않는다.
+                tranche.active = True
+                tranche.trigger = "dma200"
+                tranche.note = "3차 지정가가 초기 손절가 이하 → 200일선 조건(다음 거래일 시가)으로만 진입"
+            plan.append({"tranche": tranche.index, "limit": tranche.limit_price, "active": tranche.active,
+                         "trigger": tranche.trigger})
         self._event(day, "plan_reanchor", order.ticker, first_fill=_r(first, 6),
                     stop_price=_r(pos.stop_price, 6), plan=plan)
 
@@ -565,7 +584,14 @@ class PortfolioSimulator:
         pos = self.positions.get(ticker)
         if pos is None or pos.shares <= 0:
             return
-        shares = pos.shares if fraction >= 1.0 else pos.shares * float(fraction)
+        if fraction >= 1.0:
+            shares = pos.shares
+        elif reason in ("iv_high", "rsi_next_open"):
+            # [v1.3.4 · P0-3] 분할익절은 **고정 기준 수량의 1/3** — 매번 잔량의 1/3 이면 4/9 가 남는다.
+            basis = float(pos.trim_basis_qty or 0.0)
+            shares = min(pos.shares, basis * float(fraction)) if basis > 0 else pos.shares * float(fraction)
+        else:
+            shares = pos.shares * float(fraction)
         if shares <= self.min_shares:
             return
         self._sell(ticker, shares, price, day, reason)
@@ -605,7 +631,7 @@ class PortfolioSimulator:
         })
         pos.shares -= shares
         self._event(day, "exit_filled", ticker, price=_r(fill, 6), shares=_r(shares, 6),
-                    reason=reason, pnl_pct=_r(pnl_pct, 6))
+                    reason=reason, pnl_pct=_r(pnl_pct, 6), fill_basis="daily_ohlc_assumption")
         if pos.shares <= self.min_shares:
             self.positions.pop(ticker, None)
 

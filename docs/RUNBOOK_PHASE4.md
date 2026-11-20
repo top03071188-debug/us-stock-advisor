@@ -9,12 +9,23 @@
 
 | 단계 | 누가 | 무엇을 | 산출물 |
 |---|---|---|---|
-| 07:00 KST `daily-postclose` | Actions | 수집 → 신호 발행 → 1차 정산 → **2·3차 분할·손절·분할익절 정산** → 토론 편입 확인 → A/B 비교 → 알림 | `data/quant_signals.json`, `data/ledger/portfolio/state.json`, `data/health.json`, `data/ledger/debate_comparison.json`, `data/notifications_latest.json` |
+| 07:00 KST `daily-postclose` | Actions | 수집 → **토론 편입 검증** → 1차 정산 → 신호 발행·동결 → **2·3차 분할·손절·분할익절 정산** → Paper 채점 → A/B 비교 → 알림 | `data/quant_signals.json`, `data/ledger/portfolio/state.json`, `data/health.json`, `data/ledger/debate_comparison.json`, `data/notifications_latest.json` |
 | 신호 발행 ~ 주문 마감(09:25 ET) | PC/Cloud | 토론 실행(`codex_debate/`) → `data/debate_reports.json` 커밋 | `data/debate_reports.json` |
 | 다음 배치 | Actions | 그 리포트가 **편입 자격**을 통과하면 `data/ledger/debate_events/{signal_id}.json` 에 붙는다 | 토론 카드·A/B 페어 |
 | 분기 | 사람 | §4.8.2 판정 확인 → 필요하면 `auto_downgrade_enabled` PR | `data/params_history.json` |
 
 **토론을 돌리지 않으면?** 정량 트랙은 그대로 돌고 화면은 "토론 없음"을 보여 준다. A/B 페어는 0건으로 남고 판정은 "표본 부족 — 판단 보류"다. 이것이 정상 상태다.
+
+### 실행 순서 계약 (P0-2)
+
+```text
+원장 로드 → 토론 편입 검증(reconcile) → 1차 정산(live.settle) → 신호 발행·동결 → 2·3차 정산(settle_positions)
+         → Paper 채점 → A/B 비교 → 알림
+```
+
+- **편입이 정산보다 먼저**다. 편입은 "그 판단이 주문 전에 확정됐나"를 묻는 절차라, 같은 배치에서 방금 체결된
+  주문을 보고 소급 페어를 만들면 안 된다(편입 판정에는 **정산 전 체결 스냅샷**을 넘긴다).
+- 그래도 편입 검증 시각이 체결보다 늦은 건은 비교에서 제외한다(`counts.retroactive_dropped`, 사유 `FILLED_BEFORE_VALIDATION`).
 
 ---
 
@@ -22,10 +33,15 @@
 
 1. `daily-postclose` 실행 결과의 `status` 를 본다: `normal` / `degraded` / `stale` / `sample`.
 2. `data/health.json` 을 확인한다.
+   - `data_status` — `ok` / `degraded` / `outage`. **`outage` 면 이번 세션 판단은 보류**이고 화면은 "이번 세션 판단 보류 — 마지막 성공 데이터 표시 중" 배너를 띄운다(전일 정상 신호는 덮어쓰지 않는다).
+   - `last_attempt_at` / `last_success_at` — **이번 시도**와 **마지막 성공**은 다른 값이다. 둘이 같이 보이면 그 사이에 성공이 없었다는 뜻이다.
+   - `outage_id` — 같은 날 같은 실패는 같은 ID 다. 알림도 `outage_id` 로 묶여 한 번만 나간다.
    - `stop_reentry_blocked_count` — **손절 직후 재진입 차단 건수**. 이 값이 오르면 S5(손절)가 났고, 같은 봉의 잔여 2·3차 주문이 정상적으로 취소된 것이다(규칙이 작동한 증거).
    - `tranches_pending` — 아직 살아 있는 2·3차 주문 수. 3차가 `invalid` 면 "3차 손절선 밖 무효"다.
 3. `data/notifications_latest.json` 의 `n_new` 를 확인한다. 같은 `event_key` 는 다시 오지 않는다(중복 0건 계약).
+   발송 상세는 `data/notifications_log.json` 의 `deliveries` 에 `channel`·`status`(`sent`/`failed`/`pending_retry`)·`attempt_at`·`latency_seconds` 로 남는다. 한 채널도 성공하지 못한 건은 `sent` 가 아니라 **재시도 큐**에 남는다(`retry_pending`).
 4. 화면(성적표 탭)의 **실시간 모의 보유·분할 현황**에서 종목별 1·2·3차 상태·손절 여력·분할익절 단계를 확인한다.
+5. 성적표의 **계좌 정책 순효과**(두 모의 계좌의 순자산 차이, `policy_diff_pp`)와 **페어 회피손실/놓친수익**(`pair_summary`)은 다른 질문이다 — 한 숫자로 읽지 않는다. `policy_diff_pp` 가 `—` 면 아직 두 계좌 곡선이 쌓이지 않은 것이다(페어 손익으로 대신 읽지 않는다).
 
 ### 손절이 났을 때
 
@@ -141,11 +157,24 @@ python codex_debate/run_debate.py --tickers MSFT NVDA
 | 증상 | 원인 후보 | 조치 |
 |---|---|---|
 | 화면에 "데이터 지연" | 소스 실패(`diagnostics.degraded`) | `data/health.json`·`data/pipeline_limits.json` 확인. 전일 데이터가 유지되므로 사이트는 비지 않는다 |
+| 화면에 **"이번 세션 판단 보류 — 마지막 성공 데이터 표시 중"** | 시세 전체 실패(`data_status: outage`) | `data/health.json` 의 `reason`·`outage_id`·`last_success_at` 확인. `data/quant_signals.json` 은 **전일 그대로**이고 `data/quant_signals.degraded.json` 에 이번 시도가 남는다. 다음 정상 배치가 `last_success_at` 을 갱신한다 |
+| 화면 상단에 **"이전/혼합 세트"** | 서비스워커 캐시가 이전 발행 세트 | 새로고침하면 `meta.json` 의 `bundle_version` 으로 세트를 맞춘다. 계속 나오면 DevTools → Application → Service Workers → Unregister 후 다시 연다 |
+| 오프라인인데 화면이 열린다 | 마지막 성공 세트 캐시 | 정상이다. "오프라인 — 캐시된 세트 표시 중" 배지가 뜨고, 세트 식별자는 `meta.json` 의 `bundle_version`(`inputs_hash`+`snapshot_id`)이다 |
 | 모든 종목이 `토론 없음` | `data/debate_reports.json` 미커밋 | PC 에서 토론 실행 → 커밋. 화면은 정상 상태다 |
-| 토론이 계속 `지연 도착` | 주문 마감(09:25 ET) 뒤 완료 | 토론을 더 일찍 돌린다. 장전(premarket) 갱신은 창이 33~93분뿐이다 |
+| 토론이 계속 `지연 도착` | 주문 마감(09:25 ET) 뒤 완료·검증 | 토론을 더 일찍 돌린다. `--deadline`(기본 문 마감 5분 전)을 넘기면 `stopped_by_deadline` 으로 멈춘다 |
 | `정족수 미달` 반복 | 스킬 실행 실패·한도 초과 | `debate.max_calls_per_day`·`timeout_sec` 확인, 스킬 파일 점검 |
 | `3차 무효` 만 보임 | 손절 거리가 좁아 2·3차 지정가가 손절선 밖 | 정상 규칙이다(손절 후 재진입 방지). 1차 비중만 남는다 |
 | 페어가 30건을 못 넘김 | 토론 실행 빈도 부족 | 판정하지 않는다. 억지로 켜지 않는다 |
+| 알림이 안 온다 | 모든 채널 실패 → `pending_retry` | `data/notifications_log.json` 의 `retry_pending` 확인. 3회 실패면 `failed` 로 남고 재시도하지 않는다(자동 재발송은 최대 3회) |
+
+### 장애 뒤 복구 확인
+
+```bash
+# 1) 상태부가 남았는지(장애 실행도 흔적을 남긴다)
+python -c "import json;h=json.load(open('data/health.json'));print(h['data_status'],h['last_attempt_at'],h['last_success_at'],h.get('outage_id'))"
+# 2) 전일 정상 신호가 보존됐는지
+python -c "import json;print(json.load(open('data/quant_signals.json'))['as_of'])"
+```
 
 ---
 
@@ -161,3 +190,16 @@ python scripts/check_commit_scope.py --staged           # 스테이징 범위 �
 
 `build_public_data.py` 는 `web/data/debate.json`·`health.json`·`notifications.json` 을 **항상** 만든다.
 토론이 0건이면 `status: "none"` 으로 만들고, 화면은 그것을 "토론 없음"으로 읽는다(파일 부재로 실패하지 않는다).
+
+### 공개 메타의 시각 계약 (P2-1)
+
+- `meta.json`·`health.json` 의 `generated_at` 은 **신호 확정 시각**(`signal_published_at`)이다. 웹 빌드 시각으로
+  덮어쓰지 않는다 — 빌드가 다시 돌아도 시장 데이터의 시각은 그대로다. 빌드 시각은 `build_at` 에 따로 둔다.
+- `bundle_version`(= `inputs_hash` + `snapshot_id`)은 발행 세트 식별자다. 서비스워커(`web/sw.js`)가 이 값으로
+  데이터 캐시를 나누고, 세트가 어긋나면 화면에 "이전/혼합 세트" 배지를 띄운다.
+- 화면 캐시 키를 바꿀 때는 `sw.js` 의 `SW_VERSION` 과 `index.html` 의 `app.js?v=`·`styles.css?v=` 를 **함께** 올린다.
+
+### Paper 채점과 보정 코퍼스는 자격이 다르다 (P0-4)
+
+- Paper 성적표(`grade_all`)는 `holdout_start=None` 으로 채점한다 — 만기 봉이 관측된 신호는 홀드아웃 때문에
+  잘리지 않는다. 홀드아웃 창은 `ledger_summary.calibration_window` 로 **따로** 남고, 보정 코퍼스 적격에만 쓰인다.
