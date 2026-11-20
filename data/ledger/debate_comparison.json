@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "as_of": null,
+  "generated_at": null,
+  "n_pairs": 0,
+  "pairs": [],
+  "counts": {
+    "same_action": 0,
+    "downgraded": 0,
+    "upgraded": 0,
+    "vetoed": 0
+  },
+  "quant_only_vs_debate": {
+    "n_graded": 0,
+    "accuracy_quant_only": null,
+    "accuracy_with_debate": null,
+    "note_ko": "토론 비교 표본 없음"
+  },
+  "note_ko": "Codex 토론(data/debate_reports.json)이 아직 한 번도 푸시되지 않아 비교 기록이 비어 있는 것이 정상입니다."
+}
