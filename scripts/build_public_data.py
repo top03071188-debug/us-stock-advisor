@@ -91,13 +91,14 @@ def _json_size(obj) -> int:
 def build_meta(signals: dict | None, debate: dict | None) -> dict:
     signals = signals or {}
     regime = signals.get("regime") or {}
+    source = signals.get("source")
     return {
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "params_version": signals.get("params_version"),
         "snapshot_id": signals.get("snapshot_id"),
         "status": signals.get("status", "awaiting_first_run"),
         "mode": signals.get("mode"),
-        "source": signals.get("source"),
+        "source": None if source in (None, "none") else source,
         "regime": regime.get("regime"),
         "regime_verified": regime.get("verified"),
         "regime_multiplier": regime.get("multiplier"),
