@@ -1,4 +1,9 @@
-"""test_macro_vintage — D = realtime_start(공개 빈티지 날짜), 발표 시각 미확인은 D 종료 후 첫 결정 (v1.3.1)."""
+"""test_macro_vintage — D = realtime_start(공개 빈티지 날짜), 발표 시각 미확인은 D 종료 후 첫 결정 (v1.3.1).
+
+v1.3.2 추가: 빈티지 파라미터 없이 부른 `/series/observations` 응답은 모든 행의 `realtime_start` 가
+**요청 당일**로 같다 — 이때는 발표일로 쓰면 11시리즈가 전부 마감 뒤로 밀리므로 관측일 기준
+보수 규칙(일간: 관측일 종료 후 첫 결정, 월간: 관측월 다음 달 20일)을 쓴다.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +16,7 @@ from engine.data.macro import (
     as_of_macro,
     build_limits,
     classify_regime,
+    is_snapshot_response,
     parse_observations,
     resolve_available_at,
     series_limits,
@@ -110,3 +116,71 @@ def test_regime_neutral_when_split():
 def test_macro_extreme_flags():
     r = classify_regime({"real_rate_trend": "flat", "t10y2y": 0.1, "hy_oas_bp": 750, "vix": 20, "dxy_3m": 0.0})
     assert r["macro_extreme"] is True
+
+
+# ─────────────── v1.3.2: 스냅샷 응답(realtime_start = 요청 당일) 예외 규칙 ───────────────
+def _snapshot(series_id: str, rows: list[tuple[str, str]]) -> dict:
+    """빈티지 파라미터 없이 받은 실제 응답 형태 — realtime_start 가 전부 같다."""
+    return {"observations": [{"realtime_start": "2026-11-19", "realtime_end": "2026-11-19",
+                              "date": d, "value": v} for d, v in rows]}
+
+
+def test_snapshot_response_is_detected_and_vintage_rows_are_not():
+    snap = _snapshot("CPIAUCSL", [("2026-09-01", "336.298"), ("2026-10-01", "337.476")])
+    assert is_snapshot_response(snap["observations"]) is True
+    # ALFRED 처럼 행마다 다른 빈티지면 스냅샷이 아니다(v1.3.1 규칙 유지)
+    vintage = {"observations": [
+        {"date": "2026-10-01", "realtime_start": "2026-11-12", "value": "320.1"},
+        {"date": "2026-10-01", "realtime_start": "2026-12-10", "value": "320.45"},
+    ]}
+    assert is_snapshot_response(vintage["observations"]) is False
+
+
+def test_snapshot_daily_series_available_after_observation_day():
+    payload = _snapshot("DGS10", [("2026-11-17", "5.02"), ("2026-11-18", "5.07")])
+    df = parse_observations(payload, "DGS10")
+    row = df[df["date"] == date(2026, 11, 18)].iloc[0]
+    # 11-18 23:59:59 ET(EST) = 11-19 04:59:59Z → 첫 결정 11-19 12:50Z
+    assert row["available_at"] == pd.Timestamp("2026-11-19T12:50:00Z").to_pydatetime()
+    assert row["available_at_source"] == "obs_date_plus_one"
+
+
+def test_snapshot_monthly_series_uses_next_month_20th():
+    payload = _snapshot("CPIAUCSL", [("2026-09-01", "336.298"), ("2026-10-01", "337.476")])
+    df = parse_observations(payload, "CPIAUCSL")
+    sep = df[df["date"] == date(2026, 9, 1)].iloc[0]
+    oct_row = df[df["date"] == date(2026, 10, 1)].iloc[0]
+    # 9월 관측치 → 10-20 23:59:59 ET 이후 → 10-21 12:50Z
+    assert sep["available_at"] == pd.Timestamp("2026-10-21T12:50:00Z").to_pydatetime()
+    # 10월 관측치 → 11-20 23:59:59 ET 이후 → 11-21 12:50Z(11-20 postclose 마감 22:00Z 뒤)
+    assert oct_row["available_at"] == pd.Timestamp("2026-11-21T12:50:00Z").to_pydatetime()
+    assert oct_row["available_at_source"] == "obs_month_lag_20d"
+    cutoff = pd.Timestamp("2026-11-19T22:00:00Z").to_pydatetime()  # 2026-11-20 postclose
+    visible = as_of_macro(df, cutoff)
+    assert list(visible["date"]) == [date(2026, 9, 1)]
+
+
+def test_snapshot_macro_gives_all_eleven_series_values():
+    """이전 결함 재현: 스냅샷 응답 11시리즈가 전부 탈락해 레짐이 미검증이 됐다."""
+    from engine.data.macro import DEFAULT_SERIES
+
+    cutoff = pd.Timestamp("2026-11-19T22:00:00Z").to_pydatetime()
+    monthly = {"CPIAUCSL", "CPILFESL", "UNRATE"}
+    values = {}
+    for sid in DEFAULT_SERIES:
+        rows = ([("2026-08-01", "0.9"), ("2026-09-01", "1.0")] if sid in monthly
+                else [("2026-11-17", "0.9"), ("2026-11-18", "1.0")])
+        df = parse_observations(_snapshot(sid, rows), sid)
+        usable = as_of_macro(df, cutoff).dropna(subset=["value"])
+        assert not usable.empty, sid
+        assert float(usable.iloc[-1]["value"]) == 1.0, sid
+        values[sid] = float(usable.iloc[-1]["value"])
+    assert len(values) == 11
+
+
+def test_release_at_still_wins_over_snapshot_rule():
+    payload = {"observations": [{"date": "2026-10-15", "realtime_start": "2026-11-19", "value": "1.0",
+                                 "release_at": "2026-10-15T08:30:00-04:00"}]}
+    df = parse_observations(payload, "DFF")
+    assert df.iloc[0]["available_at"] == pd.Timestamp("2026-10-15T12:30:00Z").to_pydatetime()
+    assert df.iloc[0]["available_at_source"] == "release_at"

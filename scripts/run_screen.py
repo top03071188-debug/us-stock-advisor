@@ -47,7 +47,10 @@ def build_candidates(data: dict) -> list[Candidate]:
         panel = (data.get("panels") or {}).get(ticker)
         if panel is None or panel.frame.empty:
             continue
-        last = panel.frame.iloc[-1]
+        frame = panel.frame.dropna(subset=["raw_close", "sadj_close"], how="all")
+        if frame.empty:
+            continue
+        last = frame.iloc[-1]
         price = float(last["raw_close"])
         sadj = float(last["sadj_close"])
         mult = row.get("iv_mult")
@@ -65,8 +68,8 @@ def build_candidates(data: dict) -> list[Candidate]:
             adv20_usd=float(adv or 0.0),
             price=price,
             history_rows=int(len(panel.frame)),
-            exchange=str(row.get("exchange") or "NYSE"),
-            xbrl_completeness=1.0,
+            exchange=str(row.get("exchange") or "UNKNOWN"),
+            xbrl_completeness=float(row.get("xbrl_completeness") if row.get("xbrl_completeness") is not None else 1.0),
             fundamentals=(data.get("fundamentals") or {}).get(ticker),
             margin=margin,
             peg=row.get("peg"),

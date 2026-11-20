@@ -10,11 +10,13 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import threading
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Callable
 
 import pandas as pd
@@ -101,8 +103,32 @@ class SecClient:
     def submissions(self, cik: int) -> dict:
         return self._get(f"{SEC_DATA}/submissions/CIK{int(cik):010d}.json")
 
-    def company_facts(self, cik: int) -> dict:
-        return self._get(f"{SEC_DATA}/api/xbrl/companyfacts/CIK{int(cik):010d}.json")
+    def company_facts(self, cik: int, max_age_hours: float = 24.0) -> dict:
+        """XBRL companyfacts(수 MB). `cache_dir` 가 있으면 디스크 캐시를 쓰고 rate-limit 을 지킨다.
+
+        캐시는 `{cache_dir}/CIK{10d}.json` 이고 `max_age_hours` 안이면 재요청하지 않는다.
+        (일일 파이프라인이 같은 날 두 번 돌아도 SEC 를 두 번 두드리지 않는다.)
+        """
+        path = None
+        if self.cache_dir:
+            path = Path(self.cache_dir) / f"CIK{int(cik):010d}.json"
+            if path.exists():
+                age_h = (time.time() - path.stat().st_mtime) / 3600.0
+                if age_h <= max_age_hours:
+                    try:
+                        return json.loads(path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        pass
+        payload = self._get(f"{SEC_DATA}/api/xbrl/companyfacts/CIK{int(cik):010d}.json")
+        if path is not None:
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                tmp = path.with_suffix(".tmp")
+                tmp.write_text(json.dumps(payload), encoding="utf-8")
+                tmp.replace(path)
+            except OSError:
+                pass  # 캐시 실패는 수집 실패가 아니다
+        return payload
 
 
 def _norm_dt(value: str | None) -> str | None:

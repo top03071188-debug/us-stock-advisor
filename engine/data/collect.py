@@ -5,6 +5,8 @@
 - 가격이 하나도 없으면 신호를 만들지 않는다 — 호출자가 "전일 데이터 유지"로 처리한다.
 - 키가 없으면 그 소스는 `missing_key` 로 표시하고 건너뛴다(크래시 금지).
 - 뉴스 48시간 규칙(2.7): `published_at ≤ decision_at` 이고 48시간 안의 기사만 판독 대상으로 남긴다.
+- 재무(SEC XBRL)는 `filed ≤ decision_at.date()` 연차 공시만 써서 look-ahead 를 막는다(4.5).
+- 가격 이력 기본 6년 — HG-04(5년/1,260행) 게이트를 실데이터로 채우기 위해서다.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -21,12 +24,29 @@ from engine.data.macro import DEFAULT_SERIES, as_of_macro, FredClient
 from engine.data.news import FinnhubClient
 from engine.data.prices import PriceQualityError, build_price_frame
 from engine.data.sec_edgar import SecClient, parse_submissions
+from engine.data.xbrl_fundamentals import (
+    beta_from_prices,
+    build_fundamentals,
+    peg_ratio,
+    revenue_cagr,
+    valuation_multiplier,
+)
+from engine.metrics.fundamentals import AnnualFundamentals
 
 DEFAULT_UNIVERSE = Path("config/universe.yaml")
 NEWS_MAX_AGE_HOURS = 48
 MACRO_TO_VALUES = {
     "DFF": "dff", "T10Y2Y": "t10y2y", "BAMLH0A0HYM2": "hy_oas_bp",
     "VIXCLS": "vix", "DTWEXBGS": "dtwexbg", "CPIAUCSL": "cpi",
+    "DGS10": "dgs10",
+}
+
+#: yfinance 거래소 코드 → HG-12 가 인정하는 거래소 이름
+EXCHANGE_CODES = {
+    "NYQ": "NYSE", "NYS": "NYSE",
+    "NMS": "NASDAQ", "NGM": "NASDAQ", "NCM": "NASDAQ", "NAS": "NASDAQ",
+    "PCX": "NYSEARCA", "ASE": "NYSEARCA", "ARC": "NYSEARCA",
+    "BTS": "BATS", "PNK": "OTC", "OQB": "OTC", "OQX": "OTC",
 }
 
 
@@ -40,8 +60,12 @@ def _note(diag: dict, source: str, status: str, detail: str | None = None) -> No
 
 
 def collect_prices(tickers: list[str], as_of: date, decision_at: datetime, diag: dict,
-                   history_years: int = 3) -> dict:
-    """yfinance 일봉 → `PricePanel`(3종 가격). 종목 단위 실패는 건너뛰고 사유를 남긴다."""
+                   history_years: int = 6) -> dict:
+    """yfinance 일봉 → `PricePanel`(3종 가격). 종목 단위 실패는 건너뛰고 사유를 남긴다.
+
+    `history_years=6`(≈1,500 거래일) — 5년 이력 게이트(HG-04, `min_history_rows=1260`)를
+    실데이터로 충족하기 위해서다. 3년 미만 상장 종목은 있는 행만큼만 받아 HG-04 로 탈락한다.
+    """
     import yfinance as yf
 
     out: dict = {}
@@ -56,6 +80,9 @@ def collect_prices(tickers: list[str], as_of: date, decision_at: datetime, diag:
                 if hist is None or len(hist) == 0:
                     raise PriceQualityError("빈 이력")
                 panel = build_price_frame(ticker, hist, splits)
+                # Yahoo 가 마지막 봉을 빈 값(NaN)으로 주는 경우가 있다 — 빈 봉은 이력으로 세지 않는다.
+                frame = panel.frame.dropna(subset=["raw_close", "sadj_close"], how="all")
+                panel = type(panel)(ticker, frame, dict(panel.issues))
                 out[ticker] = panel.as_of(decision_at)
                 break
             except Exception as exc:  # noqa: BLE001 — 소스 실패는 파이프라인 실패가 아니다
@@ -103,6 +130,13 @@ def collect_macro(decision_at: datetime, diag: dict) -> tuple[dict, dict]:
                 now, year_ago = float(usable.iloc[-1]["value"]), float(usable.iloc[-13]["value"])
                 if year_ago > 0:
                     values["cpi_yoy"] = (now / year_ago - 1.0) * 100.0
+                # 3개월 전 CPI YoY — 실질금리 추세(레짐 신호)를 계산하려면 두 시점이 모두 필요하다.
+                cutoff = usable.iloc[-1]["date"] - timedelta(days=90)
+                older = usable[usable["date"] <= cutoff]
+                if len(older) > 12:
+                    prev_now, prev_year = float(older.iloc[-1]["value"]), float(older.iloc[-13]["value"])
+                    if prev_year > 0:
+                        previous["cpi_yoy"] = (prev_now / prev_year - 1.0) * 100.0
         # 약 3개월 전 값(추세 계산용)
         for series, key in MACRO_TO_VALUES.items():
             df = frames.get(series)
@@ -125,7 +159,8 @@ def collect_macro(decision_at: datetime, diag: dict) -> tuple[dict, dict]:
 
 
 def collect_filings(tickers: list[str], decision_at: datetime, diag: dict,
-                    max_rows: int = 40) -> dict[str, list[dict]]:
+                    max_rows: int = 40, client: SecClient | None = None,
+                    cik_by_ticker: dict[str, int] | None = None) -> dict[str, list[dict]]:
     """SEC submissions → 종목별 공시(접수 시각 포함). User-Agent 가 없으면 건너뛴다."""
     ua = os.environ.get("SEC_USER_AGENT")
     if not ua:
@@ -133,15 +168,16 @@ def collect_filings(tickers: list[str], decision_at: datetime, diag: dict,
         return {}
     out: dict[str, list[dict]] = {}
     try:
-        client = SecClient(user_agent=ua, cache_dir="data/cache/sec_cik")
-        table = client.company_tickers()
-        cik_by_ticker = dict(zip(table["ticker"], table["cik"]))
+        client = client or SecClient(user_agent=ua, cache_dir="data/cache/sec_facts")
+        if cik_by_ticker is None:
+            table = client.company_tickers()
+            cik_by_ticker = {str(t): int(c) for t, c in zip(table["ticker"], table["cik"], strict=False)}
     except Exception as exc:  # noqa: BLE001
         _note(diag, "sec", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
         return {}
     failed = 0
     for ticker in tickers:
-        cik = cik_by_ticker.get(ticker)
+        cik = (cik_by_ticker or {}).get(ticker)
         if cik is None:
             failed += 1
             continue
@@ -201,6 +237,126 @@ def collect_news(tickers: list[str], decision_at: datetime, diag: dict) -> dict[
     return out
 
 
+def collect_meta(tickers: list[str], diag: dict, pause: float = 0.25) -> dict[str, dict]:
+    """yfinance 메타 → `market_cap_usd`, `exchange`(거래소 코드 매핑).
+
+    - 종목 하나가 실패해도 예외를 전파하지 않는다 — 결측은 그대로 두고 `detail` 에 센다.
+    - 40여 종목을 연속 호출하므로 호출 사이에 쉬어 rate-limit(429)을 피한다.
+    """
+    import yfinance as yf
+
+    out: dict[str, dict] = {}
+    failed: list[str] = []
+    for i, ticker in enumerate(tickers):
+        info: dict = {"market_cap_usd": None, "exchange": None, "shares_outstanding": None}
+        for attempt in range(2):
+            try:
+                fast = yf.Ticker(ticker).fast_info
+                cap = fast.get("marketCap") if hasattr(fast, "get") else getattr(fast, "market_cap", None)
+                exch = fast.get("exchange") if hasattr(fast, "get") else getattr(fast, "exchange", None)
+                shares = fast.get("shares") if hasattr(fast, "get") else getattr(fast, "shares", None)
+                info = {
+                    "market_cap_usd": float(cap) if cap else None,
+                    "exchange": EXCHANGE_CODES.get(str(exch or "").upper(), None),
+                    "shares_outstanding": float(shares) if shares else None,
+                }
+                if info["market_cap_usd"] or info["exchange"]:
+                    break
+            except Exception:  # noqa: BLE001 — 메타 실패는 파이프라인 실패가 아니다
+                if attempt == 1:
+                    failed.append(ticker)
+                else:
+                    time.sleep(0.5)
+        out[ticker] = info
+        if pause and i and i % 10 == 0:
+            time.sleep(pause * 4)
+    missing_cap = [t for t, v in out.items() if not v.get("market_cap_usd")]
+    _note(diag, "yfinance_meta", "ok" if len(missing_cap) < len(tickers) else "failed",
+          f"시총 결측 {len(missing_cap)}/{len(tickers)}" + (f": {', '.join(missing_cap[:6])}" if missing_cap else ""))
+    diag["meta_missing"] = missing_cap
+    return out
+
+
+def collect_fundamentals(tickers: list[str], decision_at: datetime, diag: dict,
+                         panels: dict, benchmark_panel, risk_free: float | None,
+                         sectors: dict[str, str], client: SecClient | None = None,
+                         cik_by_ticker: dict[str, int] | None = None) -> tuple[dict, dict]:
+    """SEC XBRL 연차 재무(5년) + 밸류에이션 배수.
+
+    Returns: (`fundamentals` = ticker→AnnualFundamentals, `valuation_inputs` = ticker→{iv_mult, peg, revenue_cagr, ...})
+    종목 단위 실패는 예외를 전파하지 않고 `detail` 에 남긴다.
+    """
+    fundamentals: dict[str, AnnualFundamentals] = {}
+    valuation: dict[str, dict] = {}
+    if client is None and not os.environ.get("SEC_USER_AGENT"):
+        _note(diag, "sec_xbrl", "missing_key", "SEC_USER_AGENT 없음 — 재무 미수집(HG-05~09·11 판정 불가)")
+        return fundamentals, valuation
+    try:
+        client = client or SecClient(cache_dir="data/cache/sec_facts")
+        if cik_by_ticker is None:
+            table = client.company_tickers()
+            cik_by_ticker = {str(t): int(c) for t, c in zip(table["ticker"], table["cik"], strict=False)}
+    except Exception as exc:  # noqa: BLE001
+        _note(diag, "sec_xbrl", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
+        return fundamentals, valuation
+
+    decision_date = decision_at.date()
+    rf = float(risk_free) if risk_free is not None else 0.042
+    if rf > 1.0:  # 방어: 퍼센트(5.07)로 들어오면 소수로 바꿔준다
+        rf = rf / 100.0
+    failed: list[str] = []
+    detail: dict[str, dict] = {}
+    bench = benchmark_panel
+    for ticker in tickers:
+        cik = cik_by_ticker.get(ticker)
+        if cik is None:
+            failed.append(f"{ticker}:no_cik")
+            continue
+        try:
+            payload = client.company_facts(int(cik))
+            f, fdiag = build_fundamentals(payload, decision_date)
+        except Exception as exc:  # noqa: BLE001
+            failed.append(f"{ticker}:{type(exc).__name__}")
+            continue
+        if f is None:
+            failed.append(f"{ticker}:no_annual")
+            detail[ticker] = {"completeness": 0.0, "reason": "no_annual_facts"}
+            continue
+        fundamentals[ticker] = f
+        panel = panels.get(ticker)
+        price = None
+        if panel is not None and not panel.frame.empty:
+            sadj = panel.frame["sadj_close"].dropna()
+            price = float(sadj.iloc[-1]) if len(sadj) else None
+        beta = None
+        if panel is not None and bench is not None and not panel.frame.empty and not bench.frame.empty:
+            beta = beta_from_prices(panel.frame["sadj_close"], bench.frame["sadj_close"])
+        growth = revenue_cagr(f)
+        mult, mdetail = valuation_multiplier(
+            f, price, sectors.get(ticker), beta, rf,
+            delta_nwc=float(fdiag.get("nwc_series") or 0.0),
+        )
+        valuation[ticker] = {
+            "iv_mult": mult,
+            "peg": peg_ratio(f, price, growth) if price else None,
+            "revenue_cagr": growth,
+            "xbrl_completeness": fdiag.get("completeness", 0.0),
+            "beta": beta,
+            "fiscal_years": fdiag.get("fiscal_years"),
+            **{k: v for k, v in mdetail.items() if k == "reason"},
+        }
+        detail[ticker] = fdiag
+
+    ok_ratio = len(fundamentals) / len(tickers) if tickers else 0.0
+    status = "ok" if ok_ratio >= 0.8 else ("partial" if ok_ratio > 0 else "failed")
+    _note(diag, "sec_xbrl", status,
+          f"연차 재무 {len(fundamentals)}/{len(tickers)}" + (f", 실패: {', '.join(failed[:6])}" if failed else ""))
+    diag["xbrl_detail"] = {t: {"completeness": v.get("completeness"),
+                               "fiscal_years": v.get("fiscal_years"),
+                               "reason": v.get("reason")} for t, v in detail.items()}
+    return fundamentals, valuation
+
+
 def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFAULT_UNIVERSE) -> dict:
     """라이브 데이터셋. `source: live`, 실패 내역은 `diagnostics.degraded` 에 남는다."""
     config = load_universe(universe_path)
@@ -210,23 +366,55 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
     diag: dict = {"mode": "live", "sources": {}, "degraded": []}
     panels = collect_prices(tickers + [benchmark], as_of, decision_at, diag)
     macro, macro_prev = collect_macro(decision_at, diag)
-    filings = collect_filings(tickers, decision_at, diag)
+
+    sec_client: SecClient | None = None
+    cik_by_ticker: dict[str, int] = {}
+    ua = os.environ.get("SEC_USER_AGENT")
+    if ua:
+        try:
+            sec_client = SecClient(user_agent=ua, cache_dir="data/cache/sec_facts")
+            table = sec_client.company_tickers()
+            cik_by_ticker = {str(t): int(c) for t, c in zip(table["ticker"], table["cik"], strict=False)}
+        except Exception as exc:  # noqa: BLE001
+            _note(diag, "sec", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
+
+    filings = collect_filings(tickers, decision_at, diag, client=sec_client, cik_by_ticker=cik_by_ticker)
     news = collect_news(tickers, decision_at, diag)
+    meta = collect_meta(tickers, diag)
+    sectors = {r["ticker"]: r.get("sector") or "" for r in rows}
+    dgs10 = macro.get("dgs10")
+    risk_free = (float(dgs10) / 100.0) if dgs10 is not None else None  # FRED 는 %p, WACC 는 소수
+    fundamentals, valuation = collect_fundamentals(
+        tickers, decision_at, diag, panels, panels.get(benchmark), risk_free,
+        sectors, client=sec_client, cik_by_ticker=cik_by_ticker,
+    )
     for source, info in diag["sources"].items():
         if info["status"] not in ("ok",):
             diag["degraded"].append(f"{source}:{info['status']}")
     universe = []
     for row in rows:
-        panel = panels.get(row["ticker"])
+        ticker = row["ticker"]
+        panel = panels.get(ticker)
         if panel is None or panel.frame.empty:
             continue
+        m = meta.get(ticker) or {}
+        v = valuation.get(ticker) or {}
+        f = fundamentals.get(ticker)
+        market_cap = m.get("market_cap_usd")
+        if not market_cap and f is not None and np.isfinite(f.diluted_shares[0] if f.diluted_shares else np.nan):
+            market_cap = float(panel.frame.iloc[-1]["sadj_close"]) * float(f.diluted_shares[0]) * 1e6
         universe.append({
             **row,
-            "exchange": "NYSE",
+            "exchange": m.get("exchange") or "UNKNOWN",
             "history_rows": int(len(panel.frame)),
             "adv20_usd": float((panel.frame["raw_close"] * panel.frame["volume"]).tail(20).mean())
             if "volume" in panel.frame else None,
-            "market_cap_usd": None,
+            "market_cap_usd": market_cap,
+            "iv_mult": v.get("iv_mult"),
+            "peg": v.get("peg"),
+            "revenue_cagr": v.get("revenue_cagr"),
+            "xbrl_completeness": v.get("xbrl_completeness", 0.0),
+            "beta": v.get("beta"),
         })
     return {
         "as_of": as_of.isoformat(),
@@ -236,8 +424,8 @@ def collect(as_of: date, decision_at: datetime, universe_path: str | Path = DEFA
         "macro_previous": macro_prev,
         "filings": filings,
         "news": news,
-        "fundamentals": {},
-        "valuation_inputs": {},
+        "fundamentals": fundamentals,
+        "valuation_inputs": valuation,
         "source": "live",
         "diagnostics": diag,
         "benchmark": benchmark,

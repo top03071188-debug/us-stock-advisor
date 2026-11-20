@@ -1,12 +1,923 @@
 {
   "schema_version": 1,
   "as_of": "2026-11-20",
-  "watchlist": [],
-  "count": 0,
-  "excluded": [],
-  "valuation_suspended": [],
-  "sector_counts": {},
-  "entered": [],
+  "generated_at": "2026-11-20T02:29:51.585159Z",
+  "params_version": "params_v001",
+  "watchlist": [
+    {
+      "ticker": "ADBE",
+      "sector": "Information Technology",
+      "q": 85.0,
+      "v": 29.28,
+      "g": 90.36,
+      "rank_score": 69.356,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 0.0,
+        "fcf_margin": 20.0,
+        "fcf_quality": 15.0,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.33118274738873077,
+        "roe_stdev": 0.10951258664732302,
+        "fcf_margin": 0.3988654162637121,
+        "fcf_to_ni": 1.4117990818146253,
+        "net_debt_ebitda": 0.08179336413271734,
+        "interest_cover": 33.10266159695818,
+        "dilution_3y": -0.093225737948609,
+        "wacc": 0.07407307800145797,
+        "roic": 0.5478864800137916
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "META",
+      "sector": "Communication Services",
+      "q": 89.64,
+      "v": 0.0,
+      "g": 52.69,
+      "rank_score": 55.358,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 8.98,
+        "fcf_margin": 20.0,
+        "fcf_quality": 10.66,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.19842338815479893,
+        "roe_stdev": 0.05407030767816989,
+        "fcf_margin": 0.2756349281272549,
+        "fcf_to_ni": 0.9131260886538917,
+        "net_debt_ebitda": 0.22446315706826836,
+        "interest_cover": 71.48154506437768,
+        "dilution_3y": -0.04737231680236864,
+        "wacc": 0.08094666806769885,
+        "roic": 0.2733645141105688
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "GOOGL",
+      "sector": "Communication Services",
+      "q": 90.55,
+      "v": 0.0,
+      "g": 39.36,
+      "rank_score": 53.147,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 14.5,
+        "fcf_margin": 20.0,
+        "fcf_quality": 6.05,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.17185561004040406,
+        "roe_stdev": 0.03200257694335723,
+        "fcf_margin": 0.217622940786078,
+        "fcf_to_ni": 0.8209664373818517,
+        "net_debt_ebitda": 0.11876144498085567,
+        "interest_cover": 175.32472826086956,
+        "dilution_3y": -0.07059806976214,
+        "wacc": 0.08676586123999586,
+        "roic": 0.24564275525486726
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "MSFT",
+      "sector": "Information Technology",
+      "q": 82.43,
+      "v": 0.0,
+      "g": 44.51,
+      "rank_score": 50.117,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 9.81,
+        "fcf_margin": 20.0,
+        "fcf_quality": 2.62,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.21467820689936393,
+        "roe_stdev": 0.050768607994056046,
+        "fcf_margin": 0.2734953720193219,
+        "fcf_to_ni": 0.752414476200485,
+        "net_debt_ebitda": 0.10213836876177211,
+        "interest_cover": 50.880694854146185,
+        "dilution_3y": -0.002542826552462518,
+        "wacc": 0.08775047273458039,
+        "roic": 0.2724038879055289
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "CSCO",
+      "sector": "Information Technology",
+      "q": 97.68,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 48.84,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 14.7,
+        "fcf_margin": 20.0,
+        "fcf_quality": 15.0,
+        "balance_sheet": 7.98,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.1399181179145253,
+        "roe_stdev": 0.03118866549950215,
+        "fcf_margin": 0.24143950778568843,
+        "fcf_to_ni": 1.169120000597767,
+        "net_debt_ebitda": 0.9742345033607169,
+        "interest_cover": 10.454421768707483,
+        "dilution_3y": -0.02874543239951277,
+        "wacc": 0.07639444099676039,
+        "roic": 0.19247302080930875
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "PG",
+      "sector": "Consumer Staples",
+      "q": 95.44,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 47.72,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 15.0,
+        "fcf_margin": 17.49,
+        "fcf_quality": 12.95,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.13769823337008164,
+        "roe_stdev": 0.008202664593006786,
+        "fcf_margin": 0.17491824245170515,
+        "fcf_to_ni": 0.9589675458610148,
+        "net_debt_ebitda": 0.8449886502531867,
+        "interest_cover": 22.517673888255416,
+        "dilution_3y": -0.024719191593864487,
+        "wacc": 0.07381296376031575,
+        "roic": 0.2100276042639146
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "MRK",
+      "sector": "Health Care",
+      "q": 83.58,
+      "v": 0.0,
+      "g": 25.62,
+      "rank_score": 46.914,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 0.0,
+        "fcf_margin": 20.0,
+        "fcf_quality": 15.0,
+        "balance_sheet": 8.58,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.11864826733032303,
+        "roe_stdev": 0.13461321515453764,
+        "fcf_margin": 0.21008014251526314,
+        "fcf_to_ni": 5.692259070544585,
+        "net_debt_ebitda": 1.3539989791511249,
+        "interest_cover": 16.524686809137805,
+        "dilution_3y": -0.013768686073957537,
+        "wacc": 0.06825570059809553,
+        "roic": 0.2171082059960254
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "AAPL",
+      "sector": "Information Technology",
+      "q": 85.0,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 42.5,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 0.0,
+        "fcf_margin": 20.0,
+        "fcf_quality": 15.0,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.6625661348508379,
+        "roe_stdev": 0.2532783723427869,
+        "fcf_margin": 0.26843099975195206,
+        "fcf_to_ni": 1.0430470547705313,
+        "net_debt_ebitda": 0.24380415894008842,
+        "interest_cover": 40.18891431477244,
+        "dilution_3y": -0.0690743243324431,
+        "wacc": 0.07115393944492053,
+        "roic": 0.7974762360449693
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "JNJ",
+      "sector": "Health Care",
+      "q": 80.69,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 40.345,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 0.0,
+        "fcf_margin": 20.0,
+        "fcf_quality": 10.69,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.1335903806364519,
+        "roe_stdev": 0.10977156450521282,
+        "fcf_margin": 0.20769952209580297,
+        "fcf_to_ni": 0.9137689991637226,
+        "net_debt_ebitda": 0.5292656192911948,
+        "interest_cover": 34.55406797116375,
+        "dilution_3y": -0.08802882991103267,
+        "wacc": 0.07540047267079736,
+        "roic": 0.27270588338221585
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "HON",
+      "sector": "Industrials",
+      "q": 79.97,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 39.985,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 15.0,
+        "fcf_margin": 13.34,
+        "fcf_quality": 11.07,
+        "balance_sheet": 0.56,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.1477122193470251,
+        "roe_stdev": 0.024167871947302886,
+        "fcf_margin": 0.13338206825116514,
+        "fcf_to_ni": 0.9214325004423012,
+        "net_debt_ebitda": 2.359642669469259,
+        "interest_cover": NaN,
+        "dilution_3y": -0.05899575464792861,
+        "wacc": 0.05447006459472187,
+        "roic": 0.17318546313634559
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "KO",
+      "sector": "Consumer Staples",
+      "q": 79.8,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 39.9,
+      "parts": {
+        "roic_spread": 29.53,
+        "roe_stability": 15.0,
+        "fcf_margin": 18.74,
+        "fcf_quality": 4.11,
+        "balance_sheet": 2.42,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.09841998219930989,
+        "roe_stdev": 0.011648854849021282,
+        "fcf_margin": 0.18743692362353465,
+        "fcf_to_ni": 0.7822219453758572,
+        "net_debt_ebitda": 2.153996759384283,
+        "interest_cover": 8.32043530834341,
+        "dilution_3y": -0.008505747126436813,
+        "wacc": 0.06290626176961153,
+        "roic": 0.17231909365148243
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "COST",
+      "sector": "Consumer Staples",
+      "q": 78.13,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 39.065,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 15.0,
+        "fcf_margin": 2.57,
+        "fcf_quality": 10.55,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.19325710891467213,
+        "roe_stdev": 0.021425236238865903,
+        "fcf_margin": 0.025747670633078302,
+        "fcf_to_ni": 0.9110909523539277,
+        "net_debt_ebitda": -0.978132181906818,
+        "interest_cover": 80.58620689655173,
+        "dilution_3y": -5.6249043766221085e-05,
+        "wacc": 0.08400474442988204,
+        "roic": 0.31542395190984673
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "CAT",
+      "sector": "Industrials",
+      "q": 76.35,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 38.175,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 6.16,
+        "fcf_margin": 13.68,
+        "fcf_quality": 14.33,
+        "balance_sheet": 2.18,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.1251610887832472,
+        "roe_stdev": 0.06534742090833486,
+        "fcf_margin": 0.136788648804193,
+        "fcf_to_ni": 0.9866465166436337,
+        "net_debt_ebitda": 1.9555654961604414,
+        "interest_cover": NaN,
+        "dilution_3y": -0.10953996983408743,
+        "wacc": 0.058693572695035466,
+        "roic": 0.17825717620815476
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "LIN",
+      "sector": "Materials",
+      "q": 72.71,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 36.355,
+      "parts": {
+        "roic_spread": 9.05,
+        "roe_stability": 13.09,
+        "fcf_margin": 17.06,
+        "fcf_quality": 15.0,
+        "balance_sheet": 8.51,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.03017277597127016,
+        "roe_stdev": 0.037628333623787695,
+        "fcf_margin": 0.1706234915676567,
+        "fcf_to_ni": 1.0971572654733326,
+        "net_debt_ebitda": 1.373403752167744,
+        "interest_cover": 34.9921568627451,
+        "dilution_3y": -0.06317579230137416,
+        "wacc": 0.07209340252618404,
+        "roic": 0.11793213679894723
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "SHW",
+      "sector": "Materials",
+      "q": 67.76,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 33.88,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 6.07,
+        "fcf_margin": 9.37,
+        "fcf_quality": 10.48,
+        "balance_sheet": 1.83,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.16518874041942572,
+        "roe_stdev": 0.06572211651856308,
+        "fcf_margin": 0.09369663603421526,
+        "fcf_to_ni": 0.9096769895560959,
+        "net_debt_ebitda": 2.2839628333534447,
+        "interest_cover": 8.178924731182795,
+        "dilution_3y": -0.04354469060351418,
+        "wacc": 0.056171051993468404,
+        "roic": 0.20861614537707351
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "CVX",
+      "sector": "Energy",
+      "q": 66.9,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 33.45,
+      "parts": {
+        "roic_spread": 10.97,
+        "roe_stability": 9.65,
+        "fcf_margin": 11.27,
+        "fcf_quality": 15.0,
+        "balance_sheet": 10.0,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.03657478847083653,
+        "roe_stdev": 0.051384829128815826,
+        "fcf_margin": 0.11272493904079992,
+        "fcf_to_ni": 1.1079773635235215,
+        "net_debt_ebitda": 0.8478779324442713,
+        "interest_cover": 17.222678718159408,
+        "dilution_3y": -0.043298969072164906,
+        "wacc": 0.08144804297039059,
+        "roic": 0.06313284755413869
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "HD",
+      "sector": "Consumer Discretionary",
+      "q": 64.61,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 32.305,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 0.0,
+        "fcf_margin": 9.25,
+        "fcf_quality": 12.05,
+        "balance_sheet": 3.31,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.3219899008824106,
+        "roe_stdev": 5.685105003247476,
+        "fcf_margin": 0.09247359150687759,
+        "fcf_to_ni": 0.9410719460561914,
+        "net_debt_ebitda": 1.9672184887723323,
+        "interest_cover": 8.660862354892206,
+        "dilution_3y": -0.029268292682926855,
+        "wacc": 0.049126008439157695,
+        "roic": 0.25524013824144026
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "UPS",
+      "sector": "Industrials",
+      "q": 60.02,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 30.01,
+      "parts": {
+        "roic_spread": 30.0,
+        "roe_stability": 0.0,
+        "fcf_margin": 7.64,
+        "fcf_quality": 8.34,
+        "balance_sheet": 4.03,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.17469032913188604,
+        "roe_stdev": 0.21475258576975273,
+        "fcf_margin": 0.07639942989873051,
+        "fcf_to_ni": 0.8668495032808121,
+        "net_debt_ebitda": 1.684549553694672,
+        "interest_cover": 7.735496558505408,
+        "dilution_3y": -0.02857142857142858,
+        "wacc": 0.06022947946561108,
+        "roic": 0.1686673192637515
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    },
+    {
+      "ticker": "DIS",
+      "sector": "Communication Services",
+      "q": 58.6,
+      "v": 0.0,
+      "g": 0.0,
+      "rank_score": 29.3,
+      "parts": {
+        "roic_spread": 4.12,
+        "roe_stability": 14.01,
+        "fcf_margin": 7.43,
+        "fcf_quality": 15.0,
+        "balance_sheet": 8.03,
+        "dilution": 10.0
+      },
+      "metrics": {
+        "roic_spread": 0.013737933675155217,
+        "roe_stdev": 0.033949974852136425,
+        "fcf_margin": 0.07431782331943425,
+        "fcf_to_ni": 1.2037679571998254,
+        "net_debt_ebitda": 1.491888051158568,
+        "interest_cover": Infinity,
+        "dilution_3y": -0.03879781420765027,
+        "wacc": 0.07774252718279268,
+        "roic": 0.10933448352915012
+      },
+      "valuation_suspended": false,
+      "suspend_reason": null
+    }
+  ],
+  "count": 19,
+  "excluded": [
+    {
+      "ticker": "NVDA",
+      "gates": [
+        "HG-09"
+      ],
+      "reasons": [
+        "3년 희석 > 5%"
+      ]
+    },
+    {
+      "ticker": "AVGO",
+      "gates": [
+        "HG-09"
+      ],
+      "reasons": [
+        "3년 희석 > 5%"
+      ]
+    },
+    {
+      "ticker": "ORCL",
+      "gates": [
+        "HG-05",
+        "HG-07",
+        "HG-08",
+        "HG-09"
+      ],
+      "reasons": [
+        "FCF 양수 연도 < 4/5",
+        "이자보상배율 < 6배",
+        "FCF/순이익 < 0.7",
+        "3년 희석 > 5%"
+      ]
+    },
+    {
+      "ticker": "NFLX",
+      "gates": [
+        "HG-08",
+        "HG-09"
+      ],
+      "reasons": [
+        "FCF/순이익 < 0.7",
+        "3년 희석 > 5%"
+      ]
+    },
+    {
+      "ticker": "AMZN",
+      "gates": [
+        "HG-05",
+        "HG-08",
+        "HG-09"
+      ],
+      "reasons": [
+        "FCF 양수 연도 < 4/5",
+        "FCF/순이익 < 0.7",
+        "3년 희석 > 5%"
+      ]
+    },
+    {
+      "ticker": "TSLA",
+      "gates": [
+        "V_UNAVAILABLE"
+      ],
+      "reasons": [
+        "안전마진 없음 — V 계산 불가"
+      ]
+    },
+    {
+      "ticker": "MCD",
+      "gates": [
+        "HG-06"
+      ],
+      "reasons": [
+        "순부채/EBITDA > 2.5"
+      ]
+    },
+    {
+      "ticker": "NKE",
+      "gates": [
+        "HG-11"
+      ],
+      "reasons": [
+        "XBRL 완전성 < 90%"
+      ]
+    },
+    {
+      "ticker": "WMT",
+      "gates": [
+        "HG-09"
+      ],
+      "reasons": [
+        "3년 희석 > 5%"
+      ]
+    },
+    {
+      "ticker": "PEP",
+      "gates": [
+        "HG-06"
+      ],
+      "reasons": [
+        "순부채/EBITDA > 2.5"
+      ]
+    },
+    {
+      "ticker": "UNH",
+      "gates": [
+        "HG-07"
+      ],
+      "reasons": [
+        "이자보상배율 < 6배"
+      ]
+    },
+    {
+      "ticker": "LLY",
+      "gates": [
+        "HG-05",
+        "HG-11"
+      ],
+      "reasons": [
+        "FCF 양수 연도 < 4/5",
+        "XBRL 완전성 < 90%"
+      ]
+    },
+    {
+      "ticker": "ABBV",
+      "gates": [
+        "HG-06",
+        "HG-07"
+      ],
+      "reasons": [
+        "순부채/EBITDA > 2.5",
+        "이자보상배율 < 6배"
+      ]
+    },
+    {
+      "ticker": "XOM",
+      "gates": [
+        "HG-11"
+      ],
+      "reasons": [
+        "XBRL 완전성 < 90%"
+      ]
+    },
+    {
+      "ticker": "GE",
+      "gates": [
+        "HG-11"
+      ],
+      "reasons": [
+        "XBRL 완전성 < 90%"
+      ]
+    },
+    {
+      "ticker": "BA",
+      "gates": [
+        "HG-05",
+        "HG-06",
+        "HG-08",
+        "HG-09"
+      ],
+      "reasons": [
+        "FCF 양수 연도 < 4/5",
+        "순부채/EBITDA > 2.5",
+        "FCF/순이익 < 0.7",
+        "3년 희석 > 5%"
+      ]
+    },
+    {
+      "ticker": "NEE",
+      "gates": [
+        "HG-05",
+        "HG-06",
+        "HG-11"
+      ],
+      "reasons": [
+        "FCF 양수 연도 < 4/5",
+        "순부채/EBITDA > 2.5",
+        "XBRL 완전성 < 90%"
+      ]
+    },
+    {
+      "ticker": "DUK",
+      "gates": [
+        "HG-05",
+        "HG-06",
+        "HG-07",
+        "HG-08"
+      ],
+      "reasons": [
+        "FCF 양수 연도 < 4/5",
+        "순부채/EBITDA > 2.5",
+        "이자보상배율 < 6배",
+        "FCF/순이익 < 0.7"
+      ]
+    }
+  ],
+  "valuation_suspended": [
+    {
+      "ticker": "JPM",
+      "sector": "Financials",
+      "reason": "SECTOR_FORMULA_PENDING",
+      "valuation_suspended": true
+    },
+    {
+      "ticker": "BAC",
+      "sector": "Financials",
+      "reason": "SECTOR_FORMULA_PENDING",
+      "valuation_suspended": true
+    },
+    {
+      "ticker": "V",
+      "sector": "Financials",
+      "reason": "SECTOR_FORMULA_PENDING",
+      "valuation_suspended": true
+    },
+    {
+      "ticker": "MA",
+      "sector": "Financials",
+      "reason": "SECTOR_FORMULA_PENDING",
+      "valuation_suspended": true
+    },
+    {
+      "ticker": "AMT",
+      "sector": "Real Estate",
+      "reason": "SECTOR_FORMULA_PENDING",
+      "valuation_suspended": true
+    },
+    {
+      "ticker": "PLD",
+      "sector": "Real Estate",
+      "reason": "SECTOR_FORMULA_PENDING",
+      "valuation_suspended": true
+    }
+  ],
+  "sector_counts": {
+    "Information Technology": 4,
+    "Communication Services": 3,
+    "Consumer Staples": 3,
+    "Health Care": 2,
+    "Industrials": 3,
+    "Materials": 2,
+    "Energy": 1,
+    "Consumer Discretionary": 1
+  },
+  "entered": [
+    {
+      "ticker": "AAPL",
+      "sector": "Information Technology",
+      "rank_score": 42.5,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "ADBE",
+      "sector": "Information Technology",
+      "rank_score": 69.356,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "CAT",
+      "sector": "Industrials",
+      "rank_score": 38.175,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "COST",
+      "sector": "Consumer Staples",
+      "rank_score": 39.065,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "CSCO",
+      "sector": "Information Technology",
+      "rank_score": 48.84,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "CVX",
+      "sector": "Energy",
+      "rank_score": 33.45,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "DIS",
+      "sector": "Communication Services",
+      "rank_score": 29.3,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "GOOGL",
+      "sector": "Communication Services",
+      "rank_score": 53.147,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "HD",
+      "sector": "Consumer Discretionary",
+      "rank_score": 32.305,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "HON",
+      "sector": "Industrials",
+      "rank_score": 39.985,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "JNJ",
+      "sector": "Health Care",
+      "rank_score": 40.345,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "KO",
+      "sector": "Consumer Staples",
+      "rank_score": 39.9,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "LIN",
+      "sector": "Materials",
+      "rank_score": 36.355,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "META",
+      "sector": "Communication Services",
+      "rank_score": 55.358,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "MRK",
+      "sector": "Health Care",
+      "rank_score": 46.914,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "MSFT",
+      "sector": "Information Technology",
+      "rank_score": 50.117,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "PG",
+      "sector": "Consumer Staples",
+      "rank_score": 47.72,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "SHW",
+      "sector": "Materials",
+      "rank_score": 33.88,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    },
+    {
+      "ticker": "UPS",
+      "sector": "Industrials",
+      "rank_score": 30.01,
+      "reason_ko": "신규 후보 편입(지난주 명단에 없음)"
+    }
+  ],
   "exited": [],
-  "notes": "주간 스크린 전 — 통과 종목 0개도 정상이다."
+  "notes": "통과 종목 0개도 정상 결과다(최소 개수 강제 없음).",
+  "source": "live"
 }

@@ -301,9 +301,8 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
 
 ## 9. 미검증 한계 (정직하게)
 
-- **실데이터 파이프라인은 아직 한 번도 돌지 않았다.** 오프라인 픽스처로 전 경로를 검증했고, 라이브
-  경로(yfinance·SEC·FRED·Finnhub)는 코드와 실패 처리만 준비돼 있다. 첫 실행에서 `degraded` 사유를
-  반드시 확인해야 한다(FRED 키·SEC User-Agent 가 없으면 레짐·공시가 미검증으로 남는다).
+- **실데이터 파이프라인은 2026-11-20 첫 배치에서 두 가지 데이터 계층 결함이 드러나 2차 수정을 거쳤다**
+  (§12). 파일럿·스트레스·5년 확장은 여전히 미검증이다.
 - **`daily-postclose.yml` 의 `schedule` 은 여전히 주석 상태**다. 무인 운영(DoD "2주 연속 무인 실행")은
   워크플로 권한이 있는 사람이 주석을 풀고 `cron: "0 22 * * *"` 을 활성화한 뒤에야 측정된다.
 - **생존편향·하락장 스트레스·5년 20폴드는 미검증**이다. `universe_history`·`delisted_securities` 가
@@ -378,3 +377,69 @@ Q 가 0~100 이 되었고, 예시 재무의 Q 는 **92.71** 이다. 이 수정 �
 4. `universe_history`·`delisted_securities` 를 `data/corpus/` 에 확보 → 스트레스·5년 확장 실행.
 5. 13F 수집기(SEC 원문) + 실적 캘린더 연결.
 6. Phase 4: `codex_debate/` 3라운드 토론, `debate_reports.json` 계약, 자동 하향 스위치.
+
+---
+
+## 12. 실데이터 2차 수정 (FRED 빈티지 탈락 · 라이브 수집기 확장)
+
+첫 실데이터 배치(`daily-postclose` run 44658667329)는 **워크플로는 성공**했지만 데이터 계층 결함 두 가지로
+`status: degraded`, `watchlist_count: 0`, 신호 0건이었다. 원인을 고치고 재검증했다.
+
+### 12.1 결함 1 — FRED 11시리즈 전부 탈락 (`engine/data/macro.py`)
+
+- **원인**: `/series/observations` 를 빈티지 파라미터 없이 부르면 응답의 **모든 행** `realtime_start` 가
+  **요청 당일**(예: `2026-11-19`)로 내려온다. v1.3.1 은 이 값을 발표일로 썼기 때문에 모든 관측치의
+  `available_at` 이 `2026-11-20 12:50Z` 가 되어 11-20 postclose 마감(`2026-11-19T22:00Z`)보다 뒤로 밀렸고,
+  `as_of_macro()` 가 전부 걸러 **"유효 시리즈 없음" → `fred: degraded` → 레짐 미검증**이 됐다.
+- **수정 (v1.3.2)**: 응답의 모든 행 `realtime_start` 가 같고 `release_at`·`first_ingested_at` 이 없으면
+  스냅샷 응답으로 보고 **관측일 기준 보수 규칙**을 쓴다.
+  - 일간·주간(`DFF`·`DGS10`·`DGS2`·`T10Y2Y`·`BAMLH0A0HYM2`·`VIXCLS`·`DTWEXBGS`·`WALCL`):
+    관측일 `date` 의 `23:59:59 ET` 이후 첫 의사결정 → `available_at_source: obs_date_plus_one`
+  - 월간(`CPIAUCSL`·`CPILFESL`·`UNRATE`): **관측월 다음 달 20일** `23:59:59 ET` 이후 첫 의사결정
+    → `obs_month_lag_20d` (예: 2026-10-01 관측 → 2026-11-21 12:50Z, 11-20 마감 뒤)
+  - 행마다 `realtime_start` 가 다르거나 발표시각 필드가 오면 **v1.3.1 규칙 그대로**(ALFRED 빈티지·테스트).
+  - 한 행짜리 응답은 스냅샷인지 빈티지 한 줄인지 구분할 수 없어 더 보수적인 빈티지 규칙을 쓴다.
+- **추가 수정**: `collect_macro` 가 3개월 전 **CPI YoY** 도 함께 계산한다. 이전에는 최신 CPI YoY 만 있어
+  실질금리 추세(`real_rate`)가 항상 결측이었고, 레짐이 4신호로만 판정됐다.
+- **실측(2026-11-20 postclose 마감 2026-11-19T22:00Z)**: 11시리즈 전부 값이 잡히고
+  `DFF 3.88 · T10Y2Y 0.27 · HY OAS 347bp · VIX 24.56 · DTWEXBGS 122.65 · CPI YoY 4.02%`,
+  레짐 `neutral`(t10y2y·credit risk_on, vol·dollar neutral) **`verified: true`**.
+
+### 12.2 결함 2 — 라이브 수집기 5년 이력·시총·재무 누락 (`engine/data/collect.py`, `sec_edgar.py`, 신규 `xbrl_fundamentals.py`)
+
+| 항목 | 이전 | 지금 |
+|---|---|---|
+| 가격 이력 | `history_years=3`(≈750행) → `HG-04`(1,260행) 전 종목 탈락 | **6년(≈1,506행)** — 5년 미만 상장은 있는 만큼 받아 정상 탈락 |
+| 시총·거래소 | `market_cap_usd: None`, `exchange: "NYSE"` 하드코딩 | yfinance `fast_info`(시총·거래소 코드) → `NYQ/NMS/PCX` 매핑, 실패는 결측 + 사유 |
+| 재무 | `fundamentals: {}` | SEC XBRL companyfacts → **최근 5 회계연도** `AnnualFundamentals` |
+| 밸류에이션 | `iv_mult: None` | DCF·EPV·Graham 중앙값(USD/share) ÷ 현재가 = `iv_mult` |
+| PEG·성장 | 없음 | `revenue_cagr`(4년 CAGR)·`peg`(P/E ÷ 성장률 %p) |
+| XBRL 완전성 | 하드코딩 1.0 | 필수 9지표 × 5년 채움 비율 → `HG-11` 입력 |
+
+- **look-ahead 규칙**: `form ∈ {10-K, 10-K/A, 20-F, 40-F}` · `fp = FY` · **`filed ≤ decision_at.date()`** 만 사용.
+  같은 회계연도의 정정·재작성은 **가장 먼저 공개된 값**을 쓴다(그때 알 수 있었던 값).
+- **태그 보정**: 영업이익 태그가 없는 기업은 세전이익 + 이자비용으로 EBIT 근사, 총부채 태그가 없으면
+  `자산 − 자본` 항등식, 이자비용·감가상각 결측은 최근 보고값으로 대체, 주식수 백만/천 주 태깅 보정(MCD).
+- **캐시·rate limit**: companyfacts(수 MB)를 `data/cache/sec_facts/CIK{10d}.json` 에 24시간 캐시,
+  `RateLimiter`(10 req/s) 유지. 단일 종목 실패는 예외 전파 없이 `diagnostics.xbrl_detail` 에 남는다.
+- **가격 캐시 없음/빈 봉**: Yahoo 가 마지막 봉을 NaN 으로 주는 경우가 있어 빈 봉은 이력에서 제거한다.
+
+### 12.3 검증 (로컬 실키, 2026-11-20)
+
+- `pytest -m "not network"`: **281 passed** (이전 255 + 신규 26: `test_xbrl_fundamentals.py` 13,
+  `test_collect_live.py` 8, `test_macro_vintage.py` 5). `ruff check engine scripts tests`: **All checks passed!**
+- `python scripts/run_screen.py --as-of 2026-11-20` (실데이터):
+
+| 항목 | 값 |
+|---|---|
+| 워치리스트 | **19종목** — ADBE 69.4, GOOGL 53.1, MSFT 50.1, CSCO 48.8, PG 47.7, MRK 46.9, AAPL 42.5, META 40.4, JNJ 40.3, HON 40.0, KO 39.9, COST 39.1, CAT 38.2, LIN 36.4, SHW 33.9, CVX 33.5, UPS 30.0, DIS 29.3, HD 19.2 |
+| 가치평가 보류 | **6종목** `JPM·BAC·V·MA·AMT·PLD` (`SECTOR_FORMULA_PENDING`) |
+| 탈락 18종목 | `HG-09`(3년 희석>5%) NVDA·AVGO·WMT / `HG-05·08·09` NFLX·AMZN·BA / `HG-05·07·08·09` ORCL·DUK / `HG-06` MCD·PEP / `HG-07` UNH / `HG-06·07` ABBV / `HG-11`(XBRL 완전성<90%) NKE·GE·XOM / `HG-05·11` LLY / `HG-05·06·11` NEE / `V_UNAVAILABLE`(FCFF≤0) TSLA |
+| 소스 상태 | `yfinance ok · fred ok · sec ok · finnhub ok · yfinance_meta ok · sec_xbrl ok` (42/43 연차 재무) — `degraded: []` |
+| XBRL 완전성 | 42종목 평균 **0.978** (5년 전부 채움 32종목, 0.889 8종목: NKE·LLY·GE·JPM·BAC·V·NEE·PLD) |
+
+- **남은 데이터 한계(정직하게)**: ① `XOM` 은 2026년 재편으로 티커가 새 CIK(2115436)에 매핑돼 10-K 연차
+  이력이 없어 `HG-11` 로 탈락한다(이전 CIK 34088 의 이력은 쓰지 않았다). ② `NEE` 는 XBRL 에 capex 태그가
+  없어 `HG-05`·`HG-11` 로 탈락한다. ③ 시총은 yfinance 현재값이라 **라이브 일일 실행 전용**이며 과거 재생에는
+  쓰지 않는다. ④ 대부분 종목의 `v=0` 은 결측이 아니라 **모델 IV 가 현재가보다 낮다는 판정**이다(안전마진
+  음수) — 규칙을 완화하지 않았고, 그래서 이번 배치의 BUY 신호는 자연히 0건이다.
