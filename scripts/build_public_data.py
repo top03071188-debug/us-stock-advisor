@@ -196,9 +196,50 @@ def build_ticker(signals: dict | None, ticker: str, watch_row: dict | None = Non
     }
 
 
-def build_ledger(signals: dict | None, records: list[dict] | None, portfolio: dict | None) -> dict:
+def _next_quarter_open(today: str | None) -> str | None:
+    """다음 분기 개봉일(1·4·7·10월 1일) — 화면의 '다음 개봉' 문구용."""
+    if not today:
+        return None
+    try:
+        y, m = int(str(today)[:4]), int(str(today)[5:7])
+    except (TypeError, ValueError):
+        return None
+    for month in (1, 4, 7, 10):
+        if m < month:
+            return f"{y:04d}-{month:02d}-01"
+    return f"{y + 1:04d}-01-01"
+
+
+def holdout_view(summary: dict, folds: dict) -> dict:
+    """홀드아웃 잠금 배너 값 — 신호 파일에 없으면 폴드 요약에서 만든다."""
+    holdout = (summary.get("holdout") or {})
+    if holdout.get("next_open"):
+        return holdout
+    start = folds.get("holdout_start") or holdout.get("holdout_start")
+    end = folds.get("holdout_end") or holdout.get("holdout_end")
+    if not start and not holdout:
+        return {}
+    next_open = _next_quarter_open(folds.get("as_of") or summary.get("as_of"))
+    return {
+        "holdout_start": start,
+        "holdout_end": end,
+        "locked": True,
+        "evaluations": holdout.get("evaluations", 0),
+        "next_open": next_open,
+        "note_ko": f"홀드아웃은 분기 1회만 열립니다 — 다음 개봉 {next_open or '—'}",
+    }
+
+
+def build_ledger(signals: dict | None, records: list[dict] | None, portfolio: dict | None,
+                 folds: dict | None = None, params_history: list[dict] | None = None,
+                 pilot_eval: dict | None = None) -> dict:
     signals = signals or {}
     summary = signals.get("ledger_summary") or {}
+    fold_summary = summary.get("folds") or folds or {}
+    pilot = summary.get("pilot") or {}
+    if not pilot.get("metrics") and pilot_eval:
+        pilot = {**pilot_eval, **(pilot if pilot.get("verdict") else {})}
+    history = summary.get("params_history") or params_history or []
     return {
         "schema_version": summary.get("schema_version", 1),
         "as_of": summary.get("as_of") or signals.get("as_of"),
@@ -207,13 +248,13 @@ def build_ledger(signals: dict | None, records: list[dict] | None, portfolio: di
         "accuracy": summary.get("accuracy") or {"label_ko": "신호 정확도"},
         "strategy": summary.get("strategy") or {"label_ko": "전략(모의 계좌)"},
         "horizons": summary.get("horizons") or {},
-        "folds": summary.get("folds") or {},
-        "pilot": summary.get("pilot") or {"verdict": "보류", "reason_ko": "파일럿 지표 미산출"},
-        "params_history": summary.get("params_history") or [],
+        "folds": fold_summary,
+        "pilot": pilot or {"verdict": "보류", "reason_ko": "파일럿 지표 미산출"},
+        "params_history": history,
         "signal_history": (summary.get("signal_history") or [])[:200],
         "graded_sample": (summary.get("graded_sample") or [])[:20],
         "settlement": summary.get("settlement") or {},
-        "holdout": summary.get("holdout") or {},
+        "holdout": holdout_view(summary, fold_summary),
         "debate_effect": summary.get("debate_effect") or {
             "pairs": 0, "net_pp": None, "verdict": "표본 0건 — 판정 보류"},
         "portfolio": portfolio or (signals.get("portfolio") or {}),
@@ -397,11 +438,13 @@ def build_watchlist(watch: dict | None) -> dict:
 
 def build(signals: dict | None, folds: dict | None, records: list[dict] | None, rules: dict,
           *, radar: dict | None = None, portfolio_state: dict | None = None,
-          watch: dict | None = None, params: dict | None = None, veto: dict | None = None) -> dict:
+          watch: dict | None = None, params: dict | None = None, veto: dict | None = None,
+          params_history: list[dict] | None = None, pilot_eval: dict | None = None) -> dict:
     out: dict[str, dict] = {}
     out["meta.json"] = build_meta(signals, None)
     out["signals/today.json"] = build_today(signals)
-    out["ledger/summary.json"] = build_ledger(signals, records, portfolio_state)
+    out["ledger/summary.json"] = build_ledger(signals, records, portfolio_state, folds=folds,
+                                              params_history=params_history, pilot_eval=pilot_eval)
     out["ledger/records.json"] = build_records(signals, records)
     out["ledger/portfolio.json"] = build_portfolio(signals, portfolio_state)
     out["radar/13f.json"] = build_radar(radar)
@@ -452,6 +495,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--portfolio", default="data/ledger/portfolio/state.json")
     ap.add_argument("--watchlist", default="data/watchlist/current.json")
     ap.add_argument("--params", default=str(DEFAULT_PARAMS))
+    ap.add_argument("--params-history", default="data/params_history.json")
+    ap.add_argument("--pilot", default="data/ledger/pilot_eval.json")
     ap.add_argument("--veto", default=str(DEFAULT_VETO))
     ap.add_argument("--out", default="web/data")
     ap.add_argument("--allowlist", default=str(DEFAULT_ALLOWLIST))
@@ -469,7 +514,9 @@ def main(argv: list[str] | None = None) -> int:
                 portfolio_state=_load(Path(args.portfolio)),
                 watch=_load(Path(args.watchlist)),
                 params=_load_yaml(Path(args.params)),
-                veto=_load_yaml(Path(args.veto)))
+                veto=_load_yaml(Path(args.veto)),
+                params_history=_load(Path(args.params_history)),
+                pilot_eval=_load(Path(args.pilot)))
     root = Path(args.out)
     for name, payload in out.items():
         p = root / name
