@@ -61,6 +61,7 @@ jobs:
         run: |
           set -euo pipefail
           BASE="${BASE_REF:-$DEFAULT_BRANCH}"
+          echo "BASE=${BASE}" >> "$GITHUB_ENV"
           echo "base=${BASE}" >> "$GITHUB_ENV"
           git fetch --no-tags origin "+refs/heads/${BASE}:refs/remotes/origin/${BASE}"
           rm -rf /tmp/trusted && mkdir -p /tmp/trusted
