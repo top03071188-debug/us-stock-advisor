@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "as_of": "2026-11-21",
-  "generated_at": "2026-11-21T04:05:32Z",
-  "received_at": "2026-11-21T04:05:32Z",
+  "as_of": "2026-11-22",
+  "generated_at": "2026-11-21T22:31:50Z",
+  "received_at": "2026-11-21T22:31:50Z",
   "freeze_buffer_seconds": 300,
   "auto_downgrade_enabled": false,
-  "n_reports": 6,
-  "n_eligible": 6,
+  "n_reports": 11,
+  "n_eligible": 11,
   "n_late": 0,
   "n_invalid": 0,
   "n_superseded": 0,
@@ -16,7 +16,12 @@
     "2026-11-21-ADBE-WATCH-001": "2026-11-21-ADBE-debate-01",
     "2026-11-21-META-WATCH-001": "2026-11-21-META-debate-01",
     "2026-11-21-NVDA-WATCH-001": "2026-11-21-NVDA-debate-01",
-    "2026-11-21-MSFT-WATCH-001": "2026-11-21-MSFT-debate-01"
+    "2026-11-21-MSFT-WATCH-001": "2026-11-21-MSFT-debate-01",
+    "2026-11-21-GOOGL-WATCH-002": "2026-11-21-GOOGL-debate-02",
+    "2026-11-21-ADBE-WATCH-002": "2026-11-21-ADBE-debate-02",
+    "2026-11-21-META-WATCH-002": "2026-11-21-META-debate-02",
+    "2026-11-21-NVDA-WATCH-002": "2026-11-21-NVDA-debate-02",
+    "2026-11-21-MSFT-WATCH-002": "2026-11-21-MSFT-debate-02"
   },
   "superseded": [],
   "by_signal": {
@@ -37,7 +42,7 @@
       "report_validated_at": "2026-11-20T13:56:11Z",
       "freeze_deadline_at": "2026-11-20T14:20:00Z",
       "frozen_at": "2026-11-20T14:20:00Z",
-      "received_at": "2026-11-21T04:05:32Z",
+      "received_at": "2026-11-21T22:31:50Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -221,7 +226,7 @@
       "report_validated_at": "2026-11-21T00:44:44.454624Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-21T04:05:32Z",
+      "received_at": "2026-11-21T22:31:50Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -385,7 +390,7 @@
       "report_validated_at": "2026-11-21T00:44:44.458337Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-21T04:05:32Z",
+      "received_at": "2026-11-21T22:31:50Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -549,7 +554,7 @@
       "report_validated_at": "2026-11-21T00:44:44.462401Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-21T04:05:32Z",
+      "received_at": "2026-11-21T22:31:50Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -713,7 +718,7 @@
       "report_validated_at": "2026-11-21T00:44:44.466918Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-21T04:05:32Z",
+      "received_at": "2026-11-21T22:31:50Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -878,7 +883,7 @@
       "report_validated_at": "2026-11-21T00:44:44.471290Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-21T04:05:32Z",
+      "received_at": "2026-11-21T22:31:50Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1024,6 +1029,838 @@
       "adopted_report_id": "2026-11-21-MSFT-debate-01",
       "adopted_report_sha256": "sha256:313cda93e3ed2fc1d283cb296bce6c83a0015c336594d94f322c443a1a436f94",
       "adopted_snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424"
+    },
+    "2026-11-21-GOOGL-WATCH-002": {
+      "report_id": "2026-11-21-GOOGL-debate-02",
+      "ticker": "GOOGL",
+      "signal_id": "2026-11-21-GOOGL-WATCH-002",
+      "snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-21T04:40:01.064530+00:00",
+      "signal_published_at": "2026-11-21T04:05:32Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "report_validated_at": "2026-11-21T04:40:01.064530Z",
+      "freeze_deadline_at": "2026-11-23T14:20:00Z",
+      "frozen_at": "2026-11-23T14:20:00Z",
+      "received_at": "2026-11-21T22:31:50Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "NONE",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -66.0,
+          "stance": "sell",
+          "confidence": 0.61,
+          "reasons": [
+            "현재가 265.29는 내재가치 상단 참조값 71.08을 넘고 안전마진 -3.2923은 가격 부담을 가리킨다.",
+            "품질 점수는 90.55이며 자본수익률 격차와 현금 전환율은 비어 있어 이익의 지속성 판단에 보수적이다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "stance": "hold",
+          "confidence": 0.38,
+          "reasons": [
+            "성장 점수 93.44와 클라우드의 컴퓨팅 약정은 성장성을 추가 검토할 근거다.",
+            "성장 점수 93.44만으로는 누락된 PEG와 매출 및 주당이익 성장률을 대신해 합리적 성장 가격을 확인하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -24.0,
+          "stance": "hold",
+          "confidence": 0.39,
+          "reasons": [
+            "현재가 265.29는 단기와 장기 이동평균 아래이고 RSI 27.781에서 추세 개선 근거는 약하다.",
+            "레짐 점수 50.0의 중립 국면에서 상대강도와 거시 세부값이 없어 반등 시점 판단을 보류한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "GOOGL의 분기말 보유 공시에 적용되는 시차는 45일이며 컨텍스트에 공시 보유 행이 없어 보유 증감과 섹터 일치 여부를 판단하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -66.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수와 컴퓨팅 약정만으로는 인프라 지출 뒤 남는 현금이 현재 가격을 정당화하는지 알기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진이 음수라는 근거만으로는 클라우드 컴퓨팅 약정의 성장 기여와 지속성을 판정하기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -24.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "클라우드 수요와 성장 점수는 상대강도와 현물 추세의 회복을 확인해 주지 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "현물 약세와 낮은 RSI를 분기말 보유 축소의 확인 신호로 쓰기 어렵다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "클라우드 약정과 잉여현금흐름 전환 확인"
+          ],
+          "structural_risk": 52.0,
+          "reasoning": "클라우드 약정은 수요를 뒷받침하며 AI 인프라 투자와 부외 약정의 현금 회수 시점은 불확실하다. 가격 부담과 약한 추세를 감안해 신규 근거를 확인한다."
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 클라우드 약정으로 수요를 확인하되 현금 전환으로 이어지는지는 더 확인해야 한다고 봤다.",
+            "린치와 드러켄밀러는 클라우드 수요가 현물 진입을 뒷받침할 확인 신호로는 부족하다고 봤다."
+          ],
+          "dissent": [
+            "버핏은 음의 안전마진을 중시했고 린치는 클라우드 수요의 성장 가능성에 더 무게를 뒀다.",
+            "드러켄밀러는 이동평균 하회의 확인을, 게이츠는 분기말 보유 정보 확인을 우선했다."
+          ],
+          "grade_recommendation": "NONE",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            326.86
+          ],
+          "conflict": true,
+          "one_line_ko": "클라우드 수요 약정의 현금 전환이 불확실하고 안전마진과 추세가 약해 토론 권고를 낮춘다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 16,
+        "quotes_dropped": 0,
+        "numbers_checked": 10,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 52.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-21-GOOGL-debate-02",
+      "adopted_report_sha256": "sha256:edad3cf9ae52262fd4c2090b904557d0f72fb20c67ff3680252ba17926cc1a0b",
+      "adopted_snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87"
+    },
+    "2026-11-21-ADBE-WATCH-002": {
+      "report_id": "2026-11-21-ADBE-debate-02",
+      "ticker": "ADBE",
+      "signal_id": "2026-11-21-ADBE-WATCH-002",
+      "snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-21T04:40:01.070582+00:00",
+      "signal_published_at": "2026-11-21T04:05:32Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "report_validated_at": "2026-11-21T04:40:01.070582Z",
+      "freeze_deadline_at": "2026-11-23T14:20:00Z",
+      "frozen_at": "2026-11-23T14:20:00Z",
+      "received_at": "2026-11-21T22:31:50Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "NONE",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "stance": "sell",
+          "confidence": 0.57,
+          "reasons": [
+            "현재가 217.71은 내재가치 상단 참조값 182.46을 웃돌고 안전마진은 -0.3721이다.",
+            "품질 점수 85.0은 관심을 뒷받침하며 현금 전환과 재무 레버리지의 세부 근거는 비어 있다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "lynch",
+          "score": 26.0,
+          "stance": "hold",
+          "confidence": 0.39,
+          "reasons": [
+            "성장 점수 100.0에 Firefly 공동 개발과 기업용 AI 확대가 성장의 정성 근거를 보탠다.",
+            "성장 점수 100.0에도 PEG와 매출 및 주당이익 성장률이 비어 있어 구독 전환과 가격의 균형은 판단을 보류한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -19.0,
+          "stance": "hold",
+          "confidence": 0.38,
+          "reasons": [
+            "현재가 217.71은 두 이동평균 아래이고 RSI 30.8894는 추세 회복을 확인해 주지 않는다.",
+            "레짐 점수 50.0과 상대강도 및 거시 세부값의 부재를 감안해 모멘텀 해석의 확신은 낮다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "ADBE의 분기말 보유 공시에 적용되는 시차는 45일이며 컨텍스트에 공시 보유 행이 없어 보유 증감과 섹터 일치 여부를 판단하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수와 Firefly 공동 개발은 고객 채택의 단서이며 계약의 현금 전환이나 마진은 입증하지 못한다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 26.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진 제약은 인정하지만 이 값으로는 다년 계약의 구독 전환이 성장에 기여할지 판단할 수 없다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -19.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수와 다년 공동 개발은 상대강도나 이동평균 회복을 확인해 주는 근거가 아니다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "이동평균을 하회하는 현물 가격으로 장기 자금의 보유 축소나 섹터 동행을 해석하기 어렵다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "Firefly 제휴의 유료 구독 전환과 현금 수익성 확인"
+          ],
+          "structural_risk": 48.0,
+          "reasoning": "Firefly 공동 개발과 기업용 AI 표준은 제품 채택 경로를 넓힐 수 있다. 구독 전환과 계약 수익성이 확인되기 전까지 확인 사항으로 남긴다."
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 공동 개발이 기업 채택에 유리할 수 있으며 구독과 현금 기여는 확인이 필요하다고 봤다.",
+            "버핏과 드러켄밀러는 제품 제휴만으로 현재 가격과 추세의 제약을 해소하기 어렵다고 봤다."
+          ],
+          "dissent": [
+            "린치는 높은 성장 점수와 AI 채택 가능성에 비중을 뒀고 버핏은 현재 가격에서 확보할 안전마진을 중시했다.",
+            "드러켄밀러는 두 이동평균 아래인 현물 가격을 근거로 추세 확인을 요구했다."
+          ],
+          "grade_recommendation": "NONE",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            238.97
+          ],
+          "conflict": true,
+          "one_line_ko": "Firefly 기업 채택 가능성에도 현금 전환이 확인되지 않고 안전마진과 가격 추세가 약해 토론 권고를 낮춘다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 16,
+        "quotes_dropped": 0,
+        "numbers_checked": 10,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 48.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-21-ADBE-debate-02",
+      "adopted_report_sha256": "sha256:78303cbf71228ffc92bcb58427eaaccbbf42c364de07fafae7b8052cc63cd136",
+      "adopted_snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87"
+    },
+    "2026-11-21-META-WATCH-002": {
+      "report_id": "2026-11-21-META-debate-02",
+      "ticker": "META",
+      "signal_id": "2026-11-21-META-WATCH-002",
+      "snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-21T04:40:01.076591+00:00",
+      "signal_published_at": "2026-11-21T04:05:32Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "report_validated_at": "2026-11-21T04:40:01.076591Z",
+      "freeze_deadline_at": "2026-11-23T14:20:00Z",
+      "frozen_at": "2026-11-23T14:20:00Z",
+      "received_at": "2026-11-21T22:31:50Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "NONE",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -64.0,
+          "stance": "sell",
+          "confidence": 0.59,
+          "reasons": [
+            "현재가 560.84는 내재가치 상단 참조값 180.36을 웃돌고 안전마진은 -2.576이다.",
+            "품질 점수가 89.77인 가운데 현금 전환율이 비어 있어 인프라 약정의 부담을 상쇄할 근거를 확인하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 14.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "성장 점수 85.3과 기사에 나온 광고 수요 및 수익화 개선은 관심을 유지할 근거다.",
+            "성장 점수 85.3이 부외 데이터센터 약정의 영향이나 누락된 PEG와 장기 성장률을 확인해 주지는 않는다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -22.0,
+          "stance": "hold",
+          "confidence": 0.39,
+          "reasons": [
+            "현재가 560.84는 두 이동평균을 하회하고 RSI 30.263은 추세가 약하다는 판단을 뒷받침한다.",
+            "중립 레짐 점수 50.0에서 상대강도와 거시 세부값이 비어 있어 섹터 수급을 진입 신호로 보기는 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "META의 분기말 보유 공시에 적용되는 시차는 45일이며 컨텍스트에 공시 보유 행이 없어 보유 증감과 섹터 일치 여부를 판단하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -64.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수와 분기 광고 수요만으로는 인프라 약정 부담 뒤에도 현금 전환이 유지되는지 알기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 14.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "음의 안전마진은 가격 부담을 시사하지만 기사에서 확인한 광고 성장 동력의 지속성을 판정하는 근거는 약하다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -22.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수와 분기 수익화 개선이 중립 레짐에서 상대강도나 추세 반전을 확인해 주지는 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "두 이동평균을 밑도는 가격으로 분기말 보유 증감이나 섹터 펀드의 장기 배분을 추론할 수 없다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "데이터센터 약정의 현금 회수 일정 확인",
+            "데이터센터 규제 확정 여부 확인"
+          ],
+          "structural_risk": 56.0,
+          "reasoning": "광고 수익화와 함께 인프라 약정이 늘어 이익과 현금의 회수 시점에 대한 가시성이 낮다. 데이터센터 규제 가능성은 기사에 제기됐으며 확정 여부를 확인해야 한다."
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 광고 수익화 개선과 데이터센터 자금 회수 위험을 함께 봤다.",
+            "버핏과 린치는 성장 점수와 광고 개선만으로는 현재 가격에 필요한 현금 창출을 입증하기 어렵다고 봤다."
+          ],
+          "dissent": [
+            "린치는 광고 수익화 가능성을 성장 근거로 남겼고 버핏은 음의 안전마진과 부외 금융의 부담을 중시했다.",
+            "드러켄밀러는 두 이동평균 아래인 현물 가격을 중시했고 게이츠는 섹터 ETF 유입을 분기말 보유 변화와 구분했다."
+          ],
+          "grade_recommendation": "NONE",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            609.73
+          ],
+          "conflict": true,
+          "one_line_ko": "광고 수익화 개선에도 데이터센터 자금 회수의 불확실성과 안전마진 및 추세 약세가 남아 토론 권고를 낮춘다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 10,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 56.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-21-META-debate-02",
+      "adopted_report_sha256": "sha256:b20f286f37e1693b10e413beb636ae66412a1aa04898cc8746a6db7edd10e521",
+      "adopted_snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87"
+    },
+    "2026-11-21-NVDA-WATCH-002": {
+      "report_id": "2026-11-21-NVDA-debate-02",
+      "ticker": "NVDA",
+      "signal_id": "2026-11-21-NVDA-WATCH-002",
+      "snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-21T04:40:01.084336+00:00",
+      "signal_published_at": "2026-11-21T04:05:32Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "report_validated_at": "2026-11-21T04:40:01.084336Z",
+      "freeze_deadline_at": "2026-11-23T14:20:00Z",
+      "frozen_at": "2026-11-23T14:20:00Z",
+      "received_at": "2026-11-21T22:31:50Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "NONE",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -82.0,
+          "stance": "sell",
+          "confidence": 0.64,
+          "reasons": [
+            "현재가 125.53은 내재가치 상단 참조값 23.42를 크게 웃돌고 안전마진은 -7.1033이다.",
+            "품질 점수는 77.54이며 현금 전환율 부재와 회계 조사 보도를 감안하면 보고 이익의 질을 더 확인해야 한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 5.0,
+          "stance": "hold",
+          "confidence": 0.29,
+          "reasons": [
+            "성장 점수 100.0은 성장 후보로 볼 근거이나 PEG와 장기 매출 및 주당이익 성장률은 없다.",
+            "성장 점수 100.0에도 경쟁사 이식 경로 개선과 보도된 경영 변동 때문에 지속 가능성에 낮은 확신을 둔다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -38.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "현재가 125.53은 두 이동평균 아래이고 RSI 15.0462에서 반등을 추격할 추세 근거가 약하다.",
+            "중립 레짐 점수 50.0에서 상대강도와 신용 및 금리 세부 정보가 비어 있어 국면 판단의 확신은 낮다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "NVDA의 분기말 보유 공시에 적용되는 시차는 45일이며 컨텍스트에 공시 보유 행이 없어 보유 증감과 섹터 일치 여부를 판단하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -82.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수는 보도된 회계 조사와 현금 전환 자료 공백을 해소해 현재 이익을 검증하는 근거가 되기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": -8.0,
+          "changed": true,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진은 가격 압박을 보여 주지만 성장 지속성은 설명하지 못하며 버핏이 지적한 보고 이익의 신뢰 문제가 성장 평가에 더 직접적이다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -38.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수만으로 두 이동평균을 하회하는 현물 가격이 추세를 되돌렸다고 볼 수 없다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "급격한 가격 약세로 기관 장기 자금 이탈과 섹터 배분 변화를 확인할 수 없다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [
+            "THESIS_BREAK"
+          ],
+          "additional_blocks": [
+            "회계 조사 범위와 회사 공시의 영향 확인",
+            "경영진 변경 공시 원문 확인",
+            "경쟁사 플랫폼 이식 개선의 고객 영향 확인"
+          ],
+          "structural_risk": 84.0,
+          "reasoning": "보도된 회계 조사로 보고 이익을 매수 근거로 삼기 어려워 신규 진입을 차단한다. 임시 경영진에 관한 보도는 공시 원문 확인 사항으로 남긴다."
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 보도된 회계 조사가 실적을 가치와 성장의 근거로 사용하는 데 제약이 된다고 봤다.",
+            "버핏과 린치는 경쟁사 플랫폼 이식 경로의 개선이 성장 지속성과 경쟁 우위에 영향을 줄 수 있다고 봤다.",
+            "드러켄밀러와 게이츠는 가격 약세만으로 회계 위험의 해소 또는 분기 보유 변화를 판정하기 어렵다고 봤다."
+          ],
+          "dissent": [
+            "린치는 높은 성장 점수에 처음에는 유보적 긍정을 남겼으나 버핏의 보고 이익 신뢰 문제를 검토하면서 점수를 음수로 낮췄다.",
+            "드러켄밀러는 추세 회복 여부를, 버핏은 보고 이익과 현금 전환 검증을 우선했다."
+          ],
+          "grade_recommendation": "NONE",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            197.25
+          ],
+          "conflict": true,
+          "one_line_ko": "회계 조사 보도로 성장과 가치 평가의 근거가 약해졌고 가드가 신규 진입을 차단해 토론 권고는 NONE이다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 10,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 84.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-21-NVDA-debate-02",
+      "adopted_report_sha256": "sha256:66e1c6374daa2bb4d4f3940d340f7bea1e93b0c590549429520cae84da3a75ce",
+      "adopted_snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87"
+    },
+    "2026-11-21-MSFT-WATCH-002": {
+      "report_id": "2026-11-21-MSFT-debate-02",
+      "ticker": "MSFT",
+      "signal_id": "2026-11-21-MSFT-WATCH-002",
+      "snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-21T04:40:01.092162+00:00",
+      "signal_published_at": "2026-11-21T04:05:32Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "report_validated_at": "2026-11-21T04:40:01.092162Z",
+      "freeze_deadline_at": "2026-11-23T14:20:00Z",
+      "frozen_at": "2026-11-23T14:20:00Z",
+      "received_at": "2026-11-21T22:31:50Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -65.0,
+          "stance": "sell",
+          "confidence": 0.59,
+          "reasons": [
+            "현재가 484.52는 내재가치 상단 참조값 148.49를 넘고 안전마진은 -2.7525이다.",
+            "품질 점수는 82.43이고 투자자본수익률과 현금 전환율이 비어 있어 AI 투자 회수의 근거가 약하다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 10.0,
+          "stance": "hold",
+          "confidence": 0.34,
+          "reasons": [
+            "성장 점수 67.81과 Azure 장기 칩 협력은 성장 기회를 지켜볼 근거다.",
+            "성장 점수 67.81 외에 PEG와 매출 및 주당이익 성장률이 비어 있어 공급 확보가 합리적 가격을 뒷받침하는지는 유보한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -9.0,
+          "stance": "hold",
+          "confidence": 0.37,
+          "reasons": [
+            "현재가 484.52는 장기 이동평균 위에 있지만 단기 이동평균 아래이고 RSI 34.7635로 추세가 엇갈린다.",
+            "중립 레짐 점수 50.0에서 상대강도와 거시 세부값이 없어 추세 회복 판단은 보류한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "MSFT의 분기말 보유 공시에 적용되는 시차는 45일이며 컨텍스트에 공시 보유 행이 없어 보유 증감과 섹터 일치 여부를 판단하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -65.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수와 장기 칩 협력은 공급 선택지를 늘릴 가능성을 보여 주지만 투자비 회수나 잉여현금 창출을 확인하기에는 부족하다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 10.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진이 낮아도 Azure 공급 경로 확대가 장기 성장의 병목을 완화할 가능성은 남는다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": true,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수와 Azure 공급 확대는 중장기 변수로 상대강도나 단기 가격의 방향을 확인하기에는 부족하다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "단기선과 장기선 사이의 거래 가격으로 장기 보유 비중 변화의 방향을 판단할 수 없다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "Azure 칩 공급 약정의 현금 회수 시점 확인",
+            "자체 프런티어 모델의 경쟁력 확인"
+          ],
+          "structural_risk": 54.0,
+          "reasoning": "장기 칩 조달 협력은 Azure의 공급 경로를 넓힐 수 있으며 AI 투자와 부외 약정에서 현금이 돌아오는 시점은 확인이 필요하다. 인터뷰의 자체 모델 평가는 추가 확인 사항으로 남긴다."
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 Azure 공급 경로가 넓어질 수 있으며 현금 전환과 성장 대비 가격은 확인이 필요하다고 봤다.",
+            "린치와 드러켄밀러는 장기 공급 협력이 단기 진입 방향을 확인해 주지는 않는다고 봤다."
+          ],
+          "dissent": [
+            "버핏은 음의 안전마진을 중시했고 린치는 Azure의 성장 가능성을 남겼다.",
+            "드러켄밀러는 단기선 아래와 장기선 위라는 혼재된 가격 추세를 보고 방향 점수를 중립으로 조정했다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            430.32
+          ],
+          "conflict": true,
+          "one_line_ko": "Azure의 공급 경로 확대를 지켜보되 현금 회수와 추세가 확인될 때까지 정량 관찰 등급을 유지한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 10,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 54.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-21-MSFT-debate-02",
+      "adopted_report_sha256": "sha256:663323adf38b054e32121fd5363706b7843b51623b445acc44f445d4885a87b4",
+      "adopted_snapshot_id": "sha256:7cd296e38401e96f395d86e97fa2ca18350c8ae69b64df0d846134ebe0e9fc87"
     }
   },
   "auto_downgrade": {
