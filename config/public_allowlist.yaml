@@ -551,6 +551,77 @@ allow:
   - lock
   - expected_fill_day
 
+  # ── 워크포워드 스트레스·보정의 **파생 수치**(v1.3.8) ──────────────────────────
+  # `data/walkforward/stress.json`·`attempts.json`·`reports/calibration.md` 는 **비율·건수·판정**만 담는다.
+  # 원시 OHLC·거래량·수량·평단은 넣지 않는다(stress.json 은 reference_metrics 에도 비율만 둔다).
+  - windows
+  - results
+  - strategy_mdd
+  - benchmark_mdd
+  - v06_fired
+  - new_buys_during_crash
+  - loss_ratio
+  - loss_ratio_basis
+  - reference_metrics
+  - reference_only
+  - reference_note_ko
+  - gate_passed
+  - verified
+  - universe_history_verified
+  - delisted_verified
+  - missing_inputs
+  - n_verified
+  - n_windows
+  - n_windows_measured
+  - n_signal_days
+  - n_orders
+  - n_fills
+  - n_closed_trades
+  - n_days
+  - n_universe_at_start
+  - n_folds
+  - n_folds_planned
+  - n_snapshots
+  - n_candidates
+  - strategy_total_return
+  - benchmark_total_return
+  - max_exposure
+  - final_equity_ratio
+  - v06_days
+  - v06_day_count
+  - entry_basis
+  - entry_basis_ko
+  - data_note_ko
+  - universe_source
+  - data_source
+  - benchmark
+  - checks
+  - criteria_ko
+  - macro_signals_available
+  - membership_counts
+  - index_size
+  - tolerance
+  - coverage_required_from
+  - required_columns
+  - delisted_columns
+  - calibrations
+  - accepted
+  - candidates
+  - agreement_gain
+  - base_agreement
+  - candidate_agreement
+  - improved_folds
+  - objective
+  - stress
+  - maturity_bar
+  - agreement_mean
+  - excess_return
+  - excess_vs_plan
+  - signal_count
+  - min_signals
+  - fill_price
+  - end_price
+
 deny_keys:                       # 하나라도 있으면 커밋·배포 실패 [고정]
   - quote
   - evidence_quote

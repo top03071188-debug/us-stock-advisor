@@ -1,0 +1,47 @@
+# config/13f_filers.yaml — 13F 스마트머니 레이더 수집 대상 (기획서 2.4.4 · 5.5)
+#
+# `engine/data/holdings_13f.py:collect_13f_filings()` 가 이 목록의 CIK 로 SEC EDGAR 를 조회해
+# 최근 2개 분기 `13F-HR` 정보표를 받는다. `cik` 은 SEC 제출자 ID(숫자, 10자리로 정규화된다),
+# `name` 은 화면에 쓰는 표시 이름, `style` 은 분류 메타데이터다.
+#
+# [고정] 13F 는 분기말 +45일이 지나야 쓸 수 있고(`acceptance_datetime ≤ decision_at`),
+#        보유 수량·평단은 공개 필드가 아니다 — 레이더는 평가액과 변화율만 쓴다(2.2.3).
+
+version: 1
+description: 대표 기관·대가 펀드 7곳 — 13F-HR 보유 변화(신규·확대·축소·청산) 추적
+
+# value_unit: 그 펀드가 정보표 `<value>` 를 적는 단위다(dollars 기본 | thousands).
+#   EDGAR 에는 두 관례가 섞여 있어(2026-11 실측) 단위를 틀리면 평가액이 1,000배 틀어진다.
+
+filers:
+  - cik: "0001067983"
+    name: Berkshire Hathaway
+    style: value
+    note: 워런 버핏 — 대형 가치주 집중, 다중 운용사별 분할 신고 행이 흔하다(수집기가 합산한다).
+  - cik: "0001166559"
+    name: Bill & Melinda Gates Foundation Trust
+    style: quality-growth
+    note: 게이츠 재단 신탁 — 버크셔·CN·Waste Management 등 장기 보유 중심.
+  - cik: "0001336528"
+    name: Pershing Square Capital Management
+    style: activist-value
+    note: 빌 애크먼 — 일부 분기는 13F-NT(보유 내역 없는 통지)로 제출되어 레이더에서 빠진다.
+  - cik: "0001061768"
+    name: Baupost Group
+    style: deep-value
+    # 이 펀드의 정보표 `<value>` 는 **천 달러** 단위다(2026-Q3 커버 tableValueTotal 5,045,853 = 약 $5.05B).
+    # 단위를 비워 두면 달러로 읽혀 평가액이 1,000분의 1로 보인다.
+    value_unit: thousands
+    note: 세스 클라만 — 현금 비중이 큰 딥밸류, 분기별 편입·청산 폭이 크다.
+  - cik: "0001656456"
+    name: Appaloosa
+    style: event-driven
+    note: 데이비드 테퍼 — 경기순환·이벤트 드리븐 대형주 베팅.
+  - cik: "0001135730"
+    name: Coatue Management
+    style: growth-momentum
+    note: 필립 라핀 — 기술 성장주 집중, 개정판(13F-HR/A)이 붙는 분기가 있다.
+  - cik: "0001040273"
+    name: Third Point
+    style: activist-growth
+    note: 댄 로브 — 액티비스트 성장주, 분기 회전이 빠르다.

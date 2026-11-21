@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-20",
-  "holdout_start": "2026-08-20",
+  "as_of": "2026-11-21",
+  "holdout_start": "2026-08-21",
   "kind": "plan",
   "min_folds": 3,
   "attempts": [
@@ -38,14 +38,341 @@
       "horizon": "6m",
       "horizon_td": 126,
       "eligible_folds": [
-        "F1"
+        "F1",
+        "F2"
       ],
-      "count": 1,
+      "count": 2,
       "min_folds": 3,
       "sufficient": false,
       "action": "deferred",
       "reason": "INSUFFICIENT_ELIGIBLE_FOLDS",
-      "note": "적격 폴드 1/3 — 보정 창을 15개월 이상으로 늘려 적격 폴드 3개를 확보한 뒤 연다(4.2.1)."
+      "note": "적격 폴드 2/3 — 보정 창을 15개월 이상으로 늘려 적격 폴드 3개를 확보한 뒤 연다(4.2.1)."
+    },
+    {
+      "n_folds": 0,
+      "accepted": false,
+      "reason": "INSUFFICIENT_FOLDS",
+      "candidates": [],
+      "params": {
+        "version": "params_v001",
+        "created_at": "2026-11-19",
+        "universe": {
+          "index": "SP500",
+          "min_market_cap_usd": 10000000000,
+          "min_adv20_usd": 30000000,
+          "min_price_usd": 5,
+          "min_history_years": 5,
+          "sectors_max_count": 6,
+          "watchlist_min": null,
+          "watchlist_max": 40
+        },
+        "quality": {
+          "roic_spread_full": 0.1,
+          "roe_stdev_full": 0.03,
+          "fcf_margin_full": 0.2,
+          "fcf_to_ni_full": 1.0,
+          "max_net_debt_ebitda": 2.5,
+          "min_interest_cover": 6.0,
+          "max_dilution_3y": 0.05
+        },
+        "valuation": {
+          "discount_rate_min": 0.08,
+          "discount_rate_max": 0.15,
+          "terminal_growth": 0.025,
+          "growth_cap": 0.15,
+          "margin_high": 0.3,
+          "margin_mid": 0.0,
+          "margin_floor": -0.2,
+          "margin_floor_min": -2.0,
+          "v_score_high": 100.0,
+          "v_score_mid": 50.0,
+          "v_score_floor": 15.0,
+          "v_score_min": 0.0,
+          "dcf_sensitivity_max": 0.4,
+          "v_penalty_dcf": 4.0,
+          "hist_divergence_max": 0.2,
+          "v_penalty_hist": 10.0,
+          "ev_ebit_percentile_hot": 90.0,
+          "wacc_sensitivity_pm": 0.01,
+          "terminal_g_sensitivity_pm": 0.005,
+          "history_years": 10,
+          "per_share_output": true,
+          "net_debt_adjust": true,
+          "suspended_sectors": [
+            "Financials",
+            "banks",
+            "insurance",
+            "reits"
+          ],
+          "suspend_reason": "SECTOR_FORMULA_PENDING"
+        },
+        "entry_weights": {
+          "quality": 0.3,
+          "valuation": 0.25,
+          "timing": 0.2,
+          "macro": 0.15,
+          "growth": 0.1
+        },
+        "entry_gates": {
+          "margin_of_safety": {
+            "risk_on": 0.15,
+            "neutral": 0.2,
+            "risk_off": 0.25
+          },
+          "rsi_buy": 35,
+          "dma50_deviation": -0.08,
+          "dma200_mult": 0.97,
+          "timing_min": 55,
+          "dip_conditions_required": 2,
+          "structural_risk_block": 55
+        },
+        "grades": {
+          "strong_buy": 80,
+          "buy": 68,
+          "watch": 55
+        },
+        "exit": {
+          "margin_overheat": -0.15,
+          "rsi_overheat": 72,
+          "pe_percentile": 0.9,
+          "structural_exit": 70,
+          "exit_score": 75,
+          "trim_score": 60,
+          "hard_stop": -0.2,
+          "atr_trailing": 3.0
+        },
+        "scaling": {
+          "entry": [
+            0.4,
+            0.3,
+            0.3
+          ],
+          "entry_drops": [
+            0.0,
+            -0.07,
+            -0.14
+          ],
+          "exit": [
+            0.3333,
+            0.3333,
+            0.3334
+          ]
+        },
+        "risk": {
+          "risk_per_trade": 0.0075,
+          "stop_atr_mult": 3.0,
+          "stop_max": 0.2,
+          "max_position": 0.05,
+          "max_sector": 0.25,
+          "max_open_risk": 0.045,
+          "cash_min": 0.1,
+          "cash_min_risk_off": 0.3
+        },
+        "macro": {
+          "risk_on_multiplier": 1.0,
+          "neutral_multiplier": 0.7,
+          "risk_off_multiplier": 0.4,
+          "vix_extreme": 35,
+          "hy_oas_extreme_bp": 700,
+          "series": [
+            "DFF",
+            "CPIAUCSL",
+            "CPILFESL",
+            "DGS10",
+            "DGS2",
+            "T10Y2Y",
+            "BAMLH0A0HYM2",
+            "VIXCLS",
+            "DTWEXBGS",
+            "UNRATE",
+            "WALCL"
+          ],
+          "stale_business_days": 5
+        },
+        "calibration": {
+          "step_weights": 0.05,
+          "step_threshold_rel": 0.2,
+          "min_signals_per_fold": 25,
+          "min_folds": 3,
+          "holdout_cutoff": "maturity_date < holdout_start",
+          "truncate_grading_at_holdout": true,
+          "accept_gain": 2.0,
+          "accept_folds": 2,
+          "l2_lambda": 0.5,
+          "freeze_cycles": 4,
+          "holdout_rollback_points": 5,
+          "horizons_td": {
+            "1m": 21,
+            "3m": 63,
+            "6m": 126
+          },
+          "fold_start_dom": 19,
+          "maturity_before_holdout": true,
+          "truncated_excluded_from_objective": true,
+          "min_window_months": 12,
+          "preferred_window_months": 15
+        },
+        "data": {
+          "available_at_filter": true,
+          "price_kinds": [
+            "total_return_adj",
+            "split_adj_ohlc",
+            "raw_as_traded"
+          ],
+          "raw_price_source": "reconstructed_from_splits",
+          "split_reconstruction_tolerance": 0.001,
+          "macro_available_at_order": [
+            "release_at",
+            "first_ingested_at",
+            "date_plus_one"
+          ],
+          "macro_vintage_date_field": "realtime_start",
+          "macro_unknown_requires_after_et_day_end": true,
+          "macro_release_tz": "America/New_York",
+          "universe_history_required": true,
+          "delisted_dataset_required": true,
+          "hy_oas_available_from": "2023-11-20",
+          "snapshot_archive": "private_repo:${PRIVATE_ARCHIVE_REPO}",
+          "snapshot_filename": "snapshot_{T}_{snapshot_id_short}.tgz",
+          "snapshot_overwrite": false,
+          "archive_hash_algorithm": "sha256",
+          "public_commit_allowlist": "config/public_allowlist.yaml",
+          "atr_pct_basis": "split_adj_ohlc",
+          "stop_price_kind": "raw_as_traded",
+          "dma_compare_basis": "split_adj_ohlc"
+        },
+        "execution": {
+          "order_commit_before_open": true,
+          "limit_max": "iv_median_x_required_margin",
+          "stop_min": "max(b2_dma200_x_0_97, provisional_stop)",
+          "fill": "opening_auction_within_range",
+          "reject_reason_outside_range": "outside_order_range",
+          "order_cutoff_et": "09:25"
+        },
+        "ledger": {
+          "publish_record_immutable": true,
+          "debate_event_path": "data/ledger/debate_events/{signal_id}.json",
+          "debate_event_link": [
+            "signal_id",
+            "snapshot_id"
+          ],
+          "record_action_source": "execution_event_only"
+        },
+        "portfolio": {
+          "tranches": [
+            0.4,
+            0.3,
+            0.3
+          ],
+          "tranche_drops": [
+            0.0,
+            -0.07,
+            -0.14
+          ],
+          "tranche_anchor": "first_fill",
+          "tranche2_rsi": 25,
+          "tranche3_dma_mult": 0.97,
+          "tranche3_requires_inside_stop": true,
+          "profit_take": [
+            0.3333,
+            0.3333,
+            0.3334
+          ],
+          "intrabar_priority": [
+            "stop",
+            "limit"
+          ],
+          "cancel_pending_on_exit": true,
+          "block_tranche_on_structural": true,
+          "recheck_planned_loss_each_tranche": true,
+          "corporate_actions": {
+            "split": "adjust_shares_cost_stop_orders",
+            "dividend": "add_to_cash"
+          },
+          "gap_fill": "opening_auction_fill",
+          "slippage_bps": 10,
+          "commission_bps": 0,
+          "benchmark_cash_mix": true
+        },
+        "pilot": {
+          "min_signals": 20,
+          "min_effective_n": 15,
+          "reference_win_rate": 0.52,
+          "reference_score": 55,
+          "max_tail_loss": -0.08,
+          "require_all_criteria": true
+        },
+        "backtest": {
+          "slippage_bps": 10,
+          "commission_bps": 0,
+          "fill": "opening_auction_within_order_range",
+          "benchmark": "SPY",
+          "cost_sensitivity_bps": [
+            0,
+            5,
+            10,
+            20
+          ]
+        },
+        "costs_llm": {
+          "max_monthly_usd": 5.0,
+          "max_calls_per_day": 40,
+          "cache_ttl_hours": 168
+        },
+        "debate": {
+          "enabled": true,
+          "executor": "codex_cli",
+          "skills": [
+            "buffett",
+            "lynch",
+            "druckenmiller",
+            "gates_13f",
+            "risk_guard",
+            "committee_chair"
+          ],
+          "rounds": [
+            "round1",
+            "round2",
+            "round3"
+          ],
+          "max_tickers_per_run": 6,
+          "max_calls_per_run": 80,
+          "max_calls_per_day": 120,
+          "timeout_sec": 180,
+          "retries": 2,
+          "min_valid_skills": 3,
+          "grade_promote_from_debate": false,
+          "auto_downgrade_enabled": false,
+          "entry_rule": "signal_published_at <= completed_at < order_cutoff_at",
+          "order_cutoff_et": "09:25",
+          "veto_override_allowed": false,
+          "paths": {
+            "context": "data/debate/context/{TICKER}.json",
+            "report": "data/debate_reports.json",
+            "out_dir": "out/debate"
+          }
+        }
+      },
+      "require_metadata": true,
+      "as_of": "2026-11-21",
+      "kind": "calibrate",
+      "params_version": "params_v001",
+      "holdout": {
+        "allowed": false,
+        "reason": "NOT_OPEN_DAY",
+        "note_ko": "홀드아웃은 분기 1회만 열린다 — 다음 개봉 2027-01-01",
+        "next_open": "2027-01-01"
+      },
+      "stress": {
+        "gate_passed": false,
+        "verified_all": false,
+        "stress_pass": null,
+        "reference_only": true
+      },
+      "n_snapshots": 2,
+      "n_folds_planned": 0,
+      "folds": [],
+      "holdout_start": "2026-08-21"
     }
   ]
 }

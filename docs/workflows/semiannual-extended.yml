@@ -1,0 +1,74 @@
+# semiannual-extended.yml — 반기 5년 확장 계획 & 3대 하락장 스트레스 실측 (1·7월 15일 00:00 UTC)
+#
+# 스트레스 게이트가 미검증(delisted_securities 미확보 등)인 동안 gate_passed=false 안전핀을 유지하고
+# 실측값은 reference_metrics 로만 남긴다(기획서 4.3).
+name: semiannual-extended
+
+on:
+  schedule:
+    - cron: "0 0 15 1,7 *"      # 1·7월 15일 09:00 KST
+  workflow_dispatch:
+
+concurrency:
+  group: semiannual-extended
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  extended:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.lock
+      - name: Restore pipeline cache (public-safe paths only)
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/cache/sec_cik
+            data/cache/yfinance
+          key: pipeline-${{ runner.os }}-${{ hashFiles('requirements.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            pipeline-${{ runner.os }}-${{ hashFiles('requirements.lock') }}-
+      - name: Refresh S&P 500 universe history (Wikipedia)
+        continue-on-error: true
+        run: python scripts/build_universe_history.py --out data/universe_history.csv
+      - name: Run semiannual extended & stress backtest
+        run: python scripts/run_walkforward.py --semiannual --today "$(date -u +%F)"
+      - name: Validate output schemas
+        run: python scripts/validate_outputs.py
+      - name: Commit stress & fold summary (allowlist only)
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for p in \
+            data/universe_history.csv \
+            data/walkforward/stress.json \
+            data/walkforward/folds/summary.json \
+            data/walkforward/attempts.json \
+            data/calibration/attempts.json; do
+            [ -e "$p" ] && git add "$p"
+          done
+          python scripts/check_commit_scope.py --staged
+          git diff --cached --quiet || git commit -m "data: semiannual walkforward & stress $(date -u +%F)"
+          git push
+      - name: Build public data (allowlist only)
+        run: python scripts/build_public_data.py
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: web }
+  deploy:
+    needs: extended
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
