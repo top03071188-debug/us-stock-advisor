@@ -201,7 +201,7 @@
             "required": ["news_id", "durability", "quote_sha256", "quote_verified", "quote_chars"],
             "properties": {
               "news_id": {"type": "string"},
-              "durability": {"type": "string", "enum": ["one_off", "structural", "unknown"]},
+              "durability": {"type": "string", "enum": ["transient", "one_off", "structural", "unknown"]},
               "impact": {"type": "string", "enum": ["positive", "negative", "neutral", "unknown"]},
               "severity": {"type": "number", "minimum": 0, "maximum": 100},
               "quote_sha256": {"type": "string"},

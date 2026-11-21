@@ -34,6 +34,7 @@ from codex_debate.context import (  # noqa: E402
     INVESTOR_SKILLS,
     build_context,
     load_prompt,
+    load_snapshot_inputs,
     load_schema,
     load_skill,
     prompt_hash,
@@ -553,6 +554,11 @@ def run_debate(
         git_pull_or_abort(cwd)
         quant_signals = reload_signals(cfg.signals_path, quant_signals)
     as_of = str(quant_signals.get("as_of") or "")
+    if snapshot is None:
+        # 로컬 비공개 스냅샷(`data/snapshots/{as_of}/inputs.json`)이 있으면 그쪽 뉴스 행을 쓴다 —
+        # Finnhub `summary` 가 남아 있어 본문이 막힌 기사에도 인용할 문장이 생긴다(v1.3.7).
+        # CI 처럼 파일이 없는 곳에서는 None 그대로다(공개 신호 행으로 폴백).
+        snapshot = load_snapshot_inputs(as_of)
     targets = select_targets(quant_signals, tickers=tickers, top=top, max_tickers=cfg.max_tickers)
     if not targets:
         summary.status = "no_targets"

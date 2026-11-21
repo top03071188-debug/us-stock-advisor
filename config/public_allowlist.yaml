@@ -556,6 +556,9 @@ deny_keys:                       # 하나라도 있으면 커밋·배포 실패 
   - evidence_quote
   - body
   - body_excerpt_1500
+  # v1.3.7: 뉴스 원문 요약(Finnhub `summary`·Yahoo summary)은 비공개 스냅샷·로컬 컨텍스트 전용이다.
+  # 공개 산출물에 `summary` 키가 생기면 이 검사가 잡는다(공개 화면은 제목·매체·시각·URL 만 쓴다).
+  - summary
   - raw_open
   - raw_high
   - raw_low

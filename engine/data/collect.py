@@ -23,8 +23,9 @@ import pandas as pd
 import yaml
 
 from engine.data.macro import DEFAULT_SERIES, FredClient, as_of_macro, cutoff_vintage
-from engine.data.news import FinnhubClient
+from engine.data.news import FinnhubClient, yahoo_news
 from engine.data.prices import PriceQualityError, build_price_frame
+from engine.data.relevance import rank_news
 from engine.data.sec_edgar import SecClient, acceptance_index, parse_submissions
 from engine.data.xbrl_fundamentals import (
     beta_from_prices,
@@ -283,48 +284,127 @@ def collect_filings(tickers: list[str], decision_at: datetime, diag: dict,
     return out
 
 
-def collect_news(tickers: list[str], decision_at: datetime, diag: dict) -> dict[str, list[dict]]:
-    """Finnhub 종목 뉴스 → 48시간 규칙 적용(2.7). 원문 본문은 받지 않는다(메타만)."""
+def _news_time(value) -> datetime | None:
+    """뉴스 시각 정규화 — unix 초·ISO 문자열·datetime 을 UTC datetime 으로."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        try:
+            return datetime.fromtimestamp(float(value), tz=timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    if not value:
+        return None
+    text = str(value).strip().replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
+
+def _news_key(headline: str) -> str:
+    """중복 판정 키 — 제목의 영숫자만 소문자로(매체마다 붙는 접미사·구두점 차이 흡수)."""
+    return "".join(ch for ch in str(headline or "").lower() if ch.isalnum())[:80]
+
+
+def _dedupe_news(rows: list[dict]) -> list[dict]:
+    """같은 기사를 두 소스가 각각 줄 때 하나로 — 빈 필드(요약·관련 티커)는 채워 넣는다."""
+    by_key: dict[str, dict] = {}
+    by_url: dict[str, str] = {}
+    order: list[str] = []
+    for row in rows:
+        headline = str(row.get("headline") or "")
+        url = str(row.get("url") or "").strip()
+        key = _news_key(headline)
+        existing = by_key.get(key) or by_key.get(by_url.get(url, ""))
+        if existing is not None:
+            for field in ("summary", "related_tickers", "source"):
+                if not existing.get(field) and row.get(field):
+                    existing[field] = row[field]
+            continue
+        by_key[key] = row
+        if url:
+            by_url[url] = key
+        order.append(key)
+    return [by_key[key] for key in order]
+
+
+def collect_news(tickers: list[str], decision_at: datetime, diag: dict,
+                 *, supplement: bool = True) -> dict[str, list[dict]]:
+    """Finnhub(+Yahoo 보조) 종목 뉴스 → 48시간·`available_at <= decision_at` 규칙 적용(2.7).
+
+    **수집 하는 것**: 제목·매체·URL·발행 시각·`summary`(최대 280자).
+    - `summary` 는 **비공개 스냅샷**(`data/snapshots/{as_of}/inputs.json` → 비공개 아카이브)과
+      로컬 컨텍스트에만 남는다. 공개 `data/quant_signals.json` 은 `engine.decide.pipeline` 이
+      제목·매체·시각·URL 만 골라 쓰므로 요약이 섞이지 않는다(§2.2.3·§2.2.4).
+    - `supplement=True` 면 Yahoo Finance 뉴스(키 불필요)를 합친다 — Finnhub 무료 뉴스는 매체가
+      Yahoo 로 몰리거나 종목과 무관한 기사가 섞인다. 보조 소스 실패는 본 수집 실패가 아니다.
+    - 종목 관련도 순으로 정렬한 뭐 10건(`rank_news`)을 돌려준다 — 무관 기사가 상단을 잡지 않게.
+    """
+    window_start = decision_at - timedelta(hours=NEWS_MAX_AGE_HOURS)
+    out: dict[str, list[dict]] = {}
+    client: FinnhubClient | None = None
     if not os.environ.get("FINNHUB_API_KEY"):
         _note(diag, "finnhub", "missing_key", "FINNHUB_API_KEY 없음 — 뉴스 미판독")
-        return {}
-    out: dict[str, list[dict]] = {}
-    try:
-        client = FinnhubClient()
-    except Exception as exc:  # noqa: BLE001
-        _note(diag, "finnhub", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
-        return {}
+    else:
+        try:
+            client = FinnhubClient()
+        except Exception as exc:  # noqa: BLE001
+            _note(diag, "finnhub", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
     start = (decision_at.date() - timedelta(days=5)).isoformat()
     end = decision_at.date().isoformat()
     failed = 0
-    for ticker in tickers:
-        try:
-            rows = client.company_news(ticker, start, end)
-        except Exception:  # noqa: BLE001
-            failed += 1
-            continue
+    yahoo_used = 0
+    yahoo_empty = 0
+    for index, ticker in enumerate(tickers):
+        rows: list[dict] = []
+        if client is not None:
+            try:
+                rows.extend(client.company_news(ticker, start, end))
+            except Exception:  # noqa: BLE001 — 한 종목 실패는 그 종목만 비운다
+                failed += 1
+        if supplement:
+            extra = yahoo_news(ticker)
+            if extra:
+                yahoo_used += 1
+            else:
+                yahoo_empty += 1
+            rows.extend(extra)
         kept: list[dict] = []
-        for row in rows or []:
-            published = row.get("published_at")
-            if isinstance(published, (int, float)):
-                published = datetime.fromtimestamp(float(published), tz=timezone.utc)
+        for row in rows:
+            published = _news_time(row.get("published_at"))
             if published is None:
                 continue
-            published = published if getattr(published, "tzinfo", None) else published.replace(tzinfo=timezone.utc)
-            if published > decision_at:
+            # 시점 고정: 마감 이후 기사(미래 뉴스)와 48시간 밖 기사는 버린다.
+            if published > decision_at or published < window_start:
                 continue
-            if decision_at - published > timedelta(hours=NEWS_MAX_AGE_HOURS):
+            headline = row.get("headline")
+            url = row.get("url")
+            if not headline or not url:
                 continue
-            kept.append({
-                "headline": row.get("headline"),
+            stamp = published.isoformat().replace("+00:00", "Z")
+            entry = {
+                "headline": headline,
                 "source": row.get("source"),
-                "url": row.get("url"),
-                "published_at": published.isoformat().replace("+00:00", "Z"),
-                "available_at": published.isoformat().replace("+00:00", "Z"),
-            })
-        kept.sort(key=lambda r: str(r.get("published_at")), reverse=True)
-        out[ticker] = kept[:10]
-    _note(diag, "finnhub", "ok" if out else "failed", f"실패 {failed}건" if failed else None)
+                "url": url,
+                "published_at": stamp,
+                "available_at": stamp,
+                "summary": (row.get("summary") or "")[:280],
+            }
+            if row.get("related_tickers"):
+                entry["related_tickers"] = list(row["related_tickers"])[:8]
+            kept.append(entry)
+        kept = _dedupe_news(kept)
+        kept.sort(key=lambda row: str(row.get("published_at")), reverse=True)
+        out[ticker] = rank_news(kept, ticker, limit=10)
+        if supplement and index and index % 10 == 0:
+            time.sleep(0.5)  # Yahoo 보조 호출 간 짧은 휴지 — 몰아 치지 않는다
+    if client is not None:
+        _note(diag, "finnhub", "ok" if out else "failed", f"실패 {failed}건" if failed else None)
+    if supplement:
+        _note(diag, "yahoo_news", "ok" if yahoo_used else "failed",
+              f"사용 {yahoo_used}종목 · 빈 응답 {yahoo_empty}종목")
     return out
 
 

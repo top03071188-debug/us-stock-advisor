@@ -23,6 +23,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from engine.data.relevance import rank_news
+
 PACKAGE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_DIR.parent
 SKILLS_DIR = PACKAGE_DIR / "skills"
@@ -442,6 +444,54 @@ def _snapshot_row(snapshot: dict | None, block: str, ticker: str) -> dict:
     return {}
 
 
+def _snapshot_news(snapshot: dict | None, ticker: str) -> list[dict]:
+    """비공개 스냅샷 입력의 해당 종목 뉴스 행(있으면). 없으면 빈 리스트."""
+    if not isinstance(snapshot, dict):
+        return []
+    table = snapshot.get("news")
+    if isinstance(table, dict):
+        rows = table.get(ticker)
+        if isinstance(rows, list):
+            return [row for row in rows if isinstance(row, dict)]
+    return []
+
+
+def _news_match_key(row: dict) -> tuple[str, str]:
+    """뉴스 행 대조 키 — (URL, 제목 영숫자). 둘 중 하나만 같아도 같은 기사로 본다."""
+    url = str(row.get("url") or "").strip()
+    headline = "".join(ch for ch in str(row.get("headline") or "").lower() if ch.isalnum())[:80]
+    return url, headline
+
+
+def _merge_snapshot_news(base: list[dict], extra: list[dict]) -> list[dict]:
+    """공개 신호의 뉴스 목록에 **비공개 스냅샷의 `summary` 등**을 덧붙인다.
+
+    신호 행이 기준이다(그날 판단에 쓴 기사 목록·순서를 바꾸지 않는다). 스냅샷 행은 같은 기사를
+    찾았을 때 빈 필드만 채워 준다 — 없는 기사를 끼워 넣거나 있던 기사를 빼지 않는다.
+    신호에 뉴스가 아예 없으면(공개 행에 목록이 비었으면) 스냅샷 목록을 그대로 쓴다.
+    """
+    if not base:
+        return [dict(row) for row in extra]
+    merged = [dict(row) for row in base]  # 호출자의 dict 를 건드리지 않는다
+    by_url: dict[str, dict] = {}
+    by_headline: dict[str, dict] = {}
+    for row in extra:
+        url, headline = _news_match_key(row)
+        if url:
+            by_url.setdefault(url, row)
+        if headline:
+            by_headline.setdefault(headline, row)
+    for row in merged:
+        url, headline = _news_match_key(row)
+        match = by_url.get(url) or by_headline.get(headline)
+        if not match:
+            continue
+        for field in ("summary", "related_tickers", "provider"):
+            if not row.get(field) and match.get(field):
+                row[field] = match[field]
+    return merged
+
+
 # ── 13F ───────────────────────────────────────────────────────────────────
 def _normalize_13f(rows: Iterable[dict]) -> list[dict]:
     out: list[dict] = []
@@ -475,24 +525,250 @@ def holdings_for_ticker(holdings_13f: Any, ticker: str, radar: dict | None = Non
 
 
 # ── 본문 수집(선택) ───────────────────────────────────────────────────────
-def fetch_article_body(url: str, timeout: int = 10) -> str:
-    """기사 원문 URL 에서 본문 텍스트를 긁는다(로컬 전용, 실패하면 빈 문자열).
+# v1.3.7 — 본문 추출기 전면 교체.
+# 이전 구현은 `<script>/<style>/<noscript>` 만 지우고 **페이지 전체 텍스트 앞 1,500자**를 잘랐다.
+# 그래서 Yahoo Finance·TIKR·Motley Fool 같은 페이지에서는 네비게이션 바·쿠키 배너가 본문으로 잡혔고
+# (`"Oops, something went wrong Skip to navigation..."`), 봇 차단 껍데기가 "본문 1,500자"로 통과해
+# 인용 대조가 전부 실패했다(`quote_missing`). 지금은 ①브라우저형 헤더 ②리다이렉트 추적(Finnhub 링크)
+# ③JSON-LD `articleBody` → `<article>`/`<main>` 문단 → 메타 설명 순으로 **기사 본문만** 뽑고
+# ④차단·에러 껍데기와 지나치게 짧은 발췌는 빈 문자열로 버린다.
 
-    기본값은 `fetch_body=False` 다 — 본문 발췌는 저장소에 남기지 않는다(2.2.3).
+#: 브라우저형 헤더 — 봇 UA(`us-stock-advisor/0.1`)로는 신문사가 껍데기 페이지를 준다.
+BROWSER_HEADERS: dict[str, str] = {
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+#: 본문으로 인정하는 최소 길이 — 이보다 짧으면 기사 본문이 아니라 껍데기·요약이다.
+BODY_MIN_CHARS = 200
+#: 요약(`summary`)을 본문 대신 쓰는 최소 길이(로컬 컨텍스트 전용 폴백).
+SUMMARY_MIN_CHARS = 80
+#: 토론 컨텍스트에 넣는 뉴스 최대 건수.
+NEWS_MAX_ITEMS = 10
+#: 봇 차단·에러 껍데기 표지 — 본문이 짧을 때 이 문구가 있으면 본문이 아니다.
+BLOCK_PAGE_MARKERS: tuple[str, ...] = (
+    "oops, something went wrong", "enable javascript", "access denied", "just a moment",
+    "403 forbidden", "401 unauthorized", "are you a robot", "verify you are human",
+    "checking your browser", "please enable cookies", "unusual traffic", "captcha",
+    "subscribe to continue reading", "this content is not available in your region",
+)
+#: 본문에서 걷어내는 껍데기 요소(네비게이션·헤더·푸터·사이드바·광고·쿠키 배너·폼).
+JUNK_SELECTORS: tuple[str, ...] = (
+    "script", "style", "noscript", "nav", "header", "footer", "aside", "form", "figure",
+    "iframe", "svg", "button", "dialog", "template",
+    "[role=navigation]", "[role=banner]", "[role=contentinfo]", "[role=complementary]",
+    ".nav", ".navbar", ".navigation", ".menu", ".footer", ".sidebar", ".ad", ".ads",
+    ".advertisement", ".cookie", ".cookies", ".consent", ".newsletter", ".subscribe",
+    ".related", ".related-articles", ".share", ".social", ".breadcrumb", ".comments",
+)
+#: 본문 후보 컨테이너 — 앞에서부터 우선순위, 문단 밀도로 고른다.
+CONTAINER_SELECTORS: tuple[str, ...] = (
+    "[itemprop=articleBody]", "div.caas-body", "div.article-body", "div.article__body",
+    "div.post-content", "div.entry-content", "div.content-body", "article", "main",
+    "[role=main]",
+)
+
+
+def _soup_of(html: str):
+    """HTML → BeautifulSoup. lxml 이 없으면 파이썬 표준 파서로 떨어진다(오프라인 환경 보호)."""
+    from bs4 import BeautifulSoup  # 지역 import — 오프라인 테스트에서 모듈 로딩 비용을 만들지 않는다
+
+    try:
+        return BeautifulSoup(html, "lxml")
+    except Exception:  # noqa: BLE001 — lxml 미설치·파서 오류
+        return BeautifulSoup(html, "html.parser")
+
+
+def _walk_json(node: Any):
+    """JSON-LD 안의 모든 dict 를 훑는다(`@graph`·중첩 구조 대응)."""
+    yield node
+    if isinstance(node, dict):
+        for value in node.values():
+            yield from _walk_json(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from _walk_json(value)
+
+
+def _jsonld_body(soup) -> str:
+    """JSON-LD `articleBody` — 신문사가 구조화 데이터로 **본문 전문**을 주는 경우가 많다.
+
+    `description` 은 여기서 쓰지 않는다: 신문사가 150~200자로 **잘라 놓은** 요약을 넣기 때문에
+    그것을 "본문"으로 인정하면 1,500자 짜리 껍데기와 같은 실수를 반복한다(메타 폴백에서만 본다).
     """
+    best = ""
+    for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
+        raw = (script.string or script.get_text() or "").strip()
+        if not raw:
+            continue
+        try:
+            data = json.loads(raw)
+        except (json.JSONDecodeError, ValueError):
+            continue
+        for node in _walk_json(data):
+            if not isinstance(node, dict):
+                continue
+            value = node.get("articleBody")
+            if isinstance(value, str) and len(normalize_text(value)) > len(best):
+                best = normalize_text(value)
+        if len(best) >= BODY_EXCERPT_CHARS:
+            break
+    return best
+
+
+def _jsonld_description(soup) -> str:
+    """JSON-LD `description` — 메타 폴백용(본문 대체가 아니다)."""
+    best = ""
+    for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
+        raw = (script.string or script.get_text() or "").strip()
+        if not raw:
+            continue
+        try:
+            data = json.loads(raw)
+        except (json.JSONDecodeError, ValueError):
+            continue
+        for node in _walk_json(data):
+            if isinstance(node, dict):
+                value = node.get("description")
+                if isinstance(value, str) and len(normalize_text(value)) > len(best):
+                    best = normalize_text(value)
+    return best
+
+
+def _container_body(soup) -> str:
+    """`<article>`·`<main>`·본문 컨테이너의 `<p>` 문단 — 껍데기 요소를 지운 뒤 밀도로 고른다."""
+    for junk in JUNK_SELECTORS:
+        for element in soup.select(junk):
+            element.decompose()
+    candidates: list[tuple[int, int, str]] = []
+    for selector in CONTAINER_SELECTORS:
+        try:
+            found = soup.select(selector)
+        except Exception:  # noqa: BLE001 — 선택자 문법 오류는 그 후보만 건너뛴다
+            continue
+        for element in found:
+            paragraphs = [normalize_text(p.get_text(" ")) for p in element.find_all("p")]
+            paragraphs = [p for p in paragraphs if len(p) >= 40]
+            total = sum(len(p) for p in paragraphs)
+            if len(paragraphs) >= 2 and total >= BODY_MIN_CHARS:
+                candidates.append((total, len(paragraphs), " ".join(paragraphs)))
+        if candidates:
+            # 우선순위가 높은 선택자에서 본문을 찾았으면 더 넓은 선택자로 내려가지 않는다.
+            break
+    if candidates:
+        candidates.sort(key=lambda row: (-row[0], -row[1]))
+        return candidates[0][2]
+    # 마지막 수단: 페이지 전체의 긴 문단(제목·캡션 제외). 문단이 하나뿐이면 160자 이상일 때만 인정한다.
+    paragraphs = [normalize_text(p.get_text(" ")) for p in soup.find_all("p")]
+    paragraphs = [p for p in paragraphs if len(p) >= 60]
+    if len(paragraphs) >= 2 or (paragraphs and len(paragraphs[0]) >= BODY_MIN_CHARS):
+        return " ".join(paragraphs)
+    return ""
+
+
+def _meta_description(soup) -> str:
+    """`og:description`·`description`·JSON-LD 설명 — 본문을 못 얻었을 때의 최후 폴백(짧으면 버린다)."""
+    candidates: list[str] = []
+    for attrs in ({"property": "og:description"}, {"name": "description"},
+                  {"name": "twitter:description"}):
+        element = soup.find("meta", attrs=attrs)
+        if element and element.get("content"):
+            candidates.append(normalize_text(element["content"]))
+    candidates.append(_jsonld_description(soup))
+    best = max(candidates, key=len, default="")
+    return best if len(best) >= BODY_MIN_CHARS else ""
+
+
+def _looks_like_block_page(text: str, title: str = "") -> bool:
+    """차단·에러 껍데기인가 — **앞부분**(또는 제목)에 차단 문구가 있으면 본문으로 인정하지 않는다.
+
+    문서 중간에 나오는 `captcha` 같은 단어는 보안 기사에도 나오므로 앞 300자만 본다.
+    """
+    head = normalize_text(title).lower()
+    if any(marker in head for marker in BLOCK_PAGE_MARKERS):
+        return True
+    lead = normalize_text(text)[:300].lower()
+    return any(marker in lead for marker in BLOCK_PAGE_MARKERS)
+
+
+def fetch_article_body_detail(url: str, timeout: int = 10, *, retry_delay: float = 0.75) -> dict:
+    """기사 원문에서 본문·출처를 뽑는다(로컬 전용). 실패·차단은 **빈 본문**이다.
+
+    신문사가 짧은 시간에 몰아 친 요청을 봇으로 보고 껍데기를 주는 경우가 있다(실측). 그래서
+    차단으로 판정되면 `retry_delay` 초 후 **한 번만** 다시 시도한다.
+
+    Returns: `{"body": str(정규화·1,500자), "source": jsonld|article|meta|blocked|thin|none,
+               "status": int|None, "final_url": str, "title": str}`
+    """
+    detail: dict = {"body": "", "source": "none", "status": None, "final_url": url or "", "title": ""}
     if not url:
-        return ""
+        return detail
+    for attempt in range(2):
+        detail = _fetch_once(url, timeout)
+        if detail["source"] != "blocked" or attempt:
+            break
+        try:
+            import time
+
+            time.sleep(max(0.0, retry_delay))
+        except Exception:  # noqa: BLE001 — 대기 실패는 재시도를 포기하는 것으로 본다
+            break
+    return detail
+
+
+def _fetch_once(url: str, timeout: int) -> dict:
+    detail: dict = {"body": "", "source": "none", "status": None, "final_url": url, "title": ""}
     try:
         import requests  # 지역 import — 오프라인 테스트에서 모듈 로딩 비용을 만들지 않는다
 
-        resp = requests.get(url, timeout=timeout, headers={"User-Agent": "us-stock-advisor/0.1 (debate body fetch)"})
+        # Finnhub 링크(`finnhub.io/api/news?id=…`)는 원문으로 302 한다 — 최종 URL 까지 따라간다.
+        resp = requests.get(url, timeout=timeout, headers=BROWSER_HEADERS, allow_redirects=True)
+        detail["status"] = resp.status_code
+        detail["final_url"] = str(resp.url or url)
+        if resp.status_code in (401, 403, 429, 451):
+            detail["source"] = "blocked"
+            return detail
         resp.raise_for_status()
         html = resp.text or ""
     except Exception:  # noqa: BLE001 — 본문 수집 실패는 그 기사만 본문 없이 둔다
-        return ""
-    html = re.sub(r"(?is)<(script|style|noscript)[^>]*>.*?</\1>", " ", html)
-    html = re.sub(r"(?s)<[^>]+>", " ", html)
-    return excerpt_body(html)
+        return detail
+    if not html:
+        return detail
+    try:
+        soup = _soup_of(html)
+    except Exception:  # noqa: BLE001 — 파싱 실패도 그 기사만 본문 없이 둔다
+        return detail
+    title_el = soup.find("title")
+    detail["title"] = normalize_text(title_el.get_text(" ") if title_el else "")[:200]
+    body, source = _jsonld_body(soup), "jsonld"
+    if len(body) < BODY_MIN_CHARS:
+        candidate = _container_body(soup)
+        if len(candidate) > len(body):
+            body, source = candidate, "article"
+    if len(body) < BODY_MIN_CHARS:
+        candidate = _meta_description(soup)
+        if len(candidate) > len(body):
+            body, source = candidate, "meta"
+    if len(body) >= BODY_MIN_CHARS and _looks_like_block_page(body, detail["title"]):
+        detail["body"], detail["source"] = "", "blocked"
+        return detail
+    if len(body) < BODY_MIN_CHARS:
+        # 껍데기 페이지는 본문다운 `<p>` 가 없다 — 그러면 페이지 앞부분의 차단 문구로 판정한다.
+        page_lead = normalize_text(soup.get_text(" "))[:400]
+        detail["body"] = ""
+        detail["source"] = "blocked" if _looks_like_block_page(page_lead, detail["title"]) else "thin"
+        return detail
+    detail["body"], detail["source"] = excerpt_body(body), source
+    return detail
+
+
+def fetch_article_body(url: str, timeout: int = 10) -> str:
+    """기사 원문 URL 에서 본문 발췌(1,500자)를 얻는다(로컬 전용, 실패하면 빈 문자열).
+
+    기본값은 `fetch_body=False` 다 — 본문 발췌는 저장소에 남기지 않는다(2.2.3).
+    """
+    return fetch_article_body_detail(url, timeout=timeout)["body"]
 
 
 # ── context.json ─────────────────────────────────────────────────────────
@@ -640,17 +916,40 @@ def build_context(
     excluded: list[dict] = []
     injection_detected = False
     retrieved_at = _now_iso()
-    raw_news = list(news_items) if news_items is not None else list(signal.get("news") or [])
+    if news_items is not None:
+        raw_news = list(news_items)
+    else:
+        raw_news = _merge_snapshot_news(list(signal.get("news") or []), _snapshot_news(snapshot, ticker))
+    # 종목 관련 기사를 앞으로(무관 기사는 뒤로, 0건 방지) — 잘라내기 전에 정렬한다.
+    raw_news = rank_news([item for item in raw_news if isinstance(item, dict)], ticker)
+    cutoff = _parse_ts(quant_signals.get("data_cutoff_at") or signal.get("data_cutoff_at"))
+    future_dropped = 0
     for item in raw_news:
-        if not isinstance(item, dict):
-            continue
         nid = news_id_for(item)
-        body = item.get("body_excerpt_1500") or item.get("body") or item.get("body_excerpt") or ""
+        headline = str(item.get("headline") or item.get("title") or "")
+        # 시점 고정: 마감(`data_cutoff_at`) 이후 기사는 모델에게 보내지 않는다(미래 뉴스 차단).
+        published = _parse_ts(item.get("published_at") or item.get("available_at"))
+        if cutoff is not None and published is not None and published > cutoff:
+            future_dropped += 1
+            continue
+        # 본문: 저장된 발췌 → 원문 추출 → Finnhub `summary` 폴백 순서. 껍데기(차단·에러 페이지)는 버린다.
+        body = str(item.get("body_excerpt_1500") or item.get("body") or item.get("body_excerpt") or "")
+        body_source = "stored" if body else "none"
+        if body and _looks_like_block_page(body, headline):
+            body, body_source = "", "none"
         if not body and fetch_body:
             fetcher = body_fetcher or fetch_article_body
             body = fetcher(str(item.get("url") or "")) or ""
+            body_source = "article" if body else "none"
+            if body and _looks_like_block_page(body, headline):
+                body, body_source = "", "none"
+        summary = normalize_text(item.get("summary") or "")
+        if len(normalize_text(body)) < SUMMARY_MIN_CHARS and len(summary) >= SUMMARY_MIN_CHARS \
+                and len(summary) > len(normalize_text(body)):
+            # 원문이 막혔을 때의 **로컬 컨텍스트 전용** 폴백 — 수집기가 받은 기사 요약(실제 문장)이다.
+            # 공개 파일·보고서에는 나가지 않는다(§2.2.3·§2.2.4).
+            body, body_source = excerpt_body(summary), "summary"
         body = excerpt_body(body)
-        headline = str(item.get("headline") or item.get("title") or "")
         source = str(item.get("source") or "")
         url = str(item.get("url") or "")
         # V11 2단계: 문제 **기사 하나만** 격리하고 나머지 유효 기사로 판단을 계속한다.
@@ -677,13 +976,15 @@ def build_context(
             "source": item.get("source"),
             "body_excerpt_1500": body,
             "body_available": bool(body),
+            # 본문을 어디서 얻었나(stored/article/summary/none) — 판독 분모 판정의 근거다(v1.3.7).
+            "body_source": body_source,
             # 기사 **버전 영수증** — 무엇을 읽었는지 나중에 대조할 수 있게(감사 P1-1 · 08).
             "content_sha256": content_sha256(body if body else headline),
             "content_hash": content_sha256(body if body else headline),
             "retrieved_at": item.get("retrieved_at") or retrieved_at,
             "normalizer_version": item.get("normalizer_version") or NORMALIZER_VERSION,
         })
-    news_list = news_list[:10]
+    news_list = news_list[:NEWS_MAX_ITEMS]
 
     eights: list[dict] = []
     candidates = list(filings_8k) if filings_8k is not None else list(signal.get("filings") or [])
@@ -773,6 +1074,7 @@ def build_context(
         "news_window_hours": NEWS_WINDOW_HOURS,
         "news_retrieved_at": retrieved_at,
         "news_normalizer_version": NORMALIZER_VERSION,
+        "future_news_dropped": future_dropped,
         "filings_8k": eights,
         "injection_detected": injection_detected,
         # 격리 목록·범위 — 원문·source·url 없이 **기사 ID·본문 해시·사유 코드**만.
@@ -899,7 +1201,8 @@ NUMBER_FIELD_UNITS: dict[str, str] = {
 #: 숫자로 세지 않는 키 — 원문 발췌·서술은 숫자 검증 대상이 아니다.
 NUMBER_SKIP_KEYS: tuple[str, ...] = ("context_notes", "news", "body_excerpt_1500", "headline",
                                     "thesis_ko", "reason", "injection_fields", "excluded_news",
-                                    "content_sha256", "content_hash", "context_hash", "prompt_hash")
+                                    "content_sha256", "content_hash", "context_hash", "prompt_hash",
+                                    "body_source", "body_chars")
 
 
 def field_number_forms(value: float, unit: str = "unknown") -> set[float]:
@@ -987,7 +1290,8 @@ __all__ = [
     "NEWS_WINDOW_HOURS", "NUMBER_FIELD_UNITS", "PROMPT_SCAN_SKIP_KEYS", "QUARANTINE_BODY",
     "QUARANTINE_HEADLINE", "QUARANTINE_REASONS", "QUARANTINE_SOURCE", "QUARANTINE_URL", "REPO_ROOT",
     "VETO_CODES", "build_context", "content_hash", "content_sha256", "context_hash", "context_number_table",
-    "context_numbers", "detect_prompt_injection", "excerpt_body", "fetch_article_body", "field_numbers",
+    "context_numbers", "detect_prompt_injection", "excerpt_body", "fetch_article_body",
+    "fetch_article_body_detail", "field_numbers",
     "field_number_forms", "holdings_for_ticker", "load_prompt", "load_schema", "load_skill",
     "load_snapshot_inputs", "news_id_for", "normalize_text", "number_forms", "parse_front_matter",
     "prompt_hash", "quote_in_body", "quote_sha256", "save_context", "scan_fields", "schema_path",

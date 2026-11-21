@@ -64,6 +64,11 @@ EIGHT_K_RISK: dict[str, float] = {
 MIN_VALID_SKILLS = 3
 DROP_RATE_LIMIT = 0.30
 UNKNOWN_RATIO_LIMIT = 0.50
+#: v1.3.7 — **본문을 읽을 수 있는 기사**가 이만큼 있어야 인용·폐기율 분모를 그 집합으로 잡는다.
+#: 0~1건만 읽히고 나머지가 전부 봇 차단·페이월 껍데기라면 근거 부족은 그대로 유지한다.
+MIN_READABLE_ITEMS = 2
+#: `unknown`이 아닌 **분류가 붙은** 기사가 이만큼 있어야 판독 완료로 본다(unknown_ratio 단독 판정 대체).
+MIN_CLASSIFIED_ITEMS = 2
 #: 격리로 지울 수 있는 인젝션 범위 — 이 범위면 그 기사만 빼고 판단을 계속한다(2단계 격리).
 #: 본문·헤드라인뿐 아니라 `source`·`url` 메타데이터로 위장한 지시문도 **그 기사만** 뺄 수 있다.
 QUARANTINE_SCOPES: tuple[str, ...] = QUARANTINE_REASONS + ("news_body",)
@@ -692,6 +697,33 @@ def _round1_news(round1: Iterable[Validated] | None) -> tuple[set[str], set[str]
     return ids_in, ids_dropped, kept
 
 
+def _item_has_body(item: dict) -> bool:
+    """기사 본문을 읽을 수 있었는가 — 컨텍스트 플래그 우선, 구 형식은 발췌 유무로 판단."""
+    if not isinstance(item, dict):
+        return False
+    if "body_available" in item:
+        return bool(item.get("body_available"))
+    return bool(item.get("body_excerpt_1500") or item.get("body") or item.get("body_excerpt"))
+
+
+def readable_articles_in_window(ctx: dict) -> tuple[list[str], list[str]]:
+    """48h 유효 기사를 **(본문을 읽은 기사, 본문이 없어 못 읽은 기사)** 로 나눈다(v1.3.7).
+
+    봇 차단·페이월로 본문이 비어 있는 기사는 모델이 인용할 수 없다. 그것을 폐기율 분모에 넣으면
+    "다 읽었는데도 차단 URL 몇 건 때문에 탈락"하는 구조가 된다 — 그래서 읽을 수 있었던 기사만
+    분모로 삼고, 못 읽은 기사는 수(그리고 사유)만 따로 보고한다.
+    """
+    valid = set(valid_articles_in_window(ctx))
+    readable: list[str] = []
+    unreadable: list[str] = []
+    for item in ctx.get("news") or []:
+        news_id = str(item.get("id") or "")
+        if not news_id or news_id not in valid:
+            continue
+        (readable if _item_has_body(item) else unreadable).append(news_id)
+    return readable, unreadable
+
+
 def evaluate_news_state(
     ctx: dict,
     round1: Iterable[Validated] | None = None,
@@ -702,27 +734,40 @@ def evaluate_news_state(
 ) -> dict:
     """세 상태(`not_read` / `insufficient_evidence` / `read_done`)를 **겹치지 않게** 판정한다.
 
-    분모(`items_in`)는 **컨텍스트가 넘긴 48h 유효 기사 전체**다(`valid_articles_in_window`).
-    모델이 제출한 ID 수를 분모로 쓰면 10건 중 2건만 읽고도 폐기율 0% `read_done` 이 나온다.
+    **분모는 "본문을 읽을 수 있었던 기사"다**(v1.3.7). 모델이 제출한 ID 수를 분모로 쓰면 10건 중
+    2건만 읽고도 폐기율 0% 가 나오고, 반대로 봇 차단·페이월로 본문이 빈 기사를 분모에 넣으면
+    4건을 다 읽어도 차단 1~2건 때문에 탈락한다. 그래서:
+
+    - 본문 판독이 가능한 기사가 `MIN_READABLE_ITEMS`(2)건 이상이면 → 그 집합이 분모다.
+      (차단된 기사는 `unreadable_items` 로 따로 보고한다.)
+    - 0~1건만 읽힌다면 → 여전히 `insufficient_evidence`(`readable_items_lt_2`) — 부분 판독을
+      "판독 완료"로 바꾸지 않는다.
+    - `unknown` 은 비율이 아니라 **분류된 기사 수**(`classified_items`)로 본다. 본문을 5건 읽고
+      그중 일부가 "시황·주가 중계"여도 `transient`/`structural` 로 분류되면 근거는 있는 것이다.
     """
     valid_ids = valid_articles_in_window(ctx)
     articles = len(valid_ids)
+    readable_ids, unreadable_ids = readable_articles_in_window(ctx)
+    # 본문을 읽을 수 있었던 기사를 분모로 쓰는가(0~1건이면 종전처럼 전체 기사를 분모로 두고 근거 부족).
+    readable_mode = len(readable_ids) >= MIN_READABLE_ITEMS
+    base_ids = set(readable_ids) if readable_mode else set(valid_ids)
     ids_in, ids_dropped, kept = _round1_news(round1)
     verified = {news_id for news_id, slot in kept.items() if slot["verified"]}
+    pool = (verified & base_ids) if base_ids else set(verified)
     if items_in is None:
-        # 분모는 **컨텍스트가 전달한 48h 유효 기사 전체**다. 창 밖 기사를 읽었더라도 분모에 넣지 않는다.
-        items_in = len(valid_ids)
+        items_in = len(base_ids)
     if items_kept is None:
-        items_kept = len(verified & set(valid_ids)) if valid_ids else len(verified)
+        items_kept = len(pool)
     items_dropped = max(0, items_in - items_kept)
     drop_rate = (items_dropped / items_in) if items_in else 0.0
-    unknown = sum(1 for news_id in verified
+    unknown = sum(1 for news_id in pool
                   if "unknown" in [d for d in kept.get(news_id, {}).get("durability") or []])
     unknown_ratio = (unknown / items_kept) if items_kept else 1.0
+    classified = max(0, items_kept - unknown)
 
     eight_k = eight_k_risk_score(ctx.get("filings_8k"))
     structural = [slot["severity"] for news_id, slot in kept.items()
-                  if news_id in verified and "structural" in (slot.get("durability") or [])]
+                  if news_id in pool and "structural" in (slot.get("durability") or [])]
     structural_risk = max([eight_k] + [float(x) for x in structural]) if structural else eight_k
 
     reasons: list[str] = []
@@ -730,15 +775,21 @@ def evaluate_news_state(
         state = "not_read"
         structural_risk = eight_k
         reasons.append("debate_not_run" if not debate_ran else "no_articles_in_48h")
+    elif not readable_mode:
+        state = "insufficient_evidence"
+        reasons.append("readable_items_lt_2")
+        if len(readable_ids) == 1:
+            reasons.append("partial_read_only_1")
     elif items_kept < 2:
         state = "insufficient_evidence"
         reasons.append("valid_items_lt_2")
     elif drop_rate > DROP_RATE_LIMIT:
         state = "insufficient_evidence"
         reasons.append("drop_rate_gt_30pct")
-    elif unknown_ratio >= UNKNOWN_RATIO_LIMIT:
+    elif classified < MIN_CLASSIFIED_ITEMS:
+        # 본문을 읽었지만 분류가 전부 `unknown` — 근거는 모자란 것이 아니라 판독이 안 된 것이다.
         state = "insufficient_evidence"
-        reasons.append("unknown_ratio_ge_50pct")
+        reasons.append("classified_items_lt_2")
     else:
         state = "read_done"
 
@@ -751,13 +802,19 @@ def evaluate_news_state(
         "items_kept": int(items_kept),
         "items_dropped": int(items_dropped),
         "drop_rate": round(drop_rate, 4),
+        # v1.3.7 — 분모의 근거. `denominator="readable"` 이면 차단 기사는 분모에서 빠졌다.
+        "denominator": "readable" if readable_mode else "all",
+        "readable_items": len(readable_ids),
+        "unreadable_items": len(unreadable_ids),
+        "unreadable_news_ids": sorted(unreadable_ids),
+        "classified_items": int(classified),
         "unknown_ratio": round(unknown_ratio, 4),
         "structural_risk": round(float(structural_risk), 2),
         "grade_cap": "WATCH" if state == "insufficient_evidence" else None,
         "confidence_cap": "C" if state == "insufficient_evidence" else None,
         "reasons": reasons,
         "verified_news_ids": sorted(verified),
-        "dropped_news_ids": sorted(ids_dropped - verified),
+        "dropped_news_ids": sorted((ids_dropped - verified) - set(unreadable_ids)),
     }
 
 

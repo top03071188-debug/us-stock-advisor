@@ -40,9 +40,11 @@ output_schema: codex_debate/schemas/round1.schema.json
 - 13F 기관 보유 변화는 성장의 증거가 아니다(45일 지연).
 
 ## 뉴스 판독
-`durability`는 `one_off`(회계 조정·소송 합의·자연재해·단기 비용) 또는 `structural`(가이던스 하향·핵심 고객
-이탈·규제 제재·경영진 사임·특허 패소·점유율 하락)로만 분류한다. 성장률 전망을 바꾸는 뉴스는
-`structural`의 강한 후보이며, 근거 문장을 원문 그대로 인용한다. 확실하지 않으면 `unknown`.
+`durability`는 `transient`(단기 주가 중계·일반 시황·회계 조정·소송 합의·자연재해·단기 비용) 또는
+`structural`(가이던스 하향·핵심 고객 이탈·규제 제재·경영진 사임·특허 패소·점유율 하락)로 분류한다.
+성장률 전망을 바꾸는 뉴스는 `structural`의 강한 후보이며, 근거 문장을 원문 그대로 인용한다.
+본문이 그 내용을 말하지 않아 판단이 서지 않을 때만 `unknown` — 주가 중계 기사는 `transient`다
+(예전 `one_off`는 `transient`로 읽는다).
 
 ## 하지 말 것
 - 성장률·PER·PEG 창작, 미래 실적 추정

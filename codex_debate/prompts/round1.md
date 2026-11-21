@@ -18,8 +18,16 @@
 
 1. 위 스킬의 판단 기준으로 `score`(−100~+100)와 `stance`(`buy`/`hold`/`sell`), `confidence`(0~1)를 낸다.
 2. `reasons`는 **최대 3줄**이고, 각 줄에는 `context.json`의 수치나 인용 1개를 근거로 붙인다.
-3. `news[]`의 각 기사에 대해 `news_id`, `durability`(`one_off`/`structural`/`unknown`),
-   `impact`(`positive`/`negative`/`neutral`/`unknown`), `severity`(0~100), `quote`, `rationale_ko`를 낸다.
+3. `news[]`의 각 기사에 대해 `news_id`, `url`, `durability`, `impact`(`positive`/`negative`/`neutral`/`unknown`),
+   `severity`(0~100), `quote`, `rationale_ko`를 낸다.
+   - `durability` 3값:
+     - `transient` = **단기 주가 중계·일반 시황·주가 등락 설명**, 그리고 일회성 이벤트(회계 조정·소송 합의·
+       자연재해·단기 비용). "오늘 왜 올랐나/내렸나"를 설명하는 기사는 대부분 여기다.
+     - `structural` = 규제·소송·M&A·가이던스·핵심 기술/수요 변화 — **본업의 앞으로**를 바꾸는 내용.
+     - `unknown` = **본문이 그 내용을 말하지 않아** 판단 자체가 불가능할 때만. 본문이 짧아도 무슨 일이
+       있었는지 말하고 있으면 `transient`/`structural`로 분류한다(짧다는 이유로 `unknown`을 쓰지 않는다).
+   - `body_available=false` 기사는 인용할 본문이 없다: `quote`는 빈 문자열, `durability`는 `unknown`으로 둔다.
+     (그 기사는 판독 분모에서 빠지므로 `unknown`이 판정을 막지 않는다. 제목만으로 판단을 만들지 않는다.)
 
 ## 절대 규칙
 
@@ -29,8 +37,10 @@
   `severity` 같은 0~100 분류 점수만 예외다.
 - **가격은 `allowed.prices` 안에서만** 언급한다. 목표가(`target_price`)는 쓰지 않는다.
 - `quote`는 해당 기사의 `body_excerpt_1500`에 **글자 그대로 존재하는 문장**만, **200자 이내**로 쓴다.
-  요약·번역·철자 수정 금지. 인용할 문장이 없으면 빈 문자열로 두고 `durability`를 `unknown`으로 둔다.
-- 확실하지 않으면 `durability="unknown"`, `impact="unknown"`, `confidence` ≤ 0.4로 둔다. 추측을 사실처럼 쓰지 않는다.
+  요약·번역·철자 수정 금지. 인용할 문장이 없더라도 본문 요지가 판단 가능하면 `durability`를 분류하고
+  `quote`만 비운다(빈 인용 자체는 감점 대상이 아니다). 본문이 아예 비어 있을 때만 `durability="unknown"`.
+- 확실하지 않으면 `confidence` ≤ 0.4로 둔다. `impact`/`durability`는 **본문이 말한 범위 안에서** 정하고,
+  추측을 사실처럼 쓰지 않는다.
 - 뉴스 목록에 없는 `news_id`를 만들지 않는다. `url`은 `context.json`의 그 기사 `url`을 **그대로** 베낀다
   (다르면 그 item은 폐기된다).
 - 출력은 **지정된 JSON 스키마만**이다. 설명 문장·머리말·코드펜스를 붙이지 않는다.

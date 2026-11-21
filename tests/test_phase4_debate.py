@@ -336,7 +336,8 @@ def test_round_schemas_are_strict() -> None:
     assert score["minimum"] == -100 and score["maximum"] == 100
     assert round1["properties"]["stance"]["enum"] == ["buy", "hold", "sell"]
     news = round1["properties"]["news_read"]["items"]
-    assert news["properties"]["durability"]["enum"] == ["one_off", "structural", "unknown"]
+    # v1.3.7: `transient`(단기 주가 중계·시황) 추가 — `one_off` 는 옛 이름으로 남겨 과거 리포트를 보존한다.
+    assert news["properties"]["durability"]["enum"] == ["transient", "one_off", "structural", "unknown"]
     assert news["properties"]["quote"]["maxLength"] == 200
     assert round1["properties"]["reasons"]["maxItems"] == 3
 
@@ -656,14 +657,27 @@ def test_news_state_drop_rate_boundary(signals: dict) -> None:
     assert "V12" not in str(heavy)
 
 
-def test_news_state_unknown_ratio_boundary(ctx: dict) -> None:
+def test_news_state_unknown_ratio_boundary(ctx: dict, signals: dict) -> None:
+    """v1.3.7 — `unknown` 은 비율이 아니라 **분류된 기사 수**로 본다.
+
+    본문을 읽었는데 분류가 전부 `unknown` 이면 근거 부족이지만, 5건 중 3건이 시황(`transient`)이고
+    2건이 `unknown` 인 경우는 근거가 있는 것이다(예전에는 `unknown_ratio >= 0.5` 로 무조건 탈락).
+    """
     half_unknown = [_news_result(["n1", "n2"], [("n1", "structural", 60), ("n2", "unknown", 0)])]
     state = evaluate_news_state(ctx, half_unknown)
     assert state["state"] == "insufficient_evidence"
-    assert "unknown_ratio_ge_50pct" in state["reasons"]
+    assert "classified_items_lt_2" in state["reasons"]
+    assert state["classified_items"] == 1
 
-    one_unknown = [_news_result(["n1", "n2"], [("n1", "structural", 60), ("n2", "one_off", 10)])]
+    one_unknown = [_news_result(["n1", "n2"], [("n1", "structural", 60), ("n2", "transient", 10)])]
     assert evaluate_news_state(ctx, one_unknown)["state"] == "read_done"
+
+    mostly_unknown = [_news_result(["n1", "n2", "n3", "n4", "n5"],
+                                   [("n1", "structural", 60), ("n2", "transient", 15),
+                                    ("n3", "unknown", 0), ("n4", "unknown", 0), ("n5", "unknown", 0)])]
+    state = evaluate_news_state(_ctx_with_news(signals, 5), mostly_unknown)
+    assert state["state"] == "read_done"
+    assert state["classified_items"] == 2 and state["unknown_ratio"] >= 0.5
 
 
 def test_eight_k_only_when_not_read(ctx: dict) -> None:

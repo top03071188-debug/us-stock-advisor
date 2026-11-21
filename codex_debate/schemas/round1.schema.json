@@ -43,7 +43,8 @@
           "url": {"type": "string", "minLength": 1, "maxLength": 400},
           "durability": {
             "type": "string",
-            "enum": ["one_off", "structural", "unknown"]
+            "description": "transient=단기 주가 중계·일반 시황·일회성 이벤트, structural=규제·소송·M&A·가이던스·핵심 기술/수요 변화, unknown=본문이 모호해 판단 불가. one_off 는 transient 의 옛 이름(하위 호환).",
+            "enum": ["transient", "one_off", "structural", "unknown"]
           },
           "impact": {
             "type": "string",
