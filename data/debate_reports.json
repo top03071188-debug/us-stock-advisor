@@ -1,15 +1,135 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-20T13:56:10+00:00",
+  "generated_at": "2026-11-21T00:44:44+00:00",
   "codex": {
     "version": "cloud-agent",
     "model": "default"
   },
   "inputs": {
-    "quant_signals_commit": "400e206",
-    "as_of": "2026-11-20",
-    "context_hash": "sha256:9375ec33877e3229e07c60d8c2166c233c1d198f0e2a465cb849b7e6a23bd2df",
-    "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034"
+    "quant_signals_commit": "0e591a6",
+    "as_of": "2026-11-21",
+    "context_hash": "sha256:1921b9ec3b79b2887db6b5c5eb77cdb911f280a70abcb4b725049e2e4eb4d802",
+    "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034",
+    "quant_signals_sha256": "sha256:22143b0aaa37e2f38630e26e57c6447fd50a92d92cad9c78842b2217b492f66d",
+    "reports_provenance": {
+      "2026-11-21-GOOGL-debate-01": {
+        "ticker": "GOOGL",
+        "as_of": "2026-11-21",
+        "context_sha256": "sha256:ddda9b59035ea9b96cb7fb742196d4edbb2ed54178b3d1997ffdc92ae86c9281",
+        "quant_signal_id": "2026-11-21-GOOGL-WATCH-001",
+        "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+        "round_hashes": {
+          "round1_buffett.json": "sha256:cc8c0c763600d6676d11d9cae26b0e9f9ea26a34f664dc9ffa0a811cc3a31983",
+          "round1_lynch.json": "sha256:267bd2902ecb12f11fadc5d4d2218aff71e0c286312245d8b9047fdc733cf5db",
+          "round1_druckenmiller.json": "sha256:afcf831c7f97e22e629d6390345a8abd5711d6b294d180c5bc825ede21d1750b",
+          "round1_gates_13f.json": "sha256:eb93d84d1f046829ef33bd5114fc6c95f3644da478bd7e53a3bb5c0b3f71b9db",
+          "round2_buffett.json": "sha256:4242264a55d43e89c84e9fb8a9dc3e3687dcbcd54a4a65d8bda16b4b10ea0bda",
+          "round2_lynch.json": "sha256:47b5c72dccadc7dc95de48e1015565637fe9dc8883bd1ea43bf2ffa870a91a11",
+          "round2_druckenmiller.json": "sha256:6ab64682e54e4845b790b77652027dd62f725da1896fd6cd0a60be39d5355c20",
+          "round2_gates_13f.json": "sha256:1426d9ff55d5f922cb2a8bdd34285b4e66b4d892432f4e12e2a087da302c1573",
+          "round3_guard.json": "sha256:0a422164bf0f8b31ab67bf01823c676d68a44d5859e1c704cd719e5a51f0818a",
+          "round3_chair.json": "sha256:841fb8cfa06e5fa9174e79c2fb2cc158c701b76694ad309ed0f4afa3051c98b5"
+        },
+        "codex_version": "cloud-agent",
+        "context_origin": "재사용",
+        "assembled_at": "2026-11-21T00:44:44.454624+00:00"
+      },
+      "2026-11-21-ADBE-debate-01": {
+        "ticker": "ADBE",
+        "as_of": "2026-11-21",
+        "context_sha256": "sha256:037fe52c036e9f925fc9b6ccc1b2b892132f6d46a11ab718190d95a698e1942e",
+        "quant_signal_id": "2026-11-21-ADBE-WATCH-001",
+        "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+        "round_hashes": {
+          "round1_buffett.json": "sha256:5541c0a554aacaca75d30d99b32fb984dea13fbcda61c07cd60737e82be7b88f",
+          "round1_lynch.json": "sha256:c1c693bc505ea8da36860ef60534874eb633963594e5cf50fd1570af7943eb02",
+          "round1_druckenmiller.json": "sha256:4fe5379575a0a12493a8dcf89fc38c6f0357fc51c308c8c2f21d2129ae5a4fae",
+          "round1_gates_13f.json": "sha256:b7e9d4ff466da7d3f93e51ba6e284e65da8b82c1909c50821a4ad6cba492d3d8",
+          "round2_buffett.json": "sha256:2f61e1b0a356b6179d351e2d7b920177511a78695a9b3d34c748e3367c8bb2c6",
+          "round2_lynch.json": "sha256:b7f935daa9c6081ad34f8c3dd40c17de13afe3c9c5338a71d0186c2a4e7ab834",
+          "round2_druckenmiller.json": "sha256:ee56551de73a1807c393b35b5a4bdb6bcae7e2fe82ba0e9c92810adcd8aae35d",
+          "round2_gates_13f.json": "sha256:af380984a916f6ec36f7ff506ae597d68b054f91ffd8637117d94e0130b6e25a",
+          "round3_guard.json": "sha256:de3c8ec6b04ed123ffdf6a3986980363597fd7da24e22baf7e851861db0f665a",
+          "round3_chair.json": "sha256:8e24fff48a8bfc928de90eabb7cd1e75b3a4b654ba3e2fdfcb8784630a3007a5"
+        },
+        "codex_version": "cloud-agent",
+        "context_origin": "재사용",
+        "assembled_at": "2026-11-21T00:44:44.458337+00:00"
+      },
+      "2026-11-21-META-debate-01": {
+        "ticker": "META",
+        "as_of": "2026-11-21",
+        "context_sha256": "sha256:ef2e2cb7904223b4205e051383d5bab6dbd42b269e1fbf1b9686c42120cb7f56",
+        "quant_signal_id": "2026-11-21-META-WATCH-001",
+        "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+        "round_hashes": {
+          "round1_buffett.json": "sha256:9a574881e61c90cf131ecb343d67695ce9e98108c7d0ea38943a86df987ee355",
+          "round1_lynch.json": "sha256:878ecf6fa7887b16779e542f3ede3f25aca1bc034d7e106da969a584aace6da0",
+          "round1_druckenmiller.json": "sha256:4515e0f81c3cac3f5f204cae16c69aa2254ce8c88b606442fb8a6211d30d00c7",
+          "round1_gates_13f.json": "sha256:66704b308bdb4b3eaffa53d1bb9e43c70659a564bc063bc3d4cee02bdd3b2df9",
+          "round2_buffett.json": "sha256:10e1aa5aef9e2c88f5123085723688fa98498b7c70fb8cd1f566077afba12195",
+          "round2_lynch.json": "sha256:651de35aa1358667cde8dbf514806e1b35d0063c6cea1ce53f2d617f377f8ce0",
+          "round2_druckenmiller.json": "sha256:f1c41059014c2caa51dd3216dcfdd30e76c5857428c39358cf5232f11222dc77",
+          "round2_gates_13f.json": "sha256:fb9c12e066a203cbff09fa1b738ad5ba48d6ce782402b7a29ffa4aace72201a7",
+          "round3_guard.json": "sha256:9ca39c07735a6fd2d377f900e43e90d4a571d8848ac2e10d77e652454fbff40c",
+          "round3_chair.json": "sha256:4c073edd1af5c858bd8f71e3761b3e18604aa807b4f04fec50ebd042e887d18d"
+        },
+        "codex_version": "cloud-agent",
+        "context_origin": "재사용",
+        "assembled_at": "2026-11-21T00:44:44.462401+00:00"
+      },
+      "2026-11-21-NVDA-debate-01": {
+        "ticker": "NVDA",
+        "as_of": "2026-11-21",
+        "context_sha256": "sha256:74dfcc15a2542803f0d0dd105c76066b3d66e9854c5b5875786af5a0f5fc7785",
+        "quant_signal_id": "2026-11-21-NVDA-WATCH-001",
+        "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+        "round_hashes": {
+          "round1_buffett.json": "sha256:9046f9e0d52e52e2051d5976b31ba5cf2827efe79ef3a5d735b398d1077bd800",
+          "round1_lynch.json": "sha256:70e209b12b0501fb06c6ee92e9b8e6a25b9b0a4b55c665b788c2cb3bae870c44",
+          "round1_druckenmiller.json": "sha256:2c88aab53c86fcee996117fb43995ecece2643114a2b75b97a0c5127d6ebbd7e",
+          "round1_gates_13f.json": "sha256:e7045d9a08f6de6f08b5d29f6ca79abab3041bf66b544880e7ccf94bfd2fee58",
+          "round2_buffett.json": "sha256:dff7cf00b8fce270cda15b9f2c8a8ab4082f721c48da61f055d06070f8e3afd0",
+          "round2_lynch.json": "sha256:3f04ac818fa0468ad1df972b8f4fe276ea1bb718868f10b8a1e2956e0ab608c8",
+          "round2_druckenmiller.json": "sha256:238bbbac41a1f52a499d4c95deadb6f2efc9367eccc4e51e15b57971b2ea4650",
+          "round2_gates_13f.json": "sha256:8b7f721f263a28bcd42e0aea5841a9994965f9019e57ee33cd5b2170dbb95279",
+          "round3_guard.json": "sha256:f3da86e2cc8e10d3f4a2641963787bbf4de38558e99e4041b16dd900211b4362",
+          "round3_chair.json": "sha256:08b31bf4a4c81f5c5ecde7f78e1b1d4a940859693eae32fe5300f2ab371f726d"
+        },
+        "codex_version": "cloud-agent",
+        "context_origin": "재사용",
+        "assembled_at": "2026-11-21T00:44:44.466918+00:00"
+      },
+      "2026-11-21-MSFT-debate-01": {
+        "ticker": "MSFT",
+        "as_of": "2026-11-21",
+        "context_sha256": "sha256:1921b9ec3b79b2887db6b5c5eb77cdb911f280a70abcb4b725049e2e4eb4d802",
+        "quant_signal_id": "2026-11-21-MSFT-WATCH-001",
+        "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+        "round_hashes": {
+          "round1_buffett.json": "sha256:64fc74589747455793f00c9baa145d8444a4453ef384043d424aa6ed69433120",
+          "round1_lynch.json": "sha256:bd6ed3f6100b316386f9e8090a76c0e42387d399df5ea3adca707aa57be09a16",
+          "round1_druckenmiller.json": "sha256:5efed9212bcd1467d07aa8676c350e877b75f0c33b8dca384a299e9a5951aec8",
+          "round1_gates_13f.json": "sha256:36f9398964afbcc29bfa264863367581b4819a8e52a4ace3b415219e1f6ac789",
+          "round2_buffett.json": "sha256:48286e39cd2ee87a5a450940f3c66166e1c5c84ef1586d2efa9cd3d2148bacf2",
+          "round2_lynch.json": "sha256:b84a428b0fbc74994d564b6291824fe13f77076f4c5cf6ab2fd7fb5818e9e747",
+          "round2_druckenmiller.json": "sha256:31384f6da3a8642108bf7c443e582e1f122e33d3ab1bae2b353818f9b57ba0cd",
+          "round2_gates_13f.json": "sha256:a29c9d984a5370a6a5b3b864a58e96456b2f2058c32e39f3b711d69ed26ddff7",
+          "round3_guard.json": "sha256:3cee18065a265d170f8f31a55a2ee61320a80e7832a2dcfc3bb19460f5734d53",
+          "round3_chair.json": "sha256:eabe0994f7465bb81d5dc67e44620788b6c42f14c94cf32e5bdb6729294a4d5d"
+        },
+        "codex_version": "cloud-agent",
+        "context_origin": "재사용",
+        "assembled_at": "2026-11-21T00:44:44.471290+00:00"
+      }
+    },
+    "context_hash_by_ticker": {
+      "GOOGL": "sha256:ddda9b59035ea9b96cb7fb742196d4edbb2ed54178b3d1997ffdc92ae86c9281",
+      "ADBE": "sha256:037fe52c036e9f925fc9b6ccc1b2b892132f6d46a11ab718190d95a698e1942e",
+      "META": "sha256:ef2e2cb7904223b4205e051383d5bab6dbd42b269e1fbf1b9686c42120cb7f56",
+      "NVDA": "sha256:74dfcc15a2542803f0d0dd105c76066b3d66e9854c5b5875786af5a0f5fc7785",
+      "MSFT": "sha256:1921b9ec3b79b2887db6b5c5eb77cdb911f280a70abcb4b725049e2e4eb4d802"
+    }
   },
   "reports": [
     {
@@ -515,6 +635,2405 @@
       "context_hash": "sha256:9375ec33877e3229e07c60d8c2166c233c1d198f0e2a465cb849b7e6a23bd2df",
       "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034",
       "provider": "codex"
+    },
+    {
+      "report_id": "2026-11-21-GOOGL-debate-01",
+      "ticker": "GOOGL",
+      "signal_id": "2026-11-21-GOOGL-WATCH-001",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "completed_at": "2026-11-21T00:44:44.454624+00:00",
+      "late": false,
+      "invalid": false,
+      "status": "complete",
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -78.0,
+          "stance": "sell",
+          "confidence": 0.38,
+          "reasons": [
+            "안전마진 -3.2923으로 현재가 265.29는 내재가치 밴드 상단 71.08을 웃돈다.",
+            "품질 점수 90.55에도 자본수익 스프레드와 현금 전환율이 비어 프리미엄을 뒷받침할 수 없다."
+          ],
+          "news_read": []
+        },
+        {
+          "skill": "lynch",
+          "score": 22.0,
+          "stance": "hold",
+          "confidence": 0.34,
+          "reasons": [
+            "성장 점수 93.44는 후속 검토 근거이며, PEG와 PEGY가 비어 성장 대비 가격은 판정할 수 없다.",
+            "성장 점수 93.44의 지속성을 점검할 매출과 주당이익 성장률이 비어 있어 관망한다."
+          ],
+          "news_read": []
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -28.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "현재가 265.29는 단기와 장기 이동평균 아래에 있고 RSI 27.781은 약한 추세를 가리킨다.",
+            "레짐 점수 50의 중립 국면에서 금리와 상대강도 입력이 비어 반전 신호를 확인하기 어렵다."
+          ],
+          "news_read": []
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "13F는 분기말 기준으로 제출에 45일 시차가 있으며 보유 변화 입력이 없어 기관 동향과 섹터 일치를 평가할 수 없다."
+          ],
+          "news_read": []
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -78.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수는 이익의 현금 전환이나 자본수익을 보여주지 않아 현재의 가치 프리미엄을 설명하기 어렵다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장 후보로 검토할 여지와 지금 가격에서의 안전마진 기준은 여전히 갈린다."
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 22.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "이익력 중심 밴드의 음의 안전마진은 경계 근거지만 성장률이 비어 성장 대비 가격까지 불리하다고 확정하기 어렵다.",
+              "quote_or_number_ref": "margin"
+            }
+          ],
+          "conflict_points": [
+            "PEG 검증 전까지 성장 점수는 후보 선별에만 쓴다."
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -28.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수로는 주가가 두 이동평균을 밑도는 구간에서 매수 수급의 회복을 확인할 수 없다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장 후보 여부와 추세가 돌아섰는지는 별개의 판단이다."
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수가 높아도 공시 보유 변화가 비어 기관 확인 신호를 보탤 수 없다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장 점수와 별개로 공시 자료의 시차와 공백을 반영해 중립을 유지한다."
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "차입 및 현금흐름 보도 본문 확인 필요",
+            "현금 전환과 이익 성장률 확인 필요"
+          ],
+          "structural_risk": 0.0,
+          "reasoning": "공시 목록에 구조적 사건을 뒷받침할 항목이 없으며 차입과 현금흐름 관련 기사 발췌는 제목에 그친다. 음의 안전마진과 이동평균 하회는 신규 진입에 신중할 근거로 남는다.",
+          "opinion": "caution"
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 음의 안전마진을 가격 경계 근거로 봤다.",
+            "드러켄밀러와 린치는 성장 점수만으로 신규 진입을 뒷받침하기 어렵다고 봤다."
+          ],
+          "dissent": [
+            "버핏은 안전마진 부족을 중시했고 린치는 성장 점수를 후속 검토에 남겼다.",
+            "드러켄밀러는 이동평균과 RSI 약세에 무게를 뒀으며 게이츠는 보유 공시 부재로 중립이었다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [],
+          "conflict": true,
+          "one_line_ko": "기사 근거가 부족하고 안전마진과 추세가 진입을 지지하지 않아 관찰을 유지한다."
+        }
+      },
+      "scores": {
+        "buffett": {
+          "round1": -78.0,
+          "round2": -78.0
+        },
+        "lynch": {
+          "round1": 22.0,
+          "round2": 22.0
+        },
+        "druckenmiller": {
+          "round1": -28.0,
+          "round2": -28.0
+        },
+        "gates_13f": {
+          "round1": 0.0,
+          "round2": 0.0
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 0,
+        "quotes_dropped": 0,
+        "numbers_checked": 11,
+        "numbers_rejected": 0,
+        "refs_dropped": 0,
+        "drop_reasons": [
+          "quote_missing:news-773922c25486",
+          "quote_missing:news-2554440d9217",
+          "quote_missing:news-1ba970d22463",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-5bdea881c93c",
+          "quote_missing:news-773922c25486",
+          "quote_missing:news-2554440d9217",
+          "quote_missing:news-1ba970d22463",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-5bdea881c93c",
+          "quote_missing:news-773922c25486",
+          "quote_missing:news-2554440d9217",
+          "quote_missing:news-1ba970d22463",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-5bdea881c93c",
+          "quote_missing:news-773922c25486",
+          "quote_missing:news-2554440d9217",
+          "quote_missing:news-1ba970d22463",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-5bdea881c93c"
+        ],
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-21T00:44:44.454624+00:00",
+        "resume_key": "sha256:dce46682d2b46724428f8591b4bb70930b45971beca587bc1a8de00438d2499b",
+        "injection_scope": null,
+        "injection_blocking": false,
+        "blocked_before_calls": false,
+        "blocked_reason": null,
+        "excluded_news": [],
+        "article_receipts": [
+          {
+            "article_id": "news-773922c25486",
+            "content_sha256": "sha256:d8a35878adc3acfb8fddce7d04f17b3e55cc318a7018c655ec601f8aab06149f"
+          },
+          {
+            "article_id": "news-2554440d9217",
+            "content_sha256": "sha256:02529b5244df019b6689a48c1a74d1a8d6b968ed0262aa7511f93664d34f3142"
+          },
+          {
+            "article_id": "news-1ba970d22463",
+            "content_sha256": "sha256:d1b4638834e7e4d919a89178a7cd93fce54a6e5b3b60dd404c4f780602c5d8c1"
+          },
+          {
+            "article_id": "news-f09ba6790f08",
+            "content_sha256": "sha256:21608a090623c868fba363fee63f946187d69b720ddd7c4bfbb83c721357f3b3"
+          },
+          {
+            "article_id": "news-5bdea881c93c",
+            "content_sha256": "sha256:6c886e7d61caae4b6e2284abc29bdda4a8955ec06da9e2401ee5af53a723c816"
+          }
+        ],
+        "round_state": {
+          "round1": [
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-773922c25486",
+                "quote_missing:news-2554440d9217",
+                "quote_missing:news-1ba970d22463",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-5bdea881c93c"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 4,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-773922c25486",
+                  "news-2554440d9217",
+                  "news-1ba970d22463",
+                  "news-f09ba6790f08",
+                  "news-5bdea881c93c"
+                ],
+                "news_ids_dropped": [
+                  "news-1ba970d22463",
+                  "news-2554440d9217",
+                  "news-5bdea881c93c",
+                  "news-773922c25486",
+                  "news-f09ba6790f08"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-773922c25486",
+                "quote_missing:news-2554440d9217",
+                "quote_missing:news-1ba970d22463",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-5bdea881c93c"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-773922c25486",
+                  "news-2554440d9217",
+                  "news-1ba970d22463",
+                  "news-f09ba6790f08",
+                  "news-5bdea881c93c"
+                ],
+                "news_ids_dropped": [
+                  "news-1ba970d22463",
+                  "news-2554440d9217",
+                  "news-5bdea881c93c",
+                  "news-773922c25486",
+                  "news-f09ba6790f08"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-773922c25486",
+                "quote_missing:news-2554440d9217",
+                "quote_missing:news-1ba970d22463",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-5bdea881c93c"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 3,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-773922c25486",
+                  "news-2554440d9217",
+                  "news-1ba970d22463",
+                  "news-f09ba6790f08",
+                  "news-5bdea881c93c"
+                ],
+                "news_ids_dropped": [
+                  "news-1ba970d22463",
+                  "news-2554440d9217",
+                  "news-5bdea881c93c",
+                  "news-773922c25486",
+                  "news-f09ba6790f08"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-773922c25486",
+                "quote_missing:news-2554440d9217",
+                "quote_missing:news-1ba970d22463",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-5bdea881c93c"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-773922c25486",
+                  "news-2554440d9217",
+                  "news-1ba970d22463",
+                  "news-f09ba6790f08",
+                  "news-5bdea881c93c"
+                ],
+                "news_ids_dropped": [
+                  "news-1ba970d22463",
+                  "news-2554440d9217",
+                  "news-5bdea881c93c",
+                  "news-773922c25486",
+                  "news-f09ba6790f08"
+                ]
+              }
+            }
+          ],
+          "round2": [
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            }
+          ],
+          "guard": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          },
+          "chair": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          }
+        },
+        "report_sha256": "sha256:3f1e5bd84bce35aa4fa36d0be045b5615e21ed3a1779aee0480da4b4593d96dd"
+      },
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "intent": "no_action",
+      "auto_downgrade_applied": false,
+      "track": "codex_debated",
+      "news_state": "insufficient_evidence",
+      "structural_risk": 0.0,
+      "injection_detected": false,
+      "context_hash": "sha256:ddda9b59035ea9b96cb7fb742196d4edbb2ed54178b3d1997ffdc92ae86c9281",
+      "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034",
+      "provider": "codex",
+      "context_sha256": "sha256:ddda9b59035ea9b96cb7fb742196d4edbb2ed54178b3d1997ffdc92ae86c9281"
+    },
+    {
+      "report_id": "2026-11-21-ADBE-debate-01",
+      "ticker": "ADBE",
+      "signal_id": "2026-11-21-ADBE-WATCH-001",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "completed_at": "2026-11-21T00:44:44.458337+00:00",
+      "late": false,
+      "invalid": false,
+      "status": "complete",
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "stance": "sell",
+          "confidence": 0.37,
+          "reasons": [
+            "안전마진 -0.3721이며 현재가 217.71은 내재가치 밴드 상단 182.46을 웃돈다.",
+            "품질 점수 85에도 현금 전환과 희석 데이터가 없어 이익의 질을 확인하기 어렵다."
+          ],
+          "news_read": []
+        },
+        {
+          "skill": "lynch",
+          "score": 25.0,
+          "stance": "hold",
+          "confidence": 0.35,
+          "reasons": [
+            "성장 점수 100은 추가 검토를 지지하며 PEG와 PEGY가 비어 GARP 통과 여부는 보류한다.",
+            "성장 점수 100을 장기 성장으로 해석하기에는 매출과 주당이익 성장률이 비어 있다."
+          ],
+          "news_read": []
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -22.0,
+          "stance": "hold",
+          "confidence": 0.37,
+          "reasons": [
+            "현재가 217.71은 단기와 장기 이동평균 아래이고 RSI 30.8894는 진입을 뒷받침하지 못한다.",
+            "중립 레짐 점수 50에 거래량과 상대강도 입력이 빠져 하락 이후 추세 회복 여부를 확인하기 어렵다."
+          ],
+          "news_read": []
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "13F는 분기말 기준으로 제출에 45일 시차가 있으며 보유 변화 입력이 없어 기관 동향과 섹터 일치를 평가할 수 없다."
+          ],
+          "news_read": []
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수가 높아도 현금 전환과 희석을 확인할 수 없어 안전마진 부족을 상쇄하기 어렵다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장 점수의 의미보다 이익의 질과 안전마진을 우선한다."
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 18.0,
+          "changed": true,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "이익력 중심 밴드에서 안전마진이 음수라는 사실만으로 성장에 지불하는 가격을 판정하기는 어렵다.",
+              "quote_or_number_ref": "margin"
+            }
+          ],
+          "conflict_points": [
+            "안전마진 지적과 성장률 입력 공백을 반영해 가점을 줄이고 관망한다."
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -22.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수로는 두 이동평균 아래에서 매도 압력이 잦아들었는지 확인할 수 없다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장 기대보다 거래량과 상대강도에 의한 추세 확인이 먼저다."
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "현재가의 이동평균 이탈은 가격 흐름을 보여주며 분기말 기관 보유 축소를 입증할 자료는 없다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "가격 추세와 기관 보유 확인을 독립적으로 판단한다."
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "기사 본문과 성장률 확인 필요",
+            "현금 전환과 희석 확인 필요"
+          ],
+          "structural_risk": 0.0,
+          "reasoning": "성장 점수의 지속성을 뒷받침할 성장률과 현금 전환 입력이 빠진 가운데 주가는 내재가치 밴드와 이동평균 양쪽에서 진입을 뒷받침하지 못한다. 기사 발췌에서 구조적 사건은 확인되지 않는다.",
+          "opinion": "caution"
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 음의 안전마진을 가격 부담으로 봤다.",
+            "린치와 드러켄밀러는 성장 점수만으로 신규 진입을 판단하기 어렵다고 봤다."
+          ],
+          "dissent": [
+            "버핏은 음의 안전마진을 우선했고 린치는 성장 검토를 유지하되 성장률 공백과 가격 부담으로 가점을 줄였다.",
+            "드러켄밀러는 추세 확인을 요구했으며 게이츠는 가격 움직임에서 기관 보유를 추론하지 않았다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [],
+          "conflict": true,
+          "one_line_ko": "성장 점수는 검토할 가치가 있지만 기사 본문과 성장률 근거가 부족하고 안전마진과 추세도 약해 관찰을 유지한다."
+        }
+      },
+      "scores": {
+        "buffett": {
+          "round1": -60.0,
+          "round2": -60.0
+        },
+        "lynch": {
+          "round1": 25.0,
+          "round2": 18.0
+        },
+        "druckenmiller": {
+          "round1": -22.0,
+          "round2": -22.0
+        },
+        "gates_13f": {
+          "round1": 0.0,
+          "round2": 0.0
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 0,
+        "quotes_dropped": 0,
+        "numbers_checked": 11,
+        "numbers_rejected": 0,
+        "refs_dropped": 0,
+        "drop_reasons": [
+          "quote_missing:news-c497909a887b",
+          "quote_missing:news-5509c6f5d9bb",
+          "quote_missing:news-b3668d8cfc20",
+          "quote_missing:news-773c06a05934",
+          "quote_missing:news-71a8d8d9efbc",
+          "quote_missing:news-c497909a887b",
+          "quote_missing:news-5509c6f5d9bb",
+          "quote_missing:news-b3668d8cfc20",
+          "quote_missing:news-773c06a05934",
+          "quote_missing:news-71a8d8d9efbc",
+          "quote_missing:news-c497909a887b",
+          "quote_missing:news-5509c6f5d9bb",
+          "quote_missing:news-b3668d8cfc20",
+          "quote_missing:news-773c06a05934",
+          "quote_missing:news-71a8d8d9efbc",
+          "quote_missing:news-c497909a887b",
+          "quote_missing:news-5509c6f5d9bb",
+          "quote_missing:news-b3668d8cfc20",
+          "quote_missing:news-773c06a05934",
+          "quote_missing:news-71a8d8d9efbc"
+        ],
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-21T00:44:44.458337+00:00",
+        "resume_key": "sha256:9e4a166c83ad48e16c24c9e89c4f48f371523f7324ea974266cf3ff4e1f0603f",
+        "injection_scope": null,
+        "injection_blocking": false,
+        "blocked_before_calls": false,
+        "blocked_reason": null,
+        "excluded_news": [],
+        "article_receipts": [
+          {
+            "article_id": "news-c497909a887b",
+            "content_sha256": "sha256:00c1ff2fddeade66d604bd633302c904a75ecce08bf2d47c62a5cbd62658e0d2"
+          },
+          {
+            "article_id": "news-5509c6f5d9bb",
+            "content_sha256": "sha256:7265ef561f3a2b5ba5fc84f40d6e1070ea08e2bd721538ba21ec81bb970b2ebd"
+          },
+          {
+            "article_id": "news-b3668d8cfc20",
+            "content_sha256": "sha256:1f56b6291a36f437696732959f7fd72da4368a2f9c96dd9b61c8868f79b664a8"
+          },
+          {
+            "article_id": "news-773c06a05934",
+            "content_sha256": "sha256:cf21f658e2d02e91a0499cca2ac2cfc6bc8c25dff502a037e2ee37f2da13dc8c"
+          },
+          {
+            "article_id": "news-71a8d8d9efbc",
+            "content_sha256": "sha256:d1e7fd9732e71387d3e2379ab25382646cfb478807532470b8b94b8bfac40cd5"
+          }
+        ],
+        "round_state": {
+          "round1": [
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-c497909a887b",
+                "quote_missing:news-5509c6f5d9bb",
+                "quote_missing:news-b3668d8cfc20",
+                "quote_missing:news-773c06a05934",
+                "quote_missing:news-71a8d8d9efbc"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 4,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-c497909a887b",
+                  "news-5509c6f5d9bb",
+                  "news-b3668d8cfc20",
+                  "news-773c06a05934",
+                  "news-71a8d8d9efbc"
+                ],
+                "news_ids_dropped": [
+                  "news-5509c6f5d9bb",
+                  "news-71a8d8d9efbc",
+                  "news-773c06a05934",
+                  "news-b3668d8cfc20",
+                  "news-c497909a887b"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-c497909a887b",
+                "quote_missing:news-5509c6f5d9bb",
+                "quote_missing:news-b3668d8cfc20",
+                "quote_missing:news-773c06a05934",
+                "quote_missing:news-71a8d8d9efbc"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-c497909a887b",
+                  "news-5509c6f5d9bb",
+                  "news-b3668d8cfc20",
+                  "news-773c06a05934",
+                  "news-71a8d8d9efbc"
+                ],
+                "news_ids_dropped": [
+                  "news-5509c6f5d9bb",
+                  "news-71a8d8d9efbc",
+                  "news-773c06a05934",
+                  "news-b3668d8cfc20",
+                  "news-c497909a887b"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-c497909a887b",
+                "quote_missing:news-5509c6f5d9bb",
+                "quote_missing:news-b3668d8cfc20",
+                "quote_missing:news-773c06a05934",
+                "quote_missing:news-71a8d8d9efbc"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 3,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-c497909a887b",
+                  "news-5509c6f5d9bb",
+                  "news-b3668d8cfc20",
+                  "news-773c06a05934",
+                  "news-71a8d8d9efbc"
+                ],
+                "news_ids_dropped": [
+                  "news-5509c6f5d9bb",
+                  "news-71a8d8d9efbc",
+                  "news-773c06a05934",
+                  "news-b3668d8cfc20",
+                  "news-c497909a887b"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-c497909a887b",
+                "quote_missing:news-5509c6f5d9bb",
+                "quote_missing:news-b3668d8cfc20",
+                "quote_missing:news-773c06a05934",
+                "quote_missing:news-71a8d8d9efbc"
+              ],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-c497909a887b",
+                  "news-5509c6f5d9bb",
+                  "news-b3668d8cfc20",
+                  "news-773c06a05934",
+                  "news-71a8d8d9efbc"
+                ],
+                "news_ids_dropped": [
+                  "news-5509c6f5d9bb",
+                  "news-71a8d8d9efbc",
+                  "news-773c06a05934",
+                  "news-b3668d8cfc20",
+                  "news-c497909a887b"
+                ]
+              }
+            }
+          ],
+          "round2": [
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            }
+          ],
+          "guard": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          },
+          "chair": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          }
+        },
+        "report_sha256": "sha256:331c5a63a78709cc38c22d4012e2e1e40e93ae5bc6a111533ca5dc0e4c321825"
+      },
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "intent": "no_action",
+      "auto_downgrade_applied": false,
+      "track": "codex_debated",
+      "news_state": "insufficient_evidence",
+      "structural_risk": 0.0,
+      "injection_detected": false,
+      "context_hash": "sha256:037fe52c036e9f925fc9b6ccc1b2b892132f6d46a11ab718190d95a698e1942e",
+      "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034",
+      "provider": "codex",
+      "context_sha256": "sha256:037fe52c036e9f925fc9b6ccc1b2b892132f6d46a11ab718190d95a698e1942e"
+    },
+    {
+      "report_id": "2026-11-21-META-debate-01",
+      "ticker": "META",
+      "signal_id": "2026-11-21-META-WATCH-001",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "completed_at": "2026-11-21T00:44:44.462401+00:00",
+      "late": false,
+      "invalid": false,
+      "status": "complete",
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -75.0,
+          "stance": "sell",
+          "confidence": 0.38,
+          "reasons": [
+            "현재가 560.84는 이익력 가치가 중간값인 내재가치 밴드 상단 180.36을 웃돈다.",
+            "품질 점수 89.77에도 잉여현금흐름 마진과 자본수익 스프레드가 비어 이익력의 지속성에는 판단을 유보한다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "동종 업체와의 선행 이익 배수 비교만으로 메타 이익의 지속성이나 재평가 방향을 판단할 수 없다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 15.0,
+          "stance": "hold",
+          "confidence": 0.32,
+          "reasons": [
+            "성장 점수 85.3에는 긍정적이지만 PEG와 PEGY가 비어 성장 프리미엄을 검증할 수 없다.",
+            "성장 점수 85.3을 보완할 매출과 주당이익 성장률을 확인할 수 없어 성장의 지속성 판단은 보류한다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "동종 업체와의 선행 이익 배수 비교만으로 메타 이익의 지속성이나 재평가 방향을 판단할 수 없다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -26.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "현재가 560.84는 단기와 장기 이동평균 아래이며 RSI 30.263도 추세 추종 진입을 지지하지 않는다.",
+            "중립 레짐 점수 50에서 변동성 지수와 상대강도 입력이 비어 위험선호 회복을 확인하기 어렵다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "동종 업체와의 선행 이익 배수 비교만으로 메타 이익의 지속성이나 재평가 방향을 판단할 수 없다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "13F는 분기말 기준으로 제출에 45일 시차가 있으며 보유 변화 입력이 없어 기관 동향과 섹터 일치를 평가할 수 없다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "동종 업체와의 선행 이익 배수 비교만으로 메타 이익의 지속성이나 재평가 방향을 판단할 수 없다."
+            }
+          ]
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -75.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수로는 영업 이익이 지속 가능한 잉여현금흐름으로 이어지는지 확인할 수 없어 가격 프리미엄을 정당화하기 어렵다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장 점수에 주는 비중과 현금창출 확인을 요구하는 기준이 갈린다."
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 15.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "현재가가 이익력 중심 밴드를 웃돌아도 매출과 주당이익 성장률이 빠져 있어 GARP 결론까지 내리기는 어렵다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "성장 점수를 긍정적으로 보되 가격 대비 성장은 관망한다."
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -26.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수로는 두 이동평균 아래에서 위험선호가 돌아왔는지 확인하기 어렵다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "후보의 성장 평가와 현재 추세에서의 진입 시점이 갈린다."
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "두 이동평균보다 낮은 가격은 분기말 보유 변화를 보여주지 않아 기관 동향으로 해석할 수 없다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "가격 약세에 공시 확인 신호를 추가할 보유 입력이 없다."
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "성장률과 잉여현금흐름 마진 확인 필요",
+            "메타에 직접 관련된 기사 본문 확인 필요"
+          ],
+          "structural_risk": 0.0,
+          "reasoning": "비교 기사에는 선행 이익 배수가 나오지만 메타의 구조적 변화는 확인되지 않는다. 음의 안전마진과 두 이동평균 하회에 더해 성장률 입력이 비어 신규 진입에 신중하다.",
+          "opinion": "caution"
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 현재가가 이익력 중심 가치 밴드를 웃돌아 가격 부담이 있다고 봤다.",
+            "버핏과 린치는 성장 점수만으로 현재 가격을 뒷받침하기 어렵다고 봤다."
+          ],
+          "dissent": [
+            "버핏은 이익력 가치 대비 가격 부담을 중시했고 린치는 성장 점수의 검토 가치를 남겼다.",
+            "드러켄밀러는 가격과 위험선호를, 게이츠는 분기말 보유 자료의 공백을 각각 지적했다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [],
+          "conflict": true,
+          "one_line_ko": "가격 부담과 추세 약세가 이어지고 비교 기사로는 메타의 사업 변화를 확인하기 어려워 관찰을 유지한다."
+        }
+      },
+      "scores": {
+        "buffett": {
+          "round1": -75.0,
+          "round2": -75.0
+        },
+        "lynch": {
+          "round1": 15.0,
+          "round2": 15.0
+        },
+        "druckenmiller": {
+          "round1": -26.0,
+          "round2": -26.0
+        },
+        "gates_13f": {
+          "round1": 0.0,
+          "round2": 0.0
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 4,
+        "quotes_dropped": 0,
+        "numbers_checked": 10,
+        "numbers_rejected": 0,
+        "refs_dropped": 0,
+        "drop_reasons": [
+          "quote_missing:news-5bdea881c93c",
+          "quote_missing:news-7a1357b79ca8",
+          "quote_missing:news-1d1784663bfc",
+          "quote_missing:news-ea8f008cbd2c",
+          "quote_missing:news-5bdea881c93c",
+          "quote_missing:news-7a1357b79ca8",
+          "quote_missing:news-1d1784663bfc",
+          "quote_missing:news-ea8f008cbd2c",
+          "quote_missing:news-5bdea881c93c",
+          "quote_missing:news-7a1357b79ca8",
+          "quote_missing:news-1d1784663bfc",
+          "quote_missing:news-ea8f008cbd2c",
+          "quote_missing:news-5bdea881c93c",
+          "quote_missing:news-7a1357b79ca8",
+          "quote_missing:news-1d1784663bfc",
+          "quote_missing:news-ea8f008cbd2c"
+        ],
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-21T00:44:44.462401+00:00",
+        "resume_key": "sha256:dadf3d1402dce57ca3845a45e5d2b5e2417d180f093298d148f195ad8335ca4c",
+        "injection_scope": null,
+        "injection_blocking": false,
+        "blocked_before_calls": false,
+        "blocked_reason": null,
+        "excluded_news": [],
+        "article_receipts": [
+          {
+            "article_id": "news-5bdea881c93c",
+            "content_sha256": "sha256:6c886e7d61caae4b6e2284abc29bdda4a8955ec06da9e2401ee5af53a723c816"
+          },
+          {
+            "article_id": "news-7a1357b79ca8",
+            "content_sha256": "sha256:7502c0babbc1d069e8340c9096892e2e251b7e5e25fd1768bba50d98539f5050"
+          },
+          {
+            "article_id": "news-1d1784663bfc",
+            "content_sha256": "sha256:93721dff438282d5340c54f6b216bc5b17ab11d4185828a62b2429beb9f2a726"
+          },
+          {
+            "article_id": "news-ea8f008cbd2c",
+            "content_sha256": "sha256:ec86323f9bbfccc6acbbdd23457d004c0d89c7716ac935552883912a7f238ffa"
+          },
+          {
+            "article_id": "news-e5b61aa80b26",
+            "content_sha256": "sha256:e562439fda3e8f2f8692e6e809d2ea71b85a183ab7894f83f7725d12d047892e"
+          }
+        ],
+        "round_state": {
+          "round1": [
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-5bdea881c93c",
+                "quote_missing:news-7a1357b79ca8",
+                "quote_missing:news-1d1784663bfc",
+                "quote_missing:news-ea8f008cbd2c"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 3,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-1d1784663bfc",
+                  "news-ea8f008cbd2c",
+                  "news-e5b61aa80b26"
+                ],
+                "news_ids_dropped": [
+                  "news-1d1784663bfc",
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-ea8f008cbd2c"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-5bdea881c93c",
+                "quote_missing:news-7a1357b79ca8",
+                "quote_missing:news-1d1784663bfc",
+                "quote_missing:news-ea8f008cbd2c"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-1d1784663bfc",
+                  "news-ea8f008cbd2c",
+                  "news-e5b61aa80b26"
+                ],
+                "news_ids_dropped": [
+                  "news-1d1784663bfc",
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-ea8f008cbd2c"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-5bdea881c93c",
+                "quote_missing:news-7a1357b79ca8",
+                "quote_missing:news-1d1784663bfc",
+                "quote_missing:news-ea8f008cbd2c"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 3,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-1d1784663bfc",
+                  "news-ea8f008cbd2c",
+                  "news-e5b61aa80b26"
+                ],
+                "news_ids_dropped": [
+                  "news-1d1784663bfc",
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-ea8f008cbd2c"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-5bdea881c93c",
+                "quote_missing:news-7a1357b79ca8",
+                "quote_missing:news-1d1784663bfc",
+                "quote_missing:news-ea8f008cbd2c"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-1d1784663bfc",
+                  "news-ea8f008cbd2c",
+                  "news-e5b61aa80b26"
+                ],
+                "news_ids_dropped": [
+                  "news-1d1784663bfc",
+                  "news-5bdea881c93c",
+                  "news-7a1357b79ca8",
+                  "news-ea8f008cbd2c"
+                ]
+              }
+            }
+          ],
+          "round2": [
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            }
+          ],
+          "guard": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          },
+          "chair": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          }
+        },
+        "report_sha256": "sha256:fc59d808ad658657e7fd1a25008e20a9144fd666a5afc9c3c3b36b25b7634c92"
+      },
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "intent": "no_action",
+      "auto_downgrade_applied": false,
+      "track": "codex_debated",
+      "news_state": "insufficient_evidence",
+      "structural_risk": 0.0,
+      "injection_detected": false,
+      "context_hash": "sha256:ef2e2cb7904223b4205e051383d5bab6dbd42b269e1fbf1b9686c42120cb7f56",
+      "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034",
+      "provider": "codex",
+      "context_sha256": "sha256:ef2e2cb7904223b4205e051383d5bab6dbd42b269e1fbf1b9686c42120cb7f56"
+    },
+    {
+      "report_id": "2026-11-21-NVDA-debate-01",
+      "ticker": "NVDA",
+      "signal_id": "2026-11-21-NVDA-WATCH-001",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "completed_at": "2026-11-21T00:44:44.466918+00:00",
+      "late": false,
+      "invalid": false,
+      "status": "complete",
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -90.0,
+          "stance": "sell",
+          "confidence": 0.38,
+          "reasons": [
+            "안전마진 -7.1033이며 현재가 125.53은 내재가치 밴드 상단 23.42를 크게 웃돈다.",
+            "품질 점수 77.54에 더해 현금 전환율과 차입 부담을 확인할 입력이 없어 기존 가치 판단에 가산하지 않는다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-41a5fc23f0db",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "c4570119ff689ace76f4d9913c8fbe2eeacf4a50ccf3d34f5c0b2e0349c45a1d",
+              "quote_verified": true,
+              "quote_chars": 157,
+              "rationale_ko": "업종 동반 하락과 엔비디아 소환 보도는 확인할 사안이며 규제 결과나 사업 훼손은 발췌에서 확인되지 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 25.0,
+          "stance": "hold",
+          "confidence": 0.32,
+          "reasons": [
+            "성장 점수 100은 검토할 만하지만 PEG와 PEGY가 비어 가격이 성장에 비례하는지 판단할 수 없다.",
+            "성장 점수 100에도 주당이익과 매출 성장률 입력이 없어 성장 프리미엄의 지속성을 확인할 수 없다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-41a5fc23f0db",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "c4570119ff689ace76f4d9913c8fbe2eeacf4a50ccf3d34f5c0b2e0349c45a1d",
+              "quote_verified": true,
+              "quote_chars": 157,
+              "rationale_ko": "업종 동반 하락과 엔비디아 소환 보도는 확인할 사안이며 규제 결과나 사업 훼손은 발췌에서 확인되지 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -40.0,
+          "stance": "hold",
+          "confidence": 0.38,
+          "reasons": [
+            "현재가 125.53은 단기와 장기 이동평균 아래이며 RSI 15.0462는 극히 약한 모멘텀을 보인다.",
+            "변동성 비율 0.0853이 관측되는 가운데 상대강도와 금리 입력이 비어 국면 확인이 어렵다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-41a5fc23f0db",
+              "durability": "one_off",
+              "impact": "negative",
+              "severity": 35.0,
+              "quote_sha256": "ed61aef196b20357df77655c4be8b09d409cb17d1c56e3f5d47fdbd09e19b408",
+              "quote_verified": true,
+              "quote_chars": 127,
+              "rationale_ko": "동반 매도는 업종의 단기 위험선호 약화로 읽히며 종목의 사업 훼손이나 주어진 레짐 변경을 뒷받침하지 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "13F는 분기말 기준으로 제출에 45일 시차가 있으며 보유 변화 입력이 없어 기관 동향과 섹터 일치를 평가할 수 없다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-41a5fc23f0db",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "c4570119ff689ace76f4d9913c8fbe2eeacf4a50ccf3d34f5c0b2e0349c45a1d",
+              "quote_verified": true,
+              "quote_chars": 157,
+              "rationale_ko": "업종 동반 하락과 엔비디아 소환 보도는 확인할 사안이며 규제 결과나 사업 훼손은 발췌에서 확인되지 않는다."
+            }
+          ]
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -90.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수가 높아도 확인된 현금 전환 지표가 없어 현재가와 내재가치 밴드 사이의 차이를 설명하기 어렵다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장성을 볼 여지와 현재가에서 안전마진이 부족하다는 판단이 갈린다."
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 12.0,
+          "changed": true,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "음의 안전마진은 가격 부담을 보여주지만 이익 성장률이 비어 있어 그 부담을 성장 대비로 검증할 수 없다.",
+              "quote_or_number_ref": "margin"
+            }
+          ],
+          "conflict_points": [
+            "가격 부담과 성장률 입력 공백을 함께 반영해 성장 점수에 대한 가점을 축소한다."
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -40.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수는 두 이동평균을 밑도는 흐름이나 낮은 RSI가 개선됐다는 근거가 되지 않는다.",
+              "quote_or_number_ref": "growth"
+            }
+          ],
+          "conflict_points": [
+            "성장 검토 가치는 남아도 현재 모멘텀으로는 진입 판단을 유보한다."
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "현재가의 이동평균 이탈과 업종 동반 매도로는 분기말 기관 보유 변화를 확인할 수 없다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "가격과 업종 수급은 관찰하되 기관 공시 확인은 보류한다."
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "8-K 5.02 원문 및 사건 유형 확인 필요",
+            "소환 보도의 후속 사실관계 확인 필요",
+            "상대강도와 성장률 확인 필요"
+          ],
+          "structural_risk": 30.0,
+          "reasoning": "공시 2.02가 규칙상 위험도에 반영된다. 공시 5.02의 본문 및 소환 보도의 사업 영향이 확인되지 않아 구조적 훼손 차단 근거로 확정할 수 없으며 낮은 RSI와 음의 안전마진은 주의 요인이다.",
+          "opinion": "caution"
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 음의 안전마진을 가격 부담으로 봤다.",
+            "가드와 드러켄밀러는 낮은 RSI를 신규 진입에 신중할 이유로 봤다."
+          ],
+          "dissent": [
+            "버핏은 안전마진 부족을 이유로 부정적이었고 린치는 성장 점수의 가점을 줄여 관망했다.",
+            "드러켄밀러는 업종 동반 매도를 단기 위험선호 약화로 봤고 가드는 소환 보도와 공시 원문 확인을 요청했다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [],
+          "conflict": true,
+          "one_line_ko": "안전마진과 모멘텀이 약하고 공시 세부 내용과 뉴스의 사업 영향을 확인하기 어려워 관찰을 유지한다."
+        }
+      },
+      "scores": {
+        "buffett": {
+          "round1": -90.0,
+          "round2": -90.0
+        },
+        "lynch": {
+          "round1": 25.0,
+          "round2": 12.0
+        },
+        "druckenmiller": {
+          "round1": -40.0,
+          "round2": -40.0
+        },
+        "gates_13f": {
+          "round1": 0.0,
+          "round2": 0.0
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 4,
+        "quotes_dropped": 0,
+        "numbers_checked": 15,
+        "numbers_rejected": 0,
+        "refs_dropped": 0,
+        "drop_reasons": [
+          "quote_missing:news-99305c68ceb7",
+          "quote_missing:news-7ab95c8ee4dd",
+          "quote_missing:news-38a416e0b5e0",
+          "quote_missing:news-57b89fb87c37",
+          "quote_missing:news-99305c68ceb7",
+          "quote_missing:news-7ab95c8ee4dd",
+          "quote_missing:news-38a416e0b5e0",
+          "quote_missing:news-57b89fb87c37",
+          "quote_missing:news-99305c68ceb7",
+          "quote_missing:news-7ab95c8ee4dd",
+          "quote_missing:news-38a416e0b5e0",
+          "quote_missing:news-57b89fb87c37",
+          "quote_missing:news-99305c68ceb7",
+          "quote_missing:news-7ab95c8ee4dd",
+          "quote_missing:news-38a416e0b5e0",
+          "quote_missing:news-57b89fb87c37"
+        ],
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-21T00:44:44.466918+00:00",
+        "resume_key": "sha256:489810425c1f24805c7f359627e5ae00b26a81a963f8d04a7dc13b4d8a21e05a",
+        "injection_scope": null,
+        "injection_blocking": false,
+        "blocked_before_calls": false,
+        "blocked_reason": null,
+        "excluded_news": [],
+        "article_receipts": [
+          {
+            "article_id": "news-41a5fc23f0db",
+            "content_sha256": "sha256:0c068260cd27c1a8b28d41f57aaffccd2b2047d2097028acaf70f9c8ac5f1f58"
+          },
+          {
+            "article_id": "news-99305c68ceb7",
+            "content_sha256": "sha256:c6142cdbbd05b7f761a73a0e6e74bcf2fa20e936985f036e0279faf6016f0104"
+          },
+          {
+            "article_id": "news-7ab95c8ee4dd",
+            "content_sha256": "sha256:9bd0331c2273acc77b7d88c58ea218d95b9fa1c6d48cf3beab4a3a6c64e9b4f9"
+          },
+          {
+            "article_id": "news-38a416e0b5e0",
+            "content_sha256": "sha256:1a583140a99441b4d4e92964e969c271d0182951cd11ab8d418e44dc31758f53"
+          },
+          {
+            "article_id": "news-57b89fb87c37",
+            "content_sha256": "sha256:6c8ace244efce0edd76a6cdc75598de95c0787a9d345485015cce27c00652580"
+          }
+        ],
+        "round_state": {
+          "round1": [
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-99305c68ceb7",
+                "quote_missing:news-7ab95c8ee4dd",
+                "quote_missing:news-38a416e0b5e0",
+                "quote_missing:news-57b89fb87c37"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 4,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-41a5fc23f0db",
+                  "news-99305c68ceb7",
+                  "news-7ab95c8ee4dd",
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37"
+                ],
+                "news_ids_dropped": [
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37",
+                  "news-7ab95c8ee4dd",
+                  "news-99305c68ceb7"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-99305c68ceb7",
+                "quote_missing:news-7ab95c8ee4dd",
+                "quote_missing:news-38a416e0b5e0",
+                "quote_missing:news-57b89fb87c37"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-41a5fc23f0db",
+                  "news-99305c68ceb7",
+                  "news-7ab95c8ee4dd",
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37"
+                ],
+                "news_ids_dropped": [
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37",
+                  "news-7ab95c8ee4dd",
+                  "news-99305c68ceb7"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-99305c68ceb7",
+                "quote_missing:news-7ab95c8ee4dd",
+                "quote_missing:news-38a416e0b5e0",
+                "quote_missing:news-57b89fb87c37"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 3,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-41a5fc23f0db",
+                  "news-99305c68ceb7",
+                  "news-7ab95c8ee4dd",
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37"
+                ],
+                "news_ids_dropped": [
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37",
+                  "news-7ab95c8ee4dd",
+                  "news-99305c68ceb7"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-99305c68ceb7",
+                "quote_missing:news-7ab95c8ee4dd",
+                "quote_missing:news-38a416e0b5e0",
+                "quote_missing:news-57b89fb87c37"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-41a5fc23f0db",
+                  "news-99305c68ceb7",
+                  "news-7ab95c8ee4dd",
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37"
+                ],
+                "news_ids_dropped": [
+                  "news-38a416e0b5e0",
+                  "news-57b89fb87c37",
+                  "news-7ab95c8ee4dd",
+                  "news-99305c68ceb7"
+                ]
+              }
+            }
+          ],
+          "round2": [
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            }
+          ],
+          "guard": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 4,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          },
+          "chair": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          }
+        },
+        "report_sha256": "sha256:a16feb738d3be765b1e3b78b9437c5f666e8da04e546b320c964b615effccb0a"
+      },
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "intent": "no_action",
+      "auto_downgrade_applied": false,
+      "track": "codex_debated",
+      "news_state": "insufficient_evidence",
+      "structural_risk": 30.0,
+      "injection_detected": false,
+      "context_hash": "sha256:74dfcc15a2542803f0d0dd105c76066b3d66e9854c5b5875786af5a0f5fc7785",
+      "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034",
+      "provider": "codex",
+      "context_sha256": "sha256:74dfcc15a2542803f0d0dd105c76066b3d66e9854c5b5875786af5a0f5fc7785"
+    },
+    {
+      "report_id": "2026-11-21-MSFT-debate-01",
+      "ticker": "MSFT",
+      "signal_id": "2026-11-21-MSFT-WATCH-001",
+      "snapshot_id": "sha256:611dd49e10ee21fb1cc0829359d78f92f87fadde9bb908413f75b468952a1424",
+      "as_of": "2026-11-21",
+      "data_cutoff_at": "2026-11-20T22:00:00Z",
+      "signal_published_at": "2026-11-20T23:47:37Z",
+      "order_cutoff_at": "2026-11-23T14:25:00Z",
+      "completed_at": "2026-11-21T00:44:44.471290+00:00",
+      "late": false,
+      "invalid": false,
+      "status": "complete",
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -76.0,
+          "stance": "sell",
+          "confidence": 0.38,
+          "reasons": [
+            "현재가 484.52는 내재가치 밴드 상단 148.49를 웃돌아 안전마진이 없다.",
+            "품질 점수 82.43만으로는 자본수익률과 이익의 현금 전환을 확인할 수 없다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "알파벳과의 선행 이익 배수 비교는 상대 가격을 보여주며 마이크로소프트의 성장 지속성을 확인해 주지 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 8.0,
+          "stance": "hold",
+          "confidence": 0.31,
+          "reasons": [
+            "성장 점수 67.81은 추가 검토 근거에 그치며 PEG와 PEGY는 비어 있다.",
+            "성장 점수 67.81만으로는 매출과 주당이익 성장의 지속성을 판정할 수 없어 관망한다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "알파벳과의 선행 이익 배수 비교는 상대 가격을 보여주며 마이크로소프트의 성장 지속성을 확인해 주지 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -10.0,
+          "stance": "hold",
+          "confidence": 0.35,
+          "reasons": [
+            "현재가 484.52는 단기 이동평균을 밑돌지만 장기 이동평균 위여서 시계열에 따라 신호가 엇갈린다.",
+            "RSI 34.7635와 중립 레짐 점수 50에서 상대강도 입력이 비어 신규 진입을 지지하기 어렵다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "알파벳과의 선행 이익 배수 비교는 상대 가격을 보여주며 마이크로소프트의 성장 지속성을 확인해 주지 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "13F는 분기말 기준으로 제출에 45일 시차가 있으며 보유 변화 입력이 없어 기관 동향과 섹터 일치를 평가할 수 없다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e5b61aa80b26",
+              "durability": "unknown",
+              "impact": "unknown",
+              "severity": 0.0,
+              "quote_sha256": "ff67996bee7f38941330dcab164b4b7e4da9b9352b0f830d77f5030872b54176",
+              "quote_verified": true,
+              "quote_chars": 149,
+              "rationale_ko": "알파벳과의 선행 이익 배수 비교는 상대 가격을 보여주며 마이크로소프트의 성장 지속성을 확인해 주지 않는다."
+            }
+          ]
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -76.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "현재가가 장기 이동평균 위라는 점은 장기 추세를 설명하지만 현금 전환을 확인할 수 없는 상황에서 안전마진을 보완하지 못한다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "장기 추세의 완충과 내재가치 대비 프리미엄에 대한 해석이 갈린다."
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 8.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "현재가와 이익력 중심 밴드의 괴리로 가격 부담은 확인되지만 성장률 입력이 빠져 GARP 통과 여부를 확정하기 어렵다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "성장 점수는 검토 근거로 남기고 가격 대비 성장 판단은 유보한다."
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": -10.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "현재가가 내재가치 밴드를 웃돈다는 근거만으로 장기 이동평균 위의 추세까지 무너졌다고 볼 수 없다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "장기 추세가 버티는 가운데 단기 추세와 상대강도 확인이 남아 있다."
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "druckenmiller",
+              "point": "현재가의 단기와 장기 이동평균 대비 위치는 공시상의 기관 보유 변화를 확인해 주지 않는다.",
+              "quote_or_number_ref": "price"
+            }
+          ],
+          "conflict_points": [
+            "추세의 시계열 차이와 별개로 기관 보유 근거가 비어 있다."
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "성장률과 현금 전환 확인 필요",
+            "단기 추세 회복과 기사 본문 확인 필요"
+          ],
+          "structural_risk": 0.0,
+          "reasoning": "장기 이동평균 위의 가격에도 단기 추세와 안전마진은 신규 진입을 지지하지 않는다. 비교 기사와 공시 목록에서 구조적 사업 훼손을 확인할 수 없다.",
+          "opinion": "caution"
+        },
+        "chair": {
+          "consensus": [
+            "버핏과 린치는 현재가와 가치 밴드의 괴리를 가격 부담으로 봤다.",
+            "드러켄밀러와 가드는 장기 이동평균을 웃도는 가격에도 단기 추세가 신규 진입을 지지하지 않는다고 봤다."
+          ],
+          "dissent": [
+            "버핏은 가치 대비 가격 부담을 우선했고 드러켄밀러는 장기 추세가 유지되는 점을 남겼다.",
+            "린치는 성장 대비 가격 판정을 보류했으며 게이츠는 확인 가능한 기관 보유 변화가 없다고 봤다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [],
+          "conflict": true,
+          "one_line_ko": "장기 추세가 유지되더라도 단기 약세와 가치 대비 가격 부담이 남고 뉴스 근거가 부족해 관찰을 유지한다."
+        }
+      },
+      "scores": {
+        "buffett": {
+          "round1": -76.0,
+          "round2": -76.0
+        },
+        "lynch": {
+          "round1": 8.0,
+          "round2": 8.0
+        },
+        "druckenmiller": {
+          "round1": -10.0,
+          "round2": -10.0
+        },
+        "gates_13f": {
+          "round1": 0.0,
+          "round2": 0.0
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 4,
+        "quotes_dropped": 0,
+        "numbers_checked": 10,
+        "numbers_rejected": 0,
+        "refs_dropped": 0,
+        "drop_reasons": [
+          "quote_missing:news-97d373ab05b3",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-08fc4debcb04",
+          "quote_missing:news-d4b26a5277ad",
+          "quote_missing:news-97d373ab05b3",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-08fc4debcb04",
+          "quote_missing:news-d4b26a5277ad",
+          "quote_missing:news-97d373ab05b3",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-08fc4debcb04",
+          "quote_missing:news-d4b26a5277ad",
+          "quote_missing:news-97d373ab05b3",
+          "quote_missing:news-f09ba6790f08",
+          "quote_missing:news-08fc4debcb04",
+          "quote_missing:news-d4b26a5277ad"
+        ],
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-21T00:44:44.471290+00:00",
+        "resume_key": "sha256:3c4c9ab15cbe5fa3e28a23636e11b175849a6cc83105dcef28b7167e502efa34",
+        "injection_scope": null,
+        "injection_blocking": false,
+        "blocked_before_calls": false,
+        "blocked_reason": null,
+        "excluded_news": [],
+        "article_receipts": [
+          {
+            "article_id": "news-97d373ab05b3",
+            "content_sha256": "sha256:b80b21857939d0f6f740893f5f84a35d3a41762b27dedef131f607a806c21217"
+          },
+          {
+            "article_id": "news-f09ba6790f08",
+            "content_sha256": "sha256:21608a090623c868fba363fee63f946187d69b720ddd7c4bfbb83c721357f3b3"
+          },
+          {
+            "article_id": "news-08fc4debcb04",
+            "content_sha256": "sha256:c0c79e51a2843339cb1c2faaee9c2c8cda19c8dbfb89c2adc807cf92469281fa"
+          },
+          {
+            "article_id": "news-e5b61aa80b26",
+            "content_sha256": "sha256:e562439fda3e8f2f8692e6e809d2ea71b85a183ab7894f83f7725d12d047892e"
+          },
+          {
+            "article_id": "news-d4b26a5277ad",
+            "content_sha256": "sha256:6114c17cb89fdd16ba0c4eda3608e0a02a2f58f98279bc1195f7ddd0fb5c3f03"
+          }
+        ],
+        "round_state": {
+          "round1": [
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-97d373ab05b3",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-08fc4debcb04",
+                "quote_missing:news-d4b26a5277ad"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 3,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-97d373ab05b3",
+                  "news-f09ba6790f08",
+                  "news-08fc4debcb04",
+                  "news-e5b61aa80b26",
+                  "news-d4b26a5277ad"
+                ],
+                "news_ids_dropped": [
+                  "news-08fc4debcb04",
+                  "news-97d373ab05b3",
+                  "news-d4b26a5277ad",
+                  "news-f09ba6790f08"
+                ],
+                "confidence_cap": "C",
+                "price_pattern_hits": 1
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-97d373ab05b3",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-08fc4debcb04",
+                "quote_missing:news-d4b26a5277ad"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-97d373ab05b3",
+                  "news-f09ba6790f08",
+                  "news-08fc4debcb04",
+                  "news-e5b61aa80b26",
+                  "news-d4b26a5277ad"
+                ],
+                "news_ids_dropped": [
+                  "news-08fc4debcb04",
+                  "news-97d373ab05b3",
+                  "news-d4b26a5277ad",
+                  "news-f09ba6790f08"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-97d373ab05b3",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-08fc4debcb04",
+                "quote_missing:news-d4b26a5277ad"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 3,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-97d373ab05b3",
+                  "news-f09ba6790f08",
+                  "news-08fc4debcb04",
+                  "news-e5b61aa80b26",
+                  "news-d4b26a5277ad"
+                ],
+                "news_ids_dropped": [
+                  "news-08fc4debcb04",
+                  "news-97d373ab05b3",
+                  "news-d4b26a5277ad",
+                  "news-f09ba6790f08"
+                ]
+              }
+            },
+            {
+              "ok": true,
+              "reasons": [
+                "quote_missing:news-97d373ab05b3",
+                "quote_missing:news-f09ba6790f08",
+                "quote_missing:news-08fc4debcb04",
+                "quote_missing:news-d4b26a5277ad"
+              ],
+              "counts": {
+                "quotes_checked": 1,
+                "quotes_dropped": 0,
+                "numbers_checked": 2,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {
+                "news_ids_in": [
+                  "news-97d373ab05b3",
+                  "news-f09ba6790f08",
+                  "news-08fc4debcb04",
+                  "news-e5b61aa80b26",
+                  "news-d4b26a5277ad"
+                ],
+                "news_ids_dropped": [
+                  "news-08fc4debcb04",
+                  "news-97d373ab05b3",
+                  "news-d4b26a5277ad",
+                  "news-f09ba6790f08"
+                ]
+              }
+            }
+          ],
+          "round2": [
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            },
+            {
+              "ok": true,
+              "reasons": [],
+              "counts": {
+                "quotes_checked": 0,
+                "quotes_dropped": 0,
+                "numbers_checked": 0,
+                "numbers_rejected": 0,
+                "sentences_removed": 0,
+                "refs_dropped": 0
+              },
+              "flags": {}
+            }
+          ],
+          "guard": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          },
+          "chair": {
+            "ok": true,
+            "reasons": [],
+            "counts": {
+              "quotes_checked": 0,
+              "quotes_dropped": 0,
+              "numbers_checked": 0,
+              "numbers_rejected": 0,
+              "sentences_removed": 0,
+              "refs_dropped": 0
+            },
+            "flags": {}
+          }
+        },
+        "report_sha256": "sha256:313cda93e3ed2fc1d283cb296bce6c83a0015c336594d94f322c443a1a436f94"
+      },
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "intent": "no_action",
+      "auto_downgrade_applied": false,
+      "track": "codex_debated",
+      "news_state": "insufficient_evidence",
+      "structural_risk": 0.0,
+      "injection_detected": false,
+      "context_hash": "sha256:1921b9ec3b79b2887db6b5c5eb77cdb911f280a70abcb4b725049e2e4eb4d802",
+      "prompt_hash": "sha256:21362ffbe4cf6b67f6ed69cc140d1a05f9cfd3eb66bcb955cbeedaf00f8c4034",
+      "provider": "codex",
+      "context_sha256": "sha256:1921b9ec3b79b2887db6b5c5eb77cdb911f280a70abcb4b725049e2e4eb4d802"
     }
   ]
 }
