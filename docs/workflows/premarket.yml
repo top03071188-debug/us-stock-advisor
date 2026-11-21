@@ -1,0 +1,151 @@
+# premarket.yml — Phase 4 실운영 장전 배치 & Pages 배포 (매일 21:50 KST = 12:50 UTC)
+#
+# Actions 가 GITHUB_TOKEN 으로 푸시한 커밋은 push 워크플로를 시작시키지 않는다.
+# 그래서 데이터를 만드는 이 워크플로는 같은 실행 안에서 Pages 배포까지 끝낸다.
+# 장애(시세 전체 실패) 경로도 daily-postclose.yml 과 동일하게 health·알림을 보존·배포한다.
+name: premarket
+
+on:
+  schedule:
+    - cron: "50 12 * * *"      # 21:50 KST (미국 정규장 개장 전)
+  workflow_dispatch:
+
+concurrency:
+  group: premarket
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.lock
+      - name: Restore pipeline cache (public-safe paths only)
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/cache/sec_cik
+            data/cache/yfinance
+          key: pipeline-${{ runner.os }}-${{ hashFiles('requirements.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            pipeline-${{ runner.os }}-${{ hashFiles('requirements.lock') }}-
+      - name: Run premarket pipeline
+        id: pipeline
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python scripts/run_daily.py --mode premarket
+      - name: Report run outcome
+        run: |
+          echo "run_outcome=${{ steps.pipeline.outputs.run_outcome }}"
+          echo "data_status=${{ steps.pipeline.outputs.data_status }}"
+          echo "snapshot_created=${{ steps.pipeline.outputs.snapshot_created }} (state=${{ steps.pipeline.outputs.snapshot_state }})"
+      - name: Validate output schemas
+        id: validate
+        continue-on-error: true
+        run: python scripts/validate_outputs.py
+      - name: Validation gate (정상 실행만 차단)
+        if: steps.pipeline.outputs.run_outcome != 'outage' && steps.validate.outcome == 'failure'
+        run: |
+          echo "::error::계약 검증 실패 — 정상 실행은 배포하지 않는다(장애 기록은 이미 남겼다)"
+          exit 1
+      - name: Archive snapshot (private repo, append-only, sha256 verified)
+        if: steps.pipeline.outputs.snapshot_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.ARCHIVE_REPO_TOKEN }}
+          ARCHIVE_REPO: ${{ vars.PRIVATE_ARCHIVE_REPO }}
+          SNAPSHOT_SHORT: ${{ steps.pipeline.outputs.snapshot_id_short }}
+        run: |
+          set -euo pipefail
+          set +e
+          python scripts/archive_snapshot.py package --out dist_archive \
+            --name "snapshot_$(date -u +%F)_${SNAPSHOT_SHORT}"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 3 ]; then
+            echo "::warning::스냅샷 없음 — 아카이브를 건너뛴다(장애 배치)"
+            exit 0
+          elif [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
+          TGZ=$(ls dist_archive/snapshot_*.tgz)
+          gh release view snapshots-2026 --repo "$ARCHIVE_REPO" --json assets > /tmp/assets.json 2>/dev/null || \
+            gh release create snapshots-2026 --repo "$ARCHIVE_REPO" \
+              --title "Snapshots 2026" --notes "walk-forward 재현용 원본 (비공개)"
+          set +e
+          python scripts/archive_snapshot.py check-asset --assets /tmp/assets.json --file "$TGZ"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 10 ]; then
+            gh release upload snapshots-2026 "$TGZ" --repo "$ARCHIVE_REPO"
+          elif [ "$rc" -ne 0 ]; then
+            echo "::error::archive asset sha256 mismatch or check failed (rc=$rc)"
+            exit 1
+          fi
+      - name: Redact quotes for commit
+        run: |
+          FILES=()
+          for p in data/quant_signals.json data/ledger/records.jsonl; do
+            [ -f "$p" ] && FILES+=("$p")
+          done
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "리댁트 대상 없음(첫 실행)"
+            exit 0
+          fi
+          python scripts/redact_quotes.py --mode sha256 "${FILES[@]}"
+      - name: Commit contract data (allowlist only)
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          CANDIDATES=(
+            data/quant_signals.json
+            data/quant_signals.degraded.json
+            data/health.json
+            data/pipeline_limits.json
+            data/notifications_latest.json
+            data/notifications_log.json
+            data/params_history.json
+            data/walkforward/stress.json
+            data/ledger/records.jsonl
+            data/ledger/position_events.jsonl
+            data/ledger/portfolio/
+            data/ledger/executions/
+            data/ledger/debate_events/
+            data/ledger/debate_comparison.json
+            data/ledger/debate_summary.json
+            data/ledger/pilot_eval.json
+          )
+          for p in "${CANDIDATES[@]}"; do
+            if [ -e "$p" ]; then
+              git add "$p"
+            fi
+          done
+          python scripts/check_commit_scope.py --staged
+          git diff --cached --quiet || git commit -m "data: premarket $(date -u +%F)"
+          git push
+      - name: Build public data (allowlist only)
+        run: python scripts/build_public_data.py
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: web }
+  deploy:
+    needs: report
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

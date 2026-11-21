@@ -1,7 +1,7 @@
 {
-  "as_of": "2026-11-20",
-  "holdout_start": "2026-08-20",
-  "holdout_end": "2026-11-19",
+  "as_of": "2026-11-21",
+  "holdout_start": "2026-08-21",
+  "holdout_end": "2026-11-20",
   "window_months": 12,
   "horizons": {
     "1m": {
@@ -45,7 +45,7 @@
           "maturity": "2026-09-18",
           "eligible": false,
           "truncated": true,
-          "observed_days": 0
+          "observed_days": 1
         }
       ]
     },
@@ -90,16 +90,17 @@
           "maturity": "2026-11-17",
           "eligible": false,
           "truncated": true,
-          "observed_days": 0
+          "observed_days": 1
         }
       ]
     },
     "6m": {
       "horizon_td": 126,
       "eligible_folds": [
-        "F1"
+        "F1",
+        "F2"
       ],
-      "count": 1,
+      "count": 2,
       "min_folds": 3,
       "sufficient": false,
       "folds": [
@@ -115,9 +116,9 @@
           "fold_id": "F2",
           "start": "2026-02-19",
           "maturity": "2026-08-20",
-          "eligible": false,
-          "truncated": true,
-          "observed_days": 125
+          "eligible": true,
+          "truncated": false,
+          "observed_days": 126
         },
         {
           "fold_id": "F3",
@@ -125,7 +126,7 @@
           "maturity": "2026-11-17",
           "eligible": false,
           "truncated": true,
-          "observed_days": 63
+          "observed_days": 64
         },
         {
           "fold_id": "F4",
@@ -133,7 +134,7 @@
           "maturity": "2027-02-19",
           "eligible": false,
           "truncated": true,
-          "observed_days": 0
+          "observed_days": 1
         }
       ]
     }

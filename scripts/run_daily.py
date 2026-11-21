@@ -1250,8 +1250,25 @@ def holdout_status_for(as_of: date) -> dict:
                 "next_open": None}
 
 
+STRESS_REPORT_PATH = Path("data/walkforward/stress.json")
+
+
 def stress_payload() -> dict:
+    """스트레스 리포트 — **이미 계산된 파일이 있으면 그것을 그대로 쓴다.**
+
+    `scripts/run_walkforward.py --stress`(또는 `--semiannual`)가 실측한 `reference_metrics` 와
+    `gate_passed` 를 매일 밤 "미검증"으로 덮어쓰면 그 계산이 사라진다(예전 동작).
+    파일이 없거나 깨졌을 때만 안전핀(`stress_report(None, None)`)을 만든다 — 그때도
+    게이트는 `gate_passed=False` 다. 어떤 경우에도 없는 검증을 통과로 바꾸지 않는다.
+    """
     from engine.backtest.stress import stress_report  # noqa: PLC0415
+    try:
+        if STRESS_REPORT_PATH.exists():
+            payload = json.loads(STRESS_REPORT_PATH.read_text(encoding="utf-8"))
+            if isinstance(payload, dict) and payload.get("windows"):
+                return payload
+    except (OSError, json.JSONDecodeError):
+        pass
     return stress_report(None, None)
 
 

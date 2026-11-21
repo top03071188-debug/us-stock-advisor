@@ -23,7 +23,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from engine.data.holdings_13f import radar_payload  # noqa: E402
+from engine.data.holdings_13f import (  # noqa: E402
+    FILERS_PATH,
+    STALE_DAYS,
+    STATUS_KO,
+    build_issuer_ticker_index,
+    collect_13f_filings,
+    load_company_tickers,
+    radar_payload,
+)
 from engine.decide.pipeline import load_params  # noqa: E402
 from engine.metrics.valuation import classify_sector  # noqa: E402
 from engine.screener import Candidate, screen  # noqa: E402
@@ -32,7 +40,6 @@ from engine.utils.dates import data_cutoff_at as cutoff_of  # noqa: E402
 WATCHLIST = Path("data/watchlist/current.json")
 HISTORY = Path("data/watchlist/history.jsonl")
 RADAR = Path("data/radar/13f.json")
-
 
 def _write_json(path: Path, payload) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -187,8 +194,113 @@ def append_history(as_of: date, payload: dict) -> None:
     HISTORY.write_text("\n".join(kept + [line]) + "\n", encoding="utf-8")
 
 
+# ────────────────────────────── 13F 레이더 ──────────────────────────────
+def _existing_radar() -> dict | None:
+    """이전 실행이 남긴 레이더 — 깨졌거나 없으면 None."""
+    if not RADAR.exists():
+        return None
+    try:
+        payload = json.loads(RADAR.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _watchlist_tickers() -> set[str]:
+    """지금 워크리스트의 티커 집합(13F 매칭용)."""
+    if not WATCHLIST.exists():
+        return set()
+    try:
+        payload = json.loads(WATCHLIST.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    return {str(r.get("ticker")).upper() for r in payload.get("watchlist") or [] if r.get("ticker")}
+
+
+def _issuer_ticker_index() -> dict[str, list[str]]:
+    """회사명 → 티커 색인. 실패하면 빈 색인(이름·CUSIP 직접 비교로 폴백) — 레이더는 계속 만들린다."""
+    try:
+        return build_issuer_ticker_index(load_company_tickers())
+    except Exception as exc:  # noqa: BLE001 — 색인 실패가 13F 수집·빈도 위험을 만들지 않는다
+        print(json.dumps({"13f_ticker_index": "failed",
+                          "reason": f"{type(exc).__name__}: {str(exc)[:120]}"}, ensure_ascii=False),
+              file=sys.stderr)
+        return {}
+
+
+def refresh_radar(decision_at: datetime, as_of: date, watch_tickers: set[str], *,
+                  filings: list | None = None, live: bool = True,
+                  filers_path: str | Path = FILERS_PATH,
+                  previous: dict | None = None) -> tuple[dict, dict]:
+    """13F 레이더 갱신 — **어떤 실패도 예외로 내보내지 않는다**(주간 배치가 멈추면 안 된다).
+
+    `filings` 가 주어지면(`--13f FILE`) 수집하지 않고 그 입력으로 만든다. 없고 `live` 이면
+    SEC EDGAR 에서 직접 수집한다. 수집이 전부 실패했는데 지난 레이더에 펀드가 있으면
+    **지난 값을 지우지 않고** 사유와 경과일을 다시 적는다(일시 장애로 좋은 데이터를 날리지 않는다).
+
+    Returns: (`radar` payload, 진단 dict).
+    """
+    diag: dict = {"status": "static", "errors": [], "n_filings": len(filings or [])}
+    issuer_index = _issuer_ticker_index() if live else {}
+    if filings is None and live:
+        try:
+            collected = collect_13f_filings(decision_at, config_path=filers_path)
+        except Exception as exc:  # noqa: BLE001 — 수집기 자체 예외도 진단으로
+            collected = {"filings": [], "status": "failed", "note_ko": "13F 수집 실패",
+                         "errors": [{"stage": "collect",
+                                     "error": f"{type(exc).__name__}: {str(exc)[:160]}"}],
+                         "skipped": []}
+        filings = collected.get("filings") or []
+        diag = {"status": collected.get("status"), "errors": collected.get("errors") or [],
+                "skipped": collected.get("skipped") or [], "note_ko": collected.get("note_ko"),
+                "n_filings": len(filings)}
+
+    radar = radar_payload(filings or [], decision_at, watchlist=watch_tickers,
+                          issuer_to_ticker=issuer_index or None)
+    radar["as_of"] = as_of.isoformat()
+    status = str(diag.get("status") or ("ok" if radar.get("n_filers") else "empty"))
+    radar["status"] = status
+    if diag.get("note_ko") and status in ("partial", "missing_key", "no_filers", "failed", "empty"):
+        radar["note_ko"] = str(diag["note_ko"])
+
+    if status in ("failed", "missing_key", "no_filers") and (previous or {}).get("filers"):
+        carried = dict(previous)
+        period_end = carried.get("period_end")
+        if period_end:
+            try:
+                age = (as_of - date.fromisoformat(str(period_end))).days
+                carried["stale_days"] = age
+                carried["stale"] = age > STALE_DAYS
+            except ValueError:
+                pass
+        carried["as_of"] = as_of.isoformat()
+        carried["status"] = status
+        carried["note_ko"] = f"{STATUS_KO.get(status, status)} — 지난 레이더 유지({period_end or '분기말 미확인'})"
+        diag["carried_forward"] = True
+        radar = carried
+    return radar, diag
+
+
+def radar_for(decision_at: datetime, as_of: date, watch_tickers: set[str], *,
+              filings: list | None = None, live: bool = True,
+              filers_path: str | Path = FILERS_PATH) -> tuple[dict, dict]:
+    """레이더 1건 — 라이브 수집·입력 파일·지난 값 유지 중 무엇을 했는지 함께 돌려준다."""
+    previous = _existing_radar()
+    if filings is None and not live:
+        radar = dict(previous) if previous else radar_payload([], decision_at, watchlist=watch_tickers)
+        radar["as_of"] = as_of.isoformat()
+        radar["status"] = radar.get("status") or ("ok" if radar.get("n_filers") else "empty")
+        radar.setdefault("note_ko", "13F 입력 없음 — 지난 레이더 유지")
+        return radar, {"status": "static", "errors": [], "n_filings": 0,
+                       "carried_forward": bool(previous), "note_ko": radar.get("note_ko")}
+    return refresh_radar(decision_at, as_of, watch_tickers, filings=filings, live=live,
+                         filers_path=filers_path, previous=previous)
+
+
 def update(data: dict, as_of: date, decision_at: datetime, params: dict,
-           thirteen_f: list[dict] | None = None) -> dict:
+           thirteen_f: list[dict] | None = None, *, live: bool = True,
+           filers_path: str | Path = FILERS_PATH,
+           radar_info: dict | None = None) -> dict:
     result = screen(build_candidates(data))
     attach_valuation_wacc(result, data)
     previous = json.loads(WATCHLIST.read_text(encoding="utf-8")) if WATCHLIST.exists() else None
@@ -212,14 +324,10 @@ def update(data: dict, as_of: date, decision_at: datetime, params: dict,
     append_history(as_of, payload)
 
     watch_tickers = {r["ticker"] for r in result["watchlist"]}
-    if thirteen_f is not None:
-        radar = radar_payload(thirteen_f, decision_at, watchlist=watch_tickers)
-    elif RADAR.exists():
-        radar = json.loads(RADAR.read_text(encoding="utf-8"))
-        radar["as_of"] = as_of.isoformat()
-        radar["note_ko"] = radar.get("note_ko") or "13F 입력 없음 — 지난 레이더 유지"
-    else:
-        radar = radar_payload([], decision_at, watchlist=watch_tickers)
+    radar, radar_diag = radar_for(decision_at, as_of, watch_tickers, filings=thirteen_f,
+                                 live=live, filers_path=filers_path)
+    if radar_info is not None:
+        radar_info.update(radar_diag)
     _write_json(RADAR, radar)
     return payload
 
@@ -242,6 +350,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--root", default=".")
     ap.add_argument("--params", default="config/params_v001.yaml")
     ap.add_argument("--13f", dest="thirteen_f", default=None, help="13F 제출 JSON 목록 파일")
+    ap.add_argument("--13f-only", dest="thirteen_f_only", action="store_true",
+                    help="워치리스트는 그대로 두고 13F 레이더만 갱신한다")
+    ap.add_argument("--filers", default=FILERS_PATH, help="13F 수집 대상 펀드 목록 YAML")
     args = ap.parse_args(argv)
     if args.offline:
         args.fixtures = True
@@ -250,19 +361,42 @@ def main(argv: list[str] | None = None) -> int:
         os.chdir(root)
     as_of = date.fromisoformat(args.as_of) if args.as_of else date.today()
     decision_at = cutoff_of(as_of, "postclose")
-    params = load_params(Path(args.params))
-    data = load_dataset(args, as_of, decision_at)
+    live = not args.fixtures                    # 라이브 모드 = 13F 자동 수집 대상
     filings = None
     if args.thirteen_f:
         loaded = json.loads(Path(args.thirteen_f).read_text(encoding="utf-8"))
         filings = loaded.get("filings") if isinstance(loaded, dict) else loaded
-    payload = update(data, as_of, decision_at, params, filings)
+
+    if args.thirteen_f_only:
+        # 워치리스트·내역은 손대지 않고 레이더만 새로 만든다(13F 만 급히 손볼 때).
+        radar, diag = radar_for(decision_at, as_of, _watchlist_tickers(), filings=filings,
+                                live=live, filers_path=args.filers)
+        _write_json(RADAR, radar)
+        print(json.dumps({
+            "as_of": as_of.isoformat(), "mode": "13f-only", "status": diag.get("status"),
+            "n_filers": radar.get("n_filers"), "n_filings": diag.get("n_filings"),
+            "period_end": radar.get("period_end"),
+            "watchlist_overlap": radar.get("watchlist_overlap") or [],
+            "carried_forward": bool(diag.get("carried_forward")),
+            "errors": [f"{e.get('filer_name') or e.get('cik') or '-'}:{e.get('stage')}"
+                       for e in diag.get("errors") or []][:10],
+            "note_ko": radar.get("note_ko"),
+        }, ensure_ascii=False))
+        return 0
+
+    params = load_params(Path(args.params))
+    data = load_dataset(args, as_of, decision_at)
+    radar_info: dict = {}
+    payload = update(data, as_of, decision_at, params, filings, live=live,
+                     filers_path=args.filers, radar_info=radar_info)
     print(json.dumps({
         "as_of": as_of.isoformat(), "count": payload["count"],
         "entered": [r["ticker"] for r in payload["entered"]],
         "exited": [r["ticker"] for r in payload["exited"]],
         "valuation_suspended": [r["ticker"] for r in payload["valuation_suspended"]],
         "excluded": len(payload["excluded"]),
+        "13f": {"status": radar_info.get("status"), "n_filings": radar_info.get("n_filings"),
+                "errors": len(radar_info.get("errors") or [])},
     }, ensure_ascii=False))
     return 0
 
