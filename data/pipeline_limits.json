@@ -23,6 +23,10 @@
       "status": "ok",
       "detail": null
     },
+    "yahoo_news": {
+      "status": "ok",
+      "detail": "사용 43종목 · 빈 응답 0종목"
+    },
     "yfinance_meta": {
       "status": "ok",
       "detail": "시총 결측 0/43"
