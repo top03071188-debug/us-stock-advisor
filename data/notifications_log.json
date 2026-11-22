@@ -795,6 +795,201 @@
         }
       },
       "attempt_at": "2026-11-21T22:31:57Z"
+    },
+    "debate_recommended:2026-11-22-MSFT-WATCH-002": {
+      "sent_at": "2026-11-22T13:45:38Z",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "event": {
+        "type": "debate_recommended",
+        "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-002",
+        "label_ko": "토론 실행 권장",
+        "severity": "info",
+        "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "MSFT",
+        "signal_id": "2026-11-22-MSFT-WATCH-002"
+      },
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "attempt_at": "2026-11-22T13:45:38Z"
+    },
+    "debate_recommended:2026-11-22-NVDA-WATCH-002": {
+      "sent_at": "2026-11-22T13:45:38Z",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "event": {
+        "type": "debate_recommended",
+        "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-002",
+        "label_ko": "토론 실행 권장",
+        "severity": "info",
+        "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "NVDA",
+        "signal_id": "2026-11-22-NVDA-WATCH-002"
+      },
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "attempt_at": "2026-11-22T13:45:38Z"
+    },
+    "debate_recommended:2026-11-22-ADBE-WATCH-002": {
+      "sent_at": "2026-11-22T13:45:38Z",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "event": {
+        "type": "debate_recommended",
+        "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-002",
+        "label_ko": "토론 실행 권장",
+        "severity": "info",
+        "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "ADBE",
+        "signal_id": "2026-11-22-ADBE-WATCH-002"
+      },
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "attempt_at": "2026-11-22T13:45:38Z"
+    },
+    "debate_recommended:2026-11-22-GOOGL-WATCH-002": {
+      "sent_at": "2026-11-22T13:45:38Z",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "event": {
+        "type": "debate_recommended",
+        "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-002",
+        "label_ko": "토론 실행 권장",
+        "severity": "info",
+        "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "GOOGL",
+        "signal_id": "2026-11-22-GOOGL-WATCH-002"
+      },
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "attempt_at": "2026-11-22T13:45:38Z"
+    },
+    "debate_recommended:2026-11-22-META-WATCH-002": {
+      "sent_at": "2026-11-22T13:45:38Z",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "event": {
+        "type": "debate_recommended",
+        "event_key": "debate_recommended:2026-11-22-META-WATCH-002",
+        "label_ko": "토론 실행 권장",
+        "severity": "info",
+        "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "META",
+        "signal_id": "2026-11-22-META-WATCH-002"
+      },
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-22T13:45:38Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "attempt_at": "2026-11-22T13:45:38Z"
     }
   },
   "deliveries": [
@@ -1623,6 +1818,156 @@
       "status": "unconfigured",
       "attempts": 0,
       "attempt_at": "2026-11-21T22:31:57Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
+    },
+    {
+      "channel": "console",
+      "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-002",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": null
+    },
+    {
+      "channel": "github_issue",
+      "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"
+    },
+    {
+      "channel": "webhook",
+      "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
+    },
+    {
+      "channel": "console",
+      "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-002",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": null
+    },
+    {
+      "channel": "github_issue",
+      "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"
+    },
+    {
+      "channel": "webhook",
+      "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
+    },
+    {
+      "channel": "console",
+      "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-002",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": null
+    },
+    {
+      "channel": "github_issue",
+      "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"
+    },
+    {
+      "channel": "webhook",
+      "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
+    },
+    {
+      "channel": "console",
+      "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-002",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": null
+    },
+    {
+      "channel": "github_issue",
+      "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"
+    },
+    {
+      "channel": "webhook",
+      "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
+    },
+    {
+      "channel": "console",
+      "event_key": "debate_recommended:2026-11-22-META-WATCH-002",
+      "type": "debate_recommended",
+      "status": "sent",
+      "attempts": 1,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": null
+    },
+    {
+      "channel": "github_issue",
+      "event_key": "debate_recommended:2026-11-22-META-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"
+    },
+    {
+      "channel": "webhook",
+      "event_key": "debate_recommended:2026-11-22-META-WATCH-002",
+      "type": "debate_recommended",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-22T13:45:38Z",
       "latency_seconds": 0.0,
       "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
     }

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-21T22:31:54.665384Z",
-  "data_cutoff_at": "2026-11-21T22:00:00Z",
-  "signal_published_at": "2026-11-21T22:31:50Z",
+  "generated_at": "2026-11-22T13:45:35.994451Z",
+  "data_cutoff_at": "2026-11-22T12:50:00Z",
+  "signal_published_at": "2026-11-22T13:45:32Z",
   "order_cutoff_at": "2026-11-23T14:25:00Z",
   "as_of": "2026-11-22",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:3285b1f63ac3745cdd32cb612a534b18355830099096f28583b8b0bb56bd166b",
-  "code_commit": "7c0e973",
+  "snapshot_id": "sha256:a3ea76e0c163c515f2f36ab4a9523734f9c90491828a316cdcf985ccb3f0780d",
+  "code_commit": "88166f8",
   "status": "normal",
-  "mode": "postclose",
+  "mode": "premarket",
   "source": "live",
   "regime": {
     "regime": "neutral",
@@ -53,23 +53,23 @@
       }
     },
     "counts": {
-      "records": 38,
+      "records": 43,
       "matured": 0,
       "duplicate": 0,
       "no_regime": 28,
-      "not_matured": 10,
+      "not_matured": 15,
       "no_price": 0
     }
   },
   "ingest": {
     "policy": "cutoff_vintage_point_query",
     "mode": "live",
-    "data_cutoff_at": "2026-11-21T22:00:00Z",
-    "inputs_ingested_at": "2026-11-21T22:31:15.174519Z",
-    "lag_seconds": 1875.2,
+    "data_cutoff_at": "2026-11-22T12:50:00Z",
+    "inputs_ingested_at": "2026-11-22T13:44:53.128083Z",
+    "lag_seconds": 3293.1,
     "after_cutoff": true,
     "available_at_source": "vintage_point_query",
-    "vintage": "2026-11-20",
+    "vintage": "2026-11-21",
     "cutoff_filter": "available_at <= data_cutoff_at",
     "series_dropped": [],
     "replay": false
@@ -77,15 +77,15 @@
   "signals": [
     {
       "schema_version": 1,
-      "signal_id": "2026-11-22-MSFT-WATCH-001",
+      "signal_id": "2026-11-22-MSFT-WATCH-002",
       "ticker": "MSFT",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 55.42,
       "as_of": "2026-11-22",
-      "data_cutoff_at": "2026-11-21T22:00:00Z",
-      "signal_published_at": "2026-11-21T22:31:50Z",
-      "signal_published_planned_at": "2026-11-21T22:02:11Z",
+      "data_cutoff_at": "2026-11-22T12:50:00Z",
+      "signal_published_at": "2026-11-22T13:45:32Z",
+      "signal_published_planned_at": "2026-11-22T12:52:11Z",
       "order_cutoff_at": "2026-11-23T14:25:00Z",
       "target_session": "2026-11-23",
       "generated_price": 484.5199890136719,
@@ -186,11 +186,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:3285b1f63ac3745cdd32cb612a534b18355830099096f28583b8b0bb56bd166b",
-      "code_commit": "7c0e973",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:efd8b58f8973df1dcd5290da376e13ef44e9022b1940699768ef9e949363f7cc",
+      "snapshot_id": "sha256:a3ea76e0c163c515f2f36ab4a9523734f9c90491828a316cdcf985ccb3f0780d",
+      "code_commit": "88166f8",
+      "revision": 2,
+      "supersedes": "2026-11-22-MSFT-WATCH-001",
+      "inputs_hash": "sha256:4b139a4ba772cafddd00bc6db54b1a1f34cf547c85bea0fe481e213574b96671",
       "trade_grade": "WATCH",
       "components": {
         "quality": 82.43,
@@ -272,10 +272,19 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "Buy Microsoft and Amazon at More Than 70x 2028 Free Cash Flow? Here’s What Their Capex Must Return",
+          "headline": "Nvidia Stock Has Crashed 48% and Now Trades at 15 Times Earnings, Its Cheapest in More Than a Decade and Cheaper Than Microsoft and Broadcom",
           "source": "Yahoo",
-          "published_at": "2026-11-21T16:20:38Z",
-          "url": "https://finnhub.io/api/news?id=16eac4f472186084139e5d319053986755fc0e8362381fdf83537f1987eb2a0e",
+          "published_at": "2026-11-22T00:47:00Z",
+          "url": "https://finnhub.io/api/news?id=c64373810cdf2091b46076551ddb6887e09a0b646da2e486f1e243f6fa52d3c4",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Microsoft Stock Gave Back 8% Within 2 Weeks of Its Record. Here's How Past Quick Pullbacks Like This Played Out.",
+          "source": "Yahoo",
+          "published_at": "2026-11-22T09:01:02Z",
+          "url": "https://finnhub.io/api/news?id=08120849c27856df4a4dd3329ef93ac83e401aee10b8152deee516766dac17a8",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -290,28 +299,19 @@
           "quote_verified": null
         },
         {
-          "headline": "ETFs Are Net Sellers of Microsoft (MSFT) on Nov. 18",
-          "source": "Yahoo",
-          "published_at": "2026-11-20T11:01:59Z",
-          "url": "https://finnhub.io/api/news?id=fc468ad2da721e0e8b38507d01a502b72fdffa87955a4a7ef5e479613928fb48",
+          "headline": "A $164 Billion Fund Bought These 3 Stocks Last Quarter",
+          "source": "TIKR",
+          "published_at": "2026-11-22T12:20:37Z",
+          "url": "https://www.tikr.com/blog/a-164-billion-fund-bought-these-3-stocks-last-quarter?ref=yahoofinance&tlnk=yf-261122-9gjc63fr",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "A $1.3 Billion Fund Just Bought These 3 Stocks",
+          "headline": "A $3.1 Billion Fund Just Bought These 3 Stocks",
           "source": "Yahoo",
-          "published_at": "2026-11-21T17:21:55Z",
-          "url": "https://finnhub.io/api/news?id=13656e10d9ab88baa2c3744e852ec8f6e6a87429267c188ac0944a69dea579dd",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Microsoft (NASDAQ:MSFT): A Dividend Quality Play Built on Payout Durability and Capital Strength",
-          "source": "ChartMill",
-          "published_at": "2026-11-21T11:10:58Z",
-          "url": "https://finnhub.io/api/news?id=ad102b3b997f2240051fa1b6af0484cd057849e63498b3754aee1828aa052b02",
+          "published_at": "2026-11-22T11:20:52Z",
+          "url": "https://finnhub.io/api/news?id=7a8ba8f3dd63f14ba47938346df2be7472c9aedc643ef6d2ff2432c4ae19ef71",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -380,15 +380,15 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-22-NVDA-WATCH-001",
+      "signal_id": "2026-11-22-NVDA-WATCH-002",
       "ticker": "NVDA",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 58.26,
       "as_of": "2026-11-22",
-      "data_cutoff_at": "2026-11-21T22:00:00Z",
-      "signal_published_at": "2026-11-21T22:31:50Z",
-      "signal_published_planned_at": "2026-11-21T22:02:11Z",
+      "data_cutoff_at": "2026-11-22T12:50:00Z",
+      "signal_published_at": "2026-11-22T13:45:32Z",
+      "signal_published_planned_at": "2026-11-22T12:52:11Z",
       "order_cutoff_at": "2026-11-23T14:25:00Z",
       "target_session": "2026-11-23",
       "generated_price": 125.52999877929688,
@@ -489,11 +489,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:3285b1f63ac3745cdd32cb612a534b18355830099096f28583b8b0bb56bd166b",
-      "code_commit": "7c0e973",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:efd8b58f8973df1dcd5290da376e13ef44e9022b1940699768ef9e949363f7cc",
+      "snapshot_id": "sha256:a3ea76e0c163c515f2f36ab4a9523734f9c90491828a316cdcf985ccb3f0780d",
+      "code_commit": "88166f8",
+      "revision": 2,
+      "supersedes": "2026-11-22-NVDA-WATCH-001",
+      "inputs_hash": "sha256:4b139a4ba772cafddd00bc6db54b1a1f34cf547c85bea0fe481e213574b96671",
       "trade_grade": "WATCH",
       "components": {
         "quality": 77.54,
@@ -575,10 +575,37 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "Nvidia faces US accounting probe amid deepening turmoil: media",
-          "source": "AFP",
-          "published_at": "2026-11-21T21:53:54Z",
-          "url": "https://finance.yahoo.com/technology/ai/articles/nvidia-faces-us-accounting-probe-215354861.html",
+          "headline": "GPU prices are rising for Nvidia's older chips even as the stock keeps going down: Chart of the Day",
+          "source": "Yahoo Finance",
+          "published_at": "2026-11-22T12:37:21Z",
+          "url": "https://finance.yahoo.com/markets/article/gpu-prices-are-rising-for-nvidias-older-chips-even-as-the-stock-keeps-going-down-chart-of-the-day-123721121.html",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Nvidia Must Become a Frontier Lab “Faster Than Frontier Labs Are Becoming Chip Companies.” Nemotron Is Its Head Start",
+          "source": "TIKR",
+          "published_at": "2026-11-22T12:35:25Z",
+          "url": "https://www.tikr.com/blog/nvidia-must-become-a-frontier-lab-faster-than-frontier-labs-are-becoming-chip-companies-nemotron-is-its-head-start?ref=yahoofinance&tlnk=yf-261122-g64ppxm4",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "From Anthropic to Nvidia, Wall Street just had a bizarre, wild week",
+          "source": "Yahoo",
+          "published_at": "2026-11-22T11:00:00Z",
+          "url": "https://finnhub.io/api/news?id=b4693064ee37c969e091558a32b6043f923079d2bf4a526bbf170ec3d26447e2",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Nvidia (NVDA) CEO Jensen Huang Resigned As The SEC Opened An Accounting Probe",
+          "source": "Yahoo",
+          "published_at": "2026-11-22T11:07:09Z",
+          "url": "https://finnhub.io/api/news?id=638c963bbda40f3757e48ab282c04a915eb63d88fb8d90b20a43db3249b8b63c",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -588,33 +615,6 @@
           "source": "Benzinga",
           "published_at": "2026-11-21T09:12:02Z",
           "url": "https://finnhub.io/api/news?id=786572124d2fe295862f360d0bfcb10e6bead0253a0a1fb0254a6ed8a1f5e5cb",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "NVDA Stock Sees Biggest Fall In 22 Months, But Top Analyst Says Nvidia’s AI Boom Isn’t Over Yet — Here Are 5 Reasons Why",
-          "source": "Yahoo",
-          "published_at": "2026-11-21T02:48:25Z",
-          "url": "https://finnhub.io/api/news?id=3f489ba364b864a098b8cd638834cfe14b432498e8a10bc54f138e11887d9a4b",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "NVDA Stock Clocks Worst Week In 18 Years As SEC Reportedly Probes Its Accounting Practices",
-          "source": "Yahoo",
-          "published_at": "2026-11-20T23:38:12Z",
-          "url": "https://finnhub.io/api/news?id=fe85428ac252f2f71c02ad6b9d581ebd740aaf7f4f5e9da38c5158286056f3ff",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Renaissance Technologies Grew Its SanDisk Stake More Than 55-Fold to $481 Million",
-          "source": "Yahoo",
-          "published_at": "2026-11-21T21:43:03Z",
-          "url": "https://finnhub.io/api/news?id=add8b9846ae8b1f142e2e8e1fea2288abd9a9853b95a8579782cb6dc2f16ee7a",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -691,15 +691,15 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-22-ADBE-WATCH-001",
+      "signal_id": "2026-11-22-ADBE-WATCH-002",
       "ticker": "ADBE",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 61.26,
       "as_of": "2026-11-22",
-      "data_cutoff_at": "2026-11-21T22:00:00Z",
-      "signal_published_at": "2026-11-21T22:31:50Z",
-      "signal_published_planned_at": "2026-11-21T22:02:11Z",
+      "data_cutoff_at": "2026-11-22T12:50:00Z",
+      "signal_published_at": "2026-11-22T13:45:32Z",
+      "signal_published_planned_at": "2026-11-22T12:52:11Z",
       "order_cutoff_at": "2026-11-23T14:25:00Z",
       "target_session": "2026-11-23",
       "generated_price": 217.7100067138672,
@@ -800,11 +800,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:3285b1f63ac3745cdd32cb612a534b18355830099096f28583b8b0bb56bd166b",
-      "code_commit": "7c0e973",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:efd8b58f8973df1dcd5290da376e13ef44e9022b1940699768ef9e949363f7cc",
+      "snapshot_id": "sha256:a3ea76e0c163c515f2f36ab4a9523734f9c90491828a316cdcf985ccb3f0780d",
+      "code_commit": "88166f8",
+      "revision": 2,
+      "supersedes": "2026-11-22-ADBE-WATCH-001",
+      "inputs_hash": "sha256:4b139a4ba772cafddd00bc6db54b1a1f34cf547c85bea0fe481e213574b96671",
       "trade_grade": "WATCH",
       "components": {
         "quality": 85.0,
@@ -987,15 +987,15 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-22-GOOGL-WATCH-001",
+      "signal_id": "2026-11-22-GOOGL-WATCH-002",
       "ticker": "GOOGL",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 61.51,
       "as_of": "2026-11-22",
-      "data_cutoff_at": "2026-11-21T22:00:00Z",
-      "signal_published_at": "2026-11-21T22:31:50Z",
-      "signal_published_planned_at": "2026-11-21T22:02:11Z",
+      "data_cutoff_at": "2026-11-22T12:50:00Z",
+      "signal_published_at": "2026-11-22T13:45:32Z",
+      "signal_published_planned_at": "2026-11-22T12:52:11Z",
       "order_cutoff_at": "2026-11-23T14:25:00Z",
       "target_session": "2026-11-23",
       "generated_price": 265.2900085449219,
@@ -1096,11 +1096,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:3285b1f63ac3745cdd32cb612a534b18355830099096f28583b8b0bb56bd166b",
-      "code_commit": "7c0e973",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:efd8b58f8973df1dcd5290da376e13ef44e9022b1940699768ef9e949363f7cc",
+      "snapshot_id": "sha256:a3ea76e0c163c515f2f36ab4a9523734f9c90491828a316cdcf985ccb3f0780d",
+      "code_commit": "88166f8",
+      "revision": 2,
+      "supersedes": "2026-11-22-GOOGL-WATCH-001",
+      "inputs_hash": "sha256:4b139a4ba772cafddd00bc6db54b1a1f34cf547c85bea0fe481e213574b96671",
       "trade_grade": "WATCH",
       "components": {
         "quality": 90.55,
@@ -1191,37 +1191,37 @@
           "quote_verified": null
         },
         {
-          "headline": "ETFs Are Net Sellers of Alphabet (GOOGL) on Nov. 18",
+          "headline": "Alphabet (GOOGL) Stock Gets Fair Value Trim As Analysts Weigh AI Spending And Monetization",
           "source": "Yahoo",
-          "published_at": "2026-11-20T11:02:28Z",
-          "url": "https://finnhub.io/api/news?id=77210c95891742276c76e20e86c296d807c0f399748de66d6c08fa4f53ddb3f8",
+          "published_at": "2026-11-22T00:12:09Z",
+          "url": "https://finnhub.io/api/news?id=09a67a217b3e3c3ffefc43440d94caad55d7ad51640fec3af177e472435b6025",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Google Is Paying Elon Musk’s SpaceX $30 Billion. Jim Cramer Just Revealed Why",
+          "headline": "Jason Calacanis Will “Catch Every Knife” With SpaceX, Tesla and Google. Only Some Are Cheap",
           "source": "Yahoo",
-          "published_at": "2026-11-21T16:48:17Z",
-          "url": "https://finnhub.io/api/news?id=694f1d18ea4035f96b195b2a17a89b2d08f39a34f5bf898baba99a213da03a24",
+          "published_at": "2026-11-22T10:03:30Z",
+          "url": "https://finnhub.io/api/news?id=e1957ab22d37d4c33c4f9f628a5d4e63726a5c01f4534ef6ddfbf4d5c96873bd",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Musk Calls Google’s Gemini 4 Neon “a Banger” After Its Third Zapier Record. Bad Timing for Anthropic",
+          "headline": "Alphabet Stock Just Hit a 1-Year Low. Why Is Google's Parent Borrowing So Much Money?",
           "source": "Yahoo",
-          "published_at": "2026-11-21T16:05:34Z",
-          "url": "https://finnhub.io/api/news?id=361e86120343d4c65802076274dee8385419fb10f0b765fb6924dddf8aabcf47",
+          "published_at": "2026-11-21T23:20:48Z",
+          "url": "https://finnhub.io/api/news?id=475fb3de7e6a4768ab2afc2f57b595b9700285ecf3198f5acc521129cedd61e4",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Prediction: Here’s Where Alphabet Stock Will Be in 5 Years",
+          "headline": "Stanley Druckenmiller, David Tepper and 45 Other Big Funds Sold Alphabet Last Quarter, While 31 Bought. Who’s Right?",
           "source": "Yahoo",
-          "published_at": "2026-11-21T08:10:02Z",
-          "url": "https://finnhub.io/api/news?id=62851f2a384e13f4c54ee15bf67d38ea360f8c1655936580c0f342f6516b7598",
+          "published_at": "2026-11-21T21:19:08Z",
+          "url": "https://finnhub.io/api/news?id=471ad896c8de03d8f06d8b73da37bd1ac2ff42bf7ecd1225dce12df79e506ed6",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -1292,15 +1292,15 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-22-META-WATCH-001",
+      "signal_id": "2026-11-22-META-WATCH-002",
       "ticker": "META",
       "type": "WATCH",
       "grade": "C",
       "entry_score": 60.42,
       "as_of": "2026-11-22",
-      "data_cutoff_at": "2026-11-21T22:00:00Z",
-      "signal_published_at": "2026-11-21T22:31:50Z",
-      "signal_published_planned_at": "2026-11-21T22:02:11Z",
+      "data_cutoff_at": "2026-11-22T12:50:00Z",
+      "signal_published_at": "2026-11-22T13:45:32Z",
+      "signal_published_planned_at": "2026-11-22T12:52:11Z",
       "order_cutoff_at": "2026-11-23T14:25:00Z",
       "target_session": "2026-11-23",
       "generated_price": 560.8400268554688,
@@ -1387,11 +1387,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:3285b1f63ac3745cdd32cb612a534b18355830099096f28583b8b0bb56bd166b",
-      "code_commit": "7c0e973",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:efd8b58f8973df1dcd5290da376e13ef44e9022b1940699768ef9e949363f7cc",
+      "snapshot_id": "sha256:a3ea76e0c163c515f2f36ab4a9523734f9c90491828a316cdcf985ccb3f0780d",
+      "code_commit": "88166f8",
+      "revision": 2,
+      "supersedes": "2026-11-22-META-WATCH-001",
+      "inputs_hash": "sha256:4b139a4ba772cafddd00bc6db54b1a1f34cf547c85bea0fe481e213574b96671",
       "trade_grade": "WATCH",
       "components": {
         "quality": 89.77,
@@ -1472,6 +1472,15 @@
       "news_state": "not_read",
       "news": [
         {
+          "headline": "Mark Zuckerberg’s Meta Platforms Is Pouring Up to $145 Billion Into AI This Year. Investors Should Watch This 1 Number.",
+          "source": "Yahoo",
+          "published_at": "2026-11-22T04:31:01Z",
+          "url": "https://finnhub.io/api/news?id=13314ba30927fcba447282489c24ddaf1140ebe1f2d3bae1ebad7762c14fa9c2",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
           "headline": "Meta Platforms (META) Rethinks 2030 Climate Goals After 45% AI Emissions Jump",
           "source": "Yahoo",
           "published_at": "2026-11-21T15:09:51Z",
@@ -1503,15 +1512,6 @@
           "source": "Yahoo",
           "published_at": "2026-11-20T15:24:04Z",
           "url": "https://finnhub.io/api/news?id=4e1e312fb5a96aa74f357772b8be9b8d85915f0f67928f2da3dede0a4edd7fc9",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "A $3.2 Billion Fund Just Bought These 3 Stocks",
-          "source": "Yahoo",
-          "published_at": "2026-11-21T19:52:12Z",
-          "url": "https://finnhub.io/api/news?id=6f03bbd8a0d582ff0e50482f498bfee6bba688253aa67db1f9704f14da48c723",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -2119,12 +2119,12 @@
     "macro_ingest": {
       "policy": "cutoff_vintage_point_query",
       "mode": "live",
-      "data_cutoff_at": "2026-11-21T22:00:00Z",
-      "inputs_ingested_at": "2026-11-21T22:31:15.174519Z",
-      "lag_seconds": 1875.2,
+      "data_cutoff_at": "2026-11-22T12:50:00Z",
+      "inputs_ingested_at": "2026-11-22T13:44:53.128083Z",
+      "lag_seconds": 3293.1,
       "after_cutoff": true,
       "available_at_source": "vintage_point_query",
-      "vintage": "2026-11-20",
+      "vintage": "2026-11-21",
       "cutoff_filter": "available_at <= data_cutoff_at",
       "series_dropped": [],
       "replay": false
@@ -6313,19 +6313,20 @@
       "horizon": "3m",
       "reason": null,
       "counts": {
-        "records": 38,
+        "records": 43,
         "matured": 0,
         "duplicate": 0,
         "no_regime": 28,
-        "not_matured": 10,
+        "not_matured": 15,
         "no_price": 0
       }
     },
     "snapshot": {
-      "id": "sha256:3285b1f63ac3745cdd32cb612a534b18355830099096f28583b8b0bb56bd166b",
+      "id": "sha256:a3ea76e0c163c515f2f36ab4a9523734f9c90491828a316cdcf985ccb3f0780d",
       "state": "created",
-      "inputs_hash": "sha256:efd8b58f8973df1dcd5290da376e13ef44e9022b1940699768ef9e949363f7cc"
-    }
+      "inputs_hash": "sha256:4b139a4ba772cafddd00bc6db54b1a1f34cf547c85bea0fe481e213574b96671"
+    },
+    "supersession_cancellations": 0
   },
   "charts": {
     "AAPL": {
@@ -10930,8 +10931,8 @@
   },
   "next_trading_day": "2026-11-23",
   "watchlist_source": "data/watchlist/current.json",
-  "run_started_at": "2026-11-21T22:30:48Z",
-  "inputs_hash": "sha256:efd8b58f8973df1dcd5290da376e13ef44e9022b1940699768ef9e949363f7cc",
+  "run_started_at": "2026-11-22T13:44:29Z",
+  "inputs_hash": "sha256:4b139a4ba772cafddd00bc6db54b1a1f34cf547c85bea0fe481e213574b96671",
   "ledger_summary": {
     "schema_version": 1,
     "as_of": "2026-11-22",
@@ -11146,7 +11147,7 @@
       "verdict": "보류",
       "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
       "n_eff": 0,
-      "n_records": 43,
+      "n_records": 48,
       "n_eligible": 0,
       "metrics": [
         {
@@ -11155,7 +11156,7 @@
           "value": 0,
           "threshold": "≥ 15",
           "pass": false,
-          "note_ko": "체결·3개월 만기 0개(발행 신호 43건 중 유효 0건)"
+          "note_ko": "체결·3개월 만기 0개(발행 신호 48건 중 유효 0건)"
         },
         {
           "key": "net_after_cost",
@@ -12157,7 +12158,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-22-MSFT-WATCH-001",
+        "signal_id": "2026-11-22-MSFT-WATCH-002",
         "ticker": "MSFT",
         "as_of": "2026-11-22",
         "grade": "B",
@@ -12235,7 +12236,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-22-NVDA-WATCH-001",
+        "signal_id": "2026-11-22-NVDA-WATCH-002",
         "ticker": "NVDA",
         "as_of": "2026-11-22",
         "grade": "B",
@@ -12313,7 +12314,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-22-ADBE-WATCH-001",
+        "signal_id": "2026-11-22-ADBE-WATCH-002",
         "ticker": "ADBE",
         "as_of": "2026-11-22",
         "grade": "B",
@@ -12391,7 +12392,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-22-GOOGL-WATCH-001",
+        "signal_id": "2026-11-22-GOOGL-WATCH-002",
         "ticker": "GOOGL",
         "as_of": "2026-11-22",
         "grade": "B",
@@ -12469,7 +12470,7 @@
         "params_version": "params_v001"
       },
       {
-        "signal_id": "2026-11-22-META-WATCH-001",
+        "signal_id": "2026-11-22-META-WATCH-002",
         "ticker": "META",
         "as_of": "2026-11-22",
         "grade": "C",
@@ -12554,7 +12555,7 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-20-ADBE-WATCH-002",
-          "frozen_at": "2026-11-21T04:05:32Z",
+          "frozen_at": "2026-11-22T13:45:32Z",
           "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
@@ -12626,7 +12627,7 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-20-GOOGL-WATCH-002",
-          "frozen_at": "2026-11-21T04:05:32Z",
+          "frozen_at": "2026-11-22T13:45:32Z",
           "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
@@ -12722,7 +12723,7 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-21-ADBE-WATCH-002",
-          "frozen_at": "2026-11-21T04:05:32Z",
+          "frozen_at": "2026-11-22T13:45:32Z",
           "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
@@ -12730,7 +12731,7 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-21-GOOGL-WATCH-002",
-          "frozen_at": "2026-11-21T04:05:32Z",
+          "frozen_at": "2026-11-22T13:45:32Z",
           "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
@@ -12738,7 +12739,7 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-21-META-WATCH-002",
-          "frozen_at": "2026-11-21T04:05:32Z",
+          "frozen_at": "2026-11-22T13:45:32Z",
           "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
@@ -12746,7 +12747,7 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-21-MSFT-WATCH-002",
-          "frozen_at": "2026-11-21T04:05:32Z",
+          "frozen_at": "2026-11-22T13:45:32Z",
           "freeze_deadline_at": "2026-11-23T14:20:00Z"
         },
         {
@@ -12754,7 +12755,47 @@
           "event": "superseded",
           "reason": "INTENT_SUPERSEDED",
           "superseded_by": "2026-11-21-NVDA-WATCH-002",
-          "frozen_at": "2026-11-21T04:05:32Z",
+          "frozen_at": "2026-11-22T13:45:32Z",
+          "freeze_deadline_at": "2026-11-23T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-22-ADBE-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-22-ADBE-WATCH-002",
+          "frozen_at": "2026-11-22T13:45:32Z",
+          "freeze_deadline_at": "2026-11-23T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-22-GOOGL-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-22-GOOGL-WATCH-002",
+          "frozen_at": "2026-11-22T13:45:32Z",
+          "freeze_deadline_at": "2026-11-23T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-22-META-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-22-META-WATCH-002",
+          "frozen_at": "2026-11-22T13:45:32Z",
+          "freeze_deadline_at": "2026-11-23T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-22-MSFT-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-22-MSFT-WATCH-002",
+          "frozen_at": "2026-11-22T13:45:32Z",
+          "freeze_deadline_at": "2026-11-23T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-22-NVDA-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-22-NVDA-WATCH-002",
+          "frozen_at": "2026-11-22T13:45:32Z",
           "freeze_deadline_at": "2026-11-23T14:20:00Z"
         }
       ],
@@ -12764,7 +12805,7 @@
     "debate_effect": {
       "pairs": 0,
       "divergent_pairs": 0,
-      "same_action_pairs": 11,
+      "same_action_pairs": 16,
       "n_eff": 0,
       "avoided_loss_pp": 0.0,
       "missed_gain_pp": 0.0,
@@ -12797,10 +12838,10 @@
     },
     "debate": {
       "status": "ok",
-      "generated_at": "2026-11-21T22:31:50Z",
+      "generated_at": "2026-11-22T13:45:31Z",
       "counts": {
-        "reports": 11,
-        "eligible": 11,
+        "reports": 16,
+        "eligible": 16,
         "late": 0,
         "invalid": 0,
         "superseded": 0,
@@ -12845,50 +12886,50 @@
       "retry_pending": [],
       "events": [
         {
-          "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-001",
+          "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "MSFT",
-          "signal_id": "2026-11-22-MSFT-WATCH-001"
+          "signal_id": "2026-11-22-MSFT-WATCH-002"
         },
         {
-          "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-001",
+          "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "NVDA",
-          "signal_id": "2026-11-22-NVDA-WATCH-001"
+          "signal_id": "2026-11-22-NVDA-WATCH-002"
         },
         {
-          "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-001",
+          "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "ADBE",
-          "signal_id": "2026-11-22-ADBE-WATCH-001"
+          "signal_id": "2026-11-22-ADBE-WATCH-002"
         },
         {
-          "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-001",
+          "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "GOOGL",
-          "signal_id": "2026-11-22-GOOGL-WATCH-001"
+          "signal_id": "2026-11-22-GOOGL-WATCH-002"
         },
         {
-          "event_key": "debate_recommended:2026-11-22-META-WATCH-001",
+          "event_key": "debate_recommended:2026-11-22-META-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "META",
-          "signal_id": "2026-11-22-META-WATCH-001"
+          "signal_id": "2026-11-22-META-WATCH-002"
         }
       ]
     }
   },
   "target_session": "2026-11-23",
-  "signal_published_planned_at": "2026-11-21T22:02:11Z",
+  "signal_published_planned_at": "2026-11-22T12:52:11Z",
   "portfolio": {
     "as_of": "2026-11-22",
     "cash_pct": 1.0,
@@ -12899,10 +12940,10 @@
   },
   "debate": {
     "status": "ok",
-    "generated_at": "2026-11-21T22:31:50Z",
+    "generated_at": "2026-11-22T13:45:31Z",
     "counts": {
-      "reports": 11,
-      "eligible": 11,
+      "reports": 16,
+      "eligible": 16,
       "late": 0,
       "invalid": 0,
       "superseded": 0,
@@ -12917,9 +12958,9 @@
     "positions_open": 0,
     "tranches_pending": 0,
     "data_status": "ok",
-    "last_attempt_at": "2026-11-21T22:31:57Z",
-    "last_success_at": "2026-11-21T22:31:57Z",
-    "data_cutoff_at": "2026-11-21T22:00:00Z",
+    "last_attempt_at": "2026-11-22T13:45:38Z",
+    "last_success_at": "2026-11-22T13:45:38Z",
+    "data_cutoff_at": "2026-11-22T12:50:00Z",
     "target_session": "2026-11-23",
     "outage_id": null
   },
@@ -12927,7 +12968,7 @@
     "verdict": "보류",
     "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
     "n_eff": 0,
-    "n_records": 43,
+    "n_records": 48,
     "n_eligible": 0,
     "metrics": [
       {
@@ -12936,7 +12977,7 @@
         "value": 0,
         "threshold": "≥ 15",
         "pass": false,
-        "note_ko": "체결·3개월 만기 0개(발행 신호 43건 중 유효 0건)"
+        "note_ko": "체결·3개월 만기 0개(발행 신호 48건 중 유효 0건)"
       },
       {
         "key": "net_after_cost",
@@ -12965,7 +13006,7 @@
     ]
   },
   "prices_as_of": "2026-11-20",
-  "publish_lag_seconds": 7.1,
+  "publish_lag_seconds": 6.0,
   "published_after_order_cutoff": false,
   "notifications": {
     "n_new": 5,
@@ -12975,44 +13016,44 @@
     "retry_pending": [],
     "events": [
       {
-        "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-001",
+        "event_key": "debate_recommended:2026-11-22-MSFT-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "MSFT 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "MSFT",
-        "signal_id": "2026-11-22-MSFT-WATCH-001"
+        "signal_id": "2026-11-22-MSFT-WATCH-002"
       },
       {
-        "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-001",
+        "event_key": "debate_recommended:2026-11-22-NVDA-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "NVDA",
-        "signal_id": "2026-11-22-NVDA-WATCH-001"
+        "signal_id": "2026-11-22-NVDA-WATCH-002"
       },
       {
-        "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-001",
+        "event_key": "debate_recommended:2026-11-22-ADBE-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "ADBE",
-        "signal_id": "2026-11-22-ADBE-WATCH-001"
+        "signal_id": "2026-11-22-ADBE-WATCH-002"
       },
       {
-        "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-001",
+        "event_key": "debate_recommended:2026-11-22-GOOGL-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "GOOGL",
-        "signal_id": "2026-11-22-GOOGL-WATCH-001"
+        "signal_id": "2026-11-22-GOOGL-WATCH-002"
       },
       {
-        "event_key": "debate_recommended:2026-11-22-META-WATCH-001",
+        "event_key": "debate_recommended:2026-11-22-META-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "META",
-        "signal_id": "2026-11-22-META-WATCH-001"
+        "signal_id": "2026-11-22-META-WATCH-002"
       }
     ]
   }
