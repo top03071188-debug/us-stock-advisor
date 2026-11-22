@@ -366,6 +366,61 @@ async function registerServiceWorker() {
   }
 }
 
+/* ────────────────────── 앱 설치(PWA·Android WebAPK) ──────────────────────
+ * Android Chrome 은 설치 조건(manifest + 192/512 PNG 아이콘 + 서비스워커)을 만족하면
+ * `beforeinstallprompt` 를 던진다. 그 이벤트를 붙잡아 두었다가 버튼 클릭 때 띄운다.
+ * - 이미 standalone(설치된 앱)으로 돌고 있으면 버튼을 숨긴다.
+ * - 버튼은 이벤트를 받기 전까지 `hidden` — 설치를 지원하지 않는 브라우저(iOS Safari 등)에서
+ *   눌러도 아무 일이 없는 버튼을 보여 주지 않는다.
+ * - 프롬프트는 한 번만 쓸 수 있으므로 쓴 뒤에는 `deferredPrompt` 를 비우고 버튼을 숨긴다.
+ */
+let deferredPrompt = null;
+
+/** 설치된 앱(standalone) 모드로 실행 중인가. */
+function isStandalone() {
+  const nav = (typeof window !== "undefined" && window.navigator) ? window.navigator
+    : (typeof navigator !== "undefined" ? navigator : null);
+  if (nav && nav.standalone === true) return true; // iOS 홈 화면 앱
+  const matchMedia = (typeof window !== "undefined") ? window.matchMedia : null;
+  if (typeof matchMedia !== "function") return false;
+  const media = matchMedia("(display-mode: standalone)");
+  return Boolean(media && media.matches);
+}
+
+function setupInstallButton() {
+  const btn = $("pwa-install-btn");
+  if (!btn) return;
+  if (isStandalone()) {
+    btn.hidden = true;
+    return;
+  }
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    btn.hidden = false;
+  });
+  window.addEventListener("appinstalled", () => {
+    deferredPrompt = null;
+    btn.hidden = true;
+  });
+  btn.addEventListener("click", async () => {
+    if (!deferredPrompt) {
+      btn.hidden = true;
+      return;
+    }
+    btn.disabled = true;
+    try {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+    } catch (err) {
+      // 프롬프트가 이미 쓰였거나 브라우저가 거부한 경우 — 조용히 넘어간다.
+    }
+    deferredPrompt = null;
+    btn.disabled = false;
+    btn.hidden = true;
+  });
+}
+
 /** 파일 목록 → `{name: parsed}` — 파싱 실패한 파일은 null 로 둔다(화면이 "없음"을 그린다). */
 function parseFiles(files) {
   const docs = {};
@@ -1662,6 +1717,8 @@ async function boot() {
 
 // 서비스워커 등록 — 오프라인 열람·발행 세트 캐시(P2-1). 실패해도 화면은 그대로 동작한다.
 registerServiceWorker();
+// 앱 설치 버튼 — beforeinstallprompt 를 받은 뒤에만 보인다.
+setupInstallButton();
 
 boot().catch((err) => {
   const host = $("signals");

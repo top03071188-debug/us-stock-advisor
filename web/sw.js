@@ -22,9 +22,9 @@
 "use strict";
 
 /** 서비스워커·셸 캐시 키 — sw.js 가 바뀌면 올린다. */
-const SW_VERSION = "phase4-6";
+const SW_VERSION = "phase4-7";
 /** index.html 의 `?v=` 와 **같은** 값 — 셸 자산 URL 은 html 이 소유한다(둘을 함께 올린다). */
-const ASSET_VERSION = "phase4-6";
+const ASSET_VERSION = "phase4-7";
 const SHELL_CACHE = `shell-${SW_VERSION}`;
 const SHELL_PREFIX = "shell-";
 const SET_PREFIX = "set-";
@@ -52,9 +52,12 @@ const SHELL_ASSETS = [
   `./app.js?v=${ASSET_VERSION}`,
   "./manifest.json",
   "./icon.svg",
+  "./icon-192.png",
+  "./icon-512.png",
 ];
 /** 파일 이름만으로 셸 요청을 식별한다(하위 경로 배포에서도 동작). */
-const SHELL_FILES = ["index.html", "styles.css", "app.js", "manifest.json", "icon.svg", "sw.js"];
+const SHELL_FILES = ["index.html", "styles.css", "app.js", "manifest.json", "icon.svg",
+  "icon-192.png", "icon-512.png", "sw.js"];
 
 /** 현재 발행 세트 버전(`deploy_manifest.json` 의 `bundle_version`). 모르면 null. */
 let activeSet = null;

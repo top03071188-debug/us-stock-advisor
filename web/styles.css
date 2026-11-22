@@ -65,7 +65,24 @@ a:focus-visible, button:focus-visible, select:focus-visible {
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
 }
-.topbar h1 { margin: 0; font-size: 16px; letter-spacing: -0.01em; }
+.topbar h1 {
+  margin: 0; font-size: 16px; letter-spacing: -0.01em;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* 인앱 '앱 설치' 버튼 — beforeinstallprompt 를 받았을 때만 보인다(Android Chrome).
+   설치된 앱(standalone)에서는 숨기고, 좁은 화면에서도 한 줄을 넘치지 않게 nowrap. */
+.install-btn {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 32px; padding: 4px 11px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--info) 55%, var(--line));
+  background: color-mix(in srgb, var(--info) 14%, transparent);
+  color: var(--info); font: inherit; font-size: 12px; font-weight: 700;
+  white-space: nowrap; cursor: pointer;
+}
+.install-btn[hidden] { display: none; }
+.install-btn:disabled { opacity: 0.6; cursor: default; }
 
 main { padding: 12px 12px 24px; display: grid; gap: 12px; max-width: 860px; margin: 0 auto; }
 .view { display: grid; gap: 12px; }

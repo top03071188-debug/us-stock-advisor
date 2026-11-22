@@ -13,14 +13,16 @@
 <title>미국 주식 어드바이저</title>
 <link rel="manifest" href="./manifest.json" />
 <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="./icon.svg" />
-<link rel="stylesheet" href="./styles.css?v=phase4-6" />
+<link rel="icon" href="./icon-192.png" sizes="192x192" type="image/png" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="stylesheet" href="./styles.css?v=phase4-7" />
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
 
 <header class="topbar">
   <h1>투자 어드바이저</h1>
+  <button id="pwa-install-btn" class="install-btn" type="button" hidden>앱 설치</button>
   <p id="status-badge" class="badge" role="status" aria-live="polite">데이터 불러오는 중…</p>
 </header>
 
@@ -132,6 +134,6 @@
   <p class="tiny"><a href="./data/meta.json">데이터 계약(meta.json)</a></p>
 </footer>
 
-<script src="./app.js?v=phase4-6"></script>
+<script src="./app.js?v=phase4-7"></script>
 </body>
 </html>
