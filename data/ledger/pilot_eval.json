@@ -42,7 +42,7 @@
   ],
   "verdict": "보류",
   "verdict_reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
-  "benchmark_return": -0.033283816471297856,
+  "benchmark_return": -0.0028164497043713377,
   "risk_free": 0.0,
   "costs": {
     "slippage": 10.0,

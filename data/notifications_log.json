@@ -1575,6 +1575,43 @@
         }
       },
       "attempt_at": "2026-11-23T14:11:51Z"
+    },
+    "v06:2026-11-24": {
+      "sent_at": "2026-11-23T22:45:40Z",
+      "type": "v06",
+      "status": "sent",
+      "attempts": 1,
+      "event": {
+        "type": "v06",
+        "event_key": "v06:2026-11-24",
+        "label_ko": "시장 급변(V06) — 신규 매수 중단",
+        "severity": "bad",
+        "message_ko": "시장 급변(V06) — 신규 매수 전면 중단(21종목 차단)"
+      },
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-23T22:45:40Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-23T22:45:40Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-23T22:45:40Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "attempt_at": "2026-11-23T22:45:40Z"
     }
   },
   "deliveries": [
@@ -3003,6 +3040,36 @@
       "status": "unconfigured",
       "attempts": 0,
       "attempt_at": "2026-11-23T14:11:51Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
+    },
+    {
+      "channel": "console",
+      "event_key": "v06:2026-11-24",
+      "type": "v06",
+      "status": "sent",
+      "attempts": 1,
+      "attempt_at": "2026-11-23T22:45:40Z",
+      "latency_seconds": 0.0,
+      "detail": null
+    },
+    {
+      "channel": "github_issue",
+      "event_key": "v06:2026-11-24",
+      "type": "v06",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-23T22:45:40Z",
+      "latency_seconds": 0.0,
+      "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀"
+    },
+    {
+      "channel": "webhook",
+      "event_key": "v06:2026-11-24",
+      "type": "v06",
+      "status": "unconfigured",
+      "attempts": 0,
+      "attempt_at": "2026-11-23T22:45:40Z",
       "latency_seconds": 0.0,
       "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀"
     }

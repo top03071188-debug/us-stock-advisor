@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "as_of": "2026-11-23",
-  "generated_at": "2026-11-23T14:11:51.961315Z",
+  "as_of": "2026-11-24",
+  "generated_at": "2026-11-23T22:45:40.611165Z",
   "horizon_td": 63,
   "auto_downgrade_enabled": false,
   "divergent_pairs": 0,
