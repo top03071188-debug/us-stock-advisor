@@ -861,7 +861,7 @@ function newsBlock(sig) {
       el("span", { text: "  인용문은 공개 페이지에 싣지 않습니다 — 근거는 원문 링크와 검증 배지로만." })]),
   ]);
   if (!items.length) {
-    host.append(emptyState("표시할 기사 없음 — 48시간이 지난 기사는 판독 대상에서 제외합니다(2.7)."));
+    host.append(emptyState("표시할 기사 없음 — 유효 뉴스 창(기본 48시간, 주말·휴장 다음 날은 직전 거래일까지 확장)이 지난 기사는 판독 대상에서 제외합니다(2.7)."));
     return host;
   }
   items.forEach((n) => {
