@@ -4,7 +4,9 @@
 - 실패한 소스는 `diagnostics.degraded` 에 **사유와 함께** 남긴다(조용한 0건 금지).
 - 가격이 하나도 없으면 신호를 만들지 않는다 — 호출자가 "전일 데이터 유지"로 처리한다.
 - 키가 없으면 그 소스는 `missing_key` 로 표시하고 건너뛴다(크래시 금지).
-- 뉴스 48시간 규칙(2.7): `published_at ≤ decision_at` 이고 48시간 안의 기사만 판독 대상으로 남긴다.
+- 뉴스 48시간 규칙(2.7): `published_at ≤ decision_at` 이고 **유효 창**(기본 48시간, 주말·휴장 다음 날은
+  직전 거래일 하루를 포함하도록 자동 확장 — `engine.utils.dates.effective_news_window_hours`) 안의
+  기사만 판독 대상으로 남긴다.
 - 재무(SEC XBRL)는 `filed ≤ decision_at.date()` 연차 공시만 써서 look-ahead 를 막는다(4.5).
 - 가격 이력 기본 **10년** — HG-04(5년/1,260행) 게이트를 실데이터로 채우면서, 10년 EV/EBIT 백분위
   (v1.3.2 §3.2.3)를 계산할 수 있는 창을 확보한다.
@@ -39,7 +41,7 @@ from engine.data.xbrl_fundamentals import (
     valuation_multiplier,
 )
 from engine.metrics.fundamentals import AnnualFundamentals, qc_wacc
-from engine.utils.dates import KST, add_trading_days
+from engine.utils.dates import KST, add_trading_days, effective_news_window_hours
 
 DEFAULT_UNIVERSE = Path("config/universe.yaml")
 #: 발행 원장 — 국면 표본의 **실제 원천**이다(발행 시점에 기록된 국면 + 만기일).
@@ -53,7 +55,7 @@ DEFAULT_REGIME_SAMPLE_HORIZON = "3m"
 MIN_REGIME_SAMPLE = 30
 #: 구 레코드의 국면을 되살릴 때 읽을 아카이브 상한 — 실행 시간을 묶어 둔다(입력 1건 ≈ 1MB).
 MAX_ARCHIVE_LOOKUPS = 120
-NEWS_MAX_AGE_HOURS = 48
+NEWS_MAX_AGE_HOURS = 48   #: 뉴스 창 **기본값** — 휴장 다음 날은 `effective_news_window_hours` 가 늘린다.
 MACRO_TO_VALUES = {
     "DFF": "dff", "T10Y2Y": "t10y2y", "BAMLH0A0HYM2": "hy_oas_bp",
     "VIXCLS": "vix", "DTWEXBGS": "dtwexbg", "CPIAUCSL": "cpi",
@@ -332,7 +334,12 @@ def _dedupe_news(rows: list[dict]) -> list[dict]:
 
 def collect_news(tickers: list[str], decision_at: datetime, diag: dict,
                  *, supplement: bool = True) -> dict[str, list[dict]]:
-    """Finnhub(+Yahoo 보조) 종목 뉴스 → 48시간·`available_at <= decision_at` 규칙 적용(2.7).
+    """Finnhub(+Yahoo 보조) 종목 뉴스 → **유효 창**·`available_at <= decision_at` 규칙 적용(2.7).
+
+    창 길이는 `effective_news_window_hours(decision_at)` 다 — 기본 48시간이지만 **주말·공휴일 뒤**에는
+    직전 거래일 하루가 통째로 들어오도록 24시간 단위로 늘어난다(월요일 postclose 72h·premarket 96h).
+    고정 48시간으로 두면 월요일 07:00 KST 배치가 금요일 장중 기사를 전부 잘라 `news 0건` 종목이
+    생긴다(2026-11-23 `ADBE` 실측).
 
     **수집 하는 것**: 제목·매체·URL·발행 시각·`summary`(최대 280자).
     - `summary` 는 **비공개 스냅샷**(`data/snapshots/{as_of}/inputs.json` → 비공개 아카이브)과
@@ -342,7 +349,8 @@ def collect_news(tickers: list[str], decision_at: datetime, diag: dict,
       Yahoo 로 몰리거나 종목과 무관한 기사가 섞인다. 보조 소스 실패는 본 수집 실패가 아니다.
     - 종목 관련도 순으로 정렬한 뭐 10건(`rank_news`)을 돌려준다 — 무관 기사가 상단을 잡지 않게.
     """
-    window_start = decision_at - timedelta(hours=NEWS_MAX_AGE_HOURS)
+    window_hours = effective_news_window_hours(decision_at, NEWS_MAX_AGE_HOURS)
+    window_start = decision_at - timedelta(hours=window_hours)
     out: dict[str, list[dict]] = {}
     client: FinnhubClient | None = None
     if not os.environ.get("FINNHUB_API_KEY"):
@@ -352,7 +360,9 @@ def collect_news(tickers: list[str], decision_at: datetime, diag: dict,
             client = FinnhubClient()
         except Exception as exc:  # noqa: BLE001
             _note(diag, "finnhub", "failed", f"{type(exc).__name__}: {str(exc)[:120]}")
-    start = (decision_at.date() - timedelta(days=5)).isoformat()
+    # Finnhub `from` 은 **날짜**다 — 창이 96시간 이상으로 늘어난 연휴에도 앞날이 잘리지 않게 한다.
+    lookback_days = max(5, window_hours // 24 + 3)
+    start = (decision_at.date() - timedelta(days=lookback_days)).isoformat()
     end = decision_at.date().isoformat()
     failed = 0
     yahoo_used = 0
@@ -376,7 +386,7 @@ def collect_news(tickers: list[str], decision_at: datetime, diag: dict,
             published = _news_time(row.get("published_at"))
             if published is None:
                 continue
-            # 시점 고정: 마감 이후 기사(미래 뉴스)와 48시간 밖 기사는 버린다.
+            # 시점 고정: 마감 이후 기사(미래 뉴스)와 유효 창 밖 기사는 버린다.
             if published > decision_at or published < window_start:
                 continue
             headline = row.get("headline")

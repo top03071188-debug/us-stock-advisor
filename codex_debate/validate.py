@@ -35,6 +35,7 @@ from codex_debate.context import (
     quote_sha256,
     context_hash as compute_context_hash,
 )
+from engine.utils.dates import effective_news_window_hours
 
 # ── 상수 ─────────────────────────────────────────────────────────────────
 FORBIDDEN_KEYS: tuple[str, ...] = (
@@ -54,6 +55,8 @@ STRUCTURAL_NUMBERS: set[float] = (
     {float(i) for i in range(0, 32)}                                   # 날짜·일수·코드 번호(V01~V12)
     | {float(y) for y in range(1990, 2101)}                            # 연도(2026 등) — 날짜 표기
     | {45.0, 48.0, 63.0, 100.0, 126.0, 180.0, 200.0, 250.0, 365.0}     # 13F·뉴스 창·호라이즌
+    # 주말·휴장 보정으로 늘어나는 뉴스 창(48→72/96/120/144) — 스킬이 "72시간" 이라고 말해도 통과한다.
+    | {72.0, 96.0, 120.0, 144.0}
     | {1.01, 1.05, 2.02, 2.06, 3.01, 4.02, 5.02, 7.01, 8.01, 9.01}     # 8-K Item 코드
 )
 #: 8-K Item → 구조적 위험 점수(부록 E). 같은 코드가 여러 번 있어도 **더하지 않고 최댓값**.
@@ -648,18 +651,42 @@ def eight_k_risk_score(filings: Iterable[dict] | None) -> float:
 
 
 def articles_in_window(ctx: dict) -> int:
-    """데이터 마감 기준 48시간 안에 발행된 기사 수(시각을 모르면 입력으로 센다)."""
+    """데이터 마감 기준 **유효 뉴스 창**(기본 48h·휴장 보정) 안에 발행된 기사 수(시각을 모르면 입력으로 센다).
+    """
     return len(valid_articles_in_window(ctx))
 
 
+def news_window_hours_for(ctx: dict) -> int:
+    """컨텍스트가 쓴 뉴스 창(시간) — `news_window_hours` → `data_cutoff_at` 휴장 보정 → 48.
+
+    구형 컨텍스트(필드 없음)도 `cutoff` 만 있으면 **지금 규칙으로 다시 계산**한다 —
+    수집기만 넓히고 검증기가 48시간에 머물면 넓힌 기사가 그대로 잘리기 때문이다.
+    """
+    given = ctx.get("news_window_hours")
+    try:
+        value = int(given) if given is not None else 0
+    except (TypeError, ValueError):
+        value = 0
+    if value > 0:
+        return value
+    cutoff = _parse_iso(ctx.get("data_cutoff_at"))
+    if cutoff is None:
+        return NEWS_WINDOW_HOURS
+    return int(effective_news_window_hours(cutoff, NEWS_WINDOW_HOURS))
+
+
 def valid_articles_in_window(ctx: dict) -> list[str]:
-    """컨텍스트가 모델에게 넘긴 **48h 유효 기사 전체 집합**(ID).
+    """컨텍스트가 모델에게 넘긴 **유효 창 기사 전체 집합**(ID).
 
     판독 분모는 모델이 제출한 ID 수가 아니라 이것이다 — 10건을 주고 2건만 읽고 왔으면
     폐기율은 80%이고 `read_done` 이 아니다(감사 08-a). `published_at` 이 없으면 유효로 센다
     (모델에 전달된 기사이므로 판독 대상이다).
+
+    창 길이는 `news_window_hours_for(ctx)` 다 — 주말·휴장 뒤에는 수집기가 넓힌 창(72/96h 등)을
+    그대로 쓴다(고정 48h 로 다시 자르면 금요일 기사가 사라진다).
     """
     cutoff = _parse_iso(ctx.get("data_cutoff_at"))
+    window_hours = news_window_hours_for(ctx)
     news = ctx.get("news") or []
     ids: list[str] = []
     for item in news:
@@ -670,7 +697,7 @@ def valid_articles_in_window(ctx: dict) -> list[str]:
             ids.append(news_id)
             continue
         published = _parse_iso(item.get("published_at"))
-        start = cutoff.timestamp() - NEWS_WINDOW_HOURS * 3600
+        start = cutoff.timestamp() - window_hours * 3600
         if published is None or start <= published.timestamp() <= cutoff.timestamp() + 1:
             ids.append(news_id)
     return ids
@@ -707,7 +734,7 @@ def _item_has_body(item: dict) -> bool:
 
 
 def readable_articles_in_window(ctx: dict) -> tuple[list[str], list[str]]:
-    """48h 유효 기사를 **(본문을 읽은 기사, 본문이 없어 못 읽은 기사)** 로 나눈다(v1.3.7).
+    """유효 창 기사를 **(본문을 읽은 기사, 본문이 없어 못 읽은 기사)** 로 나눈다(v1.3.7).
 
     봇 차단·페이월로 본문이 비어 있는 기사는 모델이 인용할 수 없다. 그것을 폐기율 분모에 넣으면
     "다 읽었는데도 차단 URL 몇 건 때문에 탈락"하는 구조가 된다 — 그래서 읽을 수 있었던 기사만
@@ -774,7 +801,7 @@ def evaluate_news_state(
     if not debate_ran or articles == 0:
         state = "not_read"
         structural_risk = eight_k
-        reasons.append("debate_not_run" if not debate_ran else "no_articles_in_48h")
+        reasons.append("debate_not_run" if not debate_ran else "no_articles_in_window")
     elif not readable_mode:
         state = "insufficient_evidence"
         reasons.append("readable_items_lt_2")

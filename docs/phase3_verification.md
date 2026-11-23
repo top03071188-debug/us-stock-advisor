@@ -15,7 +15,7 @@
 |---|---|---|
 | 일일 파이프라인 | `scripts/run_daily.py` | `--mode postclose\|premarket`, `--offline`(픽스처)·라이브, `GITHUB_OUTPUT` 에 `snapshot_id`·`snapshot_id_short`, 소스 실패는 `degraded` 로 남기고 **가격 0건이면 전일 데이터 유지** |
 | 신호 조립 | `engine/decide/pipeline.py` | B0~B6 → 등급 → 40/30/30 계획, Veto 차단 목록 분리, 신뢰도 `A 데이터·근거 충족` 라벨, 주 1회 정규화 차트 |
-| 라이브 수집 | `engine/data/collect.py` | yfinance·SEC·FRED·Finnhub, 키 없음/실패를 `missing_key`·`failed`·`degraded` 로 기록, 뉴스 48시간 규칙 |
+| 라이브 수집 | `engine/data/collect.py` | yfinance·SEC·FRED·Finnhub, 키 없음/실패를 `missing_key`·`failed`·`degraded` 로 기록, 뉴스 유효 창(기본 48시간·휴장 다음 날은 직전 거래일 포함으로 확장) |
 | 오프라인 데이터 | `engine/data/fixtures.py` | 고정 시드 합성 6종목(눌림·횡보·하락·상승), 항상 `status: sample` |
 | 13F 레이더 | `engine/data/holdings_13f.py` | 정보표 XML 파싱, `acceptance_datetime ≤ decision_at`, **분기말 +45일** 워터마크, 신규·확대·축소·청산 델타 |
 | 홀드아웃 게이트 | `engine/backtest/holdout.py` | 분기 1회 개봉, `maturity < holdout_start` 경계 검증, `data/walkforward/holdout/{date}.json` append-only 잠금 |

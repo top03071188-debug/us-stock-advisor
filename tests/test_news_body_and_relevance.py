@@ -26,7 +26,7 @@ from codex_debate.validate import Validated, evaluate_news_state
 from engine.data.collect import collect_news
 from engine.data.relevance import rank_news, relevance_score
 
-T0 = datetime.now(timezone.utc)
+T0 = datetime(2026, 11, 18, 14, 0, tzinfo=timezone.utc)   # 수요일 09:00 ET — 평일 기준 뉴스 창(48h)
 
 
 def at_hour(hours: float) -> str:

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from functools import lru_cache
@@ -172,6 +173,57 @@ def market_close_at(d: date) -> datetime:
 
 def bar_available_at(d: date) -> datetime:
     return market_close_at(d)
+
+
+# ────────────────────────────── 뉴스 창(휴장 보정) ──────────────────────────────
+def last_trading_day_open_before(decision_at: datetime, max_days: int = 14) -> date | None:
+    """`decision_at` 이전에 **정규장이 이미 개장한** 가장 최근 거래일.
+
+    premarket 판단(개장 전)은 그날이 아니라 **직전 거래일**이 마지막 거래일이다 —
+    그래야 주말·휴장 다음 날에 "직전 거래일 하루"를 뉴스 창에 넣을 수 있다.
+    """
+    if decision_at.tzinfo is None:
+        decision_at = decision_at.replace(tzinfo=UTC)
+    decision_at = decision_at.astimezone(UTC)
+    d = decision_at.astimezone(ET).date()
+    for _ in range(max(1, int(max_days)) + 1):
+        if is_trading_day(d) and market_open_at(d) <= decision_at:
+            return d
+        d -= timedelta(days=1)
+    return None
+
+
+def effective_news_window_hours(decision_at: datetime, base_hours: int = 48,
+                                max_days: int = 14) -> int:
+    """뉴스 수집·판독 창(시간) — **기본 48시간, 휴장 다음 날은 직전 거래일 하루를 포함**하도록 확장.
+
+    고정 48시간 창은 주말·공휴일 뒤에 직전 거래일 기사를 통째로 잘라 버린다(실측: 2026-11-23
+    07:00 KST 월요일 배치에서 `ADBE` 최신 기사가 금요일 15:13 ET(창 경계 1시간 46분 앞)라 0건).
+
+    규칙:
+    - `decision_at` 이전에 정규장이 이미 개장한 가장 최근 거래일 `d_last` 를 찾는다.
+    - `d_last` 의 당일 시작(00:00 ET)이 `decision_at - base_hours` 보다 앞이면,
+      `d_last` 하루 전체가 창에 온전히 들어오도록 **24시간 단위 올림**으로 늘린다.
+
+    검산(2026년 캘린더): 평일 postclose/premarket `48` · 월요일 postclose `72` ·
+    월요일 premarket `96` · 추수감사절 다음 날 금요일 postclose `48`·premarket `72` ·
+    3일 연휴 다음 날 화요일 postclose `96`.
+    """
+    base = int(base_hours)
+    if base <= 0:
+        base = 48
+    if decision_at.tzinfo is None:
+        decision_at = decision_at.replace(tzinfo=UTC)
+    decision_at = decision_at.astimezone(UTC)
+    d_last = last_trading_day_open_before(decision_at, max_days=max_days)
+    if d_last is None:
+        return base
+    day_start = datetime.combine(d_last, time(0, 0), tzinfo=ET).astimezone(UTC)
+    if day_start >= decision_at - timedelta(hours=base):
+        return base
+    span_hours = (decision_at - day_start).total_seconds() / 3600.0
+    needed = math.ceil(span_hours / 24.0) * 24
+    return int(max(base, needed))
 
 
 def order_cutoff_at(d: date) -> datetime:

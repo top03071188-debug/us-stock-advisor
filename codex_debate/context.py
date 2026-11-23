@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from engine.data.relevance import rank_news
+from engine.utils.dates import effective_news_window_hours
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_DIR.parent
@@ -54,6 +55,8 @@ BLOCKING_VETO_CODES: tuple[str, ...] = (
 
 MAX_QUOTE_CHARS = 200
 BODY_EXCERPT_CHARS = 1500
+#: 뉴스 창 **기본값**. 실제 값은 `news_window_hours()` 가 정한다 — 주말·휴장 뒤에는 직전 거래일
+#: 하루가 통째로 들어오도록 24시간 단위로 늘어난다(월요일 postclose 72h·premarket 96h).
 NEWS_WINDOW_HOURS = 48
 FILING_13F_LAG_DAYS = 45
 WATERMARK_13F_KO = "45일 전 분기말 기준"
@@ -333,11 +336,27 @@ def _parse_ts(value: Any) -> datetime | None:
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
-def _news_count_48h(signal: dict, cutoff: datetime | None) -> int:
+def news_window_hours(quant_signals: dict | None = None,
+                      cutoff: datetime | None = None) -> int:
+    """뉴스 판독 창(시간) — **신호에 실린 값 우선**, 없으면 `cutoff` 로 휴장 보정, 둘 다 없으면 48.
+
+    수집기(`collect_news`)와 판독 검증기(`valid_articles_in_window`)가 같은 창을 쓰도록 한 곳에서 정한다.
+    신호 파일에 값을 따로 심지 않아도 `data_cutoff_at` 만으로 같은 결론이 나온다.
+    """
+    given = _num((quant_signals or {}).get("news_window_hours"))
+    if given is not None and given > 0:
+        return int(given)
+    if cutoff is None:
+        return NEWS_WINDOW_HOURS
+    return int(effective_news_window_hours(cutoff, NEWS_WINDOW_HOURS))
+
+
+def _news_count_48h(signal: dict, cutoff: datetime | None, window_hours: int | None = None) -> int:
     news = signal.get("news") or []
     if cutoff is None:
         return len(news)
-    start = cutoff - timedelta(hours=NEWS_WINDOW_HOURS)
+    hours = NEWS_WINDOW_HOURS if window_hours is None else int(window_hours)
+    start = cutoff - timedelta(hours=hours)
     count = 0
     for item in news:
         ts = _parse_ts(item.get("published_at") or item.get("available_at"))
@@ -364,13 +383,14 @@ def select_targets(
 ) -> list[dict]:
     """토론 대상 종목 선별 (§3.9.2).
 
-    우선순위: `--tickers` 지정 → 신호 후보(`entry_score` 높은 순) → 48시간 내 신규 뉴스 3건 이상 →
-    오늘 신규 8-K 제출. 워치리스트 밖 종목은 대상이 될 수 없다.
+    우선순위: `--tickers` 지정 → 신호 후보(`entry_score` 높은 순) → **유효 창**(주말·휴장 보정) 내
+    신규 뉴스 3건 이상 → 오늘 신규 8-K 제출. 워치리스트 밖 종목은 대상이 될 수 없다.
     """
     signals = [s for s in (quant_signals.get("signals") or []) if s.get("ticker")]
     watch = {w.get("ticker"): w for w in (quant_signals.get("watchlist") or []) if w.get("ticker")}
     as_of = quant_signals.get("as_of")
     cutoff = _parse_ts(quant_signals.get("data_cutoff_at"))
+    window = news_window_hours(quant_signals, cutoff)
     limit = max_tickers if top is None else max(0, min(int(top), max_tickers))
     if limit == 0:
         return []
@@ -387,7 +407,9 @@ def select_targets(
             "ticker": ticker,
             "signal_id": (signal or {}).get("signal_id"),
             "reasons": [reason],
-            "news_count_48h": _news_count_48h(signal or {}, cutoff),
+            # 키 이름은 계약 호환을 위해 유지한다(`news_count_48h`) — 값은 **유효 창** 기준이다.
+            "news_count_48h": _news_count_48h(signal or {}, cutoff, window),
+            "news_window_hours": window,
             "has_new_8k": _has_new_8k(signal or {}, as_of),
         })
 
@@ -410,7 +432,7 @@ def select_targets(
     for sig in ranked:
         add(sig["ticker"], "signal", sig)
     for sig in ranked:
-        if _news_count_48h(sig, cutoff) >= 3:
+        if _news_count_48h(sig, cutoff, window) >= 3:
             add(sig["ticker"], "news_3plus", sig)
     for sig in ranked:
         if _has_new_8k(sig, as_of):
@@ -923,6 +945,8 @@ def build_context(
     # 종목 관련 기사를 앞으로(무관 기사는 뒤로, 0건 방지) — 잘라내기 전에 정렬한다.
     raw_news = rank_news([item for item in raw_news if isinstance(item, dict)], ticker)
     cutoff = _parse_ts(quant_signals.get("data_cutoff_at") or signal.get("data_cutoff_at"))
+    # 판독 창 — 수집기와 같은 값을 컨텍스트에 남긴다(검증기가 이 값을 그대로 쓴다).
+    window_hours = news_window_hours(quant_signals, cutoff)
     future_dropped = 0
     for item in raw_news:
         nid = news_id_for(item)
@@ -1071,7 +1095,7 @@ def build_context(
         "holdings_13f_lag_days": FILING_13F_LAG_DAYS,
         # ── 뉴스·8-K
         "news": news_list,
-        "news_window_hours": NEWS_WINDOW_HOURS,
+        "news_window_hours": window_hours,
         "news_retrieved_at": retrieved_at,
         "news_normalizer_version": NORMALIZER_VERSION,
         "future_news_dropped": future_dropped,
@@ -1293,7 +1317,7 @@ __all__ = [
     "context_numbers", "detect_prompt_injection", "excerpt_body", "fetch_article_body",
     "fetch_article_body_detail", "field_numbers",
     "field_number_forms", "holdings_for_ticker", "load_prompt", "load_schema", "load_skill",
-    "load_snapshot_inputs", "news_id_for", "normalize_text", "number_forms", "parse_front_matter",
+    "load_snapshot_inputs", "news_id_for", "news_window_hours", "normalize_text", "number_forms", "parse_front_matter",
     "prompt_hash", "quote_in_body", "quote_sha256", "save_context", "scan_fields", "schema_path",
     "select_targets", "skill_meta", "to_strict_schema",
 ]
