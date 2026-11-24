@@ -1,77 +1,23 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-11-23T22:45:40Z",
+  "generated_at": "2026-11-24T14:06:25Z",
   "as_of": "2026-11-24",
   "data_status": "ok",
   "outage_id": null,
   "n_events": 1,
-  "n_new": 1,
-  "n_suppressed": 0,
+  "n_new": 0,
+  "n_suppressed": 1,
   "n_retried": 0,
   "n_retry_suppressed": 0,
   "retry_pending": [],
   "retry_pending_inactive": [],
-  "new": [
+  "new": [],
+  "suppressed": [
     {
-      "type": "v06",
       "event_key": "v06:2026-11-24",
-      "label_ko": "시장 급변(V06) — 신규 매수 중단",
-      "severity": "bad",
-      "message_ko": "시장 급변(V06) — 신규 매수 전면 중단(21종목 차단)",
-      "sent_at": "2026-11-23T22:45:40Z",
-      "channels": {
-        "console": {
-          "attempts": 1,
-          "status": "sent",
-          "attempt_at": "2026-11-23T22:45:40Z",
-          "detail": null,
-          "latency_seconds": 0.0
-        },
-        "github_issue": {
-          "attempts": 0,
-          "status": "unconfigured",
-          "attempt_at": "2026-11-23T22:45:40Z",
-          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
-          "latency_seconds": 0.0
-        },
-        "webhook": {
-          "attempts": 0,
-          "status": "unconfigured",
-          "attempt_at": "2026-11-23T22:45:40Z",
-          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
-          "latency_seconds": 0.0
-        }
-      },
-      "status": "sent",
-      "retried": false
+      "type": "v06"
     }
   ],
-  "suppressed": [],
-  "channels": {
-    "console": {
-      "attempts": 1,
-      "sent": 1,
-      "pending_retry": 0,
-      "failed": 0,
-      "unconfigured": 0,
-      "suppressed": 0
-    },
-    "github_issue": {
-      "attempts": 1,
-      "sent": 0,
-      "pending_retry": 0,
-      "failed": 0,
-      "unconfigured": 1,
-      "suppressed": 0
-    },
-    "webhook": {
-      "attempts": 1,
-      "sent": 0,
-      "pending_retry": 0,
-      "failed": 0,
-      "unconfigured": 1,
-      "suppressed": 0
-    }
-  },
+  "channels": {},
   "note_ko": "같은 signal_id·event_key 는 다시 보내지 않는다(중복 0건 계약). 전달 장부는 (event_key, channel) 단위이며, 실패한 채널만 다음 실행에서 재시도한다."
 }
