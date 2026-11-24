@@ -1,23 +1,184 @@
 {
   "schema_version": 3,
-  "generated_at": "2026-11-24T14:06:25Z",
-  "as_of": "2026-11-24",
+  "generated_at": "2026-11-24T22:51:10Z",
+  "as_of": "2026-11-25",
   "data_status": "ok",
   "outage_id": null,
-  "n_events": 1,
-  "n_new": 0,
-  "n_suppressed": 1,
+  "n_events": 4,
+  "n_new": 4,
+  "n_suppressed": 0,
   "n_retried": 0,
   "n_retry_suppressed": 0,
   "retry_pending": [],
   "retry_pending_inactive": [],
-  "new": [],
-  "suppressed": [
+  "new": [
     {
-      "event_key": "v06:2026-11-24",
-      "type": "v06"
+      "type": "debate_recommended",
+      "event_key": "debate_recommended:2026-11-25-NVDA-WATCH-001",
+      "label_ko": "토론 실행 권장",
+      "severity": "info",
+      "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+      "ticker": "NVDA",
+      "signal_id": "2026-11-25-NVDA-WATCH-001",
+      "sent_at": "2026-11-24T22:51:10Z",
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "status": "sent",
+      "retried": false
+    },
+    {
+      "type": "debate_recommended",
+      "event_key": "debate_recommended:2026-11-25-ADBE-WATCH-001",
+      "label_ko": "토론 실행 권장",
+      "severity": "info",
+      "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+      "ticker": "ADBE",
+      "signal_id": "2026-11-25-ADBE-WATCH-001",
+      "sent_at": "2026-11-24T22:51:10Z",
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "status": "sent",
+      "retried": false
+    },
+    {
+      "type": "debate_recommended",
+      "event_key": "debate_recommended:2026-11-25-GOOGL-WATCH-001",
+      "label_ko": "토론 실행 권장",
+      "severity": "info",
+      "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+      "ticker": "GOOGL",
+      "signal_id": "2026-11-25-GOOGL-WATCH-001",
+      "sent_at": "2026-11-24T22:51:10Z",
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "status": "sent",
+      "retried": false
+    },
+    {
+      "type": "debate_recommended",
+      "event_key": "debate_recommended:2026-11-25-META-WATCH-001",
+      "label_ko": "토론 실행 권장",
+      "severity": "info",
+      "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+      "ticker": "META",
+      "signal_id": "2026-11-25-META-WATCH-001",
+      "sent_at": "2026-11-24T22:51:10Z",
+      "channels": {
+        "console": {
+          "attempts": 1,
+          "status": "sent",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": null,
+          "latency_seconds": 0.0
+        },
+        "github_issue": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_GITHUB_REPO 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        },
+        "webhook": {
+          "attempts": 0,
+          "status": "unconfigured",
+          "attempt_at": "2026-11-24T22:51:10Z",
+          "detail": "NOTIFY_WEBHOOK_URL 미설정 — 건너뜀",
+          "latency_seconds": 0.0
+        }
+      },
+      "status": "sent",
+      "retried": false
     }
   ],
-  "channels": {},
+  "suppressed": [],
+  "channels": {
+    "console": {
+      "attempts": 4,
+      "sent": 4,
+      "pending_retry": 0,
+      "failed": 0,
+      "unconfigured": 0,
+      "suppressed": 0
+    },
+    "github_issue": {
+      "attempts": 4,
+      "sent": 0,
+      "pending_retry": 0,
+      "failed": 0,
+      "unconfigured": 4,
+      "suppressed": 0
+    },
+    "webhook": {
+      "attempts": 4,
+      "sent": 0,
+      "pending_retry": 0,
+      "failed": 0,
+      "unconfigured": 4,
+      "suppressed": 0
+    }
+  },
   "note_ko": "같은 signal_id·event_key 는 다시 보내지 않는다(중복 0건 계약). 전달 장부는 (event_key, channel) 단위이며, 실패한 채널만 다음 실행에서 재시도한다."
 }

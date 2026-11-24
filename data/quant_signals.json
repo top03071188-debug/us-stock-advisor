@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-24T14:06:24.461165Z",
-  "data_cutoff_at": "2026-11-24T12:50:00Z",
-  "signal_published_at": "2026-11-24T14:06:22Z",
-  "order_cutoff_at": "2026-11-24T14:25:00Z",
-  "as_of": "2026-11-24",
+  "generated_at": "2026-11-24T22:51:08.010163Z",
+  "data_cutoff_at": "2026-11-24T22:00:00Z",
+  "signal_published_at": "2026-11-24T22:51:04Z",
+  "order_cutoff_at": "2026-11-25T14:25:00Z",
+  "as_of": "2026-11-25",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:f0c200cf416548599cce4fa5226b0e44f4dd3790ec30b9da09060c14cb2135e4",
-  "code_commit": "d3f12dc",
+  "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+  "code_commit": "9bb6f33",
   "status": "normal",
-  "mode": "premarket",
+  "mode": "postclose",
   "source": "live",
   "regime": {
     "regime": "neutral",
@@ -24,7 +24,7 @@
     "votes_risk_off": 1,
     "inputs_missing": [],
     "verified": true,
-    "extreme": true,
+    "extreme": false,
     "multiplier": 0.7,
     "margin_of_safety": 0.2,
     "max_new_positions": 20,
@@ -34,7 +34,7 @@
     "regime": "neutral",
     "n": 0,
     "min_n": 30,
-    "matured_as_of": "2026-11-24",
+    "matured_as_of": "2026-11-25",
     "horizon": "3m",
     "source": "ledger_records",
     "reason": null,
@@ -64,9 +64,9 @@
   "ingest": {
     "policy": "cutoff_vintage_point_query",
     "mode": "live",
-    "data_cutoff_at": "2026-11-24T12:50:00Z",
-    "inputs_ingested_at": "2026-11-24T14:05:42.961942Z",
-    "lag_seconds": 4543.0,
+    "data_cutoff_at": "2026-11-24T22:00:00Z",
+    "inputs_ingested_at": "2026-11-24T22:50:26.170065Z",
+    "lag_seconds": 3026.2,
     "after_cutoff": true,
     "available_at_source": "vintage_point_query",
     "vintage": "2026-11-23",
@@ -74,198 +74,1231 @@
     "series_dropped": [],
     "replay": false
   },
-  "signals": [],
-  "blocked": [
+  "signals": [
     {
-      "ticker": "AAPL",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "MSFT",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
+      "schema_version": 1,
+      "signal_id": "2026-11-25-NVDA-WATCH-001",
       "ticker": "NVDA",
-      "reason": "V06",
-      "codes": [
-        "V06"
+      "type": "WATCH",
+      "grade": "B",
+      "entry_score": 56.39,
+      "as_of": "2026-11-25",
+      "data_cutoff_at": "2026-11-24T22:00:00Z",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "signal_published_planned_at": "2026-11-24T22:02:11Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "target_session": "2026-11-25",
+      "generated_price": 155.3800048828125,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 155.38,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 144.5,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 133.63,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
       ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "WATCH"
+      "target_band": {
+        "lo": 105.9188,
+        "hi": 130.6494,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 155.3800048828125,
+        "r_lo": -0.318324,
+        "r_hi": -0.159162,
+        "defensive": true,
+        "return_base": "base_price",
+        "base_bar_date": "2026-11-24"
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 196.98,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 1005% 프리미엄(안전마진 -1005%) · RSI 39",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2026-01-25",
+          "form": "10-K",
+          "accession": "0001045810-26-000021",
+          "filed_date": "2026-02-25",
+          "available_at": "2026-02-25T21:42:19Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2026-01-25",
+          "form": "10-K",
+          "accession": "0001045810-26-000021",
+          "filed_date": "2026-02-25",
+          "available_at": "2026-02-25T21:42:19Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+          "filed_date": "2026-08-26",
+          "available_at": "2026-08-26T20:36:00+00:00",
+          "accession": "0001045810-26-000075",
+          "role": "reference"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -38.5,
+        "graham": -33.5,
+        "lynch": 100.0,
+        "druckenmiller": 0.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "code_commit": "9bb6f33",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:d5d52b8fd1682c3b0acfcabb212861228e50f9498f8777869a777f89faf3f95a",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 77.54,
+        "valuation": 0.0,
+        "timing": 78.13,
+        "macro": 50.0,
+        "growth": 100.0
+      },
+      "debate_structural_risk": null,
+      "debate_risk_gate_applied": false,
+      "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_lt_30",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-25",
+        "regime_sample_source": "ledger_records"
+      },
+      "regime": "neutral",
+      "regime_verified": true,
+      "debate_advice": null,
+      "valuation": {
+        "iv_low": 9.0332,
+        "iv_median": 14.0622,
+        "iv_high": 21.1801,
+        "price": 155.38,
+        "margin": -10.0495,
+        "iv_band_basis": "bear_bull",
+        "median_method": "dcf_base",
+        "methods": {
+          "dcf_base": 14.0622,
+          "epv": 7.8543,
+          "graham": 26.5915
+        },
+        "iv_dcf_bear": 10.6273,
+        "iv_dcf_bull": 18.4175,
+        "fcff_normalized": 25953.2464,
+        "growth": 0.15,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -2137.0,
+        "wacc_valuation": 0.15,
+        "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.277,
+        "ev_ebit_percentile": 10.74,
+        "ev_ebit_median_10y": 56.4807,
+        "iv_hist_ev_ebit": 76.0553,
+        "hist_divergence": 0.8151,
+        "dcf_dropped": null,
+        "v_raw": 0.0,
+        "growth_raw_cagr": 0.9027,
+        "growth_clipped_to_zero": false,
+        "effective_fcff_years": 5,
+        "normalization_method": "adjusted",
+        "wacc_sensitivity": 0.0796,
+        "terminal_g_sensitivity": 0.0246,
+        "rate_sensitivity": 0.0796,
+        "hist_divergence_signed": -0.8151,
+        "ev_ebit_current": 29.1965,
+        "ev_ebit_samples": 121,
+        "ev_ebit_years": 11,
+        "ev_ebit_window": "2016-11-25~2026-11-24",
+        "ev_ebit_reason": null,
+        "minority_interest": 0.0,
+        "debt_reporting": "reported"
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "Why Nvidia is 'bar none' the 'cheapest growth stock in the market'",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T21:34:25Z",
+          "url": "https://finnhub.io/api/news?id=11d6728c845c80c28dc1957e4e979c288146735a328614f73886d523a64986e1",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Anthropic falls below IPO price as Nvidia gives back gains",
+          "source": "Yahoo Finance Video",
+          "published_at": "2026-11-24T21:45:58Z",
+          "url": "https://finance.yahoo.com/video/anthropic-falls-below-ipo-price-as-nvidia-gives-back-gains-214558309.html",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Why HubSpot's CEO thinks Jensen Huang came back to Nvidia too soon",
+          "source": "Yahoo Finance",
+          "published_at": "2026-11-24T18:30:53Z",
+          "url": "https://finance.yahoo.com/markets/article/why-hubspots-ceo-thinks-jensen-huang-came-back-to-nvidia-too-soon-183053258.html",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Nvidia Corp. (NVDA) Has Made Investors a Fortune — Is Now Time to Book Profits?",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T04:47:31Z",
+          "url": "https://finnhub.io/api/news?id=415e3d5925f28d47555d290a4a258f53f4633fc146c5e8a285dafd78f1755ffa",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Michael Burry Just Made a Big Move in NVDA Before Its 31% Rally — Fires Fresh Warning at Nvidia Following Jensen Huang’s Return: ‘Weaker, More Craven’",
+          "source": "Benzinga",
+          "published_at": "2026-11-24T01:15:34Z",
+          "url": "https://finnhub.io/api/news?id=5c5f6b343c29503d987d59ff4a25bbc05925fec4476ca0b6d01d0591cdfb4865",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "4",
+          "filed_date": "2026-11-23",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000169684126000016/xslF345X06/wk-form4_1795470863.xml",
+          "accession": "0001696841-26-000016",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-11-23",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000090/nvda-20261122.htm",
+          "accession": "0001045810-26-000090",
+          "items": [
+            "5.02",
+            "9.01"
+          ]
+        },
+        {
+          "form": "144",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000192109426001223/xsl144X01/primary_doc.xml",
+          "accession": "0001921094-26-001223",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000088/nvda-20261117.htm",
+          "accession": "0001045810-26-000088",
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        },
+        {
+          "form": "13F-HR",
+          "filed_date": "2026-11-16",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000084/xslForm13F_X02/primary_doc.xml",
+          "accession": "0001045810-26-000084",
+          "items": []
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 39.4662,
+        "pct_b": 0.2909,
+        "dma50": 204.9464,
+        "dma200": 203.0703,
+        "atr_pct": 0.0857
+      },
+      "gate_summary": {
+        "failed": [
+          "B2",
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
+          "B3": "안전마진 -1005.0% < 임계 20%",
+          "B4": "눌림 조건 1/4 · T 78.13"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Information Technology",
+      "entry_band": null
     },
     {
+      "schema_version": 1,
+      "signal_id": "2026-11-25-ADBE-WATCH-001",
       "ticker": "ADBE",
-      "reason": "V06",
-      "codes": [
-        "V06"
+      "type": "WATCH",
+      "grade": "B",
+      "entry_score": 57.15,
+      "as_of": "2026-11-25",
+      "data_cutoff_at": "2026-11-24T22:00:00Z",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "signal_published_planned_at": "2026-11-24T22:02:11Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "target_session": "2026-11-25",
+      "generated_price": 232.0800018310547,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 232.08,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 215.83,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 199.59,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
       ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "WATCH"
+      "target_band": {
+        "lo": 206.3844,
+        "hi": 219.2322,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 232.0800018310547,
+        "r_lo": -0.110719,
+        "r_hi": -0.055359,
+        "defensive": true,
+        "return_base": "base_price",
+        "base_bar_date": "2026-11-24"
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 238.59,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 46% 프리미엄(안전마진 -46%) · RSI 45",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2025-11-28",
+          "form": "10-K",
+          "accession": "0000796343-26-000003",
+          "filed_date": "2026-01-15",
+          "available_at": "2026-01-15T22:01:55Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2025-11-28",
+          "form": "10-K",
+          "accession": "0000796343-26-000003",
+          "filed_date": "2026-01-15",
+          "available_at": "2026-01-15T22:01:55Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000156/adbe-20260828.htm",
+          "filed_date": "2026-09-22",
+          "available_at": "2026-09-22T20:04:02+00:00",
+          "accession": "0000796343-26-000156",
+          "role": "reference"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -30.9,
+        "graham": -26.2,
+        "lynch": 100.0,
+        "druckenmiller": 0.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "code_commit": "9bb6f33",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:d5d52b8fd1682c3b0acfcabb212861228e50f9498f8777869a777f89faf3f95a",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 85.0,
+        "valuation": 2.81,
+        "timing": 67.25,
+        "macro": 50.0,
+        "growth": 100.0
+      },
+      "debate_structural_risk": null,
+      "debate_risk_gate_applied": false,
+      "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_lt_30",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-25",
+        "regime_sample_source": "ledger_records"
+      },
+      "regime": "neutral",
+      "regime_verified": true,
+      "debate_advice": null,
+      "valuation": {
+        "iv_low": 134.8643,
+        "iv_median": 158.6639,
+        "iv_high": 182.4635,
+        "price": 232.08,
+        "margin": -0.4627,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 377.8525,
+          "epv": 158.6639,
+          "graham": 101.127
+        },
+        "iv_dcf_bear": 303.808,
+        "iv_dcf_bull": 466.3649,
+        "fcff_normalized": 6182.16,
+        "growth": 0.103,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -385.0,
+        "wacc_valuation": 0.08,
+        "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.2151,
+        "ev_ebit_percentile": 1.65,
+        "ev_ebit_median_10y": 42.8708,
+        "iv_hist_ev_ebit": 668.5616,
+        "hist_divergence": 0.7627,
+        "dcf_dropped": null,
+        "v_raw": 12.81,
+        "growth_raw_cagr": 0.103,
+        "growth_clipped_to_zero": false,
+        "effective_fcff_years": 5,
+        "normalization_method": "adjusted",
+        "wacc_sensitivity": 0.4011,
+        "terminal_g_sensitivity": 0.1629,
+        "rate_sensitivity": 0.4011,
+        "hist_divergence_signed": -0.7627,
+        "ev_ebit_current": 11.3385,
+        "ev_ebit_samples": 121,
+        "ev_ebit_years": 11,
+        "ev_ebit_window": "2016-11-25~2026-11-24",
+        "ev_ebit_reason": null,
+        "minority_interest": 0.0,
+        "debt_reporting": "reported"
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "Adobe (ADBE) Faces A Valuation Test, Is It A Bargain?",
+          "source": "Yahoo",
+          "published_at": "2026-11-23T22:06:28Z",
+          "url": "https://finnhub.io/api/news?id=1afaaee25e9ebbea3b3424e998d8804d65691a150dfa618e073a672eddb846cf",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Investors Might Be Making a Big Mistake by Underestimating Adobe’s AI Opportunity",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T12:48:30Z",
+          "url": "https://finnhub.io/api/news?id=828ebc72fe8ed1f4208811ef016a8177c91b381e476cdb959daf96ecaa78bd49",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "How to Play Adobe Stock Before 2027 as Michael Burry Loads Up on More Shares",
+          "source": "Yahoo",
+          "published_at": "2026-11-23T21:41:31Z",
+          "url": "https://finnhub.io/api/news?id=f1dce69778b6bfe2fc09c062b235fe6561b8faa4d718be50a43827214543eebb",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Can Adobe Stock Rise 30% From Here?",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T11:07:47Z",
+          "url": "https://finnhub.io/api/news?id=d546adc86ec00d9595ae7295f1e778437b231f70deb0ed2ebf75a008e1a324a4",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Holiday shopping scams could set you back $100 or more: 3 things to watch for",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T21:14:30Z",
+          "url": "https://finnhub.io/api/news?id=b8afe6e49f3ecd3094384cf93de7ef6bfd28a8e25bb746827f30ebd5d0f6afba",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "4",
+          "filed_date": "2026-11-17",
+          "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000172/xslF345X06/wk-form4_1794952686.xml",
+          "accession": "0000796343-26-000172",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-10-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000170/xslF345X06/wk-form4_1792446782.xml",
+          "accession": "0000796343-26-000170",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-10-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000169/xslF345X06/wk-form4_1792446766.xml",
+          "accession": "0000796343-26-000169",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-10-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000168/xslF345X06/wk-form4_1792446756.xml",
+          "accession": "0000796343-26-000168",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-10-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/796343/000079634326000167/xslF345X06/wk-form4_1792446745.xml",
+          "accession": "0000796343-26-000167",
+          "items": []
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 44.8751,
+        "pct_b": 0.3296,
+        "dma50": 242.3924,
+        "dma200": 245.9675,
+        "atr_pct": 0.0386
+      },
+      "gate_summary": {
+        "failed": [
+          "B2",
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
+          "B3": "안전마진 -46.3% < 임계 20%",
+          "B4": "눌림 조건 0/4 · T 67.25"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Information Technology",
+      "entry_band": null
     },
     {
-      "ticker": "CSCO",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
+      "schema_version": 1,
+      "signal_id": "2026-11-25-GOOGL-WATCH-001",
       "ticker": "GOOGL",
-      "reason": "V06",
-      "codes": [
-        "V06"
+      "type": "WATCH",
+      "grade": "B",
+      "entry_score": 59.0,
+      "as_of": "2026-11-25",
+      "data_cutoff_at": "2026-11-24T22:00:00Z",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "signal_published_planned_at": "2026-11-24T22:02:11Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "target_session": "2026-11-25",
+      "generated_price": 279.04998779296875,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 279.05,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 259.52,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 239.98,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
       ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "WATCH"
+      "target_band": {
+        "lo": 203.2303,
+        "hi": 241.1402,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 279.04998779296875,
+        "r_lo": -0.271706,
+        "r_hi": -0.135853,
+        "defensive": true,
+        "return_base": "base_price",
+        "base_bar_date": "2026-11-24"
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 326.45,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 347% 프리미엄(안전마진 -347%) · RSI 40",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001652044-26-000018",
+          "filed_date": "2026-02-05",
+          "available_at": "2026-02-05T02:56:03Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001652044-26-000018",
+          "filed_date": "2026-02-05",
+          "available_at": "2026-02-05T02:56:03Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        },
+        {
+          "type": "sec_filing",
+          "form": "10-Q",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000084/goog-20260930.htm",
+          "filed_date": "2026-10-29",
+          "available_at": "2026-10-29T00:29:06+00:00",
+          "accession": "0001652044-26-000084",
+          "role": "reference"
+        },
+        {
+          "type": "market",
+          "metric": "atr_pct",
+          "value_kind": "ratio"
+        }
+      ],
+      "investor_scores": {
+        "buffett": -30.7,
+        "graham": -25.7,
+        "lynch": 81.4,
+        "druckenmiller": 0.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "code_commit": "9bb6f33",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:d5d52b8fd1682c3b0acfcabb212861228e50f9498f8777869a777f89faf3f95a",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 90.55,
+        "valuation": 0.0,
+        "timing": 76.33,
+        "macro": 50.0,
+        "growth": 90.69
+      },
+      "debate_structural_risk": null,
+      "debate_risk_gate_applied": false,
+      "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "B",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 4,
+        "news_state": "not_read",
+        "alt_8k": true,
+        "reason": "regime_sample_lt_30",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-25",
+        "regime_sample_source": "ledger_records"
+      },
+      "regime": "neutral",
+      "regime_verified": true,
+      "debate_advice": null,
+      "valuation": {
+        "iv_low": 53.0591,
+        "iv_median": 62.4224,
+        "iv_high": 71.7858,
+        "price": 279.05,
+        "margin": -3.4703,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 53.79,
+          "epv": 62.4224,
+          "graham": 90.8644
+        },
+        "iv_dcf_bear": 53.79,
+        "iv_dcf_bull": 53.79,
+        "fcff_normalized": 49264.0172,
+        "growth": 0.0,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -77758.0,
+        "wacc_valuation": 0.1032,
+        "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.0,
+        "ev_ebit_percentile": 38.84,
+        "ev_ebit_median_10y": 28.5602,
+        "iv_hist_ev_ebit": 203.2038,
+        "hist_divergence": 0.6928,
+        "dcf_dropped": null,
+        "v_raw": 0.0,
+        "growth_raw_cagr": -0.0535,
+        "growth_clipped_to_zero": true,
+        "effective_fcff_years": 5,
+        "normalization_method": "adjusted",
+        "wacc_sensitivity": 0.1129,
+        "terminal_g_sensitivity": 0.0415,
+        "rate_sensitivity": 0.1129,
+        "hist_divergence_signed": -0.6928,
+        "ev_ebit_current": 25.8451,
+        "ev_ebit_samples": 121,
+        "ev_ebit_years": 9,
+        "ev_ebit_window": "2016-11-25~2026-11-24",
+        "ev_ebit_reason": null,
+        "minority_interest": 0.0,
+        "debt_reporting": "reported"
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "Alphabet (GOOGL) Expands AI Search With Wallet Data",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T16:10:31Z",
+          "url": "https://finnhub.io/api/news?id=49559c05ed4169e163e41fc8047194c89d90e532a4ac29b85f659c3be68cfceb",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "ETFs Bought $276.2 Million of Alphabet (GOOGL) on Friday",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T11:01:22Z",
+          "url": "https://finnhub.io/api/news?id=91e3f2e31ffc50a3a996dbf5f2092b8f7280954374937aa34d24f594f938f51c",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Dow Jones Top Gainers Today: NVDA, CAT, GOOGL Lead",
+          "source": "ChartMill",
+          "published_at": "2026-11-23T20:10:51Z",
+          "url": "https://finnhub.io/api/news?id=8bafd04d062dc134173abbf5dd1aeaa1fc02b00f990aa74f29a319f51606d0a5",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "ETFs Are Net Sellers of Alphabet (GOOGL) on Nov. 19",
+          "source": "Yahoo",
+          "published_at": "2026-11-23T11:02:56Z",
+          "url": "https://finnhub.io/api/news?id=f7e9b607c6503e12e8a5796687bccf96835ef0d3ab9b369b39de8fedb8d3cbab",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Broadcom Stocks Fall 3.98% as Google TPU Order Report Clouds AI Outlook",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T16:54:05Z",
+          "url": "https://finnhub.io/api/news?id=661e3d44ce571fcc9de6946b2aa23eb12f7e8c94aea0758ea647151c6ddadb45",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
+      ],
+      "filings": [
+        {
+          "form": "8-K",
+          "filed_date": "2026-11-24",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526475973/d91615d8k.htm",
+          "accession": "0001193125-26-475973",
+          "items": [
+            "8.01",
+            "9.01"
+          ]
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-23",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526472910/xslF345X06/ownership.xml",
+          "accession": "0001193125-26-472910",
+          "items": []
+        },
+        {
+          "form": "CERT",
+          "filed_date": "2026-11-23",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000135445726001111/GOOG_8A_Cert_1652044.pdf",
+          "accession": "0001354457-26-001111",
+          "items": []
+        },
+        {
+          "form": "424B2",
+          "filed_date": "2026-11-23",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526470750/d115240d424b2.htm",
+          "accession": "0001193125-26-470750",
+          "items": []
+        },
+        {
+          "form": "8-A12B",
+          "filed_date": "2026-11-20",
+          "url": "https://www.sec.gov/Archives/edgar/data/1652044/000119312526470391/d142213d8a12b.htm",
+          "accession": "0001193125-26-470391",
+          "items": []
+        }
+      ],
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 39.6152,
+        "pct_b": 0.3582,
+        "dma50": 319.6362,
+        "dma200": 336.5433,
+        "atr_pct": 0.0412
+      },
+      "gate_summary": {
+        "failed": [
+          "B2",
+          "B3",
+          "B4"
+        ],
+        "reasons": {
+          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
+          "B3": "안전마진 -347.0% < 임계 20%",
+          "B4": "눌림 조건 1/4 · T 76.33"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Communication Services",
+      "entry_band": null
     },
     {
+      "schema_version": 1,
+      "signal_id": "2026-11-25-META-WATCH-001",
       "ticker": "META",
-      "reason": "V06",
-      "codes": [
-        "V06"
+      "type": "WATCH",
+      "grade": "C",
+      "entry_score": 58.61,
+      "as_of": "2026-11-25",
+      "data_cutoff_at": "2026-11-24T22:00:00Z",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "signal_published_planned_at": "2026-11-24T22:02:11Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "target_session": "2026-11-25",
+      "generated_price": 589.8200073242188,
+      "quant_intent": "no_action",
+      "entry_plan": [
+        {
+          "tranche": 1,
+          "weight": 0.4,
+          "price_ref": 589.82,
+          "provisional": true
+        },
+        {
+          "tranche": 2,
+          "weight": 0.3,
+          "price_ref": 548.53,
+          "provisional": true
+        },
+        {
+          "tranche": 3,
+          "weight": 0.3,
+          "price_ref": 507.25,
+          "provisional": true,
+          "active": false,
+          "note": "잠정 손절가보다 낮아 손절선 밖 → 1차 체결가로 재확인"
+        }
       ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "WATCH"
-    },
-    {
-      "ticker": "DIS",
-      "reason": "V06",
-      "codes": [
-        "V06"
+      "target_band": {
+        "lo": 438.5496,
+        "hi": 514.1848,
+        "horizon_td": 63,
+        "basis": "base_price",
+        "base_price": 589.8200073242188,
+        "r_lo": -0.256469,
+        "r_hi": -0.128234,
+        "defensive": true,
+        "return_base": "base_price",
+        "base_bar_date": "2026-11-24"
+      },
+      "expected_mdd": -0.2,
+      "invalidation": {
+        "price": 609.0,
+        "reason": "200일선 −3% 이탈 + ROIC<WACC"
+      },
+      "thesis_ko": "IV 대비 274% 프리미엄(안전마진 -274%) · RSI 40",
+      "evidence": [
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001628280-26-003942",
+          "filed_date": "2026-01-29",
+          "available_at": "2026-01-29T00:13:46Z",
+          "metric": "quality_composite",
+          "value_kind": "score_0_100"
+        },
+        {
+          "type": "fundamental",
+          "period_end": "2025-12-31",
+          "form": "10-K",
+          "accession": "0001628280-26-003942",
+          "filed_date": "2026-01-29",
+          "available_at": "2026-01-29T00:13:46Z",
+          "metric": "fcf_margin_5y",
+          "value_kind": "ratio"
+        }
       ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "TSLA",
-      "reason": "V06",
-      "codes": [
-        "V06"
+      "investor_scores": {
+        "buffett": -31.1,
+        "graham": -26.1,
+        "lynch": 64.3,
+        "druckenmiller": 0.0
+      },
+      "conflict": true,
+      "position": {
+        "plan_weight_target": 0.0,
+        "tranche": 0,
+        "tranche_weight": 0.0,
+        "stop_distance": 0.0,
+        "stop_price": null,
+        "planned_loss_after_fill_pct": null
+      },
+      "debate_ref": null,
+      "execution_event": null,
+      "track": "quant_only",
+      "veto": [],
+      "params_version": "params_v001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "code_commit": "9bb6f33",
+      "revision": 1,
+      "supersedes": null,
+      "inputs_hash": "sha256:d5d52b8fd1682c3b0acfcabb212861228e50f9498f8777869a777f89faf3f95a",
+      "trade_grade": "WATCH",
+      "components": {
+        "quality": 89.77,
+        "valuation": 0.0,
+        "timing": 79.82,
+        "macro": 50.0,
+        "growth": 82.15
+      },
+      "debate_structural_risk": null,
+      "debate_risk_gate_applied": false,
+      "confidence_cap": null,
+      "confidence_detail": {
+        "grade": "C",
+        "data_fresh": true,
+        "regime_sample_ok": false,
+        "verified_quotes": 0,
+        "independent_sources": 0,
+        "articles": 2,
+        "news_state": "not_read",
+        "reason": "core_evidence_missing",
+        "regime_sample_n": 0,
+        "regime_sample_min_n": 30,
+        "regime_sample_horizon": "3m",
+        "matured_as_of": "2026-11-25",
+        "regime_sample_source": "ledger_records"
+      },
+      "regime": "neutral",
+      "regime_verified": true,
+      "debate_advice": null,
+      "valuation": {
+        "iv_low": 133.976,
+        "iv_median": 157.6188,
+        "iv_high": 181.2617,
+        "price": 589.82,
+        "margin": -2.7421,
+        "iv_band_basis": "bear_bull",
+        "median_method": "epv",
+        "methods": {
+          "dcf_base": 133.4392,
+          "epv": 157.6188,
+          "graham": 211.1944
+        },
+        "iv_dcf_bear": 133.4392,
+        "iv_dcf_bull": 133.4392,
+        "fcff_normalized": 25382.2514,
+        "growth": 0.0,
+        "growth_basis": "fcff_cagr",
+        "net_debt": -22848.0,
+        "wacc_valuation": 0.0979,
+        "v_confidence": "B",
+        "v_confidence_reason": null,
+        "v_penalties": 10.0,
+        "v_penalty_dcf": 0.0,
+        "v_penalty_hist": 10.0,
+        "dcf_sensitivity": 0.0,
+        "ev_ebit_percentile": 15.7,
+        "ev_ebit_median_10y": 24.2181,
+        "iv_hist_ev_ebit": 448.7633,
+        "hist_divergence": 0.6488,
+        "dcf_dropped": null,
+        "v_raw": 0.0,
+        "growth_raw_cagr": -0.0919,
+        "growth_clipped_to_zero": true,
+        "effective_fcff_years": 5,
+        "normalization_method": "adjusted",
+        "wacc_sensitivity": 0.1288,
+        "terminal_g_sensitivity": 0.0481,
+        "rate_sensitivity": 0.1288,
+        "hist_divergence_signed": -0.6488,
+        "ev_ebit_current": 17.9565,
+        "ev_ebit_samples": 121,
+        "ev_ebit_years": 11,
+        "ev_ebit_window": "2016-11-25~2026-11-24",
+        "ev_ebit_reason": null,
+        "minority_interest": 0.0,
+        "debt_reporting": "reported"
+      },
+      "news_state": "not_read",
+      "news": [
+        {
+          "headline": "What Do Meta Platforms (META) Content Deals Mean For Its VR Glasses Launch?",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T16:14:37Z",
+          "url": "https://finnhub.io/api/news?id=638b5909b1cf6231bfe77a4f4f5d6727ca8deb1a3ef8d2745201209f16dff1e5",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Could Meta Actually Climb 30%? Or Is J.P. Morgan Totally Wrong?",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T21:15:57Z",
+          "url": "https://finnhub.io/api/news?id=7df3519a4d00fefb4facd0391b28944f097b41bba2ed575d66f485928e3fc8f5",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "David Abrams’ Meta Platforms, Inc. (META) Bet Is Backed by Strong Cash Flow and AI Growth",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T19:06:33Z",
+          "url": "https://finnhub.io/api/news?id=93dc59493504e4b6ac8a78362486af40c086025c09b404b8bde98005130f1d02",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "META Rides on Strong Demand in Ad Business: Can It Beat RDDT and SNAP?",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T16:35:00Z",
+          "url": "https://finnhub.io/api/news?id=d51b11b39bec193bcec333f4ff25e0c0299bf8bcad5927cbd703febfc976bcb1",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Meta Platforms (META) Sees $240.4 Million in Net ETF Buying on Friday",
+          "source": "Yahoo",
+          "published_at": "2026-11-24T11:01:28Z",
+          "url": "https://finnhub.io/api/news?id=81ef37dcacb377f1f4d0844f0644a3e1834123d720f1b6d424ad05d78aa8ac60",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        }
       ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "HD",
-      "reason": "V06",
-      "codes": [
-        "V06"
+      "filings": [
+        {
+          "form": "144",
+          "filed_date": "2026-11-23",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000192109426001245/xsl144X01/primary_doc.xml",
+          "accession": "0001921094-26-001245",
+          "items": []
+        },
+        {
+          "form": "8-K",
+          "filed_date": "2026-11-23",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026075541/meta-20261118.htm",
+          "accession": "0001628280-26-075541",
+          "items": [
+            "8.01"
+          ]
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017904/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017904",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017902/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017902",
+          "items": []
+        },
+        {
+          "form": "4",
+          "filed_date": "2026-11-19",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017900/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-017900",
+          "items": []
+        }
       ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "WMT",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "PG",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "KO",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "COST",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "JNJ",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "MRK",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "CVX",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "CAT",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "HON",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "UPS",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
-    },
-    {
-      "ticker": "LIN",
-      "reason": "V06",
-      "codes": [
-        "V06"
-      ],
-      "message_ko": "시장 급변 — 신규 매수 전면 중단",
-      "grade": "NONE"
+      "risk": {
+        "veto": [],
+        "note_ko": null
+      },
+      "indicators": {
+        "rsi14": 40.2383,
+        "pct_b": 0.1649,
+        "dma50": 673.6852,
+        "dma200": 627.8356,
+        "atr_pct": 0.0406
+      },
+      "gate_summary": {
+        "failed": [
+          "B2",
+          "B3"
+        ],
+        "reasons": {
+          "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
+          "B3": "안전마진 -274.2% < 임계 20%"
+        }
+      },
+      "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
+      "decision": "WATCH",
+      "sector": "Communication Services",
+      "entry_band": null
     }
   ],
+  "blocked": [],
   "watchlist": [
     {
       "ticker": "AAPL",
@@ -274,16 +1307,16 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.1143,
+      "margin": -3.1731,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 85.12,
+      "ev_ebit_percentile": 85.95,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.593,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.2815,
+      "wacc_sensitivity": 0.2839,
       "rank_score": 42.5,
       "valuation_suspended": false,
       "wacc_qc": 0.0712,
@@ -295,22 +1328,22 @@
       "sector": "Information Technology",
       "q": 82.43,
       "v": 0.0,
-      "g": 66.68,
+      "g": 66.16,
       "v_raw": 0.0,
-      "margin": -2.65,
+      "margin": -2.6887,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 19.01,
+      "ev_ebit_percentile": 22.31,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6718,
+      "hist_divergence_signed": -0.6728,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1422,
-      "rank_score": 54.551,
+      "wacc_sensitivity": 0.1415,
+      "rank_score": 54.447,
       "valuation_suspended": false,
       "wacc_qc": 0.0878,
-      "wacc_valuation": 0.0928,
+      "wacc_valuation": 0.0931,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -320,16 +1353,16 @@
       "v": 0.0,
       "g": 100.0,
       "v_raw": 0.0,
-      "margin": -10.7372,
+      "margin": -10.0495,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 11.57,
+      "ev_ebit_percentile": 10.74,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.8151,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.0803,
+      "wacc_sensitivity": 0.0796,
       "rank_score": 58.77,
       "valuation_suspended": false,
       "wacc_qc": 0.0895,
@@ -340,20 +1373,20 @@
       "ticker": "ADBE",
       "sector": "Information Technology",
       "q": 85.0,
-      "v": 3.24,
+      "v": 2.81,
       "g": 100.0,
-      "v_raw": 13.24,
-      "margin": -0.4117,
+      "v_raw": 12.81,
+      "margin": -0.4627,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 1.65,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.7627,
       "growth_clipped_to_zero": false,
       "wacc_sensitivity": 0.4011,
-      "rank_score": 63.472,
+      "rank_score": 63.343,
       "valuation_suspended": false,
       "wacc_qc": 0.0741,
       "wacc_valuation": 0.08,
@@ -366,20 +1399,20 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -2.1501,
+      "margin": -2.0587,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 90.91,
+      "ev_ebit_percentile": 89.26,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3763,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1803,
+      "wacc_sensitivity": 0.1797,
       "rank_score": 48.065,
       "valuation_suspended": false,
       "wacc_qc": 0.0735,
-      "wacc_valuation": 0.0869,
+      "wacc_valuation": 0.0872,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -387,22 +1420,22 @@
       "sector": "Communication Services",
       "q": 90.55,
       "v": 0.0,
-      "g": 90.09,
+      "g": 90.69,
       "v_raw": 0.0,
-      "margin": -3.5347,
+      "margin": -3.4703,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 39.67,
+      "ev_ebit_percentile": 38.84,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 9,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6939,
+      "hist_divergence_signed": -0.6928,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1123,
-      "rank_score": 63.293,
+      "wacc_sensitivity": 0.1129,
+      "rank_score": 63.413,
       "valuation_suspended": false,
       "wacc_qc": 0.0867,
-      "wacc_valuation": 0.1036,
+      "wacc_valuation": 0.1032,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -410,42 +1443,42 @@
       "sector": "Communication Services",
       "q": 89.77,
       "v": 0.0,
-      "g": 81.3,
+      "g": 82.15,
       "v_raw": 0.0,
-      "margin": -2.7862,
+      "margin": -2.7421,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 17.36,
+      "ev_ebit_percentile": 15.7,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6483,
+      "hist_divergence_signed": -0.6488,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1291,
-      "rank_score": 61.145,
+      "wacc_sensitivity": 0.1288,
+      "rank_score": 61.315,
       "valuation_suspended": false,
       "wacc_qc": 0.0809,
-      "wacc_valuation": 0.0977,
+      "wacc_valuation": 0.0979,
       "iv_band_basis": "bear_bull"
     },
     {
       "ticker": "DIS",
       "sector": "Communication Services",
       "q": 58.6,
-      "v": 3.82,
+      "v": 3.61,
       "g": 100.0,
-      "v_raw": 13.82,
-      "margin": -0.3419,
+      "v_raw": 13.61,
+      "margin": -0.3668,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 7.06,
       "ev_ebit_samples": 85,
       "ev_ebit_years": 8,
-      "ev_ebit_window": "2019-11-27~2026-11-23",
+      "ev_ebit_window": "2019-11-27~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.2762,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3695,
-      "rank_score": 50.446,
+      "wacc_sensitivity": 0.3733,
+      "rank_score": 50.383,
       "valuation_suspended": false,
       "wacc_qc": 0.0777,
       "wacc_valuation": 0.08,
@@ -458,20 +1491,20 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -15.2405,
+      "margin": -15.2076,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 75.71,
       "ev_ebit_samples": 70,
       "ev_ebit_years": 6,
-      "ev_ebit_window": "2021-03-02~2026-11-23",
+      "ev_ebit_window": "2021-03-02~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.9209,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.0302,
+      "wacc_sensitivity": 0.03,
       "rank_score": 28.935,
       "valuation_suspended": false,
       "wacc_qc": 0.0882,
-      "wacc_valuation": 0.1443,
+      "wacc_valuation": 0.1448,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -480,17 +1513,17 @@
       "q": 64.61,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 6.85,
-      "margin": -1.1784,
+      "v_raw": 6.45,
+      "margin": -1.2264,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 66.12,
+      "ev_ebit_percentile": 71.07,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5284,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.665,
+      "wacc_sensitivity": 0.6739,
       "rank_score": 32.305,
       "valuation_suspended": false,
       "wacc_qc": 0.0491,
@@ -504,12 +1537,12 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.9565,
+      "margin": -4.0609,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 99.17,
+      "ev_ebit_percentile": 100.0,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5616,
       "growth_clipped_to_zero": true,
@@ -526,15 +1559,15 @@
       "q": 95.22,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 3.8,
-      "margin": -1.5442,
+      "v_raw": 3.44,
+      "margin": -1.5872,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 49.59,
+      "ev_ebit_percentile": 52.89,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.5799,
+      "hist_divergence_signed": -0.5813,
       "growth_clipped_to_zero": false,
       "wacc_sensitivity": 0.5795,
       "rank_score": 47.61,
@@ -550,12 +1583,12 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.2457,
+      "margin": -3.3227,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 90.08,
+      "ev_ebit_percentile": 91.74,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.6479,
       "growth_clipped_to_zero": true,
@@ -573,12 +1606,12 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -3.7696,
+      "margin": -3.7427,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 80.99,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 10,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.6553,
       "growth_clipped_to_zero": false,
@@ -595,15 +1628,15 @@
       "q": 80.69,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 0.35,
-      "margin": -1.9584,
+      "v_raw": 0.0,
+      "margin": -2.0286,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 42.98,
+      "ev_ebit_percentile": 52.89,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.4051,
+      "hist_divergence_signed": -0.4059,
       "growth_clipped_to_zero": false,
       "wacc_sensitivity": 0.5993,
       "rank_score": 40.345,
@@ -618,13 +1651,13 @@
       "q": 83.54,
       "v": 0.0,
       "g": 0.0,
-      "v_raw": 6.3,
-      "margin": -1.2437,
+      "v_raw": 5.46,
+      "margin": -1.3447,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 23.14,
+      "ev_ebit_percentile": 29.75,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5721,
       "growth_clipped_to_zero": false,
@@ -639,20 +1672,20 @@
       "ticker": "CVX",
       "sector": "Energy",
       "q": 66.9,
-      "v": 0.96,
+      "v": 0.79,
       "g": 0.0,
-      "v_raw": 10.96,
-      "margin": -0.6846,
+      "v_raw": 10.79,
+      "margin": -0.7055,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 70.1,
       "ev_ebit_samples": 97,
       "ev_ebit_years": 9,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3238,
       "growth_clipped_to_zero": true,
       "wacc_sensitivity": 0.4088,
-      "rank_score": 33.738,
+      "rank_score": 33.687,
       "valuation_suspended": false,
       "wacc_qc": 0.0802,
       "wacc_valuation": 0.08,
@@ -663,19 +1696,19 @@
       "sector": "Industrials",
       "q": 76.35,
       "v": 0.0,
-      "g": 28.59,
+      "g": 29.85,
       "v_raw": 0.0,
-      "margin": -2.123,
+      "margin": -2.0864,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 68.6,
+      "ev_ebit_percentile": 66.94,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.6025,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3306,
-      "rank_score": 43.893,
+      "wacc_sensitivity": 0.3298,
+      "rank_score": 44.145,
       "valuation_suspended": false,
       "wacc_qc": 0.0587,
       "wacc_valuation": 0.08,
@@ -688,12 +1721,12 @@
       "v": 0.0,
       "g": 0.0,
       "v_raw": 0.0,
-      "margin": -2.0688,
+      "margin": -2.1082,
       "v_penalties": 0.0,
       "ev_ebit_percentile": null,
       "ev_ebit_samples": 22,
       "ev_ebit_years": 2,
-      "ev_ebit_window": "2025-03-06~2026-11-23",
+      "ev_ebit_window": "2025-03-06~2026-11-24",
       "ev_ebit_reason": "insufficient_history",
       "hist_divergence_signed": null,
       "growth_clipped_to_zero": false,
@@ -708,20 +1741,20 @@
       "ticker": "UPS",
       "sector": "Industrials",
       "q": 60.02,
-      "v": 4.11,
+      "v": 3.88,
       "g": 0.0,
-      "v_raw": 14.11,
-      "margin": -0.3063,
+      "v_raw": 13.88,
+      "margin": -0.3342,
       "v_penalties": 10.0,
-      "ev_ebit_percentile": 38.84,
+      "ev_ebit_percentile": 43.8,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
-      "ev_ebit_window": "2016-11-25~2026-11-23",
+      "ev_ebit_window": "2016-11-25~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3986,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.4324,
-      "rank_score": 31.243,
+      "wacc_sensitivity": 0.4398,
+      "rank_score": 31.174,
       "valuation_suspended": false,
       "wacc_qc": 0.0602,
       "wacc_valuation": 0.08,
@@ -732,19 +1765,19 @@
       "sector": "Materials",
       "q": 69.84,
       "v": 0.0,
-      "g": 52.18,
+      "g": 52.2,
       "v_raw": 0.0,
-      "margin": -2.9032,
+      "margin": -2.902,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 40.86,
       "ev_ebit_samples": 93,
       "ev_ebit_years": 8,
-      "ev_ebit_window": "2019-04-01~2026-11-23",
+      "ev_ebit_window": "2019-04-01~2026-11-24",
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.7325,
       "growth_clipped_to_zero": false,
       "wacc_sensitivity": 0.8048,
-      "rank_score": 45.356,
+      "rank_score": 45.36,
       "valuation_suspended": false,
       "wacc_qc": 0.0698,
       "wacc_valuation": 0.08,
@@ -803,9 +1836,9 @@
     "macro_ingest": {
       "policy": "cutoff_vintage_point_query",
       "mode": "live",
-      "data_cutoff_at": "2026-11-24T12:50:00Z",
-      "inputs_ingested_at": "2026-11-24T14:05:42.961942Z",
-      "lag_seconds": 4543.0,
+      "data_cutoff_at": "2026-11-24T22:00:00Z",
+      "inputs_ingested_at": "2026-11-24T22:50:26.170065Z",
+      "lag_seconds": 3026.2,
       "after_cutoff": true,
       "available_at_source": "vintage_point_query",
       "vintage": "2026-11-23",
@@ -4993,7 +6026,7 @@
       "regime": "neutral",
       "n": 0,
       "min_n": 30,
-      "matured_as_of": "2026-11-24",
+      "matured_as_of": "2026-11-25",
       "horizon": "3m",
       "reason": null,
       "counts": {
@@ -5006,9 +6039,9 @@
       }
     },
     "snapshot": {
-      "id": "sha256:f0c200cf416548599cce4fa5226b0e44f4dd3790ec30b9da09060c14cb2135e4",
+      "id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
       "state": "created",
-      "inputs_hash": "sha256:dcac87f4cbe5769433bfce6beb4f18b4230aca4f2282ad89e0d71f632247d7bb"
+      "inputs_hash": "sha256:d5d52b8fd1682c3b0acfcabb212861228e50f9498f8777869a777f89faf3f95a"
     }
   },
   "charts": {
@@ -5120,7 +6153,7 @@
         122.81,
         127.796,
         122.878,
-        125.217
+        127.007
       ],
       "dma50": [
         95.27,
@@ -5174,7 +6207,7 @@
         120.53,
         121.614,
         122.608,
-        122.723
+        122.886
       ],
       "dma200": [
         81.839,
@@ -5228,7 +6261,7 @@
         107.183,
         108.061,
         108.774,
-        108.901
+        109.044
       ]
     },
     "MSFT": {
@@ -5339,7 +6372,7 @@
         109.821,
         108.428,
         100.281,
-        101.933
+        102.684
       ],
       "dma50": [
         105.097,
@@ -5393,7 +6426,7 @@
         106.931,
         107.417,
         107.591,
-        107.538
+        107.533
       ],
       "dma200": [
         97.233,
@@ -5447,7 +6480,7 @@
         91.036,
         91.361,
         91.819,
-        91.913
+        91.999
       ]
     },
     "NVDA": {
@@ -5558,7 +6591,7 @@
         102.319,
         89.277,
         68.817,
-        90.483
+        85.182
       ],
       "dma50": [
         102.57,
@@ -5612,7 +6645,7 @@
         120.505,
         117.673,
         113.481,
-        112.977
+        112.355
       ],
       "dma200": [
         84.829,
@@ -5666,7 +6699,7 @@
         112.205,
         111.941,
         111.477,
-        111.421
+        111.326
       ]
     },
     "ADBE": {
@@ -5777,7 +6810,7 @@
         69.11,
         70.202,
         62.875,
-        64.685
+        67.025
       ],
       "dma50": [
         97.424,
@@ -5831,7 +6864,7 @@
         72.559,
         71.157,
         70.392,
-        70.151
+        70.003
       ],
       "dma200": [
         106.744,
@@ -5885,7 +6918,7 @@
         71.961,
         71.526,
         71.15,
-        71.086
+        71.036
       ]
     },
     "CSCO": {
@@ -5996,7 +7029,7 @@
         120.367,
         122.663,
         116.25,
-        124.15
+        120.546
       ],
       "dma50": [
         92.979,
@@ -6050,7 +7083,7 @@
         139.562,
         138.202,
         136.273,
-        135.933
+        135.52
       ],
       "dma200": [
         85.097,
@@ -6104,7 +7137,7 @@
         130.58,
         131.269,
         131.696,
-        131.773
+        131.819
       ]
     },
     "GOOGL": {
@@ -6215,7 +7248,7 @@
         88.642,
         92.063,
         82.575,
-        87.808
+        86.858
       ],
       "dma50": [
         85.501,
@@ -6269,7 +7302,7 @@
         103.629,
         102.153,
         100.321,
-        99.902
+        99.491
       ],
       "dma200": [
         63.924,
@@ -6323,7 +7356,7 @@
         105.678,
         105.357,
         104.888,
-        104.824
+        104.754
       ]
     },
     "META": {
@@ -6434,7 +7467,7 @@
         90.605,
         95.288,
         83.282,
-        88.741
+        87.586
       ],
       "dma50": [
         100.289,
@@ -6488,7 +7521,7 @@
         100.222,
         100.948,
         100.48,
-        100.278
+        100.039
       ],
       "dma200": [
         99.71,
@@ -6542,7 +7575,7 @@
         93.84,
         93.666,
         93.343,
-        93.296
+        93.231
       ]
     },
     "DIS": {
@@ -6653,7 +7686,7 @@
         110.874,
         112.982,
         112.042,
-        114.217
+        116.344
       ],
       "dma50": [
         104.317,
@@ -6707,7 +7740,7 @@
         102.599,
         103.704,
         105.021,
-        105.242
+        105.548
       ],
       "dma200": [
         104.135,
@@ -6761,7 +7794,7 @@
         98.338,
         98.534,
         98.832,
-        98.886
+        98.959
       ]
     },
     "TSLA": {
@@ -6872,7 +7905,7 @@
         78.73,
         85.763,
         76.004,
-        84.716
+        84.545
       ],
       "dma50": [
         95.652,
@@ -6926,7 +7959,7 @@
         81.788,
         82.361,
         82.557,
-        82.674
+        82.797
       ],
       "dma200": [
         75.294,
@@ -6980,7 +8013,7 @@
         84.366,
         84.117,
         83.882,
-        83.854
+        83.818
       ]
     },
     "HD": {
@@ -7091,7 +8124,7 @@
         96.859,
         98.331,
         95.609,
-        97.589
+        99.741
       ],
       "dma50": [
         105.51,
@@ -7145,7 +8178,7 @@
         87.247,
         88.027,
         88.818,
-        89.017
+        89.289
       ],
       "dma200": [
         105.87,
@@ -7199,7 +8232,7 @@
         94.024,
         93.819,
         93.532,
-        93.477
+        93.439
       ]
     },
     "WMT": {
@@ -7310,7 +8343,7 @@
         109.044,
         111.276,
         111.155,
-        112.571
+        114.942
       ],
       "dma50": [
         91.169,
@@ -7364,7 +8397,7 @@
         97.717,
         99.503,
         101.334,
-        101.69
+        102.111
       ],
       "dma200": [
         85.337,
@@ -7418,7 +8451,7 @@
         103.127,
         103.322,
         103.372,
-        103.365
+        103.379
       ]
     },
     "PG": {
@@ -7529,7 +8562,7 @@
         115.301,
         118.369,
         118.069,
-        118.229
+        120.23
       ],
       "dma50": [
         104.006,
@@ -7583,7 +8616,7 @@
         105.961,
         107.534,
         109.338,
-        109.665
+        110.025
       ],
       "dma200": [
         110.55,
@@ -7637,7 +8670,7 @@
         104.141,
         104.48,
         104.747,
-        104.783
+        104.836
       ]
     },
     "KO": {
@@ -7748,7 +8781,7 @@
         136.671,
         141.786,
         138.557,
-        136.971
+        139.457
       ],
       "dma50": [
         99.053,
@@ -7802,7 +8835,7 @@
         128.491,
         129.743,
         131.153,
-        131.339
+        131.594
       ],
       "dma200": [
         99.928,
@@ -7856,7 +8889,7 @@
         118.204,
         119.073,
         119.834,
-        119.955
+        120.095
       ]
     },
     "COST": {
@@ -7967,7 +9000,7 @@
         117.758,
         123.643,
         123.189,
-        122.715
+        122.022
       ],
       "dma50": [
         102.813,
@@ -8021,7 +9054,7 @@
         106.453,
         108.096,
         110.289,
-        110.689
+        111.114
       ],
       "dma200": [
         107.449,
@@ -8075,7 +9108,7 @@
         108.734,
         109.054,
         109.424,
-        109.478
+        109.531
       ]
     },
     "JNJ": {
@@ -8186,7 +9219,7 @@
         136.79,
         141.509,
         133.942,
-        133.734
+        136.909
       ],
       "dma50": [
         95.821,
@@ -8240,7 +9273,7 @@
         131.623,
         132.157,
         132.436,
-        132.473
+        132.565
       ],
       "dma200": [
         84.323,
@@ -8294,7 +9327,7 @@
         122.978,
         123.7,
         124.215,
-        124.29
+        124.383
       ]
     },
     "MRK": {
@@ -8405,7 +9438,7 @@
         147.142,
         148.175,
         134.095,
-        135.85
+        141.968
       ],
       "dma50": [
         90.566,
@@ -8459,7 +9492,7 @@
         146.769,
         146.543,
         145.685,
-        145.496
+        145.452
       ],
       "dma200": [
         85.063,
@@ -8513,7 +9546,7 @@
         128.004,
         129.006,
         129.581,
-        129.649
+        129.769
       ]
     },
     "CVX": {
@@ -8624,7 +9657,7 @@
         141.74,
         146.593,
         138.913,
-        137.447
+        139.153
       ],
       "dma50": [
         102.289,
@@ -8678,7 +9711,7 @@
         143.263,
         143.654,
         143.587,
-        143.507
+        143.387
       ],
       "dma200": [
         100.487,
@@ -8732,7 +9765,7 @@
         129.773,
         130.53,
         131.079,
-        131.163
+        131.25
       ]
     },
     "CAT": {
@@ -8843,7 +9876,7 @@
         92.616,
         99.508,
         84.628,
-        90.694
+        89.631
       ],
       "dma50": [
         89.569,
@@ -8897,7 +9930,7 @@
         126.058,
         122.812,
         118.41,
-        117.624
+        116.819
       ],
       "dma200": [
         68.581,
@@ -8951,7 +9984,7 @@
         134.047,
         133.865,
         133.307,
-        133.158
+        132.991
       ]
     },
     "HON": {
@@ -9062,7 +10095,7 @@
         109.663,
         110.864,
         105.97,
-        110.62
+        112.04
       ],
       "dma50": [
         102.255,
@@ -9116,7 +10149,7 @@
         105.714,
         106.473,
         107.099,
-        107.304
+        107.517
       ],
       "dma200": [
         105.777,
@@ -9170,7 +10203,7 @@
         114.91,
         114.834,
         114.531,
-        114.461
+        114.394
       ]
     },
     "UPS": {
@@ -9281,7 +10314,7 @@
         114.156,
         118.478,
         111.964,
-        114.378
+        116.823
       ],
       "dma50": [
         95.684,
@@ -9335,7 +10368,7 @@
         105.228,
         106.04,
         107.015,
-        107.142
+        107.321
       ],
       "dma200": [
         101.839,
@@ -9389,7 +10422,7 @@
         110.307,
         110.441,
         110.371,
-        110.325
+        110.287
       ]
     },
     "LIN": {
@@ -9500,7 +10533,7 @@
         128.951,
         131.657,
         125.843,
-        129.389
+        129.347
       ],
       "dma50": [
         108.953,
@@ -9554,7 +10587,7 @@
         121.772,
         122.682,
         123.8,
-        124.063
+        124.333
       ],
       "dma200": [
         114.348,
@@ -9608,18 +10641,18 @@
         123.862,
         124.302,
         124.615,
-        124.701
+        124.776
       ]
     }
   },
-  "next_trading_day": "2026-11-25",
+  "next_trading_day": "2026-11-27",
   "watchlist_source": "data/watchlist/current.json",
-  "run_started_at": "2026-11-24T14:05:14Z",
-  "inputs_hash": "sha256:dcac87f4cbe5769433bfce6beb4f18b4230aca4f2282ad89e0d71f632247d7bb",
+  "run_started_at": "2026-11-24T22:49:58Z",
+  "inputs_hash": "sha256:d5d52b8fd1682c3b0acfcabb212861228e50f9498f8777869a777f89faf3f95a",
   "ledger_summary": {
     "schema_version": 1,
-    "as_of": "2026-11-24",
-    "n_signals": 22,
+    "as_of": "2026-11-25",
+    "n_signals": 26,
     "n_graded_3m": 0,
     "accuracy": {
       "label_ko": "신호 정확도",
@@ -9830,7 +10863,7 @@
       "verdict": "보류",
       "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
       "n_eff": 0,
-      "n_records": 63,
+      "n_records": 67,
       "n_eligible": 0,
       "metrics": [
         {
@@ -9839,7 +10872,7 @@
           "value": 0,
           "threshold": "≥ 15",
           "pass": false,
-          "note_ko": "체결·3개월 만기 0개(발행 신호 63건 중 유효 0건)"
+          "note_ko": "체결·3개월 만기 0개(발행 신호 67건 중 유효 0건)"
         },
         {
           "key": "net_after_cost",
@@ -9882,14 +10915,14 @@
     ],
     "signal_history": [],
     "benchmark_trailing": {
-      "1w": -0.02386652326285299,
-      "1m": -0.04958089678322375,
-      "3m": -0.05461005457522361,
-      "6m": -0.032828898885334024
+      "1w": -0.018649955080278446,
+      "1m": -0.06087247490434877,
+      "3m": -0.05941296914370864,
+      "6m": -0.03736205061436315
     },
     "holdout": {
-      "holdout_start": "2026-08-24",
-      "holdout_end": "2026-11-23",
+      "holdout_start": "2026-08-25",
+      "holdout_end": "2026-11-24",
       "months": 3,
       "locked": true,
       "evaluations": 0,
@@ -9898,8 +10931,8 @@
       "note_ko": "홀드아웃은 분기 1회만 열립니다 — 다음 개봉 2027-01-01"
     },
     "calibration_window": {
-      "holdout_start": "2026-08-24",
-      "holdout_end": "2026-11-23",
+      "holdout_start": "2026-08-25",
+      "holdout_end": "2026-11-24",
       "months": 3,
       "note_ko": "Paper 채점은 홀드아웃을 보지 않는다 — 이 창은 보정 코퍼스 적격에만 쓴다."
     },
@@ -9928,7 +10961,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -9942,7 +10975,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -9956,7 +10989,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -9970,7 +11003,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10006,7 +11039,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10020,7 +11053,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10034,7 +11067,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10048,7 +11081,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10084,7 +11117,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10098,7 +11131,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10112,7 +11145,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10126,7 +11159,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10162,7 +11195,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10176,7 +11209,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10190,7 +11223,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10204,7 +11237,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10240,7 +11273,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10254,7 +11287,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10268,7 +11301,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10282,7 +11315,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10318,7 +11351,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10332,7 +11365,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10346,7 +11379,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10360,7 +11393,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10396,7 +11429,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10410,7 +11443,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10424,7 +11457,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10438,7 +11471,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10474,7 +11507,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10488,7 +11521,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10502,7 +11535,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10516,7 +11549,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10552,7 +11585,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10566,7 +11599,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10580,7 +11613,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10594,7 +11627,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10630,7 +11663,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10644,7 +11677,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10658,7 +11691,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10672,7 +11705,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10708,7 +11741,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10722,7 +11755,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10736,7 +11769,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10750,7 +11783,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10786,7 +11819,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10800,7 +11833,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10814,7 +11847,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10828,7 +11861,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10864,7 +11897,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10878,7 +11911,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10892,7 +11925,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10906,7 +11939,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10942,7 +11975,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10956,7 +11989,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10970,7 +12003,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -10984,7 +12017,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11020,7 +12053,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11034,7 +12067,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11048,7 +12081,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11062,7 +12095,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11098,7 +12131,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11112,7 +12145,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11126,7 +12159,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11140,7 +12173,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11176,7 +12209,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11190,7 +12223,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11204,7 +12237,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11218,7 +12251,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 1,
+            "observed_days": 2,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11254,7 +12287,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11268,7 +12301,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11282,7 +12315,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11296,7 +12329,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11332,7 +12365,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11346,7 +12379,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11360,7 +12393,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11374,7 +12407,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11410,7 +12443,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11424,7 +12457,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11438,7 +12471,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11452,7 +12485,7 @@
             "truncated": false,
             "matured": false,
             "complete": false,
-            "observed_days": 0,
+            "observed_days": 1,
             "status": "not_matured",
             "agreement": null,
             "return": null,
@@ -11835,7 +12868,7 @@
     },
     "debate": {
       "status": "ok",
-      "generated_at": "2026-11-24T14:06:22Z",
+      "generated_at": "2026-11-24T22:51:03Z",
       "counts": {
         "reports": 21,
         "eligible": 21,
@@ -11876,18 +12909,51 @@
       }
     },
     "notifications": {
-      "n_new": 0,
-      "n_suppressed": 1,
+      "n_new": 4,
+      "n_suppressed": 0,
       "n_retried": 0,
       "n_retry_suppressed": 0,
       "retry_pending": [],
-      "events": []
+      "events": [
+        {
+          "event_key": "debate_recommended:2026-11-25-NVDA-WATCH-001",
+          "type": "debate_recommended",
+          "severity": "info",
+          "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+          "ticker": "NVDA",
+          "signal_id": "2026-11-25-NVDA-WATCH-001"
+        },
+        {
+          "event_key": "debate_recommended:2026-11-25-ADBE-WATCH-001",
+          "type": "debate_recommended",
+          "severity": "info",
+          "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+          "ticker": "ADBE",
+          "signal_id": "2026-11-25-ADBE-WATCH-001"
+        },
+        {
+          "event_key": "debate_recommended:2026-11-25-GOOGL-WATCH-001",
+          "type": "debate_recommended",
+          "severity": "info",
+          "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+          "ticker": "GOOGL",
+          "signal_id": "2026-11-25-GOOGL-WATCH-001"
+        },
+        {
+          "event_key": "debate_recommended:2026-11-25-META-WATCH-001",
+          "type": "debate_recommended",
+          "severity": "info",
+          "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+          "ticker": "META",
+          "signal_id": "2026-11-25-META-WATCH-001"
+        }
+      ]
     }
   },
-  "target_session": "2026-11-24",
-  "signal_published_planned_at": "2026-11-24T12:52:11Z",
+  "target_session": "2026-11-25",
+  "signal_published_planned_at": "2026-11-24T22:02:11Z",
   "portfolio": {
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "cash_pct": 1.0,
     "invested_pct": 0.0,
     "avg_exposure": 0.0,
@@ -11896,7 +12962,7 @@
   },
   "debate": {
     "status": "ok",
-    "generated_at": "2026-11-24T14:06:22Z",
+    "generated_at": "2026-11-24T22:51:03Z",
     "counts": {
       "reports": 21,
       "eligible": 21,
@@ -11914,17 +12980,17 @@
     "positions_open": 0,
     "tranches_pending": 0,
     "data_status": "ok",
-    "last_attempt_at": "2026-11-24T14:06:25Z",
-    "last_success_at": "2026-11-24T14:06:25Z",
-    "data_cutoff_at": "2026-11-24T12:50:00Z",
-    "target_session": "2026-11-24",
+    "last_attempt_at": "2026-11-24T22:51:10Z",
+    "last_success_at": "2026-11-24T22:51:10Z",
+    "data_cutoff_at": "2026-11-24T22:00:00Z",
+    "target_session": "2026-11-25",
     "outage_id": null
   },
   "pilot_eval": {
     "verdict": "보류",
     "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
     "n_eff": 0,
-    "n_records": 63,
+    "n_records": 67,
     "n_eligible": 0,
     "metrics": [
       {
@@ -11933,7 +12999,7 @@
         "value": 0,
         "threshold": "≥ 15",
         "pass": false,
-        "note_ko": "체결·3개월 만기 0개(발행 신호 63건 중 유효 0건)"
+        "note_ko": "체결·3개월 만기 0개(발행 신호 67건 중 유효 0건)"
       },
       {
         "key": "net_after_cost",
@@ -11961,15 +13027,48 @@
       }
     ]
   },
-  "prices_as_of": "2026-11-23",
-  "publish_lag_seconds": 3.9,
+  "prices_as_of": "2026-11-24",
+  "publish_lag_seconds": 6.4,
   "published_after_order_cutoff": false,
   "notifications": {
-    "n_new": 0,
-    "n_suppressed": 1,
+    "n_new": 4,
+    "n_suppressed": 0,
     "n_retried": 0,
     "n_retry_suppressed": 0,
     "retry_pending": [],
-    "events": []
+    "events": [
+      {
+        "event_key": "debate_recommended:2026-11-25-NVDA-WATCH-001",
+        "type": "debate_recommended",
+        "severity": "info",
+        "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "NVDA",
+        "signal_id": "2026-11-25-NVDA-WATCH-001"
+      },
+      {
+        "event_key": "debate_recommended:2026-11-25-ADBE-WATCH-001",
+        "type": "debate_recommended",
+        "severity": "info",
+        "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "ADBE",
+        "signal_id": "2026-11-25-ADBE-WATCH-001"
+      },
+      {
+        "event_key": "debate_recommended:2026-11-25-GOOGL-WATCH-001",
+        "type": "debate_recommended",
+        "severity": "info",
+        "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "GOOGL",
+        "signal_id": "2026-11-25-GOOGL-WATCH-001"
+      },
+      {
+        "event_key": "debate_recommended:2026-11-25-META-WATCH-001",
+        "type": "debate_recommended",
+        "severity": "info",
+        "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
+        "ticker": "META",
+        "signal_id": "2026-11-25-META-WATCH-001"
+      }
+    ]
   }
 }
