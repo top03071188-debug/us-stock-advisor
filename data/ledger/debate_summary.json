@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "as_of": "2026-11-25",
-  "generated_at": "2026-11-24T22:51:03Z",
-  "received_at": "2026-11-24T22:51:03Z",
+  "generated_at": "2026-11-25T14:06:06Z",
+  "received_at": "2026-11-25T14:06:06Z",
   "freeze_buffer_seconds": 300,
   "auto_downgrade_enabled": false,
-  "n_reports": 21,
-  "n_eligible": 21,
+  "n_reports": 25,
+  "n_eligible": 25,
   "n_late": 0,
   "n_invalid": 0,
   "n_superseded": 0,
@@ -31,7 +31,11 @@
     "2026-11-23-ADBE-WATCH-002": "2026-11-23-ADBE-debate-01",
     "2026-11-23-META-WATCH-002": "2026-11-23-META-debate-01",
     "2026-11-23-NVDA-WATCH-002": "2026-11-23-NVDA-debate-01",
-    "2026-11-23-MSFT-WATCH-002": "2026-11-23-MSFT-debate-01"
+    "2026-11-23-MSFT-WATCH-002": "2026-11-23-MSFT-debate-01",
+    "2026-11-25-GOOGL-WATCH-001": "2026-11-25-GOOGL-debate-01",
+    "2026-11-25-META-WATCH-001": "2026-11-25-META-debate-01",
+    "2026-11-25-ADBE-WATCH-001": "2026-11-25-ADBE-debate-01",
+    "2026-11-25-NVDA-WATCH-001": "2026-11-25-NVDA-debate-01"
   },
   "superseded": [],
   "by_signal": {
@@ -52,7 +56,7 @@
       "report_validated_at": "2026-11-20T13:56:11Z",
       "freeze_deadline_at": "2026-11-20T14:20:00Z",
       "frozen_at": "2026-11-20T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -236,7 +240,7 @@
       "report_validated_at": "2026-11-21T00:44:44.454624Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -400,7 +404,7 @@
       "report_validated_at": "2026-11-21T00:44:44.458337Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -564,7 +568,7 @@
       "report_validated_at": "2026-11-21T00:44:44.462401Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -728,7 +732,7 @@
       "report_validated_at": "2026-11-21T00:44:44.466918Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -893,7 +897,7 @@
       "report_validated_at": "2026-11-21T00:44:44.471290Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1057,7 +1061,7 @@
       "report_validated_at": "2026-11-21T04:40:01.064530Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1222,7 +1226,7 @@
       "report_validated_at": "2026-11-21T04:40:01.070582Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1387,7 +1391,7 @@
       "report_validated_at": "2026-11-21T04:40:01.076591Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1553,7 +1557,7 @@
       "report_validated_at": "2026-11-21T04:40:01.084336Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1723,7 +1727,7 @@
       "report_validated_at": "2026-11-21T04:40:01.092162Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1889,7 +1893,7 @@
       "report_validated_at": "2026-11-22T05:29:35.573683Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2056,7 +2060,7 @@
       "report_validated_at": "2026-11-22T05:29:35.586838Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2221,7 +2225,7 @@
       "report_validated_at": "2026-11-22T05:29:35.598342Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2387,7 +2391,7 @@
       "report_validated_at": "2026-11-22T05:29:35.610723Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2555,7 +2559,7 @@
       "report_validated_at": "2026-11-22T05:29:35.622881Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2720,7 +2724,7 @@
       "report_validated_at": "2026-11-23T01:32:08.596190Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2887,7 +2891,7 @@
       "report_validated_at": "2026-11-23T01:32:08.614632Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3054,7 +3058,7 @@
       "report_validated_at": "2026-11-23T01:32:08.632568Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3221,7 +3225,7 @@
       "report_validated_at": "2026-11-23T01:32:08.652170Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3391,7 +3395,7 @@
       "report_validated_at": "2026-11-23T01:32:08.675542Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-24T22:51:03Z",
+      "received_at": "2026-11-25T14:06:06Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3540,6 +3544,751 @@
       "adopted_report_id": "2026-11-23-MSFT-debate-01",
       "adopted_report_sha256": "sha256:05309ff45239f52e18aec0fac4a51e1aa72dd0ea7cf32468fff5cc7d9be4af8a",
       "adopted_snapshot_id": "sha256:ee52ab44a765786e96a6f7874cd479c0e564ee613289761c0a2a52a94bef43ea"
+    },
+    "2026-11-25-GOOGL-WATCH-001": {
+      "report_id": "2026-11-25-GOOGL-debate-01",
+      "ticker": "GOOGL",
+      "signal_id": "2026-11-25-GOOGL-WATCH-001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-25T01:00:35.379379+00:00",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "report_validated_at": "2026-11-25T01:00:35.379379Z",
+      "freeze_deadline_at": "2026-11-25T14:20:00Z",
+      "frozen_at": "2026-11-25T14:20:00Z",
+      "received_at": "2026-11-25T14:06:06Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -77.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "현재가 279.05달러가 내재가치 상단 71.79달러를 웃돌아 가치 하락을 흡수할 안전마진이 없다.",
+            "안전마진 지표는 -3.4703이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 수치가 비어 있어 사업의 질로 가격을 정당화하기 어렵다.",
+            "공시 항목은 8.01과 9.01이다. 별도 공시 감점은 적용하지 않았고 검색 광고의 변화가 현금창출에 얼마나 기여할지는 확인이 필요하다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "stance": "hold",
+          "confidence": 0.4,
+          "reasons": [
+            "성장 점수 90.69는 양호하다. PEG와 매출·주당순이익의 장기 성장률이 비어 있어 성장 대비 가격 판단은 이 점수에 의존한다.",
+            "월렛 구매 이력을 상업적 검색에 연결해 광고주가 구매 의향이 뚜렷한 이용자에게 도달할 경로를 넓혔다. 검색 매출로 이어지는지는 아직 확인이 필요하다.",
+            "TPU 주문 축소 가능성은 공급망 분석가의 전망이며, 회사가 확인한 클라우드 수요 변화는 기사에 제시되지 않았다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.35,
+          "reasons": [
+            "주가 279.05는 50일선과 200일선 아래에 있어 단기 반등에도 추세 회복이 확인되지 않았다.",
+            "RSI 39.6152로 모멘텀 가산 조건을 충족하지 못했다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.2,
+          "reasons": [
+            "GOOGL의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -77.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 90.69와 구매 이력의 검색 연동은 광고 성장 가능성을 보여 주지만, 고객 전환이 지속적인 잉여현금흐름으로 이어져 현재 가격을 뒷받침할지는 입증하지 못한다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 39.6152로 추세 회복을 유보한 판단은 매수 시점에 관한 것이며, 현재가 279.05달러와 내재가치 상단 71.79달러의 격차를 설명하지 못한다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 상단 71.79달러에 근거한 매도 판단은 안전마진 규율에는 맞지만, 검색과 월렛의 연동이 광고 수익화에 기여할 가능성을 가늠하려면 이익 성장의 지속성도 확인해야 한다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 39.6152를 근거로 모멘텀 가산을 보류하는 것은 타당하며, 단기 모멘텀 약세만으로 광고 수익화 전망의 변화까지 읽기는 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진 -3.4703은 가치 기준의 부담을 보여주지만 중립 국면에서 매도 강도를 판단하려면 시장 대비 약세도 확인해야 한다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 90.69와 검색 광고의 확장 가능성만으론 50일선과 200일선 아래의 주가가 시장 주도력을 되찾았다고 판단하기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 상단과 주가의 격차는 크지만 현금 전환 지표가 비어 있고 검색 광고 기능 개편의 수익 효과도 미확인이라, 지금의 가치 추정만으로 강한 매도 판단을 뒷받침하기 어렵다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수가 양호해도 결제 이력 연동이 실제 광고 매출로 이어졌는지 확인되지 않아 성장 점수에 기댄 긍정 판단의 근거가 약하다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "검색·결제 연동의 광고 매출 및 현금 기여 확인",
+            "맞춤형 칩 조달 전망의 회사 확인"
+          ],
+          "structural_risk": 57.0,
+          "reasoning": "검색과 결제 이력을 연결한 기능 개편은 광고 타기팅을 개선할 수 있으나 실적 기여는 아직 확인되지 않았다. 맞춤형 칩 주문 축소 가능성은 양사가 확인하지 않은 공급망 전망이라 사업 훼손을 판단할 근거가 부족하다."
+        },
+        "chair": {
+          "consensus": [
+            "결제 이력의 검색 연동은 광고 타기팅에 긍정적이며 실제 수익 기여는 확인해야 한다."
+          ],
+          "dissent": [
+            "버핏은 내재가치 상단을 웃도는 가격으로 매도 판단을 유지했고, 린치는 성장 점수와 검색 광고의 가능성을 감안해 관망했다.",
+            "드러켄밀러는 두 이동평균을 밑도는 주가에서 추세 확인을 기다렸다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            203.23,
+            241.14
+          ],
+          "conflict": true,
+          "one_line_ko": "검색 광고 개선의 실적 기여와 주가 추세가 확인될 때까지 관망한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 40,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 57.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-25-GOOGL-debate-01",
+      "adopted_report_sha256": "sha256:d3f86376f8ab265bd82eb8f3298862e8f38dea6915007ea5a2d8bbf665e9b0e1",
+      "adopted_snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858"
+    },
+    "2026-11-25-META-WATCH-001": {
+      "report_id": "2026-11-25-META-debate-01",
+      "ticker": "META",
+      "signal_id": "2026-11-25-META-WATCH-001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-25T01:00:35.403653+00:00",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "report_validated_at": "2026-11-25T01:00:35.403653Z",
+      "freeze_deadline_at": "2026-11-25T14:20:00Z",
+      "frozen_at": "2026-11-25T14:20:00Z",
+      "received_at": "2026-11-25T14:06:06Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -79.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "현재가 589.82달러가 내재가치 상단 181.26달러를 웃돌아 광고 수익의 개선에도 안전마진이 없다.",
+            "안전마진 지표는 -2.7421이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 지표가 없어 자본 투입의 성과를 가늠하기 어렵다.",
+            "공시 항목 8.01에는 별도 감점 기준을 적용하지 않았다. 광고 개선이 공격적인 설비 투자 이후 꾸준한 잉여현금흐름으로 이어질지는 불확실하다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 9.0,
+          "stance": "hold",
+          "confidence": 0.39,
+          "reasons": [
+            "성장 점수 82.15는 양호하다. PEG와 매출·주당순이익의 장기 성장률이 비어 성장 대비 가격을 판단할 정량 근거가 제한적이다.",
+            "광고 노출과 광고 단가가 함께 상승했고 AI 광고 모델은 전환 개선에 기여했다. 본업의 성장 경로가 광고 물량과 단가 양쪽에서 확인된다.",
+            "설비투자 부담으로 분기 잉여현금흐름이 적자를 기록했다. 광고 성장이 주당이익과 현금흐름으로 이어지는지를 확인할 필요가 있다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "주가 589.82는 50일선과 200일선 모두 아래에 있어 매수 추세가 확인되지 않았다.",
+            "RSI 40.2383은 추세 평가 구간의 하단에 있다. 이동평균 조건도 함께 충족해야 가산할 수 있다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.2,
+          "reasons": [
+            "META의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -79.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 82.15와 광고 노출·단가의 개선은 성장 근거가 되지만, 설비 투자로 분기 잉여현금흐름이 적자인 상황에서 추가 광고 매출이 주주에게 돌아갈 현금을 늘린다는 근거는 부족하다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "국면 점수 50.0의 중립과 기술적 관망은 매수 시점의 불확실성을 보여 주지만, 현재가 589.82달러와 내재가치 상단 181.26달러의 격차를 줄여 주지는 않는다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 9.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 상단 181.26달러를 웃도는 주가는 안전마진을 제한하며, 매도 판단을 뒷받침하려면 개선된 광고 수익이 설비투자 부담을 얼마나 상쇄하는지도 확인해야 한다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 40.2383과 이동평균은 진입 시점을 평가하는 근거이며, 광고 노출과 단가가 함께 늘어난 흐름의 지속성은 별도로 확인해야 한다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진 -2.7421과 설비투자 부담을 인정해도 금리와 신용 지표가 비어 있어 이 근거만으로 강한 매도 점수를 뒷받침하기 어렵다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 82.15와 광고 개선은 본업을 뒷받침하지만 주가 589.82가 두 이동평균보다 낮아 매수에 필요한 추세 확인은 부족하다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진이 낮아도 차기 설비투자 예산이 미확정이고 현금 전환 지표가 비어 있어, 현재 수치로 설비투자 부담의 지속성과 매도 강도를 함께 뒷받침하기 어렵다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "양호한 성장 점수와 광고 노출·단가 개선에도 설비투자 이후 분기 잉여현금흐름이 적자를 기록해 광고 성장의 현금 전환이 아직 확인되지 않았다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "차기 자본지출 예산과 잉여현금흐름 추이 확인",
+            "VR 콘텐츠 제휴의 채택 및 수익 기여 확인"
+          ],
+          "structural_risk": 67.0,
+          "reasoning": "광고 노출과 단가 개선은 본업에 긍정적이다. 잉여현금흐름 적자가 보도됐고 적극적인 투자 기조가 이어져 확정 예산과 광고 성장의 현금 전환을 확인할 필요가 있다."
+        },
+        "chair": {
+          "consensus": [
+            "광고 성과 개선은 핵심 사업에 긍정적이다.",
+            "투자 부담이 이어져 광고 성장이 잉여현금흐름 회복으로 이어지는지 확인해야 한다."
+          ],
+          "dissent": [
+            "버핏은 안전마진 부재와 자본지출 부담을 이유로 매도 의견을 유지했고, 린치는 광고 사업의 성장과 장기 성장률 자료 공백을 함께 보고 관망했다.",
+            "드러켄밀러는 광고 호조에도 주가가 두 이동평균 아래에 있어 관망했다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            438.55,
+            514.18
+          ],
+          "conflict": true,
+          "one_line_ko": "광고 성장이 설비투자 부담을 덜고 잉여현금흐름 회복으로 이어지는지 확인하며 관망한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 38,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 67.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-25-META-debate-01",
+      "adopted_report_sha256": "sha256:f43eb3316dbf343cdf634218b7254a96ec5982bbfa87023462b71043f176995d",
+      "adopted_snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858"
+    },
+    "2026-11-25-ADBE-WATCH-001": {
+      "report_id": "2026-11-25-ADBE-debate-01",
+      "ticker": "ADBE",
+      "signal_id": "2026-11-25-ADBE-WATCH-001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-25T01:00:35.425140+00:00",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "report_validated_at": "2026-11-25T01:00:35.425140Z",
+      "freeze_deadline_at": "2026-11-25T14:20:00Z",
+      "frozen_at": "2026-11-25T14:20:00Z",
+      "received_at": "2026-11-25T14:06:06Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -62.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "현재가 232.08달러가 내재가치 상단 182.46달러를 웃돈다. 주가 약세에도 안전마진이 확보되지 않았다.",
+            "안전마진 지표가 -0.4627이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 수치가 없어 사업의 질이 가격 격차를 상쇄할지 판단하기 어렵다.",
+            "내재가치 중앙값은 158.66달러다. 가이던스 상향 소식에도 경영진 교체와 제품 통합이 장기 현금창출에 미치는 영향은 불확실하다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "lynch",
+          "score": 27.0,
+          "stance": "hold",
+          "confidence": 0.4,
+          "reasons": [
+            "성장 점수 100.0은 강하다. PEG와 매출·주당순이익의 장기 성장률이 비어 있어 현재 가격의 합리성을 검증하기 어렵다.",
+            "회사가 연간 실적 가이던스를 상향했다. 구독 사업의 성장과 AI 제품 수익화가 지속되는지 확인하면 성장 점수의 근거가 더 분명해진다.",
+            "StreamWork의 검토·승인 기능을 Creative Cloud에 통합했다. 기존 사용자의 작업 과정에 제품이 더 깊이 자리 잡을 수 있으나 도입 범위와 매출 효과는 기사에서 확인되지 않는다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "주가 232.08은 50일선과 200일선 모두 아래에 있어 안정적인 상승 추세를 확인하기 어렵다.",
+            "RSI 44.8751은 추세 평가 구간에 들어오지만 이동평균 조건을 충족하지 못해 가산하지 않는다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.2,
+          "reasons": [
+            "ADBE의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -62.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 100.0과 가이던스 상향은 이익 전망에 긍정적이지만, 구독 고객 유지와 잉여현금흐름의 지속성이 확인돼야 현재가 232.08달러를 뒷받침할 수 있다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 44.8751로 추세 평가 구간에 들어왔는지는 매수 시점에 관한 판단이며, 주가가 내재가치 상단 182.46달러를 웃돈다는 가격 부담은 그대로 남는다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 27.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 중앙값 158.66달러는 이익력 가치에 해당해 가이던스 상향과 구독 성장의 지속성을 검증한 뒤에야 그 가격 격차를 매도 근거로 얼마나 강하게 볼지 판단할 수 있다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "현재가 232.08달러가 이동평균선 아래에 있다는 근거는 진입 시점에 유효하며, 연간 가이던스 상향이 장기 성장에 주는 의미는 별도 판단이 필요하다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "현재가 232.08달러에서 안전마진이 부족하다는 평가는 타당하지만 회사가 실적 전망을 상향한 만큼 약세가 이어질지는 시장 대비 추세로 확인해야 한다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 100.0과 가이던스 상향은 실적에 우호적이지만 주가가 50일선과 200일선을 모두 밑돌아 추세에 가산할 근거는 부족하다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 중앙값을 근거로 강한 매도 판단을 내리기에는 상향된 가이던스와 경영진 교체가 장기 현금흐름에 미치는 영향이 아직 확인되지 않았다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수에 가이던스 상향을 더해도 장기 매출과 주당순이익 성장률이 비어 있고 플러그인 통합의 매출 기여도도 확인되지 않았다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "경영진 승계 이후 가이던스 이행 확인",
+            "플러그인 연동의 구독 및 현금 기여 확인"
+          ],
+          "structural_risk": 54.0,
+          "reasoning": "회사의 가이던스 상향은 영업 전망에 긍정적이다. 검토·승인 작업 연동의 신규 구독 효과와 경영진 교체 이후 현금 창출은 확인되지 않았고 현재가는 내재가치 상단을 웃돈다."
+        },
+        "chair": {
+          "consensus": [
+            "연간 가이던스 상향은 긍정적이며 장기 실적과 현금 창출의 지속성은 확인이 필요하다.",
+            "협업 기능 연동으로 기존 고객의 작업 범위가 넓어질 수 있으며 실적 기여는 확인되지 않았다."
+          ],
+          "dissent": [
+            "버핏은 내재가치 상단과 현재가의 격차를 들어 매도 쪽을 유지했고, 린치는 가이던스와 성장 점수를 긍정적으로 보면서 관망했다.",
+            "드러켄밀러는 두 이동평균 아래의 주가에서 추세 점수를 가산하지 않았다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            206.38,
+            219.23
+          ],
+          "conflict": true,
+          "one_line_ko": "가이던스 상향과 협업 기능 확대가 지속적인 구독 성장 및 현금 창출로 이어지는지 확인하며 관망한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 16,
+        "quotes_dropped": 0,
+        "numbers_checked": 40,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 54.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-25-ADBE-debate-01",
+      "adopted_report_sha256": "sha256:800a405de379f0a1109c6c2ef73398202cba95a682e434c6607db8503114e22a",
+      "adopted_snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858"
+    },
+    "2026-11-25-NVDA-WATCH-001": {
+      "report_id": "2026-11-25-NVDA-debate-01",
+      "ticker": "NVDA",
+      "signal_id": "2026-11-25-NVDA-WATCH-001",
+      "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-25T01:00:35.448961+00:00",
+      "signal_published_at": "2026-11-24T22:51:04Z",
+      "order_cutoff_at": "2026-11-25T14:25:00Z",
+      "report_validated_at": "2026-11-25T01:00:35.448961Z",
+      "freeze_deadline_at": "2026-11-25T14:20:00Z",
+      "frozen_at": "2026-11-25T14:20:00Z",
+      "received_at": "2026-11-25T14:06:06Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "NONE",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -95.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "현재가 155.38달러가 내재가치 상단 21.18달러를 웃돌아 안전마진이 없다.",
+            "안전마진 지표는 -10.0495이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 지표가 없어 높은 가격을 뒷받침할 자본 효율을 검증하기 어렵다.",
+            "공시에는 5.02가 있고 보도는 최고경영자의 사임 후 복귀와 독립 조사 지속을 전한다. 복귀로 경영 공백은 줄었지만 조사 결론과 지배구조의 장기 영향은 불확실하다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 17.0,
+          "stance": "hold",
+          "confidence": 0.37,
+          "reasons": [
+            "성장 점수 100.0은 강하다. PEG와 매출·주당순이익의 장기 성장률이 비어 성장에 비해 현재 가격이 합리적인지는 확인하기 어렵다.",
+            "기사에서 회사의 매출 전망 상향을 언급했다. 수요 신호는 우호적이지만 장기 이익 성장률을 가늠할 구체적인 수치는 해당 전망 설명에서 확인되지 않는다.",
+            "이사회가 최고경영자를 복귀시켰고 독립 조사는 계속된다. 경영 안정성과 이익의 지속성을 함께 확인할 필요가 있다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.33,
+          "reasons": [
+            "주가 155.38은 50일선과 200일선 모두 아래에 있어 반등 이후에도 추세 회복이 확인되지 않았다.",
+            "RSI 39.4662로 모멘텀 가산 조건을 충족하지 못했다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.2,
+          "reasons": [
+            "NVDA의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -95.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 100.0과 매출 전망 상향은 수요에 우호적이지만, 지속 가능한 마진과 현금 전환이 확인돼야 현재가 155.38달러를 정당화할 수 있다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 39.4662와 이동평균선 아래의 주가로 반등 지속성을 유보한 판단은 적절하지만, 주가 추세는 독립 조사가 남긴 경영 위험이나 내재가치 상단 21.18달러 대비 가격 부담을 측정하지 못한다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 17.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진 지표 -10.0495는 평가치와의 큰 격차를 보여 주며, 매도 강도를 결정하려면 회사가 높인 매출 전망이 장기 주당이익으로 이어질지도 확인해야 한다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 39.4662는 모멘텀 가산을 보류할 근거이며, 매출 전망 상향이 보여 준 수요 흐름의 지속성은 실적에서 따로 확인해야 한다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진 -10.0495와 독립 조사 지속은 부담이지만 중립 국면에서 현재 매도 강도까지 결정하려면 시장 대비 상대강도와 신용 여건이 필요하다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수 100.0과 매출 전망 상향에도 RSI 39.4662와 두 이동평균 아래의 주가는 상승 추세를 뒷받침하지 못한다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진이 낮다는 판단은 수치로 뒷받침되지만 최고경영자 복귀 이후 독립 조사의 결론과 현금흐름 영향이 확인되지 않아 지배구조 위험을 강한 매도 판단에 얼마나 반영할지는 불확실하다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수와 방송이 언급한 매출 전망 상향만으로는 지배구조 불확실성이 지속될 때 장기 이익이 얼마나 방어될지 판단하기 어렵다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [
+            "THESIS_BREAK"
+          ],
+          "additional_blocks": [
+            "8-K 5.02 원문과 이사회 조치 확인",
+            "독립 조사 결과와 잠재적 회계 검토 보도 확인"
+          ],
+          "structural_risk": 70.0,
+          "reasoning": "최고경영자의 사임과 복귀를 거친 뒤에도 회사가 독립 조사를 계속한다고 보도돼 이사회 감독과 경영 안정성에 불확실성이 남는다. 매출 전망 상향 보도에도 독립 조사 결과가 확인될 때까지 신규 진입을 차단한다."
+        },
+        "chair": {
+          "consensus": [
+            "매출 전망 상향 보도는 긍정적이며 장기 실적 기여는 확인해야 한다.",
+            "최고경영자 복귀 뒤에도 독립 조사가 이어져 지배구조 불확실성이 남는다."
+          ],
+          "dissent": [
+            "버핏은 높은 가격과 독립 조사 지속을 근거로 매도 판단을 유지했고, 린치는 매출 전망 상향과 장기 성장률 자료 공백을 함께 보고 관망했다.",
+            "드러켄밀러는 주가 반등 이후에도 두 이동평균 아래에서 추세 회복을 기다렸다."
+          ],
+          "grade_recommendation": "NONE",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            105.92,
+            130.65
+          ],
+          "conflict": true,
+          "one_line_ko": "매출 전망 상향에도 독립 조사가 진행 중이므로 신규 진입을 차단한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 43,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 70.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-25-NVDA-debate-01",
+      "adopted_report_sha256": "sha256:96207b5081d8ef7d2bddff7f977396bf29f401edd561a37ee81dec68c17ac7f9",
+      "adopted_snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858"
     }
   },
   "auto_downgrade": {
