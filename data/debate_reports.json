@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-11-25T00:37:17+00:00",
+  "generated_at": "2026-11-25T01:00:35+00:00",
   "codex": {
     "version": "cloud-agent",
     "model": "default"
@@ -459,20 +459,20 @@
         "quant_signal_id": "2026-11-25-GOOGL-WATCH-001",
         "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
         "round_hashes": {
-          "round1_buffett.json": "sha256:848476eac5e9f3112b92b682ee47975ec011c62fea86b2f3df3d238d1d83194a",
-          "round1_lynch.json": "sha256:d1aad3d8824359573550d47287638695d16a0939204be23684364556d573022b",
-          "round1_druckenmiller.json": "sha256:46a5e0bf20a5e2bbe7dbaca77c301885aefee158eaa49f9fd42d30af6d13702f",
-          "round1_gates_13f.json": "sha256:2c57ab6e87f7f292c5bf8eff6ce334d7d61873c743cd433b43a8cad8c0d687f7",
-          "round2_buffett.json": "sha256:8524bc472bc2f9fe7fbb9412cc79c14b9d38dde2090140b6b70a436370e0b100",
-          "round2_lynch.json": "sha256:507744200ab39c1b1c04d10c00409c4aa9cec091108e97f181ca1f5a972f2dfd",
-          "round2_druckenmiller.json": "sha256:45c7d751834b381fe1f19962e777b7193de6820b188017f4aa67d2f467b21a2b",
-          "round2_gates_13f.json": "sha256:c30ae4e782aae7f72a5c4c104371dc47097fe97611ddcf28cfd49b21ab5a5b81",
-          "round3_guard.json": "sha256:0b1ef8b5cc44339a549e2c0bcd5dedf4f6cd9d79365de3309a3a8d7e89db831f",
-          "round3_chair.json": "sha256:9672fce7f514c370c6969437d2e6a0cc5bf64999f4be36c83a0a7b132f041b7a"
+          "round1_buffett.json": "sha256:86cac26325f7471e2248c083481bac297ef0f7b46b3a783374d22dbae2d7734f",
+          "round1_lynch.json": "sha256:47c920a5aa06eee5c221dc3c6791c258a944c0c88f2bab9f6814c8b349631c5b",
+          "round1_druckenmiller.json": "sha256:ba29d7e65097bc285b73674a789bd382878150dae7e56a39b94936e3264a86fe",
+          "round1_gates_13f.json": "sha256:977f415f4fef10b9ba6df9c077c9059819eb77d3f431c01a52cd82125823acba",
+          "round2_buffett.json": "sha256:7d7733b2c79b5bc72625c44437b692ee75243ec004836fab1cf035f16b8f7826",
+          "round2_lynch.json": "sha256:6ac3d4f1ac9d6378d1f7dd7143ac8927a54ae3c53497d0f44c8eb911df54b127",
+          "round2_druckenmiller.json": "sha256:f675e7e7907c76d15c587631b8ca2420c64084ef55a62d16999281c00e3dfeb4",
+          "round2_gates_13f.json": "sha256:de16c622f7823b56a77b4de55a64f3c1f1ea3123ee6fb74334b7736ea6571c6a",
+          "round3_guard.json": "sha256:de978d859d30806b5e60c3732f416fbb84991538638e914881ade26f50dee27b",
+          "round3_chair.json": "sha256:fb09c2cffa4295dd2cc054fd399a7b2f0d4b7d91d9f71289c21fc1a1cf514a6e"
         },
         "codex_version": "cloud-agent",
         "context_origin": "재사용",
-        "assembled_at": "2026-11-25T00:37:17.590079+00:00"
+        "assembled_at": "2026-11-25T01:00:35.379379+00:00"
       },
       "2026-11-25-META-debate-01": {
         "ticker": "META",
@@ -481,20 +481,20 @@
         "quant_signal_id": "2026-11-25-META-WATCH-001",
         "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
         "round_hashes": {
-          "round1_buffett.json": "sha256:9a44a0e3d6dcf42c6d0bbdad49d5bec0162d062cc3980be524f23f81978b0447",
-          "round1_lynch.json": "sha256:b836cf55826a1e1a0b4e89ad8f513c785182de3af581baeda56696ea49ceaf1f",
-          "round1_druckenmiller.json": "sha256:28e2c2d3c681d77399c70b41a0be3422c89b389437c6cecedbe51ae13d203236",
-          "round1_gates_13f.json": "sha256:2a13edfe4e614c65d0720e98e1310e9fdf40af0e523ba2a1d69e252f8e7650ee",
-          "round2_buffett.json": "sha256:7b0a16669eed33e69f4cb4cb8bdfcc1b890689b7b2f8e26ee91068f89102a43a",
-          "round2_lynch.json": "sha256:89631974fd899ffaae0b018efbb839987195568c704a0b6dc9bfa6e670783b37",
-          "round2_druckenmiller.json": "sha256:2ce106fd03290717c376f420200762c1955bef95e0c7cbe06ac9360897477a70",
-          "round2_gates_13f.json": "sha256:8e5e8e86a3321af20fc860bc18b243cd3977e987341bffa920211e9d122fe9e6",
-          "round3_guard.json": "sha256:2986718d49cd148fbf289dce98eda334e5f158ad6db0241e5710b6f97957aa93",
-          "round3_chair.json": "sha256:1159f96307297ca20b3a0bf0496ec938fb695c18917baa5798e2ea47b6df2b6e"
+          "round1_buffett.json": "sha256:091f65cf83be7bf67bc54c9dd09598ef49827412f1317b698062de59fed1517e",
+          "round1_lynch.json": "sha256:9aad78c358972b6a33e010929a1c7f57e7585ee49b9337793db6f416f0ca92d2",
+          "round1_druckenmiller.json": "sha256:72944f8b329426570f389b1978bd87c758cfdcf3e893123cfe0b34da386cd6ba",
+          "round1_gates_13f.json": "sha256:a471c52e3daa7625deba30a3434750f42d77252e0cb538470697b8f3adff2de2",
+          "round2_buffett.json": "sha256:63d96433863b81d6299fbc4d301f5f0759aca3aa2d5ec3333f3194e893efe290",
+          "round2_lynch.json": "sha256:346ace6dbbb7902343c35a395b707ac15c54f15da13c9428a3adca27eb99c601",
+          "round2_druckenmiller.json": "sha256:b3d75a999554b61358e9efad577cf313182bcfd7b7b6fb6a5df85918350894e9",
+          "round2_gates_13f.json": "sha256:8616c41065b3450b0c50aa6df0cc844d64a6f60a02409d34e426f363339a73d1",
+          "round3_guard.json": "sha256:b9e1d9c2085a7469fdfb075bcc05821dff80ce68614f280dfbb8911cb8a2f5bf",
+          "round3_chair.json": "sha256:b75e39b620046a8632b062f15537784782f5e942e7f28dc142db788426b72167"
         },
         "codex_version": "cloud-agent",
         "context_origin": "재사용",
-        "assembled_at": "2026-11-25T00:37:17.614122+00:00"
+        "assembled_at": "2026-11-25T01:00:35.403653+00:00"
       },
       "2026-11-25-ADBE-debate-01": {
         "ticker": "ADBE",
@@ -503,20 +503,20 @@
         "quant_signal_id": "2026-11-25-ADBE-WATCH-001",
         "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
         "round_hashes": {
-          "round1_buffett.json": "sha256:83323aeaf7ea856bde829b54763bcde635f6697da34db02cebe922b51d24843b",
-          "round1_lynch.json": "sha256:0fd4589d7f3e182d4afc06d9b52b3c9d9df5ea2a27668859656401e05a0edbfe",
-          "round1_druckenmiller.json": "sha256:c7121588aaf5866120e76727d630e928f94596e4356341de7dece33161ea0440",
-          "round1_gates_13f.json": "sha256:7045428f777a787bbef7e726670b5cfd275abfcfed4b6398f2e4c64484e3b90f",
-          "round2_buffett.json": "sha256:479e11ad5e0b180f78bd7949d28b587ab6bac15904c81e763b5542c5f60577ef",
-          "round2_lynch.json": "sha256:bcde2e88eb0f74abf72aa02d6fa5dbd38555723685482d50a627c905d28bae50",
-          "round2_druckenmiller.json": "sha256:4e1a3d96c4b6fe26a5aacddfe18e5c84ae60121ae9eced74f8127b1d2f112e5e",
-          "round2_gates_13f.json": "sha256:286e912ab88626264f613dbf8d034af52a2baab14c850defd2f277bd03c67bbf",
-          "round3_guard.json": "sha256:1c3bae12b5821a7adf332302be6feaf84cb49a61106af4f0577c69965e3b9779",
-          "round3_chair.json": "sha256:0fe911568979cf6ae922b0d0b062b80d555638a9c41284fb2a168e1b9c0c9fa4"
+          "round1_buffett.json": "sha256:44a5c19b459bc07a91654fb4f59deb5be8e37656c7c5e3d177f35ae945fc04bb",
+          "round1_lynch.json": "sha256:a91c523c94ae67988e7f0cd9dbcdb784bf69cea06dd05f8c1d26dba25a0e6e50",
+          "round1_druckenmiller.json": "sha256:c79871ecc34eaaf3def91f173ff0f6bad42fe30da40560c0651544a599018459",
+          "round1_gates_13f.json": "sha256:be51b1d0c5045c37775448bcd881b307d5c5cf1fe2aa87794e06c074f9dc479b",
+          "round2_buffett.json": "sha256:04d7904f06e08f3992a014a9509481b638c02b33f8795b3aa04f154654ccf12e",
+          "round2_lynch.json": "sha256:7fa831efd7ef28816897ab5ac8234b259a00375022113747c8d77befc9bf1e46",
+          "round2_druckenmiller.json": "sha256:ee650d9ce9204652c73dbe837281e5dc6f82fc89d5f75c0eafc45361937c8a5d",
+          "round2_gates_13f.json": "sha256:12eed5b01f41bf2dcf9b4636a44a2e36805d5bc897eedd29446951314a0c801c",
+          "round3_guard.json": "sha256:20dd17625adf517fa31eff93b24725ec9c855402c48c1c0870b414c5d1a9b3f5",
+          "round3_chair.json": "sha256:82c9fa0b2467ec35d2f28b3a0607df9d860ea6fbbd7ee00b109d521551625d45"
         },
         "codex_version": "cloud-agent",
         "context_origin": "재사용",
-        "assembled_at": "2026-11-25T00:37:17.634983+00:00"
+        "assembled_at": "2026-11-25T01:00:35.425140+00:00"
       },
       "2026-11-25-NVDA-debate-01": {
         "ticker": "NVDA",
@@ -525,20 +525,20 @@
         "quant_signal_id": "2026-11-25-NVDA-WATCH-001",
         "snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858",
         "round_hashes": {
-          "round1_buffett.json": "sha256:63d08ae654011202e93ea9f40b1353b468648e56206bc3cb323f21f267ab5f1f",
-          "round1_lynch.json": "sha256:bf65e530c06a03de0f3bd5b535b607ccb3476339feedbe78c43695d0f825eaa2",
-          "round1_druckenmiller.json": "sha256:d9f0de2a8bc8fc82d849e5ac61f093952ed76d676862a260a6a2e093672f99db",
-          "round1_gates_13f.json": "sha256:a1fccfc30d39f59fd1da381ab861ce0fe980a678be625e3ba74f10a9d5c8172f",
-          "round2_buffett.json": "sha256:05fc4f02c668bfcfaaa226499ffcfdd6f391b864deb30338a9df434c02bb775f",
-          "round2_lynch.json": "sha256:50b89222c8d82a5291d6bbb5ac41c2ae6894d1535fd158cf718546a484c036c0",
-          "round2_druckenmiller.json": "sha256:7f852aba6ed4ad9ec866d31c11294c69073e925149be3c8fe1868862d466b740",
-          "round2_gates_13f.json": "sha256:49e3102e98c25e02e428c3976cdbba0e36bc529a7a40e81352fa366d412561f1",
-          "round3_guard.json": "sha256:aaeeed4d8854224e2154f1dffcaaabed086ef3d4a1eb1baabcd829b84ed107a9",
-          "round3_chair.json": "sha256:ea2eaf740387127291834b5dc21f86f3f64c97e7dc83322f5154fd6e20d4e080"
+          "round1_buffett.json": "sha256:5f0e1e0eac615649bb7a550ed38547099f7951a4d78706e8e218f5338787174f",
+          "round1_lynch.json": "sha256:638f529e5abcb876776b3f04e8e5c67b28d1bef9de39c7410c77d92a8d81bc9e",
+          "round1_druckenmiller.json": "sha256:af6f2ea757dc5d14606a46fada6ab45b9940d450ac91c88a22fc849229348044",
+          "round1_gates_13f.json": "sha256:a62c8a9a85bf48753baf4cbaa7a7280c16de55630b1bb9071d2b379141cb55d4",
+          "round2_buffett.json": "sha256:9f5545f705cf24f84439e3743aafed79126c5a037d391d2af80c24b8630877a7",
+          "round2_lynch.json": "sha256:30318270a5a8d7057f6b257446d6d0a4e778c80e0eda856775a4b236606664e1",
+          "round2_druckenmiller.json": "sha256:407942560daf427bdffaa89135fb1455a7dd19a108d69aec68fa9efbc44a9fd7",
+          "round2_gates_13f.json": "sha256:372a1459800a58cd9f170fc6544e8ddc37d3efeec52de336d40cf6c21bb382b2",
+          "round3_guard.json": "sha256:cb14763bccdb78bbd5b32d4361358e8bb4fa9e1f5677aa8cdb79f10bbeca1f40",
+          "round3_chair.json": "sha256:facb5301ae858657e55a24d78a12b10e294247e89639817e0357ba388b5769ea"
         },
         "codex_version": "cloud-agent",
         "context_origin": "재사용",
-        "assembled_at": "2026-11-25T00:37:17.660886+00:00"
+        "assembled_at": "2026-11-25T01:00:35.448961+00:00"
       }
     },
     "context_hash_by_ticker": {
@@ -12303,134 +12303,134 @@
       "data_cutoff_at": "2026-11-24T22:00:00Z",
       "signal_published_at": "2026-11-24T22:51:04Z",
       "order_cutoff_at": "2026-11-25T14:25:00Z",
-      "completed_at": "2026-11-25T00:37:17.590079+00:00",
+      "completed_at": "2026-11-25T01:00:35.379379+00:00",
       "late": false,
       "invalid": false,
       "status": "complete",
       "round1": [
         {
           "skill": "buffett",
-          "score": -74.0,
+          "score": -77.0,
           "stance": "sell",
           "confidence": 0.4,
           "reasons": [
-            "현재가 279.05는 내재가치 범위의 상단 71.79를 웃돌아 안전마진이 없다.",
-            "품질 점수는 90.55지만 ROIC 스프레드, 잉여현금흐름 마진과 순이익 대비 전환율, 희석 및 부채상환 지표가 비어 있다. 자본수익과 현금창출의 지속성을 검증할 수 없어 해당 가감점을 적용하지 않았다.",
-            "기사에 따르면 검색어와 구매 이력을 연결해 구매 의도가 높은 소비자에게 광고를 제시할 수 있어 검색 광고의 경쟁력을 높일 가능성이 있다."
+            "현재가 279.05달러가 내재가치 상단 71.79달러를 웃돌아 가치 하락을 흡수할 안전마진이 없다.",
+            "안전마진 지표는 -3.4703이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 수치가 비어 있어 사업의 질로 가격을 정당화하기 어렵다.",
+            "공시 항목은 8.01과 9.01이다. 별도 공시 감점은 적용하지 않았고 검색 광고의 변화가 현금창출에 얼마나 기여할지는 확인이 필요하다."
           ],
           "news_read": [
             {
               "news_id": "news-8252081b53c3",
               "durability": "structural",
               "impact": "positive",
-              "severity": 49.0,
+              "severity": 42.0,
               "quote_sha256": "2bdafcbbebba21b9f574458528e2192932d64cf0c188196165806755bda1253c",
               "quote_verified": true,
               "quote_chars": 145,
-              "rationale_ko": "구매 이력과 검색 의도를 연결해 핵심 검색 광고의 타기팅을 개선할 여지가 생겼다."
+              "rationale_ko": "결제 이력을 검색·광고에 연결하면 광고주의 타기팅 정밀도가 높아질 수 있다. 광고 성과의 개선이나 추가 투자 대비 수익은 확인되지 않았다."
             },
             {
               "news_id": "news-586edb5ecaf7",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 9.0,
-              "quote_sha256": "e0258e069ca03de29d5fba862586c204bdbf15a513da9e0985ab0b21ea21e98e",
+              "severity": 7.0,
+              "quote_sha256": "c9c557b2a5a358bc54c02a4d1cf241a93065f15db14807f68f54696612e884d2",
               "quote_verified": true,
-              "quote_chars": 80,
-              "rationale_ko": "하루 ETF 순매수는 수급 변화다."
+              "quote_chars": 106,
+              "rationale_ko": "ETF 순매수 전환은 수급 변화다. 기업이 벌어들이는 현금의 지속성을 평가하는 근거로 삼지 않는다."
             },
             {
               "news_id": "news-fbeca17ce59a",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 7.0,
+              "severity": 6.0,
               "quote_sha256": "54d3038bbb4c11ad5b3bdca8fe5ba3ff63a684f33fc78e098c1edfc7e8c5b6a7",
               "quote_verified": true,
               "quote_chars": 124,
-              "rationale_ko": "당일 지수 구성 종목의 주가 등락을 모아 전한다."
+              "rationale_ko": "당일 반등과 최근 주가 약세를 중계한다. 검색과 클라우드의 수익력 변화는 확인되지 않는다."
             },
             {
               "news_id": "news-6f1b119bc574",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 9.0,
-              "quote_sha256": "1a06c2bca6e59c48e72c95b769f779289b6e0ea19794b97dcb27942e8b45cf3a",
+              "severity": 7.0,
+              "quote_sha256": "c424a918f933dc2b092aaeb3094caec38e6843e9790d4018f2ee1bf4d7d887e5",
               "quote_verified": true,
-              "quote_chars": 136,
-              "rationale_ko": "ETF 순매도를 집계한 단기 수급 기사다."
+              "quote_chars": 127,
+              "rationale_ko": "ETF 비중 축소는 단기 수급이다. 검색 광고의 경쟁 우위나 자본 배분이 바뀌었다는 근거는 없다."
             },
             {
               "news_id": "news-fac153165105",
               "durability": "structural",
-              "impact": "unknown",
-              "severity": 38.0,
+              "impact": "neutral",
+              "severity": 28.0,
               "quote_sha256": "93503941d535cd8bd20c382211f8c4bcc1e962d5fa5ac7b35b32df563a9f894a",
               "quote_verified": true,
               "quote_chars": 133,
-              "rationale_ko": "공급망 분석가의 TPU 주문 전망은 AI 투자 규모와 관련된다. 양사가 확인하지 않아 알파벳의 투자수익이나 현금흐름에 미칠 방향은 판단하기 어렵다."
+              "rationale_ko": "맞춤형 칩 주문 전망은 향후 설비 투자의 방향과 관련된다. 양사가 확인하지 않았고 알파벳의 투자 효율에 미치는 방향은 불명확하다."
             }
           ]
         },
         {
           "skill": "lynch",
-          "score": 24.0,
+          "score": 20.0,
           "stance": "hold",
-          "confidence": 0.38,
+          "confidence": 0.4,
           "reasons": [
-            "성장 점수 90.69는 높지만 PEG와 PEGY, 장기 매출·주당순이익 성장률이 비어 있어 성장 대비 가격이 적정한지 판단하기 어렵다.",
-            "검색어와 구매 이력을 연결해 광고주가 구매 의도가 높은 소비자에게 접근할 수 있다는 본문은 검색 광고 성장의 근거다.",
-            "구글의 맞춤 칩 주문 감소 가능성은 양사 확인을 거치지 않았다는 본문을 감안해 매출 성장 둔화로 반영하지 않는다."
+            "성장 점수 90.69는 양호하다. PEG와 매출·주당순이익의 장기 성장률이 비어 있어 성장 대비 가격 판단은 이 점수에 의존한다.",
+            "월렛 구매 이력을 상업적 검색에 연결해 광고주가 구매 의향이 뚜렷한 이용자에게 도달할 경로를 넓혔다. 검색 매출로 이어지는지는 아직 확인이 필요하다.",
+            "TPU 주문 축소 가능성은 공급망 분석가의 전망이며, 회사가 확인한 클라우드 수요 변화는 기사에 제시되지 않았다."
           ],
           "news_read": [
             {
               "news_id": "news-8252081b53c3",
               "durability": "structural",
               "impact": "positive",
-              "severity": 64.0,
+              "severity": 47.0,
               "quote_sha256": "2bdafcbbebba21b9f574458528e2192932d64cf0c188196165806755bda1253c",
               "quote_verified": true,
               "quote_chars": 145,
-              "rationale_ko": "검색 의도와 결제 데이터를 연결해 광고주의 타기팅 기능을 넓혔다. 광고 수익화에 긍정적이며 실적 기여 규모는 아직 제시되지 않았다."
+              "rationale_ko": "구매 이력과 검색 의도를 결합하면 검색 광고의 타기팅과 수익화 방식이 달라질 수 있다."
             },
             {
               "news_id": "news-586edb5ecaf7",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 10.0,
-              "quote_sha256": "e0258e069ca03de29d5fba862586c204bdbf15a513da9e0985ab0b21ea21e98e",
+              "severity": 6.0,
+              "quote_sha256": "c9c557b2a5a358bc54c02a4d1cf241a93065f15db14807f68f54696612e884d2",
               "quote_verified": true,
-              "quote_chars": 80,
-              "rationale_ko": "하루 동안의 ETF 순매수다. 고객 수요나 이익 성장에 관한 정보는 없다."
+              "quote_chars": 106,
+              "rationale_ko": "ETF 순매수 전환은 단기 주식 수급을 보여 준다."
             },
             {
               "news_id": "news-fbeca17ce59a",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 9.0,
+              "severity": 5.0,
               "quote_sha256": "54d3038bbb4c11ad5b3bdca8fe5ba3ff63a684f33fc78e098c1edfc7e8c5b6a7",
               "quote_verified": true,
               "quote_chars": 124,
-              "rationale_ko": "다우 주요 종목의 당일 상승을 집계한 시황이다. 검색이나 클라우드 사업의 성장 전망을 바꿀 근거는 없다."
+              "rationale_ko": "당일 상승 종목을 정리한 시황 기사다."
             },
             {
               "news_id": "news-6f1b119bc574",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 10.0,
-              "quote_sha256": "1a06c2bca6e59c48e72c95b769f779289b6e0ea19794b97dcb27942e8b45cf3a",
+              "severity": 6.0,
+              "quote_sha256": "867d2e8d628b27125a4e78083d88a8e9bcf6bf710e7e6df3c0b38d24aa67e721",
               "quote_verified": true,
-              "quote_chars": 136,
-              "rationale_ko": "ETF 매매 집계에 따른 단기 수급 신호이며 영업 성장률은 설명하지 않는다."
+              "quote_chars": 105,
+              "rationale_ko": "연이은 ETF 순매도는 단기 수급 변화다."
             },
             {
               "news_id": "news-fac153165105",
               "durability": "structural",
-              "impact": "unknown",
-              "severity": 39.0,
+              "impact": "neutral",
+              "severity": 22.0,
               "quote_sha256": "93503941d535cd8bd20c382211f8c4bcc1e962d5fa5ac7b35b32df563a9f894a",
               "quote_verified": true,
               "quote_chars": 133,
-              "rationale_ko": "맞춤 칩 주문 전망은 구글의 인프라 계획과 관련된다. 양사 확인이 없고 알파벳의 성장 및 비용에 미칠 방향도 본문에서 확인되지 않는다."
+              "rationale_ko": "자체 AI 가속기 조달 계획에 관한 공급망 전망이다. 양사가 확인하지 않았으며 알파벳의 비용과 성장에 미칠 방향은 본문에서 확정할 수 없다."
             }
           ]
         },
@@ -12440,60 +12440,60 @@
           "stance": "hold",
           "confidence": 0.35,
           "reasons": [
-            "검증된 거시 레짐은 중립(neutral)이다. 시장 대비 상대강도와 변동성·신용·금리 지표가 비어 있어 주도주 여부와 거시 압력을 확인하기 어렵다.",
-            "현재가 279.05는 단기와 장기 이동평균을 모두 밑돌아 추세 회복이 확인될 때까지 관망한다.",
-            "RSI 39.6152는 추세 가산 구간을 밑돈다. ETF 순매수 전환 보도를 매수 신호로 해석하기는 이르다."
+            "주가 279.05는 50일선과 200일선 아래에 있어 단기 반등에도 추세 회복이 확인되지 않았다.",
+            "RSI 39.6152로 모멘텀 가산 조건을 충족하지 못했다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
           ],
           "news_read": [
             {
               "news_id": "news-8252081b53c3",
               "durability": "structural",
               "impact": "positive",
-              "severity": 52.0,
-              "quote_sha256": "2bdafcbbebba21b9f574458528e2192932d64cf0c188196165806755bda1253c",
+              "severity": 57.0,
+              "quote_sha256": "242baff3d0d7f77a23fac5cd043b34164367342d9e3ec4ad8a20e52e65d225ec",
               "quote_verified": true,
-              "quote_chars": 145,
-              "rationale_ko": "검색 질의와 구매 이력을 연결하면 광고 타기팅이 달라질 수 있다. 실제 광고 수익 효과는 기사에서 확인되지 않았다."
+              "quote_chars": 122,
+              "rationale_ko": "검색과 결제 정보의 연결은 광고 타기팅에 활용할 수 있다. 실제 광고 매출 개선은 확인이 필요하다."
             },
             {
               "news_id": "news-586edb5ecaf7",
               "durability": "transient",
               "impact": "positive",
-              "severity": 18.0,
+              "severity": 22.0,
               "quote_sha256": "e0258e069ca03de29d5fba862586c204bdbf15a513da9e0985ab0b21ea21e98e",
               "quote_verified": true,
               "quote_chars": 80,
-              "rationale_ko": "하루 ETF 순매수 전환은 단기 수급 개선이다. 시장 대비 상대강도의 회복까지 확인할 근거는 부족하다."
+              "rationale_ko": "ETF 자금이 직전 순매도 이후 순매수로 전환했다. 연속적인 매수세로 이어지는지 지켜봐야 한다."
             },
             {
               "news_id": "news-fbeca17ce59a",
               "durability": "transient",
               "impact": "positive",
-              "severity": 12.0,
+              "severity": 17.0,
               "quote_sha256": "54d3038bbb4c11ad5b3bdca8fe5ba3ff63a684f33fc78e098c1edfc7e8c5b6a7",
               "quote_verified": true,
               "quote_chars": 124,
-              "rationale_ko": "다우 구성 종목의 당일 등락 기사다. 알파벳의 당일 상승과 함께 더 긴 기간의 하락도 보도한다."
+              "rationale_ko": "여러 업종의 당일 상승 종목을 모아 보도했다. 알파벳의 반등은 장기 추세 판단에 제한적으로 반영한다."
             },
             {
               "news_id": "news-6f1b119bc574",
               "durability": "transient",
               "impact": "negative",
-              "severity": 14.0,
-              "quote_sha256": "867d2e8d628b27125a4e78083d88a8e9bcf6bf710e7e6df3c0b38d24aa67e721",
+              "severity": 18.0,
+              "quote_sha256": "1a06c2bca6e59c48e72c95b769f779289b6e0ea19794b97dcb27942e8b45cf3a",
               "quote_verified": true,
-              "quote_chars": 105,
-              "rationale_ko": "연이은 ETF 순매도는 단기 수급 압력이다. 기사에는 앞선 순매수도 함께 나온다."
+              "quote_chars": 136,
+              "rationale_ko": "매수 ETF 수가 더 많았지만 거래 규모를 합산하면 순유출이었다. 해당 거래일의 수급 신호다."
             },
             {
               "news_id": "news-fac153165105",
               "durability": "structural",
               "impact": "neutral",
-              "severity": 40.0,
+              "severity": 43.0,
               "quote_sha256": "93503941d535cd8bd20c382211f8c4bcc1e962d5fa5ac7b35b32df563a9f894a",
               "quote_verified": true,
               "quote_chars": 133,
-              "rationale_ko": "보도의 핵심은 장래 맞춤형 칩 주문량 변화 가능성이다. 양사 미확인 추정이며 알파벳 사업에 미칠 방향은 본문에서 확인되지 않았다."
+              "rationale_ko": "맞춤형 칩 조달 전망이 달라질 가능성이 제기됐다. 양사 확인이 없고 알파벳의 인프라 전략에 미치는 방향은 아직 판단하기 어렵다."
             }
           ]
         },
@@ -12503,18 +12503,18 @@
           "stance": "hold",
           "confidence": 0.2,
           "reasons": [
-            "GOOGL의 13F 보유 내역이 비어 있어 게이츠 재단·기금의 분기 대비 증감과 Communication Services 섹터의 동반 확대 여부를 확인할 수 없다. 13F는 45일 제출 기한이 적용되는 분기말 자료이므로 보유 신호 판정을 유보한다."
+            "GOOGL의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
           ],
           "news_read": [
             {
               "news_id": "news-8252081b53c3",
               "durability": "structural",
               "impact": "positive",
-              "severity": 61.0,
+              "severity": 50.0,
               "quote_sha256": "242baff3d0d7f77a23fac5cd043b34164367342d9e3ec4ad8a20e52e65d225ec",
               "quote_verified": true,
               "quote_chars": 122,
-              "rationale_ko": "검색에 월렛 구매 이력을 연결해 구매 의도가 높은 이용자에게 광고를 노출할 수 있다. 검색 광고 제품의 변화이며 실현 매출은 본문에서 확인되지 않는다."
+              "rationale_ko": "결제 이력과 검색 의도를 연결하는 기능 개편은 광고 타기팅과 검색 수익화에 영향을 줄 수 있다."
             },
             {
               "news_id": "news-586edb5ecaf7",
@@ -12524,17 +12524,17 @@
               "quote_sha256": "e0258e069ca03de29d5fba862586c204bdbf15a513da9e0985ab0b21ea21e98e",
               "quote_verified": true,
               "quote_chars": 80,
-              "rationale_ko": "직전 순유출 뒤 일별 ETF 순유입으로 전환했다. 분기말 기관 보유 변화의 확인에는 해당 분기 공시가 필요하다."
+              "rationale_ko": "일별 ETF 순유입은 단기 수급에 우호적이다. 분기말 기관 보유 변화는 별도 공시에서 확인해야 한다."
             },
             {
               "news_id": "news-fbeca17ce59a",
               "durability": "transient",
               "impact": "positive",
-              "severity": 8.0,
+              "severity": 10.0,
               "quote_sha256": "54d3038bbb4c11ad5b3bdca8fe5ba3ff63a684f33fc78e098c1edfc7e8c5b6a7",
               "quote_verified": true,
               "quote_chars": 124,
-              "rationale_ko": "여러 종목의 당일 등락을 집계한 기사에 알파벳의 장중 상승이 포함됐다."
+              "rationale_ko": "알파벳의 장중 상승을 여러 종목의 등락과 함께 전한 시황 기사다."
             },
             {
               "news_id": "news-6f1b119bc574",
@@ -12544,17 +12544,17 @@
               "quote_sha256": "1a06c2bca6e59c48e72c95b769f779289b6e0ea19794b97dcb27942e8b45cf3a",
               "quote_verified": true,
               "quote_chars": 136,
-              "rationale_ko": "일별 ETF 순유출 집계다. 분기말 보유 변화나 섹터 전반의 방향을 판단하기에는 시계열이 짧다."
+              "rationale_ko": "일별 ETF 순유출은 단기 수급에 부담이다. 분기말 기관 보유 변화는 별도 공시에서 확인해야 한다."
             },
             {
               "news_id": "news-fac153165105",
               "durability": "structural",
-              "impact": "unknown",
-              "severity": 42.0,
+              "impact": "neutral",
+              "severity": 38.0,
               "quote_sha256": "93503941d535cd8bd20c382211f8c4bcc1e962d5fa5ac7b35b32df563a9f894a",
               "quote_verified": true,
               "quote_chars": 133,
-              "rationale_ko": "애널리스트의 맞춤형 칩 주문 감소 전망은 구글의 조달 계획에 관련된다. 양사 확인이 없어 주문 변화와 구글에 미치는 영향은 불확실하다."
+              "rationale_ko": "공급망 분석가의 주문 감소 전망은 구글의 자체 칩 조달 계획에 관한 사안이다. 양사의 확인이 없어 구글에 미치는 순효과를 판단하기 어렵다."
             }
           ]
         }
@@ -12562,38 +12562,49 @@
       "round2": [
         {
           "skill": "buffett",
-          "score": -74.0,
+          "score": -77.0,
           "changed": false,
           "rebuttals": [
             {
               "target_skill": "lynch",
-              "point": "린치가 성장 점수를 높게 평가하고 광고 타기팅 개선을 성장 근거로 삼았지만, 개선된 타기팅의 이익과 현금 기여는 확인되지 않아 내재가치 상단을 넘는 가격을 뒷받침하기 어렵다.",
+              "point": "성장 점수 90.69와 구매 이력의 검색 연동은 광고 성장 가능성을 보여 주지만, 고객 전환이 지속적인 잉여현금흐름으로 이어져 현재 가격을 뒷받침할지는 입증하지 못한다.",
               "quote_or_number_ref": "growth"
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 39.6152로 추세 회복을 유보한 판단은 매수 시점에 관한 것이며, 현재가 279.05달러와 내재가치 상단 71.79달러의 격차를 설명하지 못한다.",
+              "quote_or_number_ref": "39.6152"
+            },
+            {
+              "target_skill": "gates_13f",
+              "point": "제출 기한이 45일인 분기말 보유 자료가 비어 있고 일별 ETF 순유입과 순유출이 번갈아 나타나, 수급 판독의 중립 점수가 검색 사업의 가치에 힘을 보태지는 않는다.",
+              "quote_or_number_ref": "45"
             }
           ],
           "conflict_points": [
-            "검색과 결제 데이터의 연동이 광고 타기팅을 개선할 가능성은 인정한다. 투하자본이익률과 잉여현금흐름 전환 자료가 비어 있고 현재가가 내재가치 상단을 웃돌아 점수를 유지한다."
+            "구매 이력 연동이 광고주의 전환과 알파벳의 장기 현금창출을 얼마나 개선하는지 확인이 필요하다.",
+            "안전마진 지표 -3.4703을 재평가할 자본비용을 웃도는 이익과 현금 전환을 확인할 자료가 없어 점수를 유지한다."
           ]
         },
         {
           "skill": "lynch",
-          "score": 24.0,
+          "score": 20.0,
           "changed": false,
           "rebuttals": [
             {
               "target_skill": "buffett",
-              "point": "현재가가 내재가치 상단을 넘는다는 근거에 높은 비중을 두고 매도를 판단하기에는 검색과 결제 데이터의 연결이 광고주 수요와 장기 이익에 미칠 효과가 확인되지 않았다.",
-              "quote_or_number_ref": "iv_high"
+              "point": "내재가치 상단 71.79달러에 근거한 매도 판단은 안전마진 규율에는 맞지만, 검색과 월렛의 연동이 광고 수익화에 기여할 가능성을 가늠하려면 이익 성장의 지속성도 확인해야 한다.",
+              "quote_or_number_ref": "71.79"
             },
             {
               "target_skill": "druckenmiller",
-              "point": "낮은 RSI는 진입 시점에 신중할 근거지만 구매 이력을 활용한 검색 광고의 수익화 여력을 평가하는 데는 한계가 있다.",
+              "point": "RSI 39.6152를 근거로 모멘텀 가산을 보류하는 것은 타당하며, 단기 모멘텀 약세만으로 광고 수익화 전망의 변화까지 읽기는 어렵다.",
               "quote_or_number_ref": "39.6152"
             }
           ],
           "conflict_points": [
-            "검색 광고의 신규 타기팅이 실제 매출과 이익 증가로 이어질지는 아직 확인되지 않았다.",
-            "내재가치 상단과 현재가의 격차에 부여하는 비중이 다르다. 장기 성장률과 PEG가 비어 있어 관망 점수를 유지한다."
+            "검색 광고의 수익화 개선 가능성과 TPU 조달 축소 전망이 장기 이익에 어떤 영향을 줄지는 아직 확인되지 않았다.",
+            "성장 점수 90.69에 근거한 관망을 유지한다. PEG와 장기 성장률이 비어 가격에 대한 판단을 바꿀 근거가 부족하다."
           ]
         },
         {
@@ -12602,19 +12613,19 @@
           "changed": false,
           "rebuttals": [
             {
-              "target_skill": "lynch",
-              "point": "높은 성장 점수와 구매 이력을 활용한 검색 광고 개선에도 주가가 두 이동평균을 밑돌고 있어 시장이 알파벳을 주도주로 보기 시작했다는 근거는 부족하다.",
-              "quote_or_number_ref": "growth"
+              "target_skill": "buffett",
+              "point": "안전마진 -3.4703은 가치 기준의 부담을 보여주지만 중립 국면에서 매도 강도를 판단하려면 시장 대비 약세도 확인해야 한다.",
+              "quote_or_number_ref": "-3.4703"
             },
             {
-              "target_skill": "buffett",
-              "point": "내재가치 상단을 웃도는 가격은 안전마진이 작다는 근거지만, 중립 레짐에서 매도 시점을 판단하려면 시장 대비 상대강도 확인이 필요하다.",
-              "quote_or_number_ref": "price"
+              "target_skill": "lynch",
+              "point": "성장 점수 90.69와 검색 광고의 확장 가능성만으론 50일선과 200일선 아래의 주가가 시장 주도력을 되찾았다고 판단하기 어렵다.",
+              "quote_or_number_ref": "90.69"
             }
           ],
           "conflict_points": [
-            "검색 광고 기능 변화의 매출 효과와 시장의 가격 반응은 각각 확인해야 한다.",
-            "중립 레짐과 약한 추세는 관망을 지지하며, 상대강도와 금리 지표가 비어 있어 점수를 유지한다."
+            "검색에 결제 이력을 접목하는 변화가 매출에 기여할 수 있으나 주가는 두 이동평균 아래에 머물러 있다.",
+            "중립 국면에서 6개월 상대강도, 금리, 신용 지표가 비어 있어 기존 관망 점수를 유지한다."
           ]
         },
         {
@@ -12623,14 +12634,24 @@
           "changed": false,
           "rebuttals": [
             {
+              "target_skill": "buffett",
+              "point": "내재가치 상단과 주가의 격차는 크지만 현금 전환 지표가 비어 있고 검색 광고 기능 개편의 수익 효과도 미확인이라, 지금의 가치 추정만으로 강한 매도 판단을 뒷받침하기 어렵다.",
+              "quote_or_number_ref": "71.79"
+            },
+            {
               "target_skill": "lynch",
-              "point": "성장 점수와 검색의 월렛 연동은 새로운 광고 기능을 보여 주지만, 발췌문에는 연동이 광고주의 지출 증가로 이어졌다는 실적이 없어 지속적인 광고 성장의 근거로 삼기에는 이르다.",
-              "quote_or_number_ref": "growth"
+              "point": "성장 점수가 양호해도 결제 이력 연동이 실제 광고 매출로 이어졌는지 확인되지 않아 성장 점수에 기댄 긍정 판단의 근거가 약하다.",
+              "quote_or_number_ref": "90.69"
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "낮은 RSI는 가격 추세를 보여 주지만 순매도와 순매수가 번갈아 나타난 일별 ETF 흐름을 분기말 장기 자금의 방향으로 확대해 해석하기 어렵다.",
+              "quote_or_number_ref": "39.6152"
             }
           ],
           "conflict_points": [
-            "일별 ETF 순유출 뒤 순유입 전환은 재단과 통신 서비스 섹터의 분기별 보유 변화와 구분해야 한다.",
-            "45일 제출 기한이 적용되는 분기말 13F 보유 자료가 비어 있어 장기 보유 변화의 확인점은 중립으로 유지한다."
+            "검색과 결제 데이터 연동의 광고 수익 효과가 확인되기 전에는 성장 점수와 현재 안전마진이 가리키는 평가가 갈린다.",
+            "제출 기한이 45일인 분기말 13F 보유 내역이 없어 종목 증감이나 섹터 동행을 확인할 수 없으므로 기존 점수를 유지한다."
           ]
         }
       ],
@@ -12638,20 +12659,20 @@
         "guard": {
           "veto_codes": [],
           "additional_blocks": [
-            "검색 광고 수익과 현금 기여 확인",
-            "맞춤형 TPU 주문 전망의 회사 확인"
+            "검색·결제 연동의 광고 매출 및 현금 기여 확인",
+            "맞춤형 칩 조달 전망의 회사 확인"
           ],
-          "structural_risk": 64.0,
-          "reasoning": "검색과 구매 이력의 연동은 핵심 광고 기능의 변화다. 맞춤형 TPU 주문 감소 전망은 양사 미확인 추정으로 사업 훼손을 단정할 근거가 부족하며, 광고 개선의 실제 현금 기여도 아직 확인되지 않았다.",
+          "structural_risk": 57.0,
+          "reasoning": "검색과 결제 이력을 연결한 기능 개편은 광고 타기팅을 개선할 수 있으나 실적 기여는 아직 확인되지 않았다. 맞춤형 칩 주문 축소 가능성은 양사가 확인하지 않은 공급망 전망이라 사업 훼손을 판단할 근거가 부족하다.",
           "opinion": "caution"
         },
         "chair": {
           "consensus": [
-            "검색어와 구매 이력의 연동은 광고 타기팅을 개선할 수 있으며 실적 기여는 확인되지 않았다."
+            "결제 이력의 검색 연동은 광고 타기팅에 긍정적이며 실제 수익 기여는 확인해야 한다."
           ],
           "dissent": [
-            "버핏은 안전마진 부재로 매도 판단을 유지했고, 린치는 검색 광고의 성장 가능성과 장기 성장률의 공백을 함께 고려해 관망했다.",
-            "드러켄밀러는 두 이동평균 하회와 시장 대비 상대강도 공백 때문에 진입 판단을 유보했다."
+            "버핏은 내재가치 상단을 웃도는 가격으로 매도 판단을 유지했고, 린치는 성장 점수와 검색 광고의 가능성을 감안해 관망했다.",
+            "드러켄밀러는 두 이동평균을 밑도는 주가에서 추세 확인을 기다렸다."
           ],
           "grade_recommendation": "WATCH",
           "entry_plan_refs": [],
@@ -12660,17 +12681,17 @@
             241.14
           ],
           "conflict": true,
-          "one_line_ko": "검색 광고 개선의 현금 기여와 주가 추세 회복이 확인될 때까지 관망한다."
+          "one_line_ko": "검색 광고 개선의 실적 기여와 주가 추세가 확인될 때까지 관망한다."
         }
       },
       "scores": {
         "buffett": {
-          "round1": -74.0,
-          "round2": -74.0
+          "round1": -77.0,
+          "round2": -77.0
         },
         "lynch": {
-          "round1": 24.0,
-          "round2": 24.0
+          "round1": 20.0,
+          "round2": 20.0
         },
         "druckenmiller": {
           "round1": 0.0,
@@ -12686,12 +12707,12 @@
         "skills_kept": 6,
         "quotes_checked": 20,
         "quotes_dropped": 0,
-        "numbers_checked": 12,
+        "numbers_checked": 40,
         "numbers_rejected": 0,
         "refs_dropped": 0,
         "drop_reasons": [],
-        "confidence_cap": null,
-        "report_validated_at": "2026-11-25T00:37:17.590079+00:00",
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-25T01:00:35.379379+00:00",
         "resume_key": "sha256:d5f1fa6ce479f471cb3b068add40d429ff7e30c1687f32f600e42925c2bf2b5a",
         "injection_scope": null,
         "injection_blocking": false,
@@ -12728,7 +12749,7 @@
               "counts": {
                 "quotes_checked": 5,
                 "quotes_dropped": 0,
-                "numbers_checked": 3,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -12741,7 +12762,9 @@
                   "news-6f1b119bc574",
                   "news-fac153165105"
                 ],
-                "news_ids_dropped": []
+                "news_ids_dropped": [],
+                "confidence_cap": "C",
+                "price_pattern_hits": 1
               }
             },
             {
@@ -12772,7 +12795,7 @@
               "counts": {
                 "quotes_checked": 5,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 6,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -12818,7 +12841,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 8,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -12831,7 +12854,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 1,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -12844,7 +12867,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 7,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -12857,7 +12880,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -12892,7 +12915,7 @@
             "flags": {}
           }
         },
-        "report_sha256": "sha256:937c9c1e0a7ee57c455cadc8d6b3e848dcf1864610e2da057f9245ff04d617bc"
+        "report_sha256": "sha256:d3f86376f8ab265bd82eb8f3298862e8f38dea6915007ea5a2d8bbf665e9b0e1"
       },
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -12900,7 +12923,7 @@
       "auto_downgrade_applied": false,
       "track": "codex_debated",
       "news_state": "read_done",
-      "structural_risk": 64.0,
+      "structural_risk": 57.0,
       "injection_detected": false,
       "context_hash": "sha256:802f3f74a624bed04da97bd51f8cbb05a89c08706f83ffb79d7aa39f386265cc",
       "prompt_hash": "sha256:eb3cb870df062ab365c3b95ff30736edb7413be0450dcddede589296c3fb7d64",
@@ -12916,124 +12939,187 @@
       "data_cutoff_at": "2026-11-24T22:00:00Z",
       "signal_published_at": "2026-11-24T22:51:04Z",
       "order_cutoff_at": "2026-11-25T14:25:00Z",
-      "completed_at": "2026-11-25T00:37:17.614122+00:00",
+      "completed_at": "2026-11-25T01:00:35.403653+00:00",
       "late": false,
       "invalid": false,
       "status": "complete",
       "round1": [
         {
           "skill": "buffett",
-          "score": -72.0,
+          "score": -79.0,
           "stance": "sell",
           "confidence": 0.4,
           "reasons": [
-            "현재가 589.82는 내재가치 범위의 상단 181.26을 웃돌아 안전마진이 없다.",
-            "품질 점수는 89.77이지만 ROIC 스프레드, 잉여현금흐름 마진과 순이익 대비 전환율, 희석 및 부채상환 지표가 비어 있다. 자본수익과 현금창출의 지속성을 검증할 수 없어 해당 가감점을 적용하지 않았다.",
-            "재무책임자는 공격적인 투자를 이어갈 방침을 밝혔다. 광고 성장에도 기사에 나온 자본지출 부담은 주주에게 남는 현금을 줄이는 요인이다."
+            "현재가 589.82달러가 내재가치 상단 181.26달러를 웃돌아 광고 수익의 개선에도 안전마진이 없다.",
+            "안전마진 지표는 -2.7421이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 지표가 없어 자본 투입의 성과를 가늠하기 어렵다.",
+            "공시 항목 8.01에는 별도 감점 기준을 적용하지 않았다. 광고 개선이 공격적인 설비 투자 이후 꾸준한 잉여현금흐름으로 이어질지는 불확실하다."
           ],
           "news_read": [
             {
               "news_id": "news-c46150db9fed",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 8.0,
-              "quote_sha256": "aaccc1666a3ee4340823a9e82f4ed0d7765c224212cd035109e9dddf2c92a295",
+              "severity": 6.0,
+              "quote_sha256": "821acbc02409c5d5ac1954c8f6f3f4330b54b3dea11158b7b34302e2b64dd2de",
               "quote_verified": true,
-              "quote_chars": 126,
-              "rationale_ko": "운용사의 과거 보유 현황과 투자 스타일을 소개한다. 이를 메타의 현금창출 평가에서 제외했다."
+              "quote_chars": 133,
+              "rationale_ko": "투자자의 보유 내역에 바탕을 둔 종목 목록이다. 과거 포지션은 현재 가격에 안전마진이 있다는 증거가 되지 않는다."
             },
             {
               "news_id": "news-afe3e623e5a1",
               "durability": "structural",
               "impact": "positive",
-              "severity": 56.0,
+              "severity": 52.0,
               "quote_sha256": "309bd8f910972e4e947e605b97de1f0d913eb2066e0b98b302c5dc6888198e54",
               "quote_verified": true,
               "quote_chars": 138,
-              "rationale_ko": "AI 도구가 광고 타기팅과 전환을 개선해 핵심 광고 사업의 경쟁력에 기여한다."
+              "rationale_ko": "광고 타기팅과 전환 개선은 핵심 사업의 경쟁 우위를 뒷받침한다. 광고 성과가 전체 설비 투자 대비 현금 수익으로 얼마나 이어질지는 확인이 필요하다."
+            },
+            {
+              "news_id": "news-f29849f3dca8",
+              "durability": "structural",
+              "impact": "positive",
+              "severity": 28.0,
+              "quote_sha256": "74c228c4e442f6a2bd09d5f30f4f5b1d1d8534cde2e662e0f0eb0672622631e2",
+              "quote_verified": true,
+              "quote_chars": 167,
+              "rationale_ko": "콘텐츠 제휴로 가상현실 기기의 용도를 넓힐 수 있다. 유료 이용과 현금 수익이 얼마나 늘어날지는 기사에서 확인되지 않는다."
+            },
+            {
+              "news_id": "news-52317c1b847a",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 6.0,
+              "quote_sha256": "a1e2e353d09b78f92e590a3434e7c541c9b957485d9e76bf21c507604b65d332",
+              "quote_verified": true,
+              "quote_chars": 124,
+              "rationale_ko": "일별 ETF 순매수는 단기 수급이며 광고와 설비 투자에서 나오는 현금흐름을 보여주지 않는다."
+            },
+            {
+              "news_id": "news-5b40a449ddcc",
+              "durability": "structural",
+              "impact": "negative",
+              "severity": 57.0,
+              "quote_sha256": "748e10fa4495d9e1139220b9cdd09a709610e7f77b7bec726f9c64209c8ac0fc",
+              "quote_verified": true,
+              "quote_chars": 115,
+              "rationale_ko": "분기 잉여현금흐름이 적자를 기록했고 재무책임자는 공격적인 투자를 이어갈 것으로 밝혔다. 차기 예산이 확정되지 않아 잉여현금흐름 회복 시점을 가늠하기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 9.0,
+          "stance": "hold",
+          "confidence": 0.39,
+          "reasons": [
+            "성장 점수 82.15는 양호하다. PEG와 매출·주당순이익의 장기 성장률이 비어 성장 대비 가격을 판단할 정량 근거가 제한적이다.",
+            "광고 노출과 광고 단가가 함께 상승했고 AI 광고 모델은 전환 개선에 기여했다. 본업의 성장 경로가 광고 물량과 단가 양쪽에서 확인된다.",
+            "설비투자 부담으로 분기 잉여현금흐름이 적자를 기록했다. 광고 성장이 주당이익과 현금흐름으로 이어지는지를 확인할 필요가 있다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-c46150db9fed",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 6.0,
+              "quote_sha256": "821acbc02409c5d5ac1954c8f6f3f4330b54b3dea11158b7b34302e2b64dd2de",
+              "quote_verified": true,
+              "quote_chars": 133,
+              "rationale_ko": "투자자 보유 종목을 요약한 기사로, 메타 광고 수요나 장기 이익 성장에 관한 직접 근거는 제한적이다."
+            },
+            {
+              "news_id": "news-afe3e623e5a1",
+              "durability": "structural",
+              "impact": "positive",
+              "severity": 55.0,
+              "quote_sha256": "142f0319bd9d365c257fcf34091fc083728ad448f45bfdf77f1b25011c4d3761",
+              "quote_verified": true,
+              "quote_chars": 137,
+              "rationale_ko": "광고 노출과 단가가 함께 개선됐다. 본문은 AI 광고 도구가 전환 성과를 높인 사례도 제시한다."
+            },
+            {
+              "news_id": "news-f29849f3dca8",
+              "durability": "structural",
+              "impact": "positive",
+              "severity": 21.0,
+              "quote_sha256": "3ed6b048ac6bfab89ff0e89e008ce581e2ac4816593004e94b8b69e6d9175c76",
+              "quote_verified": true,
+              "quote_chars": 165,
+              "rationale_ko": "DNEG와 IMAX 콘텐츠 계약은 VR 기기의 쓰임새를 영상으로 넓힌다. 이용자 채택과 매출 효과는 아직 제시되지 않았다."
+            },
+            {
+              "news_id": "news-52317c1b847a",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 6.0,
+              "quote_sha256": "a1e2e353d09b78f92e590a3434e7c541c9b957485d9e76bf21c507604b65d332",
+              "quote_verified": true,
+              "quote_chars": 124,
+              "rationale_ko": "ETF 자금 유입은 당일 주식 수급을 보여 준다."
+            },
+            {
+              "news_id": "news-5b40a449ddcc",
+              "durability": "structural",
+              "impact": "negative",
+              "severity": 50.0,
+              "quote_sha256": "3e7ba88321c833bc1b40352dee3307fc54249d79b05402038d1aa778f7e286a2",
+              "quote_verified": true,
+              "quote_chars": 128,
+              "rationale_ko": "매출 성장에도 설비투자로 잉여현금흐름이 적자를 기록했다. 경영진은 공격적인 투자를 이어갈 방침을 밝혔다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "주가 589.82는 50일선과 200일선 모두 아래에 있어 매수 추세가 확인되지 않았다.",
+            "RSI 40.2383은 추세 평가 구간의 하단에 있다. 이동평균 조건도 함께 충족해야 가산할 수 있다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-c46150db9fed",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 12.0,
+              "quote_sha256": "aaccc1666a3ee4340823a9e82f4ed0d7765c224212cd035109e9dddf2c92a295",
+              "quote_verified": true,
+              "quote_chars": 126,
+              "rationale_ko": "운용사의 공시 포트폴리오를 소개한다. 메타의 시장 주도력이나 광고 수요 변화를 확인할 근거는 제한적이다."
+            },
+            {
+              "news_id": "news-afe3e623e5a1",
+              "durability": "structural",
+              "impact": "positive",
+              "severity": 67.0,
+              "quote_sha256": "8f2d4a33dc40ccd31eb96f09126a2f1575e4d6a07d7908aa89686f30747100ca",
+              "quote_verified": true,
+              "quote_chars": 115,
+              "rationale_ko": "광고 매출 증가와 광고 도달 및 단가 개선이 함께 보고됐다. 핵심 광고 사업의 수요를 평가할 근거다."
             },
             {
               "news_id": "news-f29849f3dca8",
               "durability": "structural",
               "impact": "positive",
               "severity": 33.0,
-              "quote_sha256": "74c228c4e442f6a2bd09d5f30f4f5b1d1d8534cde2e662e0f0eb0672622631e2",
+              "quote_sha256": "3ed6b048ac6bfab89ff0e89e008ce581e2ac4816593004e94b8b69e6d9175c76",
               "quote_verified": true,
-              "quote_chars": 167,
-              "rationale_ko": "콘텐츠 제휴로 VR 기기의 활용 범위를 넓힐 수 있다. 본문에서 수익성은 확인되지 않는다."
+              "quote_chars": 165,
+              "rationale_ko": "출시 전 콘텐츠 확보로 기기 활용 범위가 넓어질 수 있다. 소비자 채택과 서비스 매출은 출시 이후 확인할 변수다."
             },
             {
               "news_id": "news-52317c1b847a",
               "durability": "transient",
-              "impact": "neutral",
-              "severity": 9.0,
+              "impact": "positive",
+              "severity": 20.0,
               "quote_sha256": "a1e2e353d09b78f92e590a3434e7c541c9b957485d9e76bf21c507604b65d332",
               "quote_verified": true,
               "quote_chars": 124,
-              "rationale_ko": "하루 동안의 ETF 순매수 전환을 전한다."
-            },
-            {
-              "news_id": "news-5b40a449ddcc",
-              "durability": "structural",
-              "impact": "negative",
-              "severity": 65.0,
-              "quote_sha256": "748e10fa4495d9e1139220b9cdd09a709610e7f77b7bec726f9c64209c8ac0fc",
-              "quote_verified": true,
-              "quote_chars": 115,
-              "rationale_ko": "경영진의 투자 기조와 기사에 언급된 잉여현금흐름 적자는 자본지출 부담을 보여준다. 예산 규모는 확정되지 않았다."
-            }
-          ]
-        },
-        {
-          "skill": "lynch",
-          "score": 15.0,
-          "stance": "hold",
-          "confidence": 0.36,
-          "reasons": [
-            "성장 점수 82.15를 출발점으로 보되 PEG와 PEGY, 장기 매출·주당순이익 성장률이 없어 성장 대비 가격의 적정성을 확인하기 어렵다.",
-            "광고 매출이 전년 대비 증가했고 AI 광고 도구가 타기팅과 전환을 개선했다는 본문은 핵심 사업의 성장에 긍정적이다.",
-            "재무책임자가 공격적인 투자 지속을 예상했고 예산이 확정되지 않았다는 본문을 감안하면 매출 성장의 현금흐름 전환을 지켜볼 필요가 있다."
-          ],
-          "news_read": [
-            {
-              "news_id": "news-c46150db9fed",
-              "durability": "transient",
-              "impact": "neutral",
-              "severity": 8.0,
-              "quote_sha256": "821acbc02409c5d5ac1954c8f6f3f4330b54b3dea11158b7b34302e2b64dd2de",
-              "quote_verified": true,
-              "quote_chars": 133,
-              "rationale_ko": "투자자 보유 종목 소개와 투자 성향 설명이 중심이다. 보유 포지션은 메타의 이익 성장 근거로 사용하지 않는다."
-            },
-            {
-              "news_id": "news-afe3e623e5a1",
-              "durability": "structural",
-              "impact": "positive",
-              "severity": 69.0,
-              "quote_sha256": "309bd8f910972e4e947e605b97de1f0d913eb2066e0b98b302c5dc6888198e54",
-              "quote_verified": true,
-              "quote_chars": 138,
-              "rationale_ko": "핵심 광고 사업의 타기팅과 추천, 전환 개선이 보고됐다. 본문은 노출 및 광고 단가 상승도 함께 전한다."
-            },
-            {
-              "news_id": "news-f29849f3dca8",
-              "durability": "structural",
-              "impact": "positive",
-              "severity": 30.0,
-              "quote_sha256": "3f6572eff196506137c840e9260448166399cd531552e58a59dff027be8c3642",
-              "quote_verified": true,
-              "quote_chars": 154,
-              "rationale_ko": "콘텐츠 제휴로 VR 하드웨어를 활용할 용도가 늘어난다. 이용자 수요와 수익 규모는 검증 전이다."
-            },
-            {
-              "news_id": "news-52317c1b847a",
-              "durability": "transient",
-              "impact": "neutral",
-              "severity": 10.0,
-              "quote_sha256": "a1e2e353d09b78f92e590a3434e7c541c9b957485d9e76bf21c507604b65d332",
-              "quote_verified": true,
-              "quote_chars": 124,
-              "rationale_ko": "하루 ETF 순매수 전환이며 광고 수요나 장기 이익 추세를 설명하지 않는다."
+              "rationale_ko": "직전 순유출을 끊은 ETF 순매수는 단기 수급 개선이다. 추세 지속을 확인할 근거는 아직 제한적이다."
             },
             {
               "news_id": "news-5b40a449ddcc",
@@ -13043,70 +13129,7 @@
               "quote_sha256": "748e10fa4495d9e1139220b9cdd09a709610e7f77b7bec726f9c64209c8ac0fc",
               "quote_verified": true,
               "quote_chars": 115,
-              "rationale_ko": "재무책임자가 공격적인 투자 기조의 지속을 예상했다. 매출 증가에도 자본지출로 잉여현금흐름이 음수였다는 보도가 이익의 현금 전환에 부담을 보여 준다."
-            }
-          ]
-        },
-        {
-          "skill": "druckenmiller",
-          "score": 0.0,
-          "stance": "hold",
-          "confidence": 0.36,
-          "reasons": [
-            "검증된 거시 레짐은 중립(neutral)이다. 시장 대비 상대강도와 변동성·신용·금리 지표가 비어 있어 시장 주도 여부를 확인하기 어렵다.",
-            "현재가 589.82는 단기와 장기 이동평균을 모두 밑돈다. 광고 호조가 주가 추세 회복으로 이어졌는지 확인할 때까지 관망한다.",
-            "RSI 40.2383은 추세 가산 범위 하단에 있으나 주가가 두 이동평균 위에 있어야 하는 추세 조건은 충족되지 않았다."
-          ],
-          "news_read": [
-            {
-              "news_id": "news-c46150db9fed",
-              "durability": "transient",
-              "impact": "neutral",
-              "severity": 10.0,
-              "quote_sha256": "821acbc02409c5d5ac1954c8f6f3f4330b54b3dea11158b7b34302e2b64dd2de",
-              "quote_verified": true,
-              "quote_chars": 133,
-              "rationale_ko": "운용사 보유 종목과 과거 공시를 소개한 기사다. 메타의 핵심 사업 변화나 현재 상대강도를 보여주는 근거는 제한적이다."
-            },
-            {
-              "news_id": "news-afe3e623e5a1",
-              "durability": "structural",
-              "impact": "positive",
-              "severity": 62.0,
-              "quote_sha256": "309bd8f910972e4e947e605b97de1f0d913eb2066e0b98b302c5dc6888198e54",
-              "quote_verified": true,
-              "quote_chars": 138,
-              "rationale_ko": "광고 타기팅과 전환 개선은 핵심 광고 사업의 경쟁력에 영향을 준다. 기사에는 광고 수요 확대도 나타난다."
-            },
-            {
-              "news_id": "news-f29849f3dca8",
-              "durability": "structural",
-              "impact": "positive",
-              "severity": 30.0,
-              "quote_sha256": "74c228c4e442f6a2bd09d5f30f4f5b1d1d8534cde2e662e0f0eb0672622631e2",
-              "quote_verified": true,
-              "quote_chars": 167,
-              "rationale_ko": "출시 예정인 VR 기기에 맞춘 콘텐츠 계약은 기기의 사용처를 넓힌다. 이용 수요와 실적 기여는 아직 확인되지 않았다."
-            },
-            {
-              "news_id": "news-52317c1b847a",
-              "durability": "transient",
-              "impact": "positive",
-              "severity": 15.0,
-              "quote_sha256": "a1e2e353d09b78f92e590a3434e7c541c9b957485d9e76bf21c507604b65d332",
-              "quote_verified": true,
-              "quote_chars": 124,
-              "rationale_ko": "당일 ETF 순매수 전환은 단기 매수세를 보여준다. 직전 순매도와 함께 보면 지속적 추세로 판단하기 어렵다."
-            },
-            {
-              "news_id": "news-5b40a449ddcc",
-              "durability": "structural",
-              "impact": "negative",
-              "severity": 55.0,
-              "quote_sha256": "748e10fa4495d9e1139220b9cdd09a709610e7f77b7bec726f9c64209c8ac0fc",
-              "quote_verified": true,
-              "quote_chars": 115,
-              "rationale_ko": "회사는 적극적 투자를 이어갈 방침이라고 밝혔다. 기사에 나온 현금흐름 압력은 이 방침의 영향을 보여주지만 향후 예산은 아직 확정되지 않았다."
+              "rationale_ko": "경영진이 적극적인 투자 기조를 예고했다. 투자 부담이 현금흐름에 이어질 수 있고 예산 규모는 아직 미정이다."
             }
           ]
         },
@@ -13116,38 +13139,38 @@
           "stance": "hold",
           "confidence": 0.2,
           "reasons": [
-            "META의 13F 보유 내역이 비어 있어 게이츠 재단·기금의 분기 대비 증감과 Communication Services 섹터의 동반 확대 여부를 확인할 수 없다. 13F는 45일 제출 기한이 적용되는 분기말 자료이므로 보유 신호 판정을 유보한다."
+            "META의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
           ],
           "news_read": [
             {
               "news_id": "news-c46150db9fed",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 9.0,
+              "severity": 16.0,
               "quote_sha256": "aaccc1666a3ee4340823a9e82f4ed0d7765c224212cd035109e9dddf2c92a295",
               "quote_verified": true,
               "quote_chars": 126,
-              "rationale_ko": "다른 운용사의 분기말 공시를 요약한다. 공시에는 45일 제출 시차가 있고 발췌문에는 메타 보유량의 분기 대비 변화가 제시되지 않는다."
+              "rationale_ko": "다른 운용사의 분기말 보유 구성을 소개한다. 제출 기한에 따른 시차가 있고, 본문에는 메타의 분기별 보유 증감이 제시되지 않았다."
             },
             {
               "news_id": "news-afe3e623e5a1",
               "durability": "structural",
               "impact": "positive",
-              "severity": 68.0,
-              "quote_sha256": "8f2d4a33dc40ccd31eb96f09126a2f1575e4d6a07d7908aa89686f30747100ca",
+              "severity": 62.0,
+              "quote_sha256": "309bd8f910972e4e947e605b97de1f0d913eb2066e0b98b302c5dc6888198e54",
               "quote_verified": true,
-              "quote_chars": 115,
-              "rationale_ko": "광고 매출 증가와 함께 광고 노출, 단가, 전환 개선이 보고됐다. 핵심 광고 사업의 수요와 광고 도구의 효율에 관한 내용이다."
+              "quote_chars": 138,
+              "rationale_ko": "광고 모델 개선으로 전환 성과가 좋아졌다고 보도했다. 광고 성과 개선은 플랫폼의 핵심 수익원에 영향을 준다."
             },
             {
               "news_id": "news-f29849f3dca8",
               "durability": "structural",
               "impact": "positive",
-              "severity": 39.0,
+              "severity": 35.0,
               "quote_sha256": "3ed6b048ac6bfab89ff0e89e008ce581e2ac4816593004e94b8b69e6d9175c76",
               "quote_verified": true,
               "quote_chars": 165,
-              "rationale_ko": "영상 제작과 가상 극장 제휴로 신제품에 제공할 콘텐츠를 확보하고 있다. 기기 판매나 수익화 성과는 발췌문에서 확인되지 않는다."
+              "rationale_ko": "영화 콘텐츠 제휴는 출시 예정인 VR 기기의 활용 범위를 넓힐 수 있다. 기사에서 판매 효과는 확인되지 않았다."
             },
             {
               "news_id": "news-52317c1b847a",
@@ -13157,17 +13180,17 @@
               "quote_sha256": "a1e2e353d09b78f92e590a3434e7c541c9b957485d9e76bf21c507604b65d332",
               "quote_verified": true,
               "quote_chars": 124,
-              "rationale_ko": "당일 ETF 순매수가 직전 순유출 흐름을 되돌렸다. 분기말 재단 보유 변화의 확인에는 공시 자료가 필요하다."
+              "rationale_ko": "순매도로 이어지던 ETF 흐름이 하루 순매수로 전환됐다. 분기별 기관 보유 추세를 확인하려면 공시가 필요하다."
             },
             {
               "news_id": "news-5b40a449ddcc",
               "durability": "structural",
               "impact": "negative",
-              "severity": 58.0,
+              "severity": 62.0,
               "quote_sha256": "748e10fa4495d9e1139220b9cdd09a709610e7f77b7bec726f9c64209c8ac0fc",
               "quote_verified": true,
               "quote_chars": 115,
-              "rationale_ko": "경영진이 공격적인 투자 지속을 예고했고 기사에 나온 분기 잉여현금흐름은 음수였다. 구체적인 차기 예산은 미정이다."
+              "rationale_ko": "경영진이 투자 확대 기조를 밝힌 가운데 기사에 인용된 분석가는 설비투자와 비용 증가를 반영해 이익 추정치를 내렸다. 회사 예산은 아직 확정되지 않았다."
             }
           ]
         }
@@ -13175,38 +13198,49 @@
       "round2": [
         {
           "skill": "buffett",
-          "score": -72.0,
+          "score": -79.0,
           "changed": false,
           "rebuttals": [
             {
+              "target_skill": "lynch",
+              "point": "성장 점수 82.15와 광고 노출·단가의 개선은 성장 근거가 되지만, 설비 투자로 분기 잉여현금흐름이 적자인 상황에서 추가 광고 매출이 주주에게 돌아갈 현금을 늘린다는 근거는 부족하다.",
+              "quote_or_number_ref": "growth"
+            },
+            {
               "target_skill": "druckenmiller",
-              "point": "드러켄밀러가 현재가와 두 이동평균을 비교해 광고 호조가 추세 회복으로 이어질지 관망했지만, 이동평균 회복만으로는 자본지출을 제하고 남는 현금이 현재 가격을 뒷받침하는지 알 수 없다.",
-              "quote_or_number_ref": "price"
+              "point": "국면 점수 50.0의 중립과 기술적 관망은 매수 시점의 불확실성을 보여 주지만, 현재가 589.82달러와 내재가치 상단 181.26달러의 격차를 줄여 주지는 않는다.",
+              "quote_or_number_ref": "regime_score"
+            },
+            {
+              "target_skill": "gates_13f",
+              "point": "제출 기한이 45일인 분기말 보유 자료에서 비중 증감을 확인할 수 없는 상황에서, 하루 ETF 순매수도 공격적 투자에 따른 현금 부담을 평가하는 근거가 되기 어렵다.",
+              "quote_or_number_ref": "45"
             }
           ],
           "conflict_points": [
-            "광고 도구의 전환 개선은 긍정적이다. 공격적인 투자 기조가 이어지는 가운데 잉여현금흐름이 얼마나 회복될지 확인할 자료가 부족하고 현재가가 내재가치 상단을 초과해 점수를 유지한다."
+            "AI 광고 도구가 수익화에 기여하는 속도와 공격적인 설비 투자의 회수 시점이 함께 확인돼야 한다.",
+            "안전마진 지표 -2.7421을 재평가할 만한 장기 현금 전환 자료나 확정된 투자 예산이 없어 점수를 유지한다."
           ]
         },
         {
           "skill": "lynch",
-          "score": 15.0,
+          "score": 9.0,
           "changed": false,
           "rebuttals": [
             {
               "target_skill": "buffett",
-              "point": "내재가치 상단과의 격차에 무게를 둔 매도 판단은 AI 도구가 개선한 광고 전환과 투자 확대에 따른 현금흐름 부담 가운데 어느 효과가 지속될지를 충분히 설명하지 못한다.",
-              "quote_or_number_ref": "iv_high"
+              "point": "내재가치 상단 181.26달러를 웃도는 주가는 안전마진을 제한하며, 매도 판단을 뒷받침하려면 개선된 광고 수익이 설비투자 부담을 얼마나 상쇄하는지도 확인해야 한다.",
+              "quote_or_number_ref": "181.26"
             },
             {
               "target_skill": "druckenmiller",
-              "point": "현재가가 두 이동평균을 밑돈다는 사실은 진입 시점의 근거이며 광고 노출과 단가가 함께 증가한 흐름의 지속성을 판단할 수 있는 정보는 제한적이다.",
-              "quote_or_number_ref": "price"
+              "point": "RSI 40.2383과 이동평균은 진입 시점을 평가하는 근거이며, 광고 노출과 단가가 함께 늘어난 흐름의 지속성은 별도로 확인해야 한다.",
+              "quote_or_number_ref": "40.2383"
             }
           ],
           "conflict_points": [
-            "광고 도구 개선이 광고 수요를 지지하더라도 공격적인 투자로 잉여현금흐름 회복이 지연될 수 있다.",
-            "투자 예산과 장기 성장률이 확인되지 않았고 PEG도 비어 있어 관망 점수를 유지한다."
+            "AI 광고 도구의 전환 개선이 실적에 반영되는 속도와 설비투자 부담이 현금흐름을 압박하는 기간이 관건이다.",
+            "성장 점수 82.15를 바탕으로 관망을 유지한다. PEG와 장기 성장률이 비어 광고 성과만으로 성장 대비 가격 판단을 바꾸기 어렵다."
           ]
         },
         {
@@ -13215,19 +13249,19 @@
           "changed": false,
           "rebuttals": [
             {
-              "target_skill": "lynch",
-              "point": "광고 전환 개선을 성장 점수와 함께 긍정적으로 봤지만, 주가가 두 이동평균을 밑도는 상황에서 그 사업 개선에 추세 점수까지 주기는 어렵다.",
-              "quote_or_number_ref": "growth"
+              "target_skill": "buffett",
+              "point": "안전마진 -2.7421과 설비투자 부담을 인정해도 금리와 신용 지표가 비어 있어 이 근거만으로 강한 매도 점수를 뒷받침하기 어렵다.",
+              "quote_or_number_ref": "-2.7421"
             },
             {
-              "target_skill": "buffett",
-              "point": "내재가치 상단을 웃도는 가격과 공격적 투자 계획은 매도 논거지만, 다음 예산이 미정이고 상대강도 자료가 비어 있어 매도 시점을 특정하기 어렵다.",
-              "quote_or_number_ref": "price"
+              "target_skill": "lynch",
+              "point": "성장 점수 82.15와 광고 개선은 본업을 뒷받침하지만 주가 589.82가 두 이동평균보다 낮아 매수에 필요한 추세 확인은 부족하다.",
+              "quote_or_number_ref": "82.15"
             }
           ],
           "conflict_points": [
-            "광고 매출 확대가 투자 부담을 상쇄할 만큼 현금창출로 이어질지 남아 있다.",
-            "현재 추세 조건이 충족되지 않았고 중립 레짐을 보완할 시장 상대강도 자료가 없으므로 점수를 유지한다."
+            "광고 수요가 개선되는 가운데 설비투자 부담이 이어져 현금흐름과 주가 추세의 회복 여부가 중요하다.",
+            "중립 국면에서 RSI 40.2383만으로는 두 이동평균 아래의 주가와 6개월 상대강도 공백을 보완하기 어려워 관망을 유지한다."
           ]
         },
         {
@@ -13236,14 +13270,24 @@
           "changed": false,
           "rebuttals": [
             {
+              "target_skill": "buffett",
+              "point": "안전마진이 낮아도 차기 설비투자 예산이 미확정이고 현금 전환 지표가 비어 있어, 현재 수치로 설비투자 부담의 지속성과 매도 강도를 함께 뒷받침하기 어렵다.",
+              "quote_or_number_ref": "-2.7421"
+            },
+            {
+              "target_skill": "lynch",
+              "point": "양호한 성장 점수와 광고 노출·단가 개선에도 설비투자 이후 분기 잉여현금흐름이 적자를 기록해 광고 성장의 현금 전환이 아직 확인되지 않았다.",
+              "quote_or_number_ref": "82.15"
+            },
+            {
               "target_skill": "druckenmiller",
-              "point": "두 이동평균 하회를 관망 근거로 삼았지만 시장 대비 상대강도가 비어 메타 고유의 약세인지 가려지지 않으며, 장기 자금도 같은 방향인지 확인하려면 종목과 섹터의 분기말 보유 변화가 필요하다.",
-              "quote_or_number_ref": "price"
+              "point": "이동평균 조건을 충족하지 못한 상태에서 하루 ETF 순유입을 단기 수급 개선으로 볼 수는 있어도 앞선 유출이 끝났는지 확인할 근거는 부족하다.",
+              "quote_or_number_ref": "589.82"
             }
           ],
           "conflict_points": [
-            "에이브럼스 운용사의 공시는 보유 현황을 보여 주지만 메타 보유량의 분기별 증감을 발췌문에서 확인할 수 없다.",
-            "45일 제출 기한이 적용되는 분기말 13F 보유 자료에 재단의 변화가 제시되지 않아 확인점은 중립으로 유지한다."
+            "광고 효율 개선이 현금흐름에 얼마나 남는지는 차기 투자 규모에 달려 있고 그 예산이 아직 확정되지 않았다.",
+            "다른 운용사의 보유 구성 소개에는 메타의 분기별 보유 증감이 없고 제공된 13F 내역도 비어 있어, 45일 제출 기한을 고려한 기존 평가를 유지한다."
           ]
         }
       ],
@@ -13251,21 +13295,21 @@
         "guard": {
           "veto_codes": [],
           "additional_blocks": [
-            "투자 예산 확정과 잉여현금흐름 회복 확인",
-            "VR 콘텐츠 제휴의 수요 및 수익 기여 확인"
+            "차기 자본지출 예산과 잉여현금흐름 추이 확인",
+            "VR 콘텐츠 제휴의 채택 및 수익 기여 확인"
           ],
-          "structural_risk": 69.0,
-          "reasoning": "광고 도구 개선과 수요 확대는 핵심 사업을 뒷받침한다. 적극적인 투자 지속 방침과 기사에 나온 잉여현금흐름 적자는 부담이며, 향후 확정 예산과 현금흐름 회복을 확인할 필요가 있다.",
+          "structural_risk": 67.0,
+          "reasoning": "광고 노출과 단가 개선은 본업에 긍정적이다. 잉여현금흐름 적자가 보도됐고 적극적인 투자 기조가 이어져 확정 예산과 광고 성장의 현금 전환을 확인할 필요가 있다.",
           "opinion": "caution"
         },
         "chair": {
           "consensus": [
-            "AI 광고 도구의 전환 개선은 핵심 광고 사업에 긍정적이다.",
-            "적극적인 투자 기조가 이어지는 가운데 광고 성장이 잉여현금흐름 회복으로 이어지는지 확인이 필요하다."
+            "광고 성과 개선은 핵심 사업에 긍정적이다.",
+            "투자 부담이 이어져 광고 성장이 잉여현금흐름 회복으로 이어지는지 확인해야 한다."
           ],
           "dissent": [
-            "버핏은 안전마진과 잉여현금흐름 부담을 중시해 매도 의견을 유지했고, 린치는 핵심 광고 사업의 성장과 미확정 투자 예산을 함께 고려해 관망했다.",
-            "드러켄밀러는 광고 호조에도 시장 대비 상대강도와 주가 추세 확인이 필요하다고 봤다."
+            "버핏은 안전마진 부재와 자본지출 부담을 이유로 매도 의견을 유지했고, 린치는 광고 사업의 성장과 장기 성장률 자료 공백을 함께 보고 관망했다.",
+            "드러켄밀러는 광고 호조에도 주가가 두 이동평균 아래에 있어 관망했다."
           ],
           "grade_recommendation": "WATCH",
           "entry_plan_refs": [],
@@ -13274,17 +13318,17 @@
             514.18
           ],
           "conflict": true,
-          "one_line_ko": "광고 개선이 자본지출 부담을 상쇄하고 잉여현금흐름을 회복시키는지 확인할 때까지 관망한다."
+          "one_line_ko": "광고 성장이 설비투자 부담을 덜고 잉여현금흐름 회복으로 이어지는지 확인하며 관망한다."
         }
       },
       "scores": {
         "buffett": {
-          "round1": -72.0,
-          "round2": -72.0
+          "round1": -79.0,
+          "round2": -79.0
         },
         "lynch": {
-          "round1": 15.0,
-          "round2": 15.0
+          "round1": 9.0,
+          "round2": 9.0
         },
         "druckenmiller": {
           "round1": 0.0,
@@ -13300,12 +13344,12 @@
         "skills_kept": 6,
         "quotes_checked": 20,
         "quotes_dropped": 0,
-        "numbers_checked": 12,
+        "numbers_checked": 38,
         "numbers_rejected": 0,
         "refs_dropped": 0,
         "drop_reasons": [],
-        "confidence_cap": null,
-        "report_validated_at": "2026-11-25T00:37:17.614122+00:00",
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-25T01:00:35.403653+00:00",
         "resume_key": "sha256:22060f7a10083a495d1759b01599d36f9d67b3ae3e487ea9b35847b7010ffff6",
         "injection_scope": null,
         "injection_blocking": false,
@@ -13342,7 +13386,7 @@
               "counts": {
                 "quotes_checked": 5,
                 "quotes_dropped": 0,
-                "numbers_checked": 3,
+                "numbers_checked": 4,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13355,7 +13399,9 @@
                   "news-52317c1b847a",
                   "news-5b40a449ddcc"
                 ],
-                "news_ids_dropped": []
+                "news_ids_dropped": [],
+                "confidence_cap": "C",
+                "price_pattern_hits": 1
               }
             },
             {
@@ -13386,7 +13432,7 @@
               "counts": {
                 "quotes_checked": 5,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 6,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13408,7 +13454,7 @@
               "counts": {
                 "quotes_checked": 5,
                 "quotes_dropped": 0,
-                "numbers_checked": 4,
+                "numbers_checked": 3,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13432,7 +13478,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 7,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13445,7 +13491,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13458,7 +13504,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 7,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13471,7 +13517,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13506,7 +13552,7 @@
             "flags": {}
           }
         },
-        "report_sha256": "sha256:358621ffdea176dfd213158ed07f237fad099f23e8b6110c4dd4851c47f301a0"
+        "report_sha256": "sha256:f43eb3316dbf343cdf634218b7254a96ec5982bbfa87023462b71043f176995d"
       },
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -13514,7 +13560,7 @@
       "auto_downgrade_applied": false,
       "track": "codex_debated",
       "news_state": "read_done",
-      "structural_risk": 69.0,
+      "structural_risk": 67.0,
       "injection_detected": false,
       "context_hash": "sha256:5f4815aaf0bde2f575fcd0466550dcd22480434e1db0ebd14f725e4b46513a6c",
       "prompt_hash": "sha256:eb3cb870df062ab365c3b95ff30736edb7413be0450dcddede589296c3fb7d64",
@@ -13530,114 +13576,114 @@
       "data_cutoff_at": "2026-11-24T22:00:00Z",
       "signal_published_at": "2026-11-24T22:51:04Z",
       "order_cutoff_at": "2026-11-25T14:25:00Z",
-      "completed_at": "2026-11-25T00:37:17.634983+00:00",
+      "completed_at": "2026-11-25T01:00:35.425140+00:00",
       "late": false,
       "invalid": false,
       "status": "complete",
       "round1": [
         {
           "skill": "buffett",
-          "score": -60.0,
+          "score": -62.0,
           "stance": "sell",
           "confidence": 0.4,
           "reasons": [
-            "현재가 232.08은 내재가치 범위의 상단 182.46을 웃돌아 안전마진이 없다.",
-            "품질 점수는 85.0이지만 ROIC 스프레드, 잉여현금흐름 마진과 순이익 대비 전환율, 희석 및 부채상환 지표가 비어 있다. 자본수익과 현금창출의 지속성을 검증할 수 없어 해당 가감점을 적용하지 않았다.",
-            "기사에 따르면 경영진이 연간 비GAAP 주당순이익 전망을 높인 점은 긍정적이다."
+            "현재가 232.08달러가 내재가치 상단 182.46달러를 웃돈다. 주가 약세에도 안전마진이 확보되지 않았다.",
+            "안전마진 지표가 -0.4627이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 수치가 없어 사업의 질이 가격 격차를 상쇄할지 판단하기 어렵다.",
+            "내재가치 중앙값은 158.66달러다. 가이던스 상향 소식에도 경영진 교체와 제품 통합이 장기 현금창출에 미치는 영향은 불확실하다."
           ],
           "news_read": [
             {
               "news_id": "news-e3552ecef24f",
               "durability": "structural",
               "impact": "positive",
-              "severity": 28.0,
+              "severity": 34.0,
               "quote_sha256": "b720fa7230af27870a27159f2d02847783a7c11ffa8cd6d3475c609a919986c7",
               "quote_verified": true,
               "quote_chars": 106,
-              "rationale_ko": "StreamWork 플러그인의 Creative Cloud 연동은 기존 고객의 검토·승인 작업을 제품 안으로 가져온다. 장기 현금흐름 기여는 확인되지 않았다."
+              "rationale_ko": "StreamWork의 검토·승인 기능이 크리에이티브 클라우드에 연결되면 고객이 기존 작업 흐름을 유지하기 쉬워진다. 통합으로 인한 매출이나 유지율 개선은 기사에서 확인되지 않는다."
             },
             {
               "news_id": "news-b718a5fe16a0",
               "durability": "structural",
               "impact": "positive",
-              "severity": 52.0,
-              "quote_sha256": "414223e6d4a2ee3e5348f10fdfa7a04ce3e2c6b9e015bf7aac5907e913894a3b",
+              "severity": 44.0,
+              "quote_sha256": "10c9a37b1d870de78f93803e0d0476892b0d9e602c5bbce108a1914a526cbd80",
               "quote_verified": true,
-              "quote_chars": 77,
-              "rationale_ko": "경영진의 연간 이익 전망 상향은 본업에 긍정적이다."
+              "quote_chars": 57,
+              "rationale_ko": "회사 가이던스 상향은 이익 전망을 뒷받침한다. 경영진 교체로 인한 전략 변화와 이익의 장기 현금 전환은 추가 확인이 필요하다."
             },
             {
               "news_id": "news-cf2d6dd7512e",
               "durability": "transient",
               "impact": "neutral",
               "severity": 12.0,
-              "quote_sha256": "679cd09a09dfb740d642f408d9a66c74db11b8a4e3726c70475d145b44c54f6f",
+              "quote_sha256": "6e78d3e0e4c9d1372fa7d4a8d44214284a99f54b8fdb406353b649500319b5fb",
               "quote_verified": true,
-              "quote_chars": 101,
-              "rationale_ko": "과거 주가 하락과 매출 성장 가정에 따른 반등 시나리오를 다룬 증권 분석이다."
+              "quote_chars": 99,
+              "rationale_ko": "외부 기관의 주가 시나리오는 매출과 이익률 가정에 의존한다. 회사의 새 수주나 계약, 가이던스 변화는 제시되지 않는다."
             },
             {
               "news_id": "news-6e78bebfa0c3",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 3.0,
+              "severity": 5.0,
               "quote_sha256": "6a37c3797c577304bd1d9a33f5f239df732ae203235c16ddfdcaf108cf504210",
               "quote_verified": true,
               "quote_chars": 174,
-              "rationale_ko": "어도비가 발표한 전망의 대상은 연말 쇼핑 기간의 소비 지출이다."
+              "rationale_ko": "연말 쇼핑 기간의 소비 전망이다. 어도비의 구독 수요나 현금창출이 바뀌었다는 근거는 기사에 없다."
             }
           ]
         },
         {
           "skill": "lynch",
-          "score": 23.0,
+          "score": 27.0,
           "stance": "hold",
-          "confidence": 0.36,
+          "confidence": 0.4,
           "reasons": [
-            "성장 점수 100.0 외에 장기 매출·주당순이익 성장률과 PEG, PEGY가 없어 현재 가격이 지속 가능한 성장에 비해 적정한지 확인하기 어렵다.",
-            "어도비가 연간 가이던스를 거듭 높였다는 본문은 단기 이익 흐름을 뒷받침한다.",
-            "본문에 나온 StreamWork의 크리에이티브 클라우드 연동은 제품 활용 범위를 넓히지만 신규 구독이나 추가 수익 기여는 확인되지 않았다."
+            "성장 점수 100.0은 강하다. PEG와 매출·주당순이익의 장기 성장률이 비어 있어 현재 가격의 합리성을 검증하기 어렵다.",
+            "회사가 연간 실적 가이던스를 상향했다. 구독 사업의 성장과 AI 제품 수익화가 지속되는지 확인하면 성장 점수의 근거가 더 분명해진다.",
+            "StreamWork의 검토·승인 기능을 Creative Cloud에 통합했다. 기존 사용자의 작업 과정에 제품이 더 깊이 자리 잡을 수 있으나 도입 범위와 매출 효과는 기사에서 확인되지 않는다."
           ],
           "news_read": [
             {
               "news_id": "news-e3552ecef24f",
               "durability": "structural",
               "impact": "positive",
-              "severity": 36.0,
+              "severity": 24.0,
               "quote_sha256": "b720fa7230af27870a27159f2d02847783a7c11ffa8cd6d3475c609a919986c7",
               "quote_verified": true,
               "quote_chars": 106,
-              "rationale_ko": "StreamWork 검토·승인 플러그인의 크리에이티브 클라우드 연동은 작업 흐름을 제품 안에 연결한다. 기사에 신규 구독이나 수익화 성과는 제시되지 않았다."
+              "rationale_ko": "StreamWork 플러그인이 Creative Cloud의 검토·승인 작업을 통합했다. 기사에서 설명한 적용 범위는 기존 StreamWork 팀 고객이다."
             },
             {
               "news_id": "news-b718a5fe16a0",
               "durability": "structural",
               "impact": "positive",
-              "severity": 58.0,
+              "severity": 49.0,
               "quote_sha256": "10c9a37b1d870de78f93803e0d0476892b0d9e602c5bbce108a1914a526cbd80",
               "quote_verified": true,
               "quote_chars": 57,
-              "rationale_ko": "본문은 회사가 연간 조정 주당순이익 가이던스를 상향했다고 전한다. 향후 실적에 긍정적이지만 장기 성장률을 확정할 근거는 아니다."
+              "rationale_ko": "회사가 연간 가이던스를 상향했고 기사에 나온 최근 분기 매출과 주당이익은 시장 예상치를 넘었다."
             },
             {
               "news_id": "news-cf2d6dd7512e",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 13.0,
-              "quote_sha256": "38902d60b2350c7f65674f328baf84fb68a56c82cc3eb4cd69cb3663a4e63edf",
+              "severity": 9.0,
+              "quote_sha256": "6e78d3e0e4c9d1372fa7d4a8d44214284a99f54b8fdb406353b649500319b5fb",
               "quote_verified": true,
-              "quote_chars": 101,
-              "rationale_ko": "과거 주가 성과와 외부 업체의 가정에 따른 수익률 시나리오가 중심이다. 가정은 회사 가이던스나 성장의 증거로 쓰지 않는다."
+              "quote_chars": 99,
+              "rationale_ko": "매출과 이익률, 주가 배수에 가정을 둔 외부 시나리오다. 회사가 새로 발표한 실적 전망은 기사에 제시되지 않았다."
             },
             {
               "news_id": "news-6e78bebfa0c3",
               "durability": "transient",
               "impact": "neutral",
               "severity": 3.0,
-              "quote_sha256": "6a37c3797c577304bd1d9a33f5f239df732ae203235c16ddfdcaf108cf504210",
+              "quote_sha256": "24125256efc4011c7f528898fe19fb94fa466ccddbe2d3b576544ee1c27bdae4",
               "quote_verified": true,
-              "quote_chars": 174,
-              "rationale_ko": "어도비가 발표한 계절성 온라인 쇼핑 전망은 소비자 지출을 다룬다. 어도비 자체의 매출이나 구독 가이던스는 제시하지 않는다."
+              "quote_chars": 106,
+              "rationale_ko": "연말 쇼핑 사기 기사에서 어도비의 온라인 쇼핑 집계 전망을 배경으로 인용했다."
             }
           ]
         },
@@ -13645,93 +13691,42 @@
           "skill": "druckenmiller",
           "score": 0.0,
           "stance": "hold",
-          "confidence": 0.38,
+          "confidence": 0.36,
           "reasons": [
-            "검증된 거시 레짐은 중립(neutral)이다. 시장 대비 상대강도와 변동성·신용·금리 지표가 비어 있어 위험선호와 시장 주도 여부를 확인하기 어렵다.",
-            "현재가 232.08은 단기와 장기 이동평균에 모두 미달한다. 주가 추세 회복을 확인할 때까지 진입을 보류한다.",
-            "RSI 44.8751은 추세 가산 범위 안이지만 두 이동평균 대비 주가 조건이 충족되지 않아 추세 점수를 가산하지 않는다."
+            "주가 232.08은 50일선과 200일선 모두 아래에 있어 안정적인 상승 추세를 확인하기 어렵다.",
+            "RSI 44.8751은 추세 평가 구간에 들어오지만 이동평균 조건을 충족하지 못해 가산하지 않는다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
           ],
           "news_read": [
             {
               "news_id": "news-e3552ecef24f",
               "durability": "structural",
               "impact": "positive",
-              "severity": 29.0,
+              "severity": 27.0,
               "quote_sha256": "b720fa7230af27870a27159f2d02847783a7c11ffa8cd6d3475c609a919986c7",
               "quote_verified": true,
               "quote_chars": 106,
-              "rationale_ko": "StreamWork의 검토·승인 도구를 Creative Cloud와 연결해 기존 고객의 협업 기능을 넓혔다. 통합이 실적에 기여한 정도는 확인되지 않았다."
+              "rationale_ko": "마켓플레이스에 검토·승인 기능이 추가돼 기존 고객의 작업 흐름이 개선될 수 있다. 도입 범위와 매출 기여도는 확인이 필요하다."
             },
             {
               "news_id": "news-b718a5fe16a0",
               "durability": "structural",
               "impact": "positive",
-              "severity": 53.0,
+              "severity": 54.0,
               "quote_sha256": "10c9a37b1d870de78f93803e0d0476892b0d9e602c5bbce108a1914a526cbd80",
               "quote_verified": true,
               "quote_chars": 57,
-              "rationale_ko": "연간 가이던스 상향은 본업 실적 전망 개선 신호다. 기사에 언급된 경영진 교체 이후의 실행은 지켜볼 사안이다."
+              "rationale_ko": "회사의 전망 상향은 본업 실적에 긍정적이다. 주가 약세가 지속돼 가격 추세 확인이 필요하다."
             },
             {
               "news_id": "news-cf2d6dd7512e",
               "durability": "transient",
-              "impact": "negative",
-              "severity": 16.0,
-              "quote_sha256": "679cd09a09dfb740d642f408d9a66c74db11b8a4e3726c70475d145b44c54f6f",
+              "impact": "neutral",
+              "severity": 14.0,
+              "quote_sha256": "38902d60b2350c7f65674f328baf84fb68a56c82cc3eb4cd69cb3663a4e63edf",
               "quote_verified": true,
               "quote_chars": 101,
-              "rationale_ko": "주가 하락과 매출 성장 가정에 따른 시나리오를 다룬 기사다. 이미 확인된 새로운 사업 변화는 제시되지 않았다."
-            },
-            {
-              "news_id": "news-6e78bebfa0c3",
-              "durability": "transient",
-              "impact": "neutral",
-              "severity": 3.0,
-              "quote_sha256": "6a37c3797c577304bd1d9a33f5f239df732ae203235c16ddfdcaf108cf504210",
-              "quote_verified": true,
-              "quote_chars": 174,
-              "rationale_ko": "연말 쇼핑 기간의 소비와 사기 주의보를 다룬 기사다. 어도비는 지출 전망의 출처로 언급된다."
-            }
-          ]
-        },
-        {
-          "skill": "gates_13f",
-          "score": 0.0,
-          "stance": "hold",
-          "confidence": 0.2,
-          "reasons": [
-            "ADBE의 13F 보유 내역이 비어 있어 게이츠 재단·기금의 분기 대비 증감과 Information Technology 섹터의 동반 확대 여부를 확인할 수 없다. 13F는 45일 제출 기한이 적용되는 분기말 자료이므로 보유 신호 판정을 유보한다."
-          ],
-          "news_read": [
-            {
-              "news_id": "news-e3552ecef24f",
-              "durability": "structural",
-              "impact": "positive",
-              "severity": 31.0,
-              "quote_sha256": "b720fa7230af27870a27159f2d02847783a7c11ffa8cd6d3475c609a919986c7",
-              "quote_verified": true,
-              "quote_chars": 106,
-              "rationale_ko": "스트림워크의 검토·승인 플러그인이 마켓플레이스에 들어와 기존 팀 고객이 크리에이티브 클라우드에서 작업 흐름을 연결할 수 있다. 매출 효과는 확인되지 않는다."
-            },
-            {
-              "news_id": "news-b718a5fe16a0",
-              "durability": "structural",
-              "impact": "positive",
-              "severity": 53.0,
-              "quote_sha256": "10c9a37b1d870de78f93803e0d0476892b0d9e602c5bbce108a1914a526cbd80",
-              "quote_verified": true,
-              "quote_chars": 57,
-              "rationale_ko": "회사 가이던스 상향이 핵심 영업 전망의 변화를 보여 준다. 기사에는 최고경영자 승계도 언급된다."
-            },
-            {
-              "news_id": "news-cf2d6dd7512e",
-              "durability": "transient",
-              "impact": "neutral",
-              "severity": 9.0,
-              "quote_sha256": "d5f399fef94efc47cecb14b783350a225fcbb956bbf120815ca2fac511b79ce7",
-              "quote_verified": true,
-              "quote_chars": 55,
-              "rationale_ko": "문장 속 상승분은 외부 분석사의 매출 성장 가정을 반영한 주가 시나리오다. 기사에서 신규 회사 가이던스는 확인되지 않는다."
+              "rationale_ko": "과거 주가 약세와 외부 분석 시나리오가 주제다. 경영진의 새로운 전망이나 수요 변화는 확인하기 어렵다."
             },
             {
               "news_id": "news-6e78bebfa0c3",
@@ -13741,7 +13736,58 @@
               "quote_sha256": "6a37c3797c577304bd1d9a33f5f239df732ae203235c16ddfdcaf108cf504210",
               "quote_verified": true,
               "quote_chars": 174,
-              "rationale_ko": "쇼핑 시즌 소비 전망과 사기 주의가 주제이며 어도비는 소비 통계 출처로 인용됐다."
+              "rationale_ko": "어도비의 연말 쇼핑 전망이 소비자 사기 안내의 배경에 쓰였다. 어도비 사업 수요에 대한 새로운 정보는 제한적이다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.2,
+          "reasons": [
+            "ADBE의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
+          ],
+          "news_read": [
+            {
+              "news_id": "news-e3552ecef24f",
+              "durability": "structural",
+              "impact": "positive",
+              "severity": 30.0,
+              "quote_sha256": "b720fa7230af27870a27159f2d02847783a7c11ffa8cd6d3475c609a919986c7",
+              "quote_verified": true,
+              "quote_chars": 106,
+              "rationale_ko": "스트림워크의 검토·승인 플러그인이 마켓플레이스에 들어오면서 기존 팀 고객의 작업 흐름이 크리에이티브 클라우드와 연결된다. 수익화 규모는 제시되지 않았다."
+            },
+            {
+              "news_id": "news-b718a5fe16a0",
+              "durability": "structural",
+              "impact": "positive",
+              "severity": 52.0,
+              "quote_sha256": "414223e6d4a2ee3e5348f10fdfa7a04ce3e2c6b9e015bf7aac5907e913894a3b",
+              "quote_verified": true,
+              "quote_chars": 77,
+              "rationale_ko": "연간 이익 가이던스 상향은 경영진이 발표한 실적 전망의 변화다. 기사는 최고경영자 교체 일정도 전했다."
+            },
+            {
+              "news_id": "news-cf2d6dd7512e",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 10.0,
+              "quote_sha256": "6e78d3e0e4c9d1372fa7d4a8d44214284a99f54b8fdb406353b649500319b5fb",
+              "quote_verified": true,
+              "quote_chars": 99,
+              "rationale_ko": "매출과 이익률, 평가 배수를 가정한 외부 평가 시나리오다. 기사에서 회사의 새로운 가이던스는 확인되지 않았다."
+            },
+            {
+              "news_id": "news-6e78bebfa0c3",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 5.0,
+              "quote_sha256": "6a37c3797c577304bd1d9a33f5f239df732ae203235c16ddfdcaf108cf504210",
+              "quote_verified": true,
+              "quote_chars": 174,
+              "rationale_ko": "어도비의 연말 온라인 소비 전망을 인용한 쇼핑 사기 기사다. 전망의 대상은 소비자 지출이다."
             }
           ]
         }
@@ -13749,38 +13795,49 @@
       "round2": [
         {
           "skill": "buffett",
-          "score": -60.0,
+          "score": -62.0,
           "changed": false,
           "rebuttals": [
             {
               "target_skill": "lynch",
-              "point": "린치가 성장 점수를 출발점으로 연간 가이던스 상향을 긍정적으로 봤지만, 단기 이익 전망과 플러그인 연동만으로는 현재 가격의 프리미엄을 뒷받침할 장기 구독 수익과 잉여현금흐름이 확보되는지 판단하기 어렵다.",
+              "point": "성장 점수 100.0과 가이던스 상향은 이익 전망에 긍정적이지만, 구독 고객 유지와 잉여현금흐름의 지속성이 확인돼야 현재가 232.08달러를 뒷받침할 수 있다.",
               "quote_or_number_ref": "growth"
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI 44.8751로 추세 평가 구간에 들어왔는지는 매수 시점에 관한 판단이며, 주가가 내재가치 상단 182.46달러를 웃돈다는 가격 부담은 그대로 남는다.",
+              "quote_or_number_ref": "44.8751"
+            },
+            {
+              "target_skill": "gates_13f",
+              "point": "제출 기한이 45일인 보유 공시로 분기말 추세를 확인할 수 없다는 판단은 근거의 한계이며, 최근 실적 전망 상향과 제품 통합이 현금창출에 기여하는지는 별도로 평가해야 한다.",
+              "quote_or_number_ref": "45"
             }
           ],
           "conflict_points": [
-            "가이던스 상향과 제품 연동의 긍정적 효과를 인정한다. 자본수익과 현금 전환의 지속성을 판단할 지표가 부족하고 현재가가 내재가치 상단을 웃돌아 점수를 유지한다."
+            "가이던스가 반영하는 이익 개선을 장기 현금 전환으로 연결할 수 있는지, 제품 통합이 고객 유지와 구독 매출을 개선하는지가 관건이다.",
+            "안전마진 지표 -0.4627을 재평가할 투입 자본 대비 이익과 장기 현금흐름 자료가 없어 점수를 유지한다."
           ]
         },
         {
           "skill": "lynch",
-          "score": 23.0,
+          "score": 27.0,
           "changed": false,
           "rebuttals": [
             {
               "target_skill": "buffett",
-              "point": "현재가가 내재가치 상단을 넘는다는 이유에 무게를 두고 매도를 택하기에는 이익 가이던스 상향의 지속성과 크리에이티브 클라우드 연동의 구독 증가 효과를 확인해야 한다.",
-              "quote_or_number_ref": "iv_high"
+              "point": "내재가치 중앙값 158.66달러는 이익력 가치에 해당해 가이던스 상향과 구독 성장의 지속성을 검증한 뒤에야 그 가격 격차를 매도 근거로 얼마나 강하게 볼지 판단할 수 있다.",
+              "quote_or_number_ref": "158.66"
             },
             {
               "target_skill": "druckenmiller",
-              "point": "이동평균 대비 현재가가 약하다는 점은 진입 시점에 신중할 근거지만 경영진의 연간 이익 전망 상향이 지속될지는 실적과 구독 흐름에 달려 있다.",
-              "quote_or_number_ref": "price"
+              "point": "현재가 232.08달러가 이동평균선 아래에 있다는 근거는 진입 시점에 유효하며, 연간 가이던스 상향이 장기 성장에 주는 의미는 별도 판단이 필요하다.",
+              "quote_or_number_ref": "232.08"
             }
           ],
           "conflict_points": [
-            "이익 전망 상향에 부여하는 비중은 다르며 제품 연동에서 신규 구독이 발생할지는 확인 전이다.",
-            "장기 성장률과 PEG가 비어 있어 성장 대비 현재 가격을 평가하기 어려우므로 관망 점수를 유지한다."
+            "연간 가이던스 상향과 제품 통합이 구독 유지율과 주당순이익의 장기 성장으로 이어질지가 남은 쟁점이다.",
+            "성장 점수 100.0에도 PEG와 장기 성장률이 비어 있어 관망을 유지한다."
           ]
         },
         {
@@ -13789,19 +13846,19 @@
           "changed": false,
           "rebuttals": [
             {
-              "target_skill": "lynch",
-              "point": "성장 점수와 반복된 가이던스 상향은 영업 흐름을 뒷받침하지만, 주가가 두 이동평균에 못 미쳐 수급의 기조가 돌아섰다는 확인은 부족하다.",
-              "quote_or_number_ref": "growth"
+              "target_skill": "buffett",
+              "point": "현재가 232.08달러에서 안전마진이 부족하다는 평가는 타당하지만 회사가 실적 전망을 상향한 만큼 약세가 이어질지는 시장 대비 추세로 확인해야 한다.",
+              "quote_or_number_ref": "232.08"
             },
             {
-              "target_skill": "buffett",
-              "point": "내재가치 상단을 웃도는 가격은 안전마진에 불리하지만, 중립 레짐과 비어 있는 상대강도 자료로는 가격 괴리만큼 강한 매도 판단을 뒷받침하기 어렵다.",
-              "quote_or_number_ref": "price"
+              "target_skill": "lynch",
+              "point": "성장 점수 100.0과 가이던스 상향은 실적에 우호적이지만 주가가 50일선과 200일선을 모두 밑돌아 추세에 가산할 근거는 부족하다.",
+              "quote_or_number_ref": "100.0"
             }
           ],
           "conflict_points": [
-            "연간 이익 전망 상향에도 협업 도구 통합이 구독 수요에 미칠 영향은 남아 있다.",
-            "RSI는 추세 가산 범위에 들어왔어도 주가는 두 이동평균 아래에 있고 시장 대비 상대강도도 확인할 수 없어 점수를 유지한다."
+            "가이던스 상향이 시장 주도력으로 이어지는지가 쟁점이며 RSI 44.8751과 두 이동평균 아래의 주가는 매수 추세를 뒷받침하지 못한다.",
+            "중립 국면에서 6개월 상대강도와 금리·신용 지표가 비어 있어 관망 점수를 유지한다."
           ]
         },
         {
@@ -13810,14 +13867,24 @@
           "changed": false,
           "rebuttals": [
             {
+              "target_skill": "buffett",
+              "point": "내재가치 중앙값을 근거로 강한 매도 판단을 내리기에는 상향된 가이던스와 경영진 교체가 장기 현금흐름에 미치는 영향이 아직 확인되지 않았다.",
+              "quote_or_number_ref": "158.66"
+            },
+            {
               "target_skill": "lynch",
-              "point": "높은 성장 점수와 연간 가이던스 상향은 단기 이익 흐름을 뒷받침하지만, 플러그인 연동이 기존 팀 고객을 넘어 신규 구독 또는 추가 매출로 이어졌다는 근거가 없어 장기 성장 확인에는 부족하다.",
-              "quote_or_number_ref": "growth"
+              "point": "높은 성장 점수에 가이던스 상향을 더해도 장기 매출과 주당순이익 성장률이 비어 있고 플러그인 통합의 매출 기여도도 확인되지 않았다.",
+              "quote_or_number_ref": "100.0"
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "RSI와 이동평균의 조합은 가격 추세를 보여 주지만 가이던스 상향 이후 장기 보유 자금의 변화까지 판단하려면 분기말 공시가 필요하다.",
+              "quote_or_number_ref": "44.8751"
             }
           ],
           "conflict_points": [
-            "기관 보유 변화 기사에는 확인 가능한 본문이 없어 보유 확대의 근거로 사용하기 어렵다.",
-            "45일 제출 기한이 적용되는 분기말 13F 보유 자료가 비어 있어 재단과 정보기술 섹터의 보유 방향을 확인하지 못했고 확인점은 중립으로 유지한다."
+            "가이던스 상향을 긍정적으로 볼 근거가 있지만 그 효과가 장기 현금창출과 현재 가격에 얼마나 반영될지는 불확실하다.",
+            "기관 보유 관련 기사의 본문과 분기말 13F 보유 내역이 없어, 제출 기한 45일을 적용해 확인할 보유 증감이 없으므로 기존 점수를 유지한다."
           ]
         }
       ],
@@ -13826,20 +13893,20 @@
           "veto_codes": [],
           "additional_blocks": [
             "경영진 승계 이후 가이던스 이행 확인",
-            "플러그인 연동의 신규 구독과 현금흐름 기여 확인"
+            "플러그인 연동의 구독 및 현금 기여 확인"
           ],
-          "structural_risk": 58.0,
-          "reasoning": "연간 이익 가이던스 상향은 긍정적인 구조적 신호다. 플러그인 연동에 따른 장기 구독 및 현금 기여는 확인되지 않았고, 현재가는 내재가치 범위 상단보다 높다.",
+          "structural_risk": 54.0,
+          "reasoning": "회사의 가이던스 상향은 영업 전망에 긍정적이다. 검토·승인 작업 연동의 신규 구독 효과와 경영진 교체 이후 현금 창출은 확인되지 않았고 현재가는 내재가치 상단을 웃돈다.",
           "opinion": "caution"
         },
         "chair": {
           "consensus": [
-            "연간 이익 가이던스 상향은 긍정적이며 장기 성장의 지속성은 확인이 필요하다.",
-            "크리에이티브 클라우드 연동이 신규 구독이나 추가 매출로 이어졌는지 근거가 부족하다."
+            "연간 가이던스 상향은 긍정적이며 장기 실적과 현금 창출의 지속성은 확인이 필요하다.",
+            "협업 기능 연동으로 기존 고객의 작업 범위가 넓어질 수 있으며 실적 기여는 확인되지 않았다."
           ],
           "dissent": [
-            "버핏은 내재가치 상단을 넘는 가격과 현금창출 지표 공백 때문에 매도 의견을 유지했고, 린치는 이익 전망 상향을 고려해 관망했다.",
-            "드러켄밀러는 두 이동평균을 밑도는 주가에서 추세 회복 확인을 기다렸다."
+            "버핏은 내재가치 상단과 현재가의 격차를 들어 매도 쪽을 유지했고, 린치는 가이던스와 성장 점수를 긍정적으로 보면서 관망했다.",
+            "드러켄밀러는 두 이동평균 아래의 주가에서 추세 점수를 가산하지 않았다."
           ],
           "grade_recommendation": "WATCH",
           "entry_plan_refs": [],
@@ -13848,17 +13915,17 @@
             219.23
           ],
           "conflict": true,
-          "one_line_ko": "가이던스 상향 이후 구독 확대와 현금 기여가 확인될 때까지 관망한다."
+          "one_line_ko": "가이던스 상향과 협업 기능 확대가 지속적인 구독 성장 및 현금 창출로 이어지는지 확인하며 관망한다."
         }
       },
       "scores": {
         "buffett": {
-          "round1": -60.0,
-          "round2": -60.0
+          "round1": -62.0,
+          "round2": -62.0
         },
         "lynch": {
-          "round1": 23.0,
-          "round2": 23.0
+          "round1": 27.0,
+          "round2": 27.0
         },
         "druckenmiller": {
           "round1": 0.0,
@@ -13874,7 +13941,7 @@
         "skills_kept": 6,
         "quotes_checked": 16,
         "quotes_dropped": 0,
-        "numbers_checked": 11,
+        "numbers_checked": 40,
         "numbers_rejected": 0,
         "refs_dropped": 0,
         "drop_reasons": [
@@ -13884,7 +13951,7 @@
           "quote_missing:news-25ea100d693c"
         ],
         "confidence_cap": "C",
-        "report_validated_at": "2026-11-25T00:37:17.634983+00:00",
+        "report_validated_at": "2026-11-25T01:00:35.425140+00:00",
         "resume_key": "sha256:f74d31a8f60daf5f94a838855b866c5acc0907c61ebfcb5cdd1101f32cd06927",
         "injection_scope": null,
         "injection_blocking": false,
@@ -13923,7 +13990,7 @@
               "counts": {
                 "quotes_checked": 4,
                 "quotes_dropped": 0,
-                "numbers_checked": 3,
+                "numbers_checked": 4,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -13938,7 +14005,9 @@
                 ],
                 "news_ids_dropped": [
                   "news-25ea100d693c"
-                ]
+                ],
+                "confidence_cap": "C",
+                "price_pattern_hits": 1
               }
             },
             {
@@ -13962,8 +14031,6 @@
                   "news-25ea100d693c",
                   "news-6e78bebfa0c3"
                 ],
-                "confidence_cap": "C",
-                "price_pattern_hits": 1,
                 "news_ids_dropped": [
                   "news-25ea100d693c"
                 ]
@@ -13977,7 +14044,7 @@
               "counts": {
                 "quotes_checked": 4,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 6,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14029,7 +14096,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 8,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14042,7 +14109,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14055,7 +14122,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 8,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14068,7 +14135,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14103,7 +14170,7 @@
             "flags": {}
           }
         },
-        "report_sha256": "sha256:f101eb52cc5418cd6a653738c166a539a14c9dbaa482882381ed745f3aa9fec6"
+        "report_sha256": "sha256:800a405de379f0a1109c6c2ef73398202cba95a682e434c6607db8503114e22a"
       },
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -14111,7 +14178,7 @@
       "auto_downgrade_applied": false,
       "track": "codex_debated",
       "news_state": "read_done",
-      "structural_risk": 58.0,
+      "structural_risk": 54.0,
       "injection_detected": false,
       "context_hash": "sha256:297b28809d0557d6e145e7c55cdb71eac1a956c85b6b7ce22db24633559d58a5",
       "prompt_hash": "sha256:eb3cb870df062ab365c3b95ff30736edb7413be0450dcddede589296c3fb7d64",
@@ -14127,134 +14194,134 @@
       "data_cutoff_at": "2026-11-24T22:00:00Z",
       "signal_published_at": "2026-11-24T22:51:04Z",
       "order_cutoff_at": "2026-11-25T14:25:00Z",
-      "completed_at": "2026-11-25T00:37:17.660886+00:00",
+      "completed_at": "2026-11-25T01:00:35.448961+00:00",
       "late": false,
       "invalid": false,
       "status": "complete",
       "round1": [
         {
           "skill": "buffett",
-          "score": -88.0,
+          "score": -95.0,
           "stance": "sell",
-          "confidence": 0.38,
+          "confidence": 0.4,
           "reasons": [
-            "현재가 155.38은 내재가치 범위의 상단 21.18을 웃돌아 안전마진이 없다.",
-            "품질 점수는 77.54지만 ROIC 스프레드, 잉여현금흐름 마진과 순이익 대비 전환율, 희석 및 부채상환 지표가 비어 있다. 자본수익과 현금창출의 지속성을 검증할 수 없어 해당 가감점을 적용하지 않았다.",
-            "기사에 따르면 최고경영자가 사임 후 복귀했고 독립 조사는 이어진다. 지배구조 불확실성을 점수에 반영했다."
+            "현재가 155.38달러가 내재가치 상단 21.18달러를 웃돌아 안전마진이 없다.",
+            "안전마진 지표는 -10.0495이다. 자본수익률과 자본비용의 격차, 현금 전환, 부채 부담과 희석 지표가 없어 높은 가격을 뒷받침할 자본 효율을 검증하기 어렵다.",
+            "공시에는 5.02가 있고 보도는 최고경영자의 사임 후 복귀와 독립 조사 지속을 전한다. 복귀로 경영 공백은 줄었지만 조사 결론과 지배구조의 장기 영향은 불확실하다."
           ],
           "news_read": [
             {
               "news_id": "news-718bc1450989",
               "durability": "structural",
               "impact": "negative",
-              "severity": 76.0,
+              "severity": 67.0,
               "quote_sha256": "b09134665c282e79b461e1dd8a9a35b907250c3d1585cd10ff75a696a2b5c4c3",
               "quote_verified": true,
               "quote_chars": 187,
-              "rationale_ko": "최고경영자가 사임 후 복귀했으며 독립 조사가 진행 중이다. 경영 안정성과 이사회 감독에 대한 불확실성이 남는다."
+              "rationale_ko": "최고경영자 복귀는 단기 공백을 해소했다. 독립 조사가 계속돼 지배구조 불확실성이 남으며 조사 결과와 현금창출 영향은 확인되지 않았다."
             },
             {
               "news_id": "news-58a04bc4117d",
               "durability": "structural",
               "impact": "negative",
-              "severity": 72.0,
+              "severity": 50.0,
               "quote_sha256": "af6b133493db5b4bf55cbf1852c8620b8052738277e07fdb5839d757457959bc",
               "quote_verified": true,
               "quote_chars": 146,
-              "rationale_ko": "본문은 CEO 복귀와 SEC 집행 부서가 잠재적 회계 문제를 살피고 있다는 보도를 함께 전한다. 회계 문제는 확정되지 않았다."
+              "rationale_ko": "옵션 거래 자체의 영향은 제한적이다. 기사에 언급된 복귀 절차와 회계 관련 당국 검토 보도가 지배구조 및 재무보고 위험을 남기지만 회계 위반은 확인되지 않았다."
             },
             {
               "news_id": "news-9f601098a802",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 10.0,
+              "severity": 9.0,
               "quote_sha256": "9e9d082b29d3de3aa7bf1dc91b36e25620b1b0544e1842fcccd382ea85724887",
               "quote_verified": true,
               "quote_chars": 36,
-              "rationale_ko": "시황 방송에서 전일 급등 뒤 주가 반락과 투자자의 가치평가 의견을 전한다."
+              "rationale_ko": "장 마감 시황에서 엔비디아의 급등 뒤 조정과 전문가의 밸류에이션 견해를 다룬다. 신규 기업 공시는 제시되지 않는다."
             },
             {
               "news_id": "news-31abb66425c0",
               "durability": "structural",
               "impact": "positive",
-              "severity": 49.0,
+              "severity": 37.0,
               "quote_sha256": "d8d36336e6a2f9152057ab7af4051a8752cffdd32d5fb69544e059b841834993",
               "quote_verified": true,
               "quote_chars": 165,
-              "rationale_ko": "인터뷰에서 언급된 회사의 매출 전망 상향은 본업 전망에 긍정적이다."
+              "rationale_ko": "인터뷰에서 언급된 회사 매출 전망 상향은 수요가 양호하다는 근거다. 인터뷰의 가격 평가는 장기 현금 전환을 입증하지 않는다."
             },
             {
               "news_id": "news-24dddc0719c8",
-              "durability": "structural",
-              "impact": "unknown",
-              "severity": 25.0,
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 10.0,
               "quote_sha256": "8d696b49a27f3025d01f46c7bcf66e6c377834a84bfa5c6e1c387e85514dbd8c",
               "quote_verified": true,
               "quote_chars": 195,
-              "rationale_ko": "다른 기업의 경영자가 엔비디아 최고경영자의 복귀 시점에 대해 의견을 밝혔다. 복귀가 경영에 미칠 방향은 기사에서 확인하기 어렵다."
+              "rationale_ko": "다른 기업 경영자의 복귀 시점에 대한 견해다. 엔비디아의 경영 계획 변경이나 조사 결과를 새로 제시하지 않는다."
             }
           ]
         },
         {
           "skill": "lynch",
-          "score": 12.0,
+          "score": 17.0,
           "stance": "hold",
-          "confidence": 0.34,
+          "confidence": 0.37,
           "reasons": [
-            "성장 점수 100.0은 긍정적이다. PEG와 PEGY, 장기 매출·주당순이익 성장률이 없어 성장 대비 가격 검증은 보류한다.",
-            "회사가 매출 전망을 높였다는 인터뷰 보도는 성장에 긍정적이지만 장기 이익률이나 성장 지속 기간을 확인해 주지는 않는다.",
-            "독립 조사가 최고경영자 복귀 이후에도 계속된다는 본문을 감안해 지배구조 불확실성을 반영한다."
+            "성장 점수 100.0은 강하다. PEG와 매출·주당순이익의 장기 성장률이 비어 성장에 비해 현재 가격이 합리적인지는 확인하기 어렵다.",
+            "기사에서 회사의 매출 전망 상향을 언급했다. 수요 신호는 우호적이지만 장기 이익 성장률을 가늠할 구체적인 수치는 해당 전망 설명에서 확인되지 않는다.",
+            "이사회가 최고경영자를 복귀시켰고 독립 조사는 계속된다. 경영 안정성과 이익의 지속성을 함께 확인할 필요가 있다."
           ],
           "news_read": [
             {
               "news_id": "news-718bc1450989",
               "durability": "structural",
-              "impact": "negative",
-              "severity": 57.0,
+              "impact": "neutral",
+              "severity": 51.0,
               "quote_sha256": "b09134665c282e79b461e1dd8a9a35b907250c3d1585cd10ff75a696a2b5c4c3",
               "quote_verified": true,
               "quote_chars": 187,
-              "rationale_ko": "복귀에도 독립 조사가 계속된다는 회사 설명은 경영 안정성과 관련된다. 조사 결과와 영업 영향은 아직 확인되지 않았다."
+              "rationale_ko": "최고경영자 복귀로 지도부가 재정비됐고 독립 조사는 계속된다. 성장에 미치는 순효과는 본문에서 확인되지 않는다."
             },
             {
               "news_id": "news-58a04bc4117d",
               "durability": "structural",
               "impact": "negative",
-              "severity": 54.0,
-              "quote_sha256": "af6b133493db5b4bf55cbf1852c8620b8052738277e07fdb5839d757457959bc",
+              "severity": 46.0,
+              "quote_sha256": "2269fda35eb0da7c61c5a75a6b8cf71b3d3ba6f14d0bb2807bce0f3d4dec92f1",
               "quote_verified": true,
-              "quote_chars": 146,
-              "rationale_ko": "이사회가 정부 의견을 받은 뒤 경영진 복귀를 결정했고, 본문은 잠재적 회계 문제를 규제 집행 담당자가 들여다본다는 보도도 전한다. 위반이나 제재는 확인되지 않았다."
+              "quote_chars": 144,
+              "rationale_ko": "본문은 투자자의 옵션 거래와 함께 잠재적 회계 문제에 대한 SEC 집행 부서의 검토를 전했다. 회계 문제의 존재나 제재가 확정됐다는 근거는 없다."
             },
             {
               "news_id": "news-9f601098a802",
               "durability": "transient",
               "impact": "neutral",
-              "severity": 12.0,
-              "quote_sha256": "9e9d082b29d3de3aa7bf1dc91b36e25620b1b0544e1842fcccd382ea85724887",
+              "severity": 8.0,
+              "quote_sha256": "83521ed76ee43de713e540c53dd0194b17caec61e48786d3fad4b13a19064cc4",
               "quote_verified": true,
-              "quote_chars": 36,
-              "rationale_ko": "급등 뒤 일부 상승분을 반납한 당일 장세 중계다. 인터뷰이의 저평가 의견은 성장 대비 가격을 검증하기에 부족하다."
+              "quote_chars": 196,
+              "rationale_ko": "주가 급등락을 전한 방송에서 투자자가 상대적 밸류에이션에 대한 견해를 제시했다."
             },
             {
               "news_id": "news-31abb66425c0",
               "durability": "structural",
               "impact": "positive",
-              "severity": 53.0,
+              "severity": 35.0,
               "quote_sha256": "d8d36336e6a2f9152057ab7af4051a8752cffdd32d5fb69544e059b841834993",
               "quote_verified": true,
               "quote_chars": 165,
-              "rationale_ko": "인터뷰 진행자가 전한 회사의 매출 전망 상향은 본업 성장에 긍정적이다. 장기 이익 추정은 제시된 성장 평가 지표를 대신할 수 없다."
+              "rationale_ko": "방송에서 회사의 매출 전망 상향을 언급했다. 이후 이익 추정에 관한 언급은 방송 출연자의 해석이다."
             },
             {
               "news_id": "news-24dddc0719c8",
-              "durability": "structural",
+              "durability": "transient",
               "impact": "neutral",
-              "severity": 27.0,
+              "severity": 9.0,
               "quote_sha256": "8d696b49a27f3025d01f46c7bcf66e6c377834a84bfa5c6e1c387e85514dbd8c",
               "quote_verified": true,
               "quote_chars": 195,
-              "rationale_ko": "엔비디아 최고경영자의 빠른 복귀는 지배구조 사안이다. 복귀 시점에 관한 외부 경영자의 의견으로 실적의 방향을 판단하지 않는다."
+              "rationale_ko": "다른 회사의 경영자가 본인 경험을 바탕으로 황의 복귀 시점에 대한 견해를 제시했다."
             }
           ]
         },
@@ -14262,62 +14329,62 @@
           "skill": "druckenmiller",
           "score": 0.0,
           "stance": "hold",
-          "confidence": 0.32,
+          "confidence": 0.33,
           "reasons": [
-            "검증된 거시 레짐은 중립(neutral)이다. 시장 대비 상대강도와 변동성·신용·금리 지표가 비어 있어 주도주 여부와 거시 압력을 확인하기 어렵다.",
-            "현재가 155.38은 단기와 장기 이동평균을 모두 밑돈다. 경영진 복귀 보도 이후에도 주가 추세 조건이 충족되지 않았다.",
-            "RSI 39.4662는 추세 가산 구간을 밑돈다. 급등과 반락이 이어졌다는 보도 속에서 지속적인 추세 회복을 기다린다."
+            "주가 155.38은 50일선과 200일선 모두 아래에 있어 반등 이후에도 추세 회복이 확인되지 않았다.",
+            "RSI 39.4662로 모멘텀 가산 조건을 충족하지 못했다.",
+            "국면 점수 50.0인 중립 상태에서 금리·신용·변동성 지표와 6개월 상대강도가 비어 있어 관망한다."
           ],
           "news_read": [
             {
               "news_id": "news-718bc1450989",
               "durability": "structural",
-              "impact": "positive",
-              "severity": 60.0,
+              "impact": "negative",
+              "severity": 52.0,
               "quote_sha256": "b09134665c282e79b461e1dd8a9a35b907250c3d1585cd10ff75a696a2b5c4c3",
               "quote_verified": true,
               "quote_chars": 187,
-              "rationale_ko": "창업자 CEO 복귀는 경영 연속성에 긍정적이다. 독립 조사가 계속돼 지배구조 불확실성이 남는다."
+              "rationale_ko": "최고경영자 복귀로 경영 공백은 줄었지만 독립 조사가 계속돼 지배구조 불확실성이 남아 있다."
             },
             {
               "news_id": "news-58a04bc4117d",
-              "durability": "structural",
-              "impact": "negative",
-              "severity": 45.0,
-              "quote_sha256": "af6b133493db5b4bf55cbf1852c8620b8052738277e07fdb5839d757457959bc",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 19.0,
+              "quote_sha256": "22566cfcad6aab828deb33b53d9efdb6684120c32f6fc3e2f5220cf85342ebbc",
               "quote_verified": true,
-              "quote_chars": 146,
-              "rationale_ko": "이사회는 정부 당국의 의견을 들은 뒤 복귀를 의결했다고 밝혔다. 기사는 회계 문제에 대한 규제기관의 검토 보도도 전하며 그 결과는 확인되지 않았다."
+              "quote_chars": 150,
+              "rationale_ko": "한 투자자가 하락 포지션 일부를 청산하고 상승 옵션으로 헤지했다. 포지션 조정에서 주가 방향을 단정하기 어렵다."
             },
             {
               "news_id": "news-9f601098a802",
               "durability": "transient",
               "impact": "negative",
-              "severity": 20.0,
+              "severity": 24.0,
               "quote_sha256": "9e9d082b29d3de3aa7bf1dc91b36e25620b1b0544e1842fcccd382ea85724887",
               "quote_verified": true,
               "quote_chars": 36,
-              "rationale_ko": "엔비디아가 앞선 급등분 일부를 반납했다는 장 마감 시황이다. 본업 수요가 달라졌다는 근거로 보기 어렵다."
+              "rationale_ko": "급등 이후 주가가 하락하면서 최근 반등의 지속성이 약해졌다. 방송은 장중 움직임을 중심으로 다뤘다."
             },
             {
               "news_id": "news-31abb66425c0",
               "durability": "structural",
               "impact": "positive",
-              "severity": 40.0,
+              "severity": 54.0,
               "quote_sha256": "d8d36336e6a2f9152057ab7af4051a8752cffdd32d5fb69544e059b841834993",
               "quote_verified": true,
               "quote_chars": 165,
-              "rationale_ko": "인터뷰가 언급한 회사의 매출 전망 상향은 긍정적인 사업 신호다. 출연자의 밸류에이션 의견은 국면 점수에 반영하지 않는다."
+              "rationale_ko": "방송에서 언급한 회사의 매출 전망 상향은 본업의 긍정적 신호다. 외부 출연자의 평가보다 회사 전망 변경에 무게를 둔다."
             },
             {
               "news_id": "news-24dddc0719c8",
-              "durability": "structural",
+              "durability": "transient",
               "impact": "neutral",
-              "severity": 26.0,
+              "severity": 14.0,
               "quote_sha256": "8d696b49a27f3025d01f46c7bcf66e6c377834a84bfa5c6e1c387e85514dbd8c",
               "quote_verified": true,
               "quote_chars": 195,
-              "rationale_ko": "복귀 시점에 관한 동종 업계 경영자의 평가다. CEO 복귀는 지배구조 사안이며 이 인터뷰에서 새로운 경영 조치는 확인되지 않았다."
+              "rationale_ko": "외부 경영자가 복귀 시점에 견해를 밝혔다. 엔비디아의 추가 인사나 경영 방침 변경을 발표한 내용은 없다."
             }
           ]
         },
@@ -14327,58 +14394,58 @@
           "stance": "hold",
           "confidence": 0.2,
           "reasons": [
-            "NVDA의 13F 보유 내역이 비어 있어 게이츠 재단·기금의 분기 대비 증감과 Information Technology 섹터의 동반 확대 여부를 확인할 수 없다. 13F는 45일 제출 기한이 적용되는 분기말 자료이므로 보유 신호 판정을 유보한다."
+            "NVDA의 13F 보유 내역이 비어 있어 분기말 보유 증감과 섹터 동행을 확인할 수 없다. 13F는 분기말 기준이며 제출 기한은 45일이다."
           ],
           "news_read": [
             {
               "news_id": "news-718bc1450989",
               "durability": "structural",
-              "impact": "unknown",
-              "severity": 73.0,
+              "impact": "neutral",
+              "severity": 70.0,
               "quote_sha256": "b09134665c282e79b461e1dd8a9a35b907250c3d1585cd10ff75a696a2b5c4c3",
               "quote_verified": true,
               "quote_chars": 187,
-              "rationale_ko": "황의 최고경영자 복귀로 경영 체제가 바뀌었고 회사의 독립 조사는 계속된다. 조사 결과와 사업 영향은 확인되지 않는다."
+              "rationale_ko": "이사회가 젠슨 황을 복귀시키고 독립 조사를 계속하기로 했다. 경영진 복귀와 조사 결과의 불확실성이 함께 남는다."
             },
             {
               "news_id": "news-58a04bc4117d",
-              "durability": "structural",
-              "impact": "negative",
-              "severity": 64.0,
-              "quote_sha256": "af6b133493db5b4bf55cbf1852c8620b8052738277e07fdb5839d757457959bc",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 22.0,
+              "quote_sha256": "22566cfcad6aab828deb33b53d9efdb6684120c32f6fc3e2f5220cf85342ebbc",
               "quote_verified": true,
-              "quote_chars": 146,
-              "rationale_ko": "이사회는 황의 복귀에 대한 판단을 밝혔고 본문은 별도로 회계 사안에 대한 증권거래위원회 집행 인력의 검토 보도를 전한다. 버리의 옵션 조정은 분기말 보유 확인에 쓰기 어렵다."
+              "quote_chars": 150,
+              "rationale_ko": "투자자 개인의 옵션 조정과 헤지가 중심이다. 규제 관련 내용은 별도 보도와 투자자의 발언을 인용했다."
             },
             {
               "news_id": "news-9f601098a802",
               "durability": "transient",
               "impact": "negative",
-              "severity": 13.0,
+              "severity": 12.0,
               "quote_sha256": "9e9d082b29d3de3aa7bf1dc91b36e25620b1b0544e1842fcccd382ea85724887",
               "quote_verified": true,
               "quote_chars": 36,
-              "rationale_ko": "장 마감 시황에서 엔비디아가 전일 급등분 일부를 되돌렸다고 전한다."
+              "rationale_ko": "시장 마감 방송에서 전일 급등에 이은 엔비디아의 주가 하락과 다른 AI 종목의 등락을 다뤘다."
             },
             {
               "news_id": "news-31abb66425c0",
-              "durability": "structural",
-              "impact": "positive",
-              "severity": 48.0,
-              "quote_sha256": "d8d36336e6a2f9152057ab7af4051a8752cffdd32d5fb69544e059b841834993",
+              "durability": "transient",
+              "impact": "neutral",
+              "severity": 14.0,
+              "quote_sha256": "b7111281a85582735d1baad59cbdc2ff4ad28341172f08608962f92940eb5174",
               "quote_verified": true,
-              "quote_chars": 165,
-              "rationale_ko": "인터뷰에서 엔비디아의 매출 전망 상향을 언급했다. 회사 전망의 변화가 기사에 나온 근거이며 출연자의 가치평가는 의견이다."
+              "quote_chars": 76,
+              "rationale_ko": "최근 매도세를 배경으로 출연자가 기존 실적 전망과 밸류에이션을 해석했다."
             },
             {
               "news_id": "news-24dddc0719c8",
-              "durability": "transient",
+              "durability": "structural",
               "impact": "neutral",
-              "severity": 11.0,
+              "severity": 35.0,
               "quote_sha256": "8d696b49a27f3025d01f46c7bcf66e6c377834a84bfa5c6e1c387e85514dbd8c",
               "quote_verified": true,
               "quote_chars": 195,
-              "rationale_ko": "다른 기업 창업자가 황의 복귀 시점에 대해 의견을 밝혔다. 엔비디아의 추가 경영 체제 변경은 본문에 제시되지 않는다."
+              "rationale_ko": "외부 경영자가 젠슨 황의 복귀 시점에 관한 견해를 밝혔다. 사안은 경영진 구성에 관한 것이며 복귀에 따른 실적 영향은 제시되지 않았다."
             }
           ]
         }
@@ -14386,43 +14453,49 @@
       "round2": [
         {
           "skill": "buffett",
-          "score": -88.0,
+          "score": -95.0,
           "changed": false,
           "rebuttals": [
             {
               "target_skill": "lynch",
-              "point": "린치가 성장 점수와 매출 전망 상향을 긍정적으로 평가했지만, 매출의 이익률과 현금 전환율을 확인할 수 없어 내재가치 상단을 크게 웃도는 가격을 뒷받침하기 어렵다.",
+              "point": "성장 점수 100.0과 매출 전망 상향은 수요에 우호적이지만, 지속 가능한 마진과 현금 전환이 확인돼야 현재가 155.38달러를 정당화할 수 있다.",
               "quote_or_number_ref": "growth"
             },
             {
               "target_skill": "druckenmiller",
-              "point": "드러켄밀러가 최고경영자 복귀 이후 현재가와 이동평균을 비교해 추세 회복을 기다렸지만, 주가 반등만으로는 진행 중인 독립 조사에 따른 경영 불확실성이 해소됐는지 확인할 수 없다.",
-              "quote_or_number_ref": "price"
+              "point": "RSI 39.4662와 이동평균선 아래의 주가로 반등 지속성을 유보한 판단은 적절하지만, 주가 추세는 독립 조사가 남긴 경영 위험이나 내재가치 상단 21.18달러 대비 가격 부담을 측정하지 못한다.",
+              "quote_or_number_ref": "39.4662"
+            },
+            {
+              "target_skill": "gates_13f",
+              "point": "제출 기한이 45일인 분기말 보유 자료가 비어 있어 기관 수급을 확인할 수 없으며, 이로 인한 중립 점수는 최고경영자 복귀 후에도 이어지는 독립 조사의 위험을 덜어 주지 않는다.",
+              "quote_or_number_ref": "45"
             }
           ],
           "conflict_points": [
-            "매출 전망 상향 보도에도 안전마진이 없고 최고경영자 복귀 뒤에도 독립 조사가 이어진다. 조사 결과와 장기 현금창출력 모두 확인되지 않아 점수를 유지한다."
+            "매출 전망 상향만으로 안전마진 지표 -10.0495를 재평가할 장기 현금흐름을 확인하기 어려워 점수를 유지한다.",
+            "경영 공백이 줄었다는 판단과 별개로 독립 조사의 결론이 나올 때까지 사임과 복귀에 따른 지배구조 위험이 남아 있다."
           ]
         },
         {
           "skill": "lynch",
-          "score": 12.0,
+          "score": 17.0,
           "changed": false,
           "rebuttals": [
             {
               "target_skill": "buffett",
-              "point": "내재가치 상단과의 큰 격차는 부담이지만 회사가 매출 전망을 상향했다는 보도와 독립 조사 지속을 함께 고려하면 격차만으로 지속 가능한 이익 성장 대비 가격을 판정하기 어렵다.",
-              "quote_or_number_ref": "iv_high"
+              "point": "안전마진 지표 -10.0495는 평가치와의 큰 격차를 보여 주며, 매도 강도를 결정하려면 회사가 높인 매출 전망이 장기 주당이익으로 이어질지도 확인해야 한다.",
+              "quote_or_number_ref": "-10.0495"
             },
             {
               "target_skill": "druckenmiller",
-              "point": "낮은 RSI와 반등 후 반락은 단기 진입 위험을 보여 주지만 매출 전망 상향이 장기 이익 성장으로 이어질지 판단할 근거는 제한적이다.",
+              "point": "RSI 39.4662는 모멘텀 가산을 보류할 근거이며, 매출 전망 상향이 보여 준 수요 흐름의 지속성은 실적에서 따로 확인해야 한다.",
               "quote_or_number_ref": "39.4662"
             }
           ],
           "conflict_points": [
-            "매출 전망 상향을 긍정적으로 보되 독립 조사 결과와 잠재적인 회계 문제의 영향은 확인되지 않았다.",
-            "장기 이익 성장과 PEG의 공백이 남아 관망 점수를 유지한다."
+            "매출 전망 상향의 근거가 되는 수요가 얼마나 이어질지와 경영진 복귀 후 독립 조사가 사업에 미칠 영향이 남은 쟁점이다.",
+            "성장 점수 100.0과 매출 전망 상향을 반영한 관망을 유지한다. PEG와 장기 성장률이 비어 가격 판단을 바꾸기 어렵다."
           ]
         },
         {
@@ -14431,19 +14504,24 @@
           "changed": false,
           "rebuttals": [
             {
-              "target_skill": "lynch",
-              "point": "성장 점수와 매출 전망 상향 보도에 긍정적이더라도 두 이동평균 아래의 주가와 약한 RSI는 시장 추세의 회복을 뒷받침하기 어렵다.",
-              "quote_or_number_ref": "growth"
+              "target_skill": "buffett",
+              "point": "안전마진 -10.0495와 독립 조사 지속은 부담이지만 중립 국면에서 현재 매도 강도까지 결정하려면 시장 대비 상대강도와 신용 여건이 필요하다.",
+              "quote_or_number_ref": "-10.0495"
             },
             {
-              "target_skill": "buffett",
-              "point": "내재가치 상단을 크게 웃도는 가격과 진행 중인 조사는 위험 요인이지만, 조사 결과와 시장 대비 상대강도가 비어 있어 강한 매도 점수에 필요한 촉매는 확인되지 않았다.",
-              "quote_or_number_ref": "price"
+              "target_skill": "lynch",
+              "point": "성장 점수 100.0과 매출 전망 상향에도 RSI 39.4662와 두 이동평균 아래의 주가는 상승 추세를 뒷받침하지 못한다.",
+              "quote_or_number_ref": "100.0"
+            },
+            {
+              "target_skill": "gates_13f",
+              "point": "분기말 보유 공시의 45일 시차는 합리적인 제약이지만 현재 판단에서는 공시 공백보다 최근 반등 뒤에도 주가가 두 이동평균 아래라는 점이 직접적인 근거다.",
+              "quote_or_number_ref": "45"
             }
           ],
           "conflict_points": [
-            "CEO 복귀는 경영 연속성을 높일 수 있고 조사 결과에 따른 지배구조 영향은 여전히 불확실하다.",
-            "급등 뒤 반락과 두 이동평균 하회로 추세 가산 근거가 부족하며, 중립 레짐과 상대강도 공백 때문에 점수를 유지한다."
+            "매출 전망 상향과 독립 조사 지속이 겹친 상황에서 주가 155.38은 두 이동평균 아래에 있다.",
+            "중립 국면에서 6개월 상대강도와 금리·신용 지표가 비어 있고 최근 반등도 추세 회복으로 이어지지 않아 관망 점수를 유지한다."
           ]
         },
         {
@@ -14453,13 +14531,23 @@
           "rebuttals": [
             {
               "target_skill": "buffett",
-              "point": "현재가가 내재가치 추정 상단을 웃돈다는 점은 가격 부담을 보여 주지만, 독립 조사가 진행 중인 상태에서 그 격차만으로 경영 불확실성에 대한 장기 보유자의 대응까지 판단할 근거는 부족하다.",
-              "quote_or_number_ref": "price"
+              "point": "안전마진이 낮다는 판단은 수치로 뒷받침되지만 최고경영자 복귀 이후 독립 조사의 결론과 현금흐름 영향이 확인되지 않아 지배구조 위험을 강한 매도 판단에 얼마나 반영할지는 불확실하다.",
+              "quote_or_number_ref": "-10.0495"
+            },
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수와 방송이 언급한 매출 전망 상향만으로는 지배구조 불확실성이 지속될 때 장기 이익이 얼마나 방어될지 판단하기 어렵다.",
+              "quote_or_number_ref": "100.0"
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "낮은 RSI가 반등의 지속성에 의문을 제기해도 개인 투자자의 옵션 헤지와 장중 조정으로는 분기말 장기 자금의 방향을 확인할 수 없다.",
+              "quote_or_number_ref": "39.4662"
             }
           ],
           "conflict_points": [
-            "버리의 옵션 조정은 위험 노출의 변화이며 재단의 분기말 주식 보유 증감을 확인하려면 별도의 공시가 필요하다.",
-            "45일 제출 기한이 적용되는 분기말 13F 보유 자료가 비어 있어 최고경영자 복귀 이후의 장기 보유 신호를 평가할 수 없고 확인점은 중립으로 유지한다."
+            "최고경영자 복귀가 경영 공백을 줄였지만 독립 조사 결론이 남아 있어 지배구조에 미치는 순효과를 두고 의견이 갈린다.",
+            "제출 기한이 45일인 분기말 13F 보유 내역이 비어 있고 옵션 거래 보도는 보유 증감을 알려 주지 않아 기존 점수를 유지한다."
           ]
         }
       ],
@@ -14470,20 +14558,20 @@
           ],
           "additional_blocks": [
             "8-K 5.02 원문과 이사회 조치 확인",
-            "진행 중인 독립 조사 결과와 회계 검토 보도 확인"
+            "독립 조사 결과와 잠재적 회계 검토 보도 확인"
           ],
-          "structural_risk": 76.0,
-          "reasoning": "기사에 따르면 최고경영자의 사임과 복귀를 거친 뒤에도 회사의 독립 조사가 이어져 경영과 이사회 감독에 대한 불확실성이 남는다. 잠재적 회계 문제에 대한 검토는 보도 단계이며, 독립 조사 결과와 경영 안정성이 확인될 때까지 신규 진입을 차단한다.",
+          "structural_risk": 70.0,
+          "reasoning": "최고경영자의 사임과 복귀를 거친 뒤에도 회사가 독립 조사를 계속한다고 보도돼 이사회 감독과 경영 안정성에 불확실성이 남는다. 매출 전망 상향 보도에도 독립 조사 결과가 확인될 때까지 신규 진입을 차단한다.",
           "opinion": "block_new"
         },
         "chair": {
           "consensus": [
-            "매출 전망 상향 보도는 긍정적이며 장기 이익과 현금 전환은 확인이 필요하다.",
-            "최고경영자 복귀 이후에도 독립 조사가 계속돼 지배구조 불확실성이 남는다."
+            "매출 전망 상향 보도는 긍정적이며 장기 실적 기여는 확인해야 한다.",
+            "최고경영자 복귀 뒤에도 독립 조사가 이어져 지배구조 불확실성이 남는다."
           ],
           "dissent": [
-            "버핏은 가격 부담과 독립 조사를 이유로 매도 의견을 유지했고, 린치는 매출 전망 상향을 긍정적으로 보면서 조사 결과를 기다렸다.",
-            "드러켄밀러는 복귀가 경영 연속성에 도움이 될 수 있다고 봤으며 주가 추세 회복은 확인되지 않았다고 판단했다."
+            "버핏은 높은 가격과 독립 조사 지속을 근거로 매도 판단을 유지했고, 린치는 매출 전망 상향과 장기 성장률 자료 공백을 함께 보고 관망했다.",
+            "드러켄밀러는 주가 반등 이후에도 두 이동평균 아래에서 추세 회복을 기다렸다."
           ],
           "grade_recommendation": "NONE",
           "entry_plan_refs": [],
@@ -14492,17 +14580,17 @@
             130.65
           ],
           "conflict": true,
-          "one_line_ko": "매출 전망 상향 보도에도 독립 조사와 지배구조 불확실성이 남아 신규 진입을 차단한다."
+          "one_line_ko": "매출 전망 상향에도 독립 조사가 진행 중이므로 신규 진입을 차단한다."
         }
       },
       "scores": {
         "buffett": {
-          "round1": -88.0,
-          "round2": -88.0
+          "round1": -95.0,
+          "round2": -95.0
         },
         "lynch": {
-          "round1": 12.0,
-          "round2": 12.0
+          "round1": 17.0,
+          "round2": 17.0
         },
         "druckenmiller": {
           "round1": 0.0,
@@ -14518,12 +14606,12 @@
         "skills_kept": 6,
         "quotes_checked": 20,
         "quotes_dropped": 0,
-        "numbers_checked": 14,
+        "numbers_checked": 43,
         "numbers_rejected": 0,
         "refs_dropped": 0,
         "drop_reasons": [],
-        "confidence_cap": null,
-        "report_validated_at": "2026-11-25T00:37:17.660886+00:00",
+        "confidence_cap": "C",
+        "report_validated_at": "2026-11-25T01:00:35.448961+00:00",
         "resume_key": "sha256:4457423e9cb911eb6356c336845e4b4a05910c01e7a89d9e8b828b76f7ada204",
         "injection_scope": null,
         "injection_blocking": false,
@@ -14560,7 +14648,7 @@
               "counts": {
                 "quotes_checked": 5,
                 "quotes_dropped": 0,
-                "numbers_checked": 3,
+                "numbers_checked": 4,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14573,7 +14661,9 @@
                   "news-31abb66425c0",
                   "news-24dddc0719c8"
                 ],
-                "news_ids_dropped": []
+                "news_ids_dropped": [],
+                "confidence_cap": "C",
+                "price_pattern_hits": 1
               }
             },
             {
@@ -14604,7 +14694,7 @@
               "counts": {
                 "quotes_checked": 5,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 6,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14650,7 +14740,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 8,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14663,7 +14753,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 1,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14676,7 +14766,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 0,
+                "numbers_checked": 9,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14689,7 +14779,7 @@
               "counts": {
                 "quotes_checked": 0,
                 "quotes_dropped": 0,
-                "numbers_checked": 2,
+                "numbers_checked": 5,
                 "numbers_rejected": 0,
                 "sentences_removed": 0,
                 "refs_dropped": 0
@@ -14724,7 +14814,7 @@
             "flags": {}
           }
         },
-        "report_sha256": "sha256:d8c855704e0b171674f7156058447bfc82ff6a50bcc1c9fb58e6f5590ff503ef"
+        "report_sha256": "sha256:96207b5081d8ef7d2bddff7f977396bf29f401edd561a37ee81dec68c17ac7f9"
       },
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -14732,7 +14822,7 @@
       "auto_downgrade_applied": false,
       "track": "codex_debated",
       "news_state": "read_done",
-      "structural_risk": 76.0,
+      "structural_risk": 70.0,
       "injection_detected": false,
       "context_hash": "sha256:4d54cbe9a7cf8b3a5cd19a73be349ac01e220b9d97d10290a67bb5b4663ded26",
       "prompt_hash": "sha256:eb3cb870df062ab365c3b95ff30736edb7413be0450dcddede589296c3fb7d64",
