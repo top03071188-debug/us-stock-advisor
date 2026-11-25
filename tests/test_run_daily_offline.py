@@ -101,12 +101,21 @@ def test_blocked_list_keeps_reason(workdir, monkeypatch):
 
 
 def test_settlement_is_a_separate_event_next_day(workdir, monkeypatch):
+    """발행일·정산일이 달력 날짜로 고정된 시나리오라 실행기 시계를 각 배치 시각으로 묶는다.
+
+    실제 날짜를 쓰던 때는 `2026-11-20` 발행 레코드의 발행 시각이 실행일(오늘)로 찍히고 대상 세션이
+    먼 미래로 밀려, 두 번째 실행(`as_of=2026-11-24`)에서 체결 이벤트가 생기지 않았다(시한폭탄).
+    """
+    from tests.helpers import freeze_runner_clock
+
+    freeze_runner_clock(monkeypatch, "2026-11-20T22:10:00Z")
     assert _run_daily(monkeypatch) == 0
     signals = json.loads(Path("data/quant_signals.json").read_text(encoding="utf-8"))["signals"]
     buy = [s for s in signals if s["quant_intent"] == "pending_buy"]
     assert buy, "체결 대기(pending_buy) 신호가 있어야 정산을 검증할 수 있다"
     assert not list(Path("data/ledger/executions").glob("*.json"))
 
+    freeze_runner_clock(monkeypatch, "2026-11-24T22:10:00Z")
     assert _run_daily(monkeypatch, LATER) == 0
     events = {}
     for path in Path("data/ledger/executions").glob("*.json"):

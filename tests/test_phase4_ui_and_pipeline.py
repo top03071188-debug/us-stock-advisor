@@ -791,8 +791,16 @@ def _records() -> list[dict]:
 
 
 def test_blocked_signal_supersedes_the_live_buy_in_the_same_run(workdir, monkeypatch):
-    """감사 01-d: 오전 BUY 가 같은 날 차단되면 원장에서 **대체**되고 주문이 취소된다."""
+    """감사 01-d: 오전 BUY 가 같은 날 차단되면 원장에서 **대체**되고 주문이 취소된다.
+
+    시나리오(2026-11-20 postclose, 대상 세션 2026-11-23)가 달력 날짜로 고정돼 있으므로,
+    실행기 시계를 그 배치 시각으로 묶는다 — 실제 날짜가 주문 마감(2026-11-23T14:20Z)을 지나면
+    차단 재발행이 "동결 뒤 도착"으로 판정돼 취소 대신 `FROZEN_ORDER_STANDS` 만 남는다.
+    """
+    from tests.helpers import freeze_runner_clock
     from tests.test_phase4_ledger_and_ui import record_of
+
+    freeze_runner_clock(monkeypatch, "2026-11-20T22:10:00Z")
 
     buy = record_of(sid="2026-11-20-FIXC-BUY-001", ticker="FIXC", as_of=AS_OF)
     buy.update({"as_of": AS_OF, "target_session": "2026-11-23",
