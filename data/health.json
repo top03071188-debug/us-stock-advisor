@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "as_of": "2026-11-25",
-  "generated_at": "2026-11-25T14:06:13.810706Z",
+  "as_of": "2026-11-26",
+  "generated_at": "2026-11-25T22:48:39.031156Z",
   "status": "normal",
   "degraded": [],
   "positions_open": 0,
@@ -20,11 +20,11 @@
   "order_cancellations_count": 0,
   "order_cancellations": [],
   "data_status": "ok",
-  "last_run_at": "2026-11-25T14:04:40Z",
-  "last_attempt_at": "2026-11-25T14:06:13Z",
-  "last_success_at": "2026-11-25T14:06:13Z",
-  "data_cutoff_at": "2026-11-25T12:50:00Z",
-  "target_session": "2026-11-25",
+  "last_run_at": "2026-11-25T22:47:21Z",
+  "last_attempt_at": "2026-11-25T22:48:39Z",
+  "last_success_at": "2026-11-25T22:48:39Z",
+  "data_cutoff_at": "2026-11-25T22:00:00Z",
+  "target_session": "2026-11-27",
   "outage_id": null,
   "reason": null
 }

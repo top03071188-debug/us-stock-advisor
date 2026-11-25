@@ -2,7 +2,7 @@
   "schema_version": 1,
   "as_of": "2026-11-25",
   "horizon": "3m",
-  "n_records": 71,
+  "n_records": 75,
   "n_eligible": 0,
   "n_graded": 0,
   "n_eff": 0,
@@ -13,7 +13,7 @@
       "value": 0,
       "threshold": "≥ 15",
       "pass": false,
-      "note_ko": "체결·3개월 만기 0개(발행 신호 71건 중 유효 0건)"
+      "note_ko": "체결·3개월 만기 0개(발행 신호 75건 중 유효 0건)"
     },
     {
       "key": "net_after_cost",
@@ -42,7 +42,7 @@
   ],
   "verdict": "보류",
   "verdict_reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
-  "benchmark_return": 0.005075864865958124,
+  "benchmark_return": 0.019197951885167708,
   "risk_free": 0.0,
   "costs": {
     "slippage": 10.0,
