@@ -2,7 +2,7 @@
   "schema_version": 1,
   "as_of": "2026-11-26",
   "horizon": "3m",
-  "n_records": 79,
+  "n_records": 83,
   "n_eligible": 0,
   "n_graded": 0,
   "n_eff": 0,
@@ -13,7 +13,7 @@
       "value": 0,
       "threshold": "≥ 15",
       "pass": false,
-      "note_ko": "체결·3개월 만기 0개(발행 신호 79건 중 유효 0건)"
+      "note_ko": "체결·3개월 만기 0개(발행 신호 83건 중 유효 0건)"
     },
     {
       "key": "net_after_cost",
