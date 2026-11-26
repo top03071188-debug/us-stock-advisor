@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "as_of": "2026-11-26",
-  "generated_at": "2026-11-25T22:48:30Z",
-  "received_at": "2026-11-25T22:48:30Z",
+  "generated_at": "2026-11-26T14:03:52Z",
+  "received_at": "2026-11-26T14:03:52Z",
   "freeze_buffer_seconds": 300,
   "auto_downgrade_enabled": false,
-  "n_reports": 25,
-  "n_eligible": 25,
+  "n_reports": 29,
+  "n_eligible": 29,
   "n_late": 0,
   "n_invalid": 0,
   "n_superseded": 0,
@@ -35,7 +35,11 @@
     "2026-11-25-GOOGL-WATCH-001": "2026-11-25-GOOGL-debate-01",
     "2026-11-25-META-WATCH-001": "2026-11-25-META-debate-01",
     "2026-11-25-ADBE-WATCH-001": "2026-11-25-ADBE-debate-01",
-    "2026-11-25-NVDA-WATCH-001": "2026-11-25-NVDA-debate-01"
+    "2026-11-25-NVDA-WATCH-001": "2026-11-25-NVDA-debate-01",
+    "2026-11-26-GOOGL-WATCH-001": "2026-11-26-GOOGL-debate-01",
+    "2026-11-26-NVDA-WATCH-001": "2026-11-26-NVDA-debate-01",
+    "2026-11-26-ADBE-WATCH-001": "2026-11-26-ADBE-debate-01",
+    "2026-11-26-META-WATCH-001": "2026-11-26-META-debate-01"
   },
   "superseded": [],
   "by_signal": {
@@ -56,7 +60,7 @@
       "report_validated_at": "2026-11-20T13:56:11Z",
       "freeze_deadline_at": "2026-11-20T14:20:00Z",
       "frozen_at": "2026-11-20T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -240,7 +244,7 @@
       "report_validated_at": "2026-11-21T00:44:44.454624Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -404,7 +408,7 @@
       "report_validated_at": "2026-11-21T00:44:44.458337Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -568,7 +572,7 @@
       "report_validated_at": "2026-11-21T00:44:44.462401Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -732,7 +736,7 @@
       "report_validated_at": "2026-11-21T00:44:44.466918Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -897,7 +901,7 @@
       "report_validated_at": "2026-11-21T00:44:44.471290Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1061,7 +1065,7 @@
       "report_validated_at": "2026-11-21T04:40:01.064530Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1226,7 +1230,7 @@
       "report_validated_at": "2026-11-21T04:40:01.070582Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1391,7 +1395,7 @@
       "report_validated_at": "2026-11-21T04:40:01.076591Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1557,7 +1561,7 @@
       "report_validated_at": "2026-11-21T04:40:01.084336Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1727,7 +1731,7 @@
       "report_validated_at": "2026-11-21T04:40:01.092162Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -1893,7 +1897,7 @@
       "report_validated_at": "2026-11-22T05:29:35.573683Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2060,7 +2064,7 @@
       "report_validated_at": "2026-11-22T05:29:35.586838Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2225,7 +2229,7 @@
       "report_validated_at": "2026-11-22T05:29:35.598342Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2391,7 +2395,7 @@
       "report_validated_at": "2026-11-22T05:29:35.610723Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2559,7 +2563,7 @@
       "report_validated_at": "2026-11-22T05:29:35.622881Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2724,7 +2728,7 @@
       "report_validated_at": "2026-11-23T01:32:08.596190Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -2891,7 +2895,7 @@
       "report_validated_at": "2026-11-23T01:32:08.614632Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3058,7 +3062,7 @@
       "report_validated_at": "2026-11-23T01:32:08.632568Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3225,7 +3229,7 @@
       "report_validated_at": "2026-11-23T01:32:08.652170Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3395,7 +3399,7 @@
       "report_validated_at": "2026-11-23T01:32:08.675542Z",
       "freeze_deadline_at": "2026-11-23T14:20:00Z",
       "frozen_at": "2026-11-23T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3562,7 +3566,7 @@
       "report_validated_at": "2026-11-25T01:00:35.379379Z",
       "freeze_deadline_at": "2026-11-25T14:20:00Z",
       "frozen_at": "2026-11-25T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3747,7 +3751,7 @@
       "report_validated_at": "2026-11-25T01:00:35.403653Z",
       "freeze_deadline_at": "2026-11-25T14:20:00Z",
       "frozen_at": "2026-11-25T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -3933,7 +3937,7 @@
       "report_validated_at": "2026-11-25T01:00:35.425140Z",
       "freeze_deadline_at": "2026-11-25T14:20:00Z",
       "frozen_at": "2026-11-25T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -4119,7 +4123,7 @@
       "report_validated_at": "2026-11-25T01:00:35.448961Z",
       "freeze_deadline_at": "2026-11-25T14:20:00Z",
       "frozen_at": "2026-11-25T14:20:00Z",
-      "received_at": "2026-11-25T22:48:30Z",
+      "received_at": "2026-11-26T14:03:52Z",
       "validation_source": "validation",
       "quant_grade": "WATCH",
       "display_grade": "WATCH",
@@ -4289,6 +4293,748 @@
       "adopted_report_id": "2026-11-25-NVDA-debate-01",
       "adopted_report_sha256": "sha256:96207b5081d8ef7d2bddff7f977396bf29f401edd561a37ee81dec68c17ac7f9",
       "adopted_snapshot_id": "sha256:641c908b2d1301beae7bda4fba8ed223d51e8da72592e708d27e233ac49d9858"
+    },
+    "2026-11-26-GOOGL-WATCH-001": {
+      "report_id": "2026-11-26-GOOGL-debate-01",
+      "ticker": "GOOGL",
+      "signal_id": "2026-11-26-GOOGL-WATCH-001",
+      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-26T01:06:16.160570+00:00",
+      "signal_published_at": "2026-11-25T22:48:30Z",
+      "order_cutoff_at": "2026-11-27T14:25:00Z",
+      "report_validated_at": "2026-11-26T01:06:16.160570Z",
+      "freeze_deadline_at": "2026-11-27T14:20:00Z",
+      "frozen_at": "2026-11-27T14:20:00Z",
+      "received_at": "2026-11-26T14:03:52Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -78.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "주가 273.10달러가 제공된 내재가치 상단 72.54달러를 웃돌며, 안전마진은 -3.3297이다.",
+            "기사에 따르면 2025 회계연도 레버리지 반영 잉여현금흐름은 플러스였다. ROIC 스프레드, 장기 현금흐름 마진과 순이익의 현금 전환율이 없어 지속성 판단을 보류했다.",
+            "제공된 8-K 항목은 8.01과 9.01이다. 이 항목만으로 구조적 훼손을 확인할 수 없어 공시에 따른 감점은 적용하지 않았다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "lynch",
+          "score": 15.0,
+          "stance": "hold",
+          "confidence": 0.39,
+          "reasons": [
+            "성장 점수 91.88은 높지만 PEG·PEGY와 매출·EPS의 5년 연평균 성장률이 없어 성장 점수에 의존한 잠정 판단이다. 성장 대비 가격을 검증할 수 없어 관망한다.",
+            "검색 AI 모드에 Wallet 지출 데이터를 연결했다는 기사 내용은 광고주가 구매 의도가 높은 고객에 도달할 경로가 넓어졌음을 보여준다. 광고 매출 기여 규모는 확인되지 않는다.",
+            "동종업계 비교 기사는 일회성 항목 때문에 해당 기간 PER의 의미가 제한된다고 지적한다. 지속 가능한 이익 성장률을 판단하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.33,
+          "reasons": [
+            "거시 국면 점수 50.0은 주어진 중립 국면이다. 실질금리·신용 스프레드·변동성 지표와 상대강도가 비어 국면과 시장 대비 우위를 추가로 확인할 수 없다.",
+            "종가 273.1달러는 50일 및 200일 이동평균선 아래에 있어 추세 가산 근거가 없다.",
+            "RSI는 36.9292로 추세 가산 조건의 하한에도 못 미쳐 상승 추세를 확인하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "GOOGL의 13F 보유 내역은 비어 있다. 분기말 기준 공시의 제출 기한은 45일이며, 제공된 자료로는 분기별 보유량 변화나 동종 섹터의 보유 확대 여부를 확인할 수 없다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 4
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -78.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수에 가점을 주려면 결제 이력을 활용한 검색 광고가 추가 매출과 지속적인 잉여현금흐름으로 연결되는지 확인해야 한다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "이동평균선 아래의 종가를 추세 가산의 문제로만 보면 내재가치 상단을 웃도는 현재 가격을 평가에 반영하기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 15.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진을 근거로 한 매도 판단은 현재 수익력 대비 프리미엄을 짚지만, 검색 광고와 클라우드가 그 프리미엄을 감당할 만큼 성장할지까지 평가하지 못했다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "낮은 RSI로 상승 추세를 확인하기 어렵다는 지적은 진입 시점에는 유효하지만, 검색과 결제의 연동이 광고 매출에 미치는 영향은 가늠할 수 없다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진을 근거로 한 매도 의견은 밸류에이션 부담을 설명하지만, 매도 시점을 평가하려면 금융 여건과 시장 대비 추세도 확인해야 한다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수를 근거로 한 가점은 검색 AI의 광고 성과가 확인되지 않았고 주가가 두 이동평균선 아래에 있다는 점에서 현재의 보유 매력을 과대평가할 수 있다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 상단과의 격차는 크지만 약세·기준·강세 DCF 추정치가 같아 검색 광고 현금흐름의 변화가 그 격차에 미치는 영향은 비교하기 어렵다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수에 가점을 주기에는 장기 매출과 주당이익 성장률이 비어 있고 월렛 연동이 광고 매출로 이어졌는지도 확인되지 않았다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "월렛 연동의 검색 광고 실적 및 현금흐름 기여 확인",
+            "일회성 항목을 제외한 이익 성장의 지속성 확인"
+          ],
+          "structural_risk": 55.0,
+          "reasoning": "월렛 결제 데이터와 검색의 연결은 광고 타기팅을 개선할 여지가 있지만 실적 기여가 확인되지 않았다. 동종업계 비교 기사도 일회성 항목으로 이익 배수 해석이 제한된다고 지적해 장기 이익과 현금흐름을 확인할 필요가 있다."
+        },
+        "chair": {
+          "consensus": [
+            "월렛 구매 이력과 검색의 연동은 광고 타기팅을 개선할 수 있으며 광고 매출 기여는 확인이 필요하다."
+          ],
+          "dissent": [
+            "버핏은 내재가치 상단을 웃도는 가격에서 안전마진이 부족하다고 봤고 린치는 높은 성장 점수에도 성장 대비 가격 검증이 어려워 관망했다.",
+            "드러켄밀러는 주가의 두 이동평균 하회와 상대강도 자료 공백을 근거로 추세 확인을 기다렸다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            199.59,
+            236.35
+          ],
+          "conflict": true,
+          "one_line_ko": "검색 광고 기능의 실적 기여와 주가 추세가 확인될 때까지 관망한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 16,
+        "quotes_dropped": 0,
+        "numbers_checked": 20,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 55.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-26-GOOGL-debate-01",
+      "adopted_report_sha256": "sha256:45b55a7028c729d2bf32fa0c9dbc8dab4774af566f27fdbf0640b0bb3668b1c8",
+      "adopted_snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2"
+    },
+    "2026-11-26-NVDA-WATCH-001": {
+      "report_id": "2026-11-26-NVDA-debate-01",
+      "ticker": "NVDA",
+      "signal_id": "2026-11-26-NVDA-WATCH-001",
+      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-26T01:06:16.197252+00:00",
+      "signal_published_at": "2026-11-25T22:48:30Z",
+      "order_cutoff_at": "2026-11-27T14:25:00Z",
+      "report_validated_at": "2026-11-26T01:06:16.197252Z",
+      "freeze_deadline_at": "2026-11-27T14:20:00Z",
+      "frozen_at": "2026-11-27T14:20:00Z",
+      "received_at": "2026-11-26T14:03:52Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -91.0,
+          "stance": "sell",
+          "confidence": 0.38,
+          "reasons": [
+            "주가 149.30달러가 제공된 내재가치 상단 21.18달러를 웃돌며, 안전마진은 -9.6171이다.",
+            "제공된 8-K에는 5.02 항목이 있고 기사에는 CEO 복귀와 이사회 조사 논의가 나온다. 현재 경영 공백이나 조사 결과를 단정할 수 없다.",
+            "성장 점수는 100.0이다. ROIC 스프레드, 잉여현금흐름의 순이익 대비 비율과 희석률이 없어 성장의 주주가치 전환을 판단에서 보류했다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "stance": "hold",
+          "confidence": 0.38,
+          "reasons": [
+            "성장 점수 100.0을 잠정 근거로 삼았다. PEG·PEGY와 매출·EPS의 5년 연평균 성장률이 모두 없어 성장 대비 가격과 지속성을 확인할 수 없다.",
+            "기사에 따르면 젠슨 황이 CEO로 복귀했지만, 이사회 조사와 향후 거취에 관한 불확실성은 남아 있다. 경영 연속성이 이익 성장으로 이어질지는 관망한다.",
+            "복귀 이후 주가 반응을 다룬 보도는 시장 금융 여건이 여전히 부담이라고 평가한다. 본문은 장기 수요나 회사 가이던스의 변화를 확인해 주지 않는다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.33,
+          "reasons": [
+            "거시 국면 점수 50.0은 주어진 중립 국면이다. 실질금리·신용 스프레드·변동성 지표와 상대강도가 비어 국면과 시장 대비 우위를 추가로 확인할 수 없다.",
+            "종가 149.3달러는 50일 및 200일 이동평균선 아래에 있어 추세 가산 근거가 없다.",
+            "RSI는 37.4514로 추세 가산 조건의 하한에도 못 미쳐 상승 추세를 확인하기 어렵다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "NVDA의 13F 보유 내역은 비어 있다. 분기말 기준 공시의 제출 기한은 45일이며, 제공된 자료로는 분기별 보유량 변화나 동종 섹터의 보유 확대 여부를 확인할 수 없다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -91.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "최고 수준의 성장 점수를 긍정적으로 반영하려면 경영진 불확실성 속에서도 이익이 현금으로 전환되고 그 혜택이 주주에게 돌아가는지 확인해야 한다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "중립 거시 점수에 따른 관망은 시장 위험선호의 판단에 그치므로 종가가 내재가치 상단을 웃도는 정도도 반영해야 한다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 20.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진은 현 주가와 제공된 가치 범위의 큰 격차를 보여 주지만, AI 수요가 장기 이익 증가로 전환되는지 확인하지 못해 성장 대비 가격의 결론으로 삼기 어렵다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "중립 국면 점수에 실질금리와 신용 스프레드 확인이 빠져 있어, 경영진 복귀 뒤의 주가 약세에서 고객 수요 둔화 가능성을 구분하기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수에 준 가점은 CEO 복귀 이후 반등분이 일부 되돌려지고 주가가 두 이동평균선 아래에 있다는 점에서 현재 시장의 선호를 과대평가할 수 있다."
+            },
+            {
+              "target_skill": "buffett",
+              "point": "안전마진으로 매도 의견을 뒷받침했지만, 금리와 신용 여건의 실제 수치가 없어 기사에서 다룬 AI 관련주의 매도 압력이 이어질지 판단하기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진은 제공된 추정치와의 격차를 보여 주지만 자본수익률 스프레드와 현금 전환 자료가 비어 있어 성장의 장기 현금흐름 기여까지 반영한 격차인지는 확인하기 어렵다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수에 가점을 주기에는 장기 매출과 이익 성장률이 비어 있고 CEO 복귀가 수요나 실적 전망을 바꿨다는 근거도 없다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "8-K 5.02 원문과 이사회 조치 확인",
+            "이사회 조사 결과와 경영 연속성 확인"
+          ],
+          "structural_risk": 59.0,
+          "reasoning": "CEO 복귀는 전략 집행의 연속성에 도움을 줄 수 있지만, 기사에서 이사회 조사와 이후 거취가 논의돼 경영 불확실성이 남는다. 컨텍스트의 공시에는 항목 번호만 있어 조사의 결론이나 공시상 구조적 훼손을 확인할 수 없으며 주가 추세도 회복되지 않았다."
+        },
+        "chair": {
+          "consensus": [
+            "CEO 복귀에도 이사회 조사 결과와 장기 경영 효과는 확인이 필요하다."
+          ],
+          "dissent": [
+            "버핏은 가격과 내재가치의 격차를 들어 매도 의견을 유지했고 린치는 성장 점수와 경영 연속성에 주목하면서 성장 대비 가격을 확인할 때까지 관망했다.",
+            "드러켄밀러는 복귀 직후의 반응보다 두 이동평균을 밑도는 주가에 무게를 뒀다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            101.97,
+            125.63
+          ],
+          "conflict": true,
+          "one_line_ko": "CEO 복귀 이후 이사회 조사와 경영 연속성, 주가 추세를 확인하며 관망한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 19,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 59.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-26-NVDA-debate-01",
+      "adopted_report_sha256": "sha256:286120fac3445148d125955c602d616952e35f884ad1ee387ee520e5f57dac72",
+      "adopted_snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2"
+    },
+    "2026-11-26-ADBE-WATCH-001": {
+      "report_id": "2026-11-26-ADBE-debate-01",
+      "ticker": "ADBE",
+      "signal_id": "2026-11-26-ADBE-WATCH-001",
+      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-26T01:06:16.220563+00:00",
+      "signal_published_at": "2026-11-25T22:48:30Z",
+      "order_cutoff_at": "2026-11-27T14:25:00Z",
+      "report_validated_at": "2026-11-26T01:06:16.220563Z",
+      "freeze_deadline_at": "2026-11-27T14:20:00Z",
+      "frozen_at": "2026-11-27T14:20:00Z",
+      "received_at": "2026-11-26T14:03:52Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "주가 232.83달러가 제공된 내재가치 상단 182.46달러를 웃돈다. 안전마진 -0.4674는 매수 조건을 충족하지 못한다.",
+            "기사에 따르면 분기 영업현금흐름은 전년 동기보다 늘며 사상 최고치를 기록했다. 단일 분기로 장기 현금흐름 마진의 지속성이나 순이익의 현금 전환을 확인할 수 없다.",
+            "기사에서 다룬 분기에는 영업현금흐름의 상당 부분이 자사주 매입에 쓰였다. 장기 희석률과 ROIC 스프레드가 없어 주당 가치 증가와 자본수익은 판단에서 제외했다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 14.0,
+          "stance": "hold",
+          "confidence": 0.4,
+          "reasons": [
+            "성장 점수 100.0을 잠정 근거로 삼았다. PEG·PEGY와 매출·EPS의 5년 연평균 성장률이 없어 구독 성장에 지불하는 가격이 합리적인지 판단하기 어렵다.",
+            "기사에 따르면 최근 분기 구독 매출은 전년 동기보다 늘었다. 반복 매출의 성장 신호이며 여러 해의 지속성을 판단하려면 추가 실적이 필요하다.",
+            "다른 기사는 회계연도 중 조정 순이익의 분기 증가율이 둔화됐다고 보도했다. 높은 성장 점수에도 이익 성장의 둔화를 감안해 관망한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "거시 국면 점수 50.0은 주어진 중립 국면이다. 실질금리·신용 스프레드·변동성 지표와 상대강도가 비어 국면과 시장 대비 우위를 추가로 확인할 수 없다.",
+            "종가 232.83달러는 50일 및 200일 이동평균선 아래에 있어 추세 가산 근거가 없다.",
+            "RSI는 45.5148로 통상적인 추세 확인 범위에 있으나 두 이동평균선 아래에 있어 추세 가산 조건을 충족하지 않는다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "ADBE의 13F 보유 내역은 비어 있다. 분기말 기준 공시의 제출 기한은 45일이며, 제공된 자료로는 분기별 보유량 변화나 동종 섹터의 보유 확대 여부를 확인할 수 없다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -60.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "구독 매출이 늘고 조정 순이익 증가율이 둔화하는 상황에서 성장 점수에 가점을 주려면 반복 매출의 장기 현금 전환을 확인해야 한다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "통상 범위의 RSI를 반영한 관망 판단에는 주가가 내재가치 상단을 웃돈다는 가격 부담이 빠져 있다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 14.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진이 매수 조건에 못 미친다는 판단에는 현재 수익력이 반영돼 있지만, 구독 매출과 계약 잔고가 미래 이익을 얼마나 뒷받침하는지는 별도 평가가 필요하다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "이동평균선을 하회한다는 기술적 근거만으로는 기사에서 확인되는 구독 매출 증가와 조정 순이익 성장 둔화 가운데 어느 흐름이 지속될지 판단하기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "높은 성장 점수와 분기 구독 매출 증가는 사업의 성장 근거지만, 주가가 두 이동평균선 아래이고 시장 대비 강약도 확인되지 않아 당장의 가점을 뒷받침하기 어렵다."
+            },
+            {
+              "target_skill": "buffett",
+              "point": "내재가치 상단과 주가의 괴리는 매수에 신중할 근거지만, 상대강도와 금융 여건을 확인해야 매도 시점을 판단할 수 있다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "제공된 내재가치 상단은 주가보다 낮지만 기준 DCF 값은 주가보다 높아 안전마진에 근거한 매도 결론은 대표 가치 산정 방식에 민감하다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "분기 구독 매출이 늘었어도 이익 증가세가 둔화했고 장기 성장률이 비어 있으므로 높은 성장 점수만으로 이익 성장의 지속성에 가점을 주기 어렵다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "구독 성장의 이익 및 현금 전환 확인",
+            "플러그인 연동의 고객 유지와 구독 기여 확인"
+          ],
+          "structural_risk": 58.0,
+          "reasoning": "기사에 나온 구독 매출 증가와 현금 창출은 반복 매출 기반을 뒷받침하지만 조정 순이익 성장 둔화도 보도됐다. 협업 기능 확대의 실적 기여와 자사주 매입 이후 주당가치의 지속성을 확인할 필요가 있다."
+        },
+        "chair": {
+          "consensus": [
+            "구독 매출과 현금흐름 자료는 본업에 긍정적이지만 장기 이익 성장과 현금 전환의 지속성은 확인이 필요하다.",
+            "검토·승인 플러그인 연동은 작업 범위를 넓혔고 실제 구독 매출에 얼마나 기여할지는 확인이 필요하다."
+          ],
+          "dissent": [
+            "버핏은 안전마진 부재를 이유로 매도 의견을 유지했고 린치는 구독 매출 성장과 조정 순이익 성장 둔화를 함께 고려해 관망했다.",
+            "드러켄밀러는 두 이동평균을 밑도는 주가에 추세 가산점을 주지 않았다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            206.87,
+            219.85
+          ],
+          "conflict": true,
+          "one_line_ko": "구독 매출 증가가 장기 이익과 현금 창출로 이어지는지 확인하며 관망한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 16,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 58.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-26-ADBE-debate-01",
+      "adopted_report_sha256": "sha256:215f1c111b2e2f8917a56fa111277cbec4bb3a9242918ebbc21215993ec1b9bd",
+      "adopted_snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2"
+    },
+    "2026-11-26-META-WATCH-001": {
+      "report_id": "2026-11-26-META-debate-01",
+      "ticker": "META",
+      "signal_id": "2026-11-26-META-WATCH-001",
+      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
+      "status": "complete",
+      "badge": "토론 완료",
+      "eligible": true,
+      "late": false,
+      "invalid": false,
+      "reasons": [],
+      "completed_at": "2026-11-26T01:06:16.247024+00:00",
+      "signal_published_at": "2026-11-25T22:48:30Z",
+      "order_cutoff_at": "2026-11-27T14:25:00Z",
+      "report_validated_at": "2026-11-26T01:06:16.247024Z",
+      "freeze_deadline_at": "2026-11-27T14:20:00Z",
+      "frozen_at": "2026-11-27T14:20:00Z",
+      "received_at": "2026-11-26T14:03:52Z",
+      "validation_source": "validation",
+      "quant_grade": "WATCH",
+      "display_grade": "WATCH",
+      "recommendation": "WATCH",
+      "track": "codex_debated",
+      "divergent": false,
+      "quant_action": "no_action",
+      "debate_action": "no_action",
+      "auto_downgrade_applied": false,
+      "round1": [
+        {
+          "skill": "buffett",
+          "score": -75.0,
+          "stance": "sell",
+          "confidence": 0.4,
+          "reasons": [
+            "주가 609.89달러가 제공된 내재가치 상단 182.14달러를 웃돌며, 안전마진은 -2.8507이다.",
+            "기사에 인용된 Forter 추적 주문에서 Muse는 상당한 비중을 차지했다. 제한된 주문 표본은 전체 보급률이나 광고 현금흐름 증가를 보여 주지 않는다.",
+            "제공된 8-K는 8.01 항목만 표시한다. ROIC 스프레드, 잉여현금흐름의 순이익 대비 비율, 희석률과 부채 지표가 비어 있어 자본수익과 주당가치의 지속성을 판단에서 제외했다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "lynch",
+          "score": 10.0,
+          "stance": "hold",
+          "confidence": 0.39,
+          "reasons": [
+            "성장 점수 79.96을 잠정 근거로 삼았다. PEG·PEGY와 매출·EPS의 5년 연평균 성장률이 없어 성장 대비 가격을 판단하기 어렵다.",
+            "영국 JD Sports 제휴로 Muse에서 직접 상품을 검색하고 살 수 있게 됐다고 보도됐다. 거래 편의성이 광고 매출 성장으로 이어지는지는 확인되지 않았다.",
+            "보도에 따르면 Amazon의 Muse 접근 차단 해제는 협의 중이다. 쇼핑 채널 확대의 규모와 시기가 불확실해 관망한다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.36,
+          "reasons": [
+            "거시 국면 점수 50.0은 주어진 중립 국면이다. 실질금리·신용 스프레드·변동성 지표와 상대강도가 비어 국면과 시장 대비 우위를 추가로 확인할 수 없다.",
+            "종가 609.89달러는 50일 및 200일 이동평균선 아래에 있어 추세 가산 근거가 없다.",
+            "RSI는 45.6967로 통상적인 추세 확인 범위에 있으나 두 이동평균선 아래에 있어 추세 가산 조건을 충족하지 않는다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "stance": "hold",
+          "confidence": 0.25,
+          "reasons": [
+            "META의 13F 보유 내역은 비어 있다. 분기말 기준 공시의 제출 기한은 45일이며, 제공된 자료로는 분기별 보유량 변화나 동종 섹터의 보유 확대 여부를 확인할 수 없다."
+          ],
+          "quote_verified": true,
+          "quote_sha256_count": 5
+        }
+      ],
+      "round2": [
+        {
+          "skill": "buffett",
+          "score": -75.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수에 잠정 가점을 줄 만큼 Muse의 구매 기능이 광고 매출과 잉여현금흐름에 기여한다는 실적은 확인되지 않았다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "중립 거시 점수에 따른 관망은 쇼핑 제휴의 수익화 불확실성과 내재가치 상단을 웃도는 가격을 함께 평가해야 한다."
+            }
+          ]
+        },
+        {
+          "skill": "lynch",
+          "score": 10.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진이 음수라는 점은 현재 수익력에 비춘 매도 근거지만, Muse 구매 기능이 광고 매출의 성장 경로를 넓히는 경우까지 평가한 수치는 아니다."
+            },
+            {
+              "target_skill": "druckenmiller",
+              "point": "종가가 두 이동평균선 아래에 있다는 근거는 당장의 추세를 보여 주며, 영국 소매 제휴와 릴스 구매 기능이 장기 광고 성장에 기여할지는 설명하지 못한다."
+            }
+          ]
+        },
+        {
+          "skill": "druckenmiller",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "안전마진의 부담은 매수에 신중할 근거지만, 단기 매도 의견에는 신용 여건과 시장 대비 추세의 확인이 더 필요하다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수와 영국 쇼핑 제휴는 수익화 가능성을 뒷받침하지만, 광고 매출 기여가 확인되지 않았고 주가가 두 이동평균선 아래에 있어 보유 매력에 가점을 주기 어렵다."
+            }
+          ]
+        },
+        {
+          "skill": "gates_13f",
+          "score": 0.0,
+          "changed": false,
+          "rebuttals": [
+            {
+              "target_skill": "buffett",
+              "point": "주가와 내재가치 상단의 격차는 크지만 자본수익과 현금 전환 자료가 비어 있고 뮤즈의 광고 현금흐름 효과도 확인되지 않아 그 격차의 지속성을 단정하기 어렵다."
+            },
+            {
+              "target_skill": "lynch",
+              "point": "성장 점수에 가점을 주기에는 장기 이익 성장률이 비어 있고 뮤즈의 구매 기능 확대가 광고 매출 성장으로 이어졌다는 근거도 없다."
+            }
+          ]
+        }
+      ],
+      "round3": {
+        "guard": {
+          "veto_codes": [],
+          "additional_blocks": [
+            "Muse 쇼핑 확대의 광고 매출 및 현금 기여 확인",
+            "아마존과의 협의 결과 및 VR 콘텐츠 수익화 확인"
+          ],
+          "structural_risk": 52.0,
+          "reasoning": "Muse 쇼핑 제휴와 구매 기능은 거래 경로를 넓히지만 광고와 현금흐름 개선은 아직 확인되지 않았다. 아마존의 접근 차단 해제는 보도된 협의 단계에 있으며 VR 콘텐츠 제휴도 실제 이용 및 수익 기여를 확인할 필요가 있다."
+        },
+        "chair": {
+          "consensus": [
+            "Muse 도입과 소매 제휴는 구매 경로를 넓혔으며 광고 매출 기여의 확인이 필요하다.",
+            "아마존 접근 확대는 협의 중이며 차단 해제는 확인되지 않았다."
+          ],
+          "dissent": [
+            "버핏은 내재가치 상단을 웃도는 가격에서 매도 의견을 유지했고 린치는 소매 제휴의 성장 가능성을 보면서 관망했다.",
+            "드러켄밀러는 주가가 두 이동평균 아래에 있고 시장 대비 상대강도를 확인할 자료도 부족하다고 봤다."
+          ],
+          "grade_recommendation": "WATCH",
+          "entry_plan_refs": [],
+          "exit_refs": [
+            451.86,
+            530.88
+          ],
+          "conflict": true,
+          "one_line_ko": "Muse 쇼핑 확대가 광고 매출과 현금흐름에 기여하는지 확인하며 관망한다."
+        }
+      },
+      "validation": {
+        "skills_in": 6,
+        "skills_kept": 6,
+        "quotes_checked": 20,
+        "quotes_dropped": 0,
+        "numbers_checked": 18,
+        "numbers_rejected": 0
+      },
+      "news_state": "read_done",
+      "structural_risk": 52.0,
+      "quote_verified": true,
+      "adoption": "adopted",
+      "adopted_report_id": "2026-11-26-META-debate-01",
+      "adopted_report_sha256": "sha256:34e6eb1fb02b29f108e7f5955223ea3f043d503fba43c541857df423def3ab09",
+      "adopted_snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2"
     }
   },
   "auto_downgrade": {

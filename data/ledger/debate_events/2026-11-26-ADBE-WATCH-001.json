@@ -1,0 +1,49 @@
+{
+  "adopted": {
+    "adopted_at": "2026-11-26T14:03:52Z",
+    "freeze_deadline_at": "2026-11-27T14:20:00Z",
+    "received_at": "2026-11-26T14:03:52Z",
+    "report_id": "2026-11-26-ADBE-debate-01",
+    "report_sha256": "sha256:215f1c111b2e2f8917a56fa111277cbec4bb3a9242918ebbc21215993ec1b9bd",
+    "report_validated_at": "2026-11-26T01:06:16.220563Z",
+    "signal_id": "2026-11-26-ADBE-WATCH-001",
+    "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2"
+  },
+  "events": [
+    {
+      "adoption": "adopted",
+      "auto_downgrade_applied": false,
+      "completed_at": "2026-11-26T01:06:16.220563+00:00",
+      "debate_action": "no_action",
+      "display_grade": "WATCH",
+      "divergent": false,
+      "eligible": true,
+      "event": "debate_attached",
+      "freeze_deadline_at": "2026-11-27T14:20:00Z",
+      "frozen_at": "2026-11-27T14:20:00Z",
+      "frozen_source": "rule",
+      "intent": "no_action",
+      "invalid": false,
+      "late": false,
+      "order_cutoff_at": "2026-11-27T14:25:00Z",
+      "quant_action": "no_action",
+      "quant_grade": "WATCH",
+      "reasons": [],
+      "received_at": "2026-11-26T14:03:52Z",
+      "recommendation": "WATCH",
+      "recorded_at": "2026-11-26T14:03:52Z",
+      "regime": "neutral",
+      "report_id": "2026-11-26-ADBE-debate-01",
+      "report_sha256": "sha256:215f1c111b2e2f8917a56fa111277cbec4bb3a9242918ebbc21215993ec1b9bd",
+      "report_validated_at": "2026-11-26T01:06:16.220563Z",
+      "signal_observed_at": "2026-11-25T22:48:30Z",
+      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
+      "track": "codex_debated",
+      "validation_claimed_at": "2026-11-26T01:06:16.220563Z",
+      "validation_source": "validation",
+      "veto_codes": []
+    }
+  ],
+  "signal_id": "2026-11-26-ADBE-WATCH-001",
+  "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2"
+}

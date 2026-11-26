@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-25T22:48:34.773159Z",
-  "data_cutoff_at": "2026-11-25T22:00:00Z",
-  "signal_published_at": "2026-11-25T22:48:30Z",
+  "generated_at": "2026-11-26T14:03:56.272350Z",
+  "data_cutoff_at": "2026-11-26T12:50:00Z",
+  "signal_published_at": "2026-11-26T14:03:52Z",
   "order_cutoff_at": "2026-11-27T14:25:00Z",
   "as_of": "2026-11-26",
   "params_version": "params_v001",
-  "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
-  "code_commit": "65d5195",
+  "snapshot_id": "sha256:42eff01b84078b25f958012f0a54523d969f4cbaa716fca7ba95f658d9671a6e",
+  "code_commit": "a861d82",
   "status": "normal",
-  "mode": "postclose",
+  "mode": "premarket",
   "source": "live",
   "regime": {
     "regime": "neutral",
@@ -53,23 +53,23 @@
       }
     },
     "counts": {
-      "records": 71,
+      "records": 75,
       "matured": 0,
       "duplicate": 0,
       "no_regime": 28,
-      "not_matured": 43,
+      "not_matured": 47,
       "no_price": 0
     }
   },
   "ingest": {
     "policy": "cutoff_vintage_point_query",
     "mode": "live",
-    "data_cutoff_at": "2026-11-25T22:00:00Z",
-    "inputs_ingested_at": "2026-11-25T22:47:49.739965Z",
-    "lag_seconds": 2869.7,
+    "data_cutoff_at": "2026-11-26T12:50:00Z",
+    "inputs_ingested_at": "2026-11-26T14:03:07.648221Z",
+    "lag_seconds": 4387.6,
     "after_cutoff": true,
     "available_at_source": "vintage_point_query",
-    "vintage": "2026-11-24",
+    "vintage": "2026-11-25",
     "cutoff_filter": "available_at <= data_cutoff_at",
     "series_dropped": [],
     "replay": false
@@ -77,15 +77,15 @@
   "signals": [
     {
       "schema_version": 1,
-      "signal_id": "2026-11-26-NVDA-WATCH-001",
+      "signal_id": "2026-11-26-NVDA-WATCH-002",
       "ticker": "NVDA",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 56.89,
       "as_of": "2026-11-26",
-      "data_cutoff_at": "2026-11-25T22:00:00Z",
-      "signal_published_at": "2026-11-25T22:48:30Z",
-      "signal_published_planned_at": "2026-11-25T22:02:11Z",
+      "data_cutoff_at": "2026-11-26T12:50:00Z",
+      "signal_published_at": "2026-11-26T14:03:52Z",
+      "signal_published_planned_at": "2026-11-26T12:52:11Z",
       "order_cutoff_at": "2026-11-27T14:25:00Z",
       "target_session": "2026-11-27",
       "generated_price": 149.3000030517578,
@@ -186,11 +186,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
-      "code_commit": "65d5195",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:42251939e3ff6f9ee081a1d6e5597a24683c2294b2be40179d67c525a6fd71f9",
+      "snapshot_id": "sha256:42eff01b84078b25f958012f0a54523d969f4cbaa716fca7ba95f658d9671a6e",
+      "code_commit": "a861d82",
+      "revision": 2,
+      "supersedes": "2026-11-26-NVDA-WATCH-001",
+      "inputs_hash": "sha256:c9ebbb14b4fe1155b2d2352ff6709660829320090332f806e8fd04d140345037",
       "trade_grade": "WATCH",
       "components": {
         "quality": 77.54,
@@ -272,46 +272,46 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "Jensen Huang reclaims throne at Nvidia: Here's the bottom line for investors",
+          "headline": "‘Trump Put’ Protects Nvidia Growth Through 2028, Says Gary Black as NVDA Stock Trades at Cheapest Valuation in 10 Years",
           "source": "Yahoo",
-          "published_at": "2026-11-25T21:28:03Z",
-          "url": "https://finnhub.io/api/news?id=88c4f999254d079c5a213e611e6dc001a3e44d4f4302408a819ff30d0804722b",
+          "published_at": "2026-11-26T03:06:25Z",
+          "url": "https://finnhub.io/api/news?id=2e9bffbff6efc0ed08d7c7c56f04ca7acdee944e0c3ae68463616a3d8347930d",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Nvidia is cheap on paper, so why won't the market buy it?",
+          "headline": "5 things I'm thankful for in AI",
+          "source": "Yahoo Finance Video",
+          "published_at": "2026-11-26T12:00:00Z",
+          "url": "https://finance.yahoo.com/video/5-things-im-thankful-ai-120000522.html",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Nvidia’s Market Cap Falls Below Microsoft’s: Analyst Flags Five Overhangs For NVDA Stock",
           "source": "Yahoo",
-          "published_at": "2026-11-25T19:22:15Z",
-          "url": "https://finnhub.io/api/news?id=6f7b910f4effa634856b55ef8cddb0da1edcbabefe30a96aad309e3931e472ea",
+          "published_at": "2026-11-26T02:39:42Z",
+          "url": "https://finnhub.io/api/news?id=93e694d0d5d96ee714e44261e18d84fe92e620d072c98af04c437fc031464488",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Why Nvidia's 'Jensen put' failed to stop the AI trade meltdown",
-          "source": "Yahoo Finance",
-          "published_at": "2026-11-25T18:53:34Z",
-          "url": "https://finance.yahoo.com/markets/article/why-nvidias-jensen-put-did-little-to-ease-the-ai-trade-meltdown-185334279.html",
+          "headline": "Dow Jones Losers in Today's Session: NVDA, AMZN and GOOGL Decline",
+          "source": "ChartMill",
+          "published_at": "2026-11-25T17:40:56Z",
+          "url": "https://finnhub.io/api/news?id=0eddfa8233e93bb8928dfeb04d8e5d4e28223413495ffe1ad374c2874f6d4e6b",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Jensen Huang's return, neocloud risk, and a holiday retail rally",
-          "source": "Yahoo Finance Video",
-          "published_at": "2026-11-25T21:00:00Z",
-          "url": "https://finance.yahoo.com/video/jensen-huangs-return-neocloud-risk-and-a-holiday-retail-rally-222042649.html",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Ten reasons the market is selling off again before Thanksgiving",
-          "source": "Yahoo Finance Video",
-          "published_at": "2026-11-25T16:04:24Z",
-          "url": "https://finance.yahoo.com/video/ten-reasons-the-market-is-selling-off-again-before-thanksgiving-160424234.html",
+          "headline": "Jensen Huang Says Nvidia's Next-Gen Vera Rubin Chips Will Generate $40 Billion in Revenue per Gigawatt, Up From $25 Billion for Grace Blackwell. What That Means for NVDA's Growth Runway.",
+          "source": "Yahoo",
+          "published_at": "2026-11-25T11:35:00Z",
+          "url": "https://finnhub.io/api/news?id=cf8fb51cb6dab0b63d13acbb10365543fe09504596082b5a1c9ac068c1cc6d8f",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -390,15 +390,15 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-26-ADBE-WATCH-001",
+      "signal_id": "2026-11-26-ADBE-WATCH-002",
       "ticker": "ADBE",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 56.72,
       "as_of": "2026-11-26",
-      "data_cutoff_at": "2026-11-25T22:00:00Z",
-      "signal_published_at": "2026-11-25T22:48:30Z",
-      "signal_published_planned_at": "2026-11-25T22:02:11Z",
+      "data_cutoff_at": "2026-11-26T12:50:00Z",
+      "signal_published_at": "2026-11-26T14:03:52Z",
+      "signal_published_planned_at": "2026-11-26T12:52:11Z",
       "order_cutoff_at": "2026-11-27T14:25:00Z",
       "target_session": "2026-11-27",
       "generated_price": 232.8300018310547,
@@ -499,11 +499,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
-      "code_commit": "65d5195",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:42251939e3ff6f9ee081a1d6e5597a24683c2294b2be40179d67c525a6fd71f9",
+      "snapshot_id": "sha256:42eff01b84078b25f958012f0a54523d969f4cbaa716fca7ba95f658d9671a6e",
+      "code_commit": "a861d82",
+      "revision": 2,
+      "supersedes": "2026-11-26-ADBE-WATCH-001",
+      "inputs_hash": "sha256:c9ebbb14b4fe1155b2d2352ff6709660829320090332f806e8fd04d140345037",
       "trade_grade": "WATCH",
       "components": {
         "quality": 85.0,
@@ -570,9 +570,9 @@
         "growth_clipped_to_zero": false,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.4011,
-        "terminal_g_sensitivity": 0.1629,
-        "rate_sensitivity": 0.4011,
+        "wacc_sensitivity": 0.4023,
+        "terminal_g_sensitivity": 0.1633,
+        "rate_sensitivity": 0.4023,
         "hist_divergence_signed": -0.7672,
         "ev_ebit_current": 11.3753,
         "ev_ebit_samples": 121,
@@ -603,6 +603,15 @@
           "quote_verified": null
         },
         {
+          "headline": "Can Adobe's Freemium Strategy Win More Users Amid AI Competition?",
+          "source": "Zacks",
+          "published_at": "2026-11-26T12:43:00Z",
+          "url": "https://finance.yahoo.com/technology/articles/adobes-freemium-strategy-win-more-124300554.html",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
           "headline": "Adobe $47.5 Billion in Online Spend Expected Over Black Friday + Cyber Monday",
           "source": "Yahoo",
           "published_at": "2026-11-25T16:58:04Z",
@@ -616,15 +625,6 @@
           "source": "Yahoo",
           "published_at": "2026-11-25T12:50:00Z",
           "url": "https://finnhub.io/api/news?id=28b7f77f0e210560721c0a92d639232cafbf167b2af16fafcd7687d2eac9ac5e",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Adobe Stock Is About 67% Below Its 2021 Record. Here's What I Think It Will Be Worth in 2030.",
-          "source": "Yahoo",
-          "published_at": "2026-11-25T08:33:02Z",
-          "url": "https://finnhub.io/api/news?id=3fe321b11f15fa6c12d25e65aa721c9f4db420763664dfb1f12d8424ae825062",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -697,15 +697,15 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-26-GOOGL-WATCH-001",
+      "signal_id": "2026-11-26-GOOGL-WATCH-002",
       "ticker": "GOOGL",
       "type": "WATCH",
       "grade": "B",
       "entry_score": 60.31,
       "as_of": "2026-11-26",
-      "data_cutoff_at": "2026-11-25T22:00:00Z",
-      "signal_published_at": "2026-11-25T22:48:30Z",
-      "signal_published_planned_at": "2026-11-25T22:02:11Z",
+      "data_cutoff_at": "2026-11-26T12:50:00Z",
+      "signal_published_at": "2026-11-26T14:03:52Z",
+      "signal_published_planned_at": "2026-11-26T12:52:11Z",
       "order_cutoff_at": "2026-11-27T14:25:00Z",
       "target_session": "2026-11-27",
       "generated_price": 273.1000061035156,
@@ -733,13 +733,13 @@
         }
       ],
       "target_band": {
-        "lo": 199.5914,
-        "hi": 236.3457,
+        "lo": 199.6088,
+        "hi": 236.3544,
         "horizon_td": 63,
         "basis": "base_price",
         "base_price": 273.1000061035156,
-        "r_lo": -0.269164,
-        "r_hi": -0.134582,
+        "r_lo": -0.2691,
+        "r_hi": -0.13455,
         "defensive": true,
         "return_base": "base_price",
         "base_bar_date": "2026-11-25"
@@ -806,11 +806,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
-      "code_commit": "65d5195",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:42251939e3ff6f9ee081a1d6e5597a24683c2294b2be40179d67c525a6fd71f9",
+      "snapshot_id": "sha256:42eff01b84078b25f958012f0a54523d969f4cbaa716fca7ba95f658d9671a6e",
+      "code_commit": "a861d82",
+      "revision": 2,
+      "supersedes": "2026-11-26-GOOGL-WATCH-001",
+      "inputs_hash": "sha256:c9ebbb14b4fe1155b2d2352ff6709660829320090332f806e8fd04d140345037",
       "trade_grade": "WATCH",
       "components": {
         "quality": 90.55,
@@ -842,25 +842,25 @@
       "regime_verified": true,
       "debate_advice": null,
       "valuation": {
-        "iv_low": 53.614,
-        "iv_median": 63.0753,
-        "iv_high": 72.5366,
+        "iv_low": 53.6563,
+        "iv_median": 63.1251,
+        "iv_high": 72.5938,
         "price": 273.1,
-        "margin": -3.3297,
+        "margin": -3.3263,
         "iv_band_basis": "bear_bull",
         "median_method": "epv",
         "methods": {
-          "dcf_base": 54.511,
-          "epv": 63.0753,
+          "dcf_base": 54.5662,
+          "epv": 63.1251,
           "graham": 90.8644
         },
-        "iv_dcf_bear": 54.511,
-        "iv_dcf_bull": 54.511,
+        "iv_dcf_bear": 54.5662,
+        "iv_dcf_bull": 54.5662,
         "fcff_normalized": 49264.0172,
         "growth": 0.0,
         "growth_basis": "fcff_cagr",
         "net_debt": -77758.0,
-        "wacc_valuation": 0.1021,
+        "wacc_valuation": 0.102,
         "v_confidence": "B",
         "v_confidence_reason": null,
         "v_penalties": 10.0,
@@ -870,17 +870,17 @@
         "ev_ebit_percentile": 38.02,
         "ev_ebit_median_10y": 28.3886,
         "iv_hist_ev_ebit": 202.0211,
-        "hist_divergence": 0.6878,
+        "hist_divergence": 0.6875,
         "dcf_dropped": null,
         "v_raw": 0.0,
         "growth_raw_cagr": -0.0535,
         "growth_clipped_to_zero": true,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.1149,
+        "wacc_sensitivity": 0.1151,
         "terminal_g_sensitivity": 0.0424,
-        "rate_sensitivity": 0.1149,
-        "hist_divergence_signed": -0.6878,
+        "rate_sensitivity": 0.1151,
+        "hist_divergence_signed": -0.6875,
         "ev_ebit_current": 25.2812,
         "ev_ebit_samples": 121,
         "ev_ebit_years": 9,
@@ -892,6 +892,15 @@
       "news_state": "not_read",
       "news": [
         {
+          "headline": "ETFs Are Net Sellers of Alphabet (GOOGL) on Nov. 24",
+          "source": "Yahoo",
+          "published_at": "2026-11-26T11:03:08Z",
+          "url": "https://finnhub.io/api/news?id=7bf7b022311789cd6ef2b9589ab58095ae84e408f6ce03347189bd78cdac2920",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
           "headline": "Alphabet (GOOGL) Expands AI Search With Wallet Data",
           "source": "Yahoo",
           "published_at": "2026-11-24T16:10:31Z",
@@ -901,10 +910,19 @@
           "quote_verified": null
         },
         {
-          "headline": "ETFs Bought $276.2 Million of Alphabet (GOOGL) on Friday",
-          "source": "Yahoo",
-          "published_at": "2026-11-24T11:01:22Z",
-          "url": "https://finnhub.io/api/news?id=91e3f2e31ffc50a3a996dbf5f2092b8f7280954374937aa34d24f594f938f51c",
+          "headline": "5 things I'm thankful for in AI",
+          "source": "Yahoo Finance Video",
+          "published_at": "2026-11-26T12:00:00Z",
+          "url": "https://finance.yahoo.com/video/5-things-im-thankful-ai-120000522.html",
+          "impact": null,
+          "durability": null,
+          "quote_verified": null
+        },
+        {
+          "headline": "Dow Jones Losers in Today's Session: NVDA, AMZN and GOOGL Decline",
+          "source": "ChartMill",
+          "published_at": "2026-11-25T17:40:56Z",
+          "url": "https://finnhub.io/api/news?id=0eddfa8233e93bb8928dfeb04d8e5d4e28223413495ffe1ad374c2874f6d4e6b",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -914,24 +932,6 @@
           "source": "Yahoo",
           "published_at": "2026-11-25T13:04:48Z",
           "url": "https://finnhub.io/api/news?id=a56a6cafec861f1219dab755921848d1cab92b874f4f1e560c101cf7ae5615c9",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "Market Chatter: Google Ends ABC Deal Amid Australian Media Funding Retreat",
-          "source": "Yahoo",
-          "published_at": "2026-11-25T09:48:28Z",
-          "url": "https://finnhub.io/api/news?id=1f0cc25a87ab7c17dd1accb3cddb8d4ad5f17285420fa774a4314772550bb3f8",
-          "impact": null,
-          "durability": null,
-          "quote_verified": null
-        },
-        {
-          "headline": "How Alphabet Stacks Up Against Meta And Reddit, And The Rest Of The Interactive Media & Services Sector.",
-          "source": "Benzinga",
-          "published_at": "2026-11-24T13:55:46Z",
-          "url": "https://finnhub.io/api/news?id=0b121baf949bb2ce93aad3813dace0007d75e6583781c62a3688a8974997d11c",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -995,7 +995,7 @@
         ],
         "reasons": {
           "B2": "장기 추세 이탈(200일선 −3% 이하 & 기울기 하락)",
-          "B3": "안전마진 -333.0% < 임계 20%"
+          "B3": "안전마진 -332.6% < 임계 20%"
         }
       },
       "sizing_note_ko": "주문 범위 밖 — 관찰만(3.4.4)",
@@ -1005,15 +1005,15 @@
     },
     {
       "schema_version": 1,
-      "signal_id": "2026-11-26-META-WATCH-001",
+      "signal_id": "2026-11-26-META-WATCH-002",
       "ticker": "META",
       "type": "WATCH",
       "grade": "C",
       "entry_score": 56.42,
       "as_of": "2026-11-26",
-      "data_cutoff_at": "2026-11-25T22:00:00Z",
-      "signal_published_at": "2026-11-25T22:48:30Z",
-      "signal_published_planned_at": "2026-11-25T22:02:11Z",
+      "data_cutoff_at": "2026-11-26T12:50:00Z",
+      "signal_published_at": "2026-11-26T14:03:52Z",
+      "signal_published_planned_at": "2026-11-26T12:52:11Z",
       "order_cutoff_at": "2026-11-27T14:25:00Z",
       "target_session": "2026-11-27",
       "generated_price": 609.8900146484375,
@@ -1041,13 +1041,13 @@
         }
       ],
       "target_band": {
-        "lo": 451.8624,
-        "hi": 530.8762,
+        "lo": 451.9047,
+        "hi": 530.8974,
         "horizon_td": 63,
         "basis": "base_price",
         "base_price": 609.8900146484375,
-        "r_lo": -0.259108,
-        "r_hi": -0.129554,
+        "r_lo": -0.259039,
+        "r_hi": -0.129519,
         "defensive": true,
         "return_base": "base_price",
         "base_bar_date": "2026-11-25"
@@ -1100,11 +1100,11 @@
       "track": "quant_only",
       "veto": [],
       "params_version": "params_v001",
-      "snapshot_id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
-      "code_commit": "65d5195",
-      "revision": 1,
-      "supersedes": null,
-      "inputs_hash": "sha256:42251939e3ff6f9ee081a1d6e5597a24683c2294b2be40179d67c525a6fd71f9",
+      "snapshot_id": "sha256:42eff01b84078b25f958012f0a54523d969f4cbaa716fca7ba95f658d9671a6e",
+      "code_commit": "a861d82",
+      "revision": 2,
+      "supersedes": "2026-11-26-META-WATCH-001",
+      "inputs_hash": "sha256:c9ebbb14b4fe1155b2d2352ff6709660829320090332f806e8fd04d140345037",
       "trade_grade": "WATCH",
       "components": {
         "quality": 89.77,
@@ -1135,25 +1135,25 @@
       "regime_verified": true,
       "debate_advice": null,
       "valuation": {
-        "iv_low": 134.6251,
-        "iv_median": 158.3825,
-        "iv_high": 182.1399,
+        "iv_low": 134.7279,
+        "iv_median": 158.5035,
+        "iv_high": 182.279,
         "price": 609.89,
-        "margin": -2.8507,
+        "margin": -2.8478,
         "iv_band_basis": "bear_bull",
         "median_method": "epv",
         "methods": {
-          "dcf_base": 134.2879,
-          "epv": 158.3825,
+          "dcf_base": 134.4226,
+          "epv": 158.5035,
           "graham": 211.1944
         },
-        "iv_dcf_bear": 134.2879,
-        "iv_dcf_bull": 134.2879,
+        "iv_dcf_bear": 134.4226,
+        "iv_dcf_bull": 134.4226,
         "fcff_normalized": 25382.2514,
         "growth": 0.0,
         "growth_basis": "fcff_cagr",
         "net_debt": -22848.0,
-        "wacc_valuation": 0.0974,
+        "wacc_valuation": 0.0973,
         "v_confidence": "B",
         "v_confidence_reason": null,
         "v_penalties": 10.0,
@@ -1163,17 +1163,17 @@
         "ev_ebit_percentile": 18.18,
         "ev_ebit_median_10y": 24.5042,
         "iv_hist_ev_ebit": 453.9599,
-        "hist_divergence": 0.6511,
+        "hist_divergence": 0.6508,
         "dcf_dropped": null,
         "v_raw": 0.0,
         "growth_raw_cagr": -0.0919,
         "growth_clipped_to_zero": true,
         "effective_fcff_years": 5,
         "normalization_method": "adjusted",
-        "wacc_sensitivity": 0.1298,
-        "terminal_g_sensitivity": 0.0486,
-        "rate_sensitivity": 0.1298,
-        "hist_divergence_signed": -0.6511,
+        "wacc_sensitivity": 0.1299,
+        "terminal_g_sensitivity": 0.0487,
+        "rate_sensitivity": 0.1299,
+        "hist_divergence_signed": -0.6508,
         "ev_ebit_current": 18.5769,
         "ev_ebit_samples": 121,
         "ev_ebit_years": 11,
@@ -1185,19 +1185,19 @@
       "news_state": "not_read",
       "news": [
         {
-          "headline": "Meta’s AI shopping push could lift Instagram ad revenue, Jefferies says",
+          "headline": "ETFs Are Net Sellers of Meta Platforms (META) on Tuesday",
           "source": "Yahoo",
-          "published_at": "2026-11-25T19:09:00Z",
-          "url": "https://finnhub.io/api/news?id=ceac68d8f871a0e8eb8d4cc9a9827d15a1d74779b2e5460348a32dc657027a9a",
+          "published_at": "2026-11-26T11:02:47Z",
+          "url": "https://finnhub.io/api/news?id=9e6590911d02a67030e1b814c17583f4a40660a7c904b9e7101c1714e7fb7cd2",
           "impact": null,
           "durability": null,
           "quote_verified": null
         },
         {
-          "headline": "Amazon, Meta reportedly in talks to remove block on Muse AI agent",
+          "headline": "Anthropic Broke Its $83 IPO Price. What Did Facebook Do Next?",
           "source": "Yahoo",
-          "published_at": "2026-11-25T14:36:16Z",
-          "url": "https://finnhub.io/api/news?id=e6fba0c3419f9e0fea9eb6c798adbd51124af78a1da184b4ecfa8251ae5034ed",
+          "published_at": "2026-11-26T11:38:21Z",
+          "url": "https://finnhub.io/api/news?id=94d179dd3d173552dd2aa43bdbb1843d6a2bfc50438be70c6bd0dad1fab492b9",
           "impact": null,
           "durability": null,
           "quote_verified": null
@@ -1221,16 +1221,23 @@
           "quote_verified": null
         },
         {
-          "headline": "David Abrams’ Meta Platforms, Inc. (META) Bet Is Backed by Strong Cash Flow and AI Growth",
+          "headline": "CoreWeave (CRWV) Debt Sale Wins Investment Grade Ratings",
           "source": "Yahoo",
-          "published_at": "2026-11-24T19:06:33Z",
-          "url": "https://finnhub.io/api/news?id=93dc59493504e4b6ac8a78362486af40c086025c09b404b8bde98005130f1d02",
+          "published_at": "2026-11-26T08:09:08Z",
+          "url": "https://finnhub.io/api/news?id=6a28ef42a74dc506f002a9b6c34b73b0aae052f40ff5c27aa1e5ab02cee2ce49",
           "impact": null,
           "durability": null,
           "quote_verified": null
         }
       ],
       "filings": [
+        {
+          "form": "4",
+          "filed_date": "2026-11-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326018246/xslF345X06/ownership.xml",
+          "accession": "0000950103-26-018246",
+          "items": []
+        },
         {
           "form": "144",
           "filed_date": "2026-11-23",
@@ -1260,13 +1267,6 @@
           "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017902/xslF345X06/ownership.xml",
           "accession": "0000950103-26-017902",
           "items": []
-        },
-        {
-          "form": "4",
-          "filed_date": "2026-11-19",
-          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000095010326017900/xslF345X06/ownership.xml",
-          "accession": "0000950103-26-017900",
-          "items": []
         }
       ],
       "risk": {
@@ -1286,7 +1286,7 @@
           "B4"
         ],
         "reasons": {
-          "B3": "안전마진 -285.1% < 임계 20%",
+          "B3": "안전마진 -284.8% < 임계 20%",
           "B4": "눌림 조건 1/4 · T 69.99"
         }
       },
@@ -1314,7 +1314,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5893,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.2852,
+      "wacc_sensitivity": 0.2857,
       "rank_score": 42.5,
       "valuation_suspended": false,
       "wacc_qc": 0.0712,
@@ -1328,20 +1328,20 @@
       "v": 0.0,
       "g": 67.04,
       "v_raw": 0.0,
-      "margin": -2.6561,
+      "margin": -2.6527,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 19.01,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
       "ev_ebit_window": "2016-11-28~2026-11-25",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6748,
+      "hist_divergence_signed": -0.6745,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1407,
+      "wacc_sensitivity": 0.1409,
       "rank_score": 54.623,
       "valuation_suspended": false,
       "wacc_qc": 0.0878,
-      "wacc_valuation": 0.0935,
+      "wacc_valuation": 0.0934,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -1383,7 +1383,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.7672,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.4011,
+      "wacc_sensitivity": 0.4023,
       "rank_score": 63.331,
       "valuation_suspended": false,
       "wacc_qc": 0.0741,
@@ -1406,11 +1406,11 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3779,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1787,
+      "wacc_sensitivity": 0.1789,
       "rank_score": 48.065,
       "valuation_suspended": false,
       "wacc_qc": 0.0735,
-      "wacc_valuation": 0.0875,
+      "wacc_valuation": 0.0874,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -1420,20 +1420,20 @@
       "v": 0.0,
       "g": 91.88,
       "v_raw": 0.0,
-      "margin": -3.3297,
+      "margin": -3.3263,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 38.02,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 9,
       "ev_ebit_window": "2016-11-28~2026-11-25",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6878,
+      "hist_divergence_signed": -0.6875,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1149,
+      "wacc_sensitivity": 0.1151,
       "rank_score": 63.651,
       "valuation_suspended": false,
       "wacc_qc": 0.0867,
-      "wacc_valuation": 0.1021,
+      "wacc_valuation": 0.102,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -1443,20 +1443,20 @@
       "v": 0.0,
       "g": 79.96,
       "v_raw": 0.0,
-      "margin": -2.8507,
+      "margin": -2.8478,
       "v_penalties": 10.0,
       "ev_ebit_percentile": 18.18,
       "ev_ebit_samples": 121,
       "ev_ebit_years": 11,
       "ev_ebit_window": "2016-11-28~2026-11-25",
       "ev_ebit_reason": null,
-      "hist_divergence_signed": -0.6511,
+      "hist_divergence_signed": -0.6508,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.1298,
+      "wacc_sensitivity": 0.1299,
       "rank_score": 60.877,
       "valuation_suspended": false,
       "wacc_qc": 0.0809,
-      "wacc_valuation": 0.0974,
+      "wacc_valuation": 0.0973,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -1475,7 +1475,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.2795,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3666,
+      "wacc_sensitivity": 0.3674,
       "rank_score": 50.296,
       "valuation_suspended": false,
       "wacc_qc": 0.0777,
@@ -1502,7 +1502,7 @@
       "rank_score": 28.935,
       "valuation_suspended": false,
       "wacc_qc": 0.0882,
-      "wacc_valuation": 0.1437,
+      "wacc_valuation": 0.1436,
       "iv_band_basis": "bear_bull"
     },
     {
@@ -1521,7 +1521,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5289,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.6661,
+      "wacc_sensitivity": 0.6672,
       "rank_score": 32.305,
       "valuation_suspended": false,
       "wacc_qc": 0.0491,
@@ -1544,7 +1544,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5621,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.4011,
+      "wacc_sensitivity": 0.4021,
       "rank_score": 33.145,
       "valuation_suspended": false,
       "wacc_qc": 0.075,
@@ -1567,7 +1567,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.584,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.5795,
+      "wacc_sensitivity": 0.5818,
       "rank_score": 47.61,
       "valuation_suspended": false,
       "wacc_qc": 0.072,
@@ -1590,7 +1590,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.6451,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.6646,
+      "wacc_sensitivity": 0.6667,
       "rank_score": 39.375,
       "valuation_suspended": false,
       "wacc_qc": 0.0629,
@@ -1613,7 +1613,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.654,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.3344,
+      "wacc_sensitivity": 0.3354,
       "rank_score": 39.065,
       "valuation_suspended": false,
       "wacc_qc": 0.084,
@@ -1636,7 +1636,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.4065,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.5993,
+      "wacc_sensitivity": 0.6019,
       "rank_score": 40.345,
       "valuation_suspended": false,
       "wacc_qc": 0.0738,
@@ -1659,7 +1659,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.5752,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.7285,
+      "wacc_sensitivity": 0.7317,
       "rank_score": 41.77,
       "valuation_suspended": false,
       "wacc_qc": 0.0682,
@@ -1682,7 +1682,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3185,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.4088,
+      "wacc_sensitivity": 0.4101,
       "rank_score": 33.642,
       "valuation_suspended": false,
       "wacc_qc": 0.0802,
@@ -1705,7 +1705,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.602,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.329,
+      "wacc_sensitivity": 0.3294,
       "rank_score": 44.025,
       "valuation_suspended": false,
       "wacc_qc": 0.0587,
@@ -1751,7 +1751,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.3988,
       "growth_clipped_to_zero": true,
-      "wacc_sensitivity": 0.4348,
+      "wacc_sensitivity": 0.4356,
       "rank_score": 31.156,
       "valuation_suspended": false,
       "wacc_qc": 0.0602,
@@ -1774,7 +1774,7 @@
       "ev_ebit_reason": null,
       "hist_divergence_signed": -0.7328,
       "growth_clipped_to_zero": false,
-      "wacc_sensitivity": 0.8048,
+      "wacc_sensitivity": 0.809,
       "rank_score": 45.108,
       "valuation_suspended": false,
       "wacc_qc": 0.0698,
@@ -1834,12 +1834,12 @@
     "macro_ingest": {
       "policy": "cutoff_vintage_point_query",
       "mode": "live",
-      "data_cutoff_at": "2026-11-25T22:00:00Z",
-      "inputs_ingested_at": "2026-11-25T22:47:49.739965Z",
-      "lag_seconds": 2869.7,
+      "data_cutoff_at": "2026-11-26T12:50:00Z",
+      "inputs_ingested_at": "2026-11-26T14:03:07.648221Z",
+      "lag_seconds": 4387.6,
       "after_cutoff": true,
       "available_at_source": "vintage_point_query",
-      "vintage": "2026-11-24",
+      "vintage": "2026-11-25",
       "cutoff_filter": "available_at <= data_cutoff_at",
       "series_dropped": [],
       "replay": false
@@ -1847,7 +1847,7 @@
     "meta_missing": [],
     "wacc_risk_free": {
       "source": "FRED:DGS10",
-      "value": 0.0492,
+      "value": 0.049100000000000005,
       "fallback": false,
       "note_ko": null
     },
@@ -6028,19 +6028,20 @@
       "horizon": "3m",
       "reason": null,
       "counts": {
-        "records": 71,
+        "records": 75,
         "matured": 0,
         "duplicate": 0,
         "no_regime": 28,
-        "not_matured": 43,
+        "not_matured": 47,
         "no_price": 0
       }
     },
     "snapshot": {
-      "id": "sha256:a75fd923ec25e15fb57d2489ffa9b69fb55df007ee93d09e9d2e935d3db4f7e2",
+      "id": "sha256:42eff01b84078b25f958012f0a54523d969f4cbaa716fca7ba95f658d9671a6e",
       "state": "created",
-      "inputs_hash": "sha256:42251939e3ff6f9ee081a1d6e5597a24683c2294b2be40179d67c525a6fd71f9"
-    }
+      "inputs_hash": "sha256:c9ebbb14b4fe1155b2d2352ff6709660829320090332f806e8fd04d140345037"
+    },
+    "supersession_cancellations": 0
   },
   "charts": {
     "AAPL": {
@@ -10645,8 +10646,8 @@
   },
   "next_trading_day": "2026-11-27",
   "watchlist_source": "data/watchlist/current.json",
-  "run_started_at": "2026-11-25T22:47:21Z",
-  "inputs_hash": "sha256:42251939e3ff6f9ee081a1d6e5597a24683c2294b2be40179d67c525a6fd71f9",
+  "run_started_at": "2026-11-26T14:02:39Z",
+  "inputs_hash": "sha256:c9ebbb14b4fe1155b2d2352ff6709660829320090332f806e8fd04d140345037",
   "ledger_summary": {
     "schema_version": 1,
     "as_of": "2026-11-26",
@@ -10861,7 +10862,7 @@
       "verdict": "보류",
       "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
       "n_eff": 0,
-      "n_records": 75,
+      "n_records": 79,
       "n_eligible": 0,
       "metrics": [
         {
@@ -10870,7 +10871,7 @@
           "value": 0,
           "threshold": "≥ 15",
           "pass": false,
-          "note_ko": "체결·3개월 만기 0개(발행 신호 75건 중 유효 0건)"
+          "note_ko": "체결·3개월 만기 0개(발행 신호 79건 중 유효 0건)"
         },
         {
           "key": "net_after_cost",
@@ -12857,6 +12858,38 @@
           "superseded_by": "2026-11-25-NVDA-WATCH-002",
           "frozen_at": "2026-11-25T14:06:06Z",
           "freeze_deadline_at": "2026-11-25T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-26-ADBE-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-26-ADBE-WATCH-002",
+          "frozen_at": "2026-11-26T14:03:52Z",
+          "freeze_deadline_at": "2026-11-27T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-26-GOOGL-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-26-GOOGL-WATCH-002",
+          "frozen_at": "2026-11-26T14:03:52Z",
+          "freeze_deadline_at": "2026-11-27T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-26-META-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-26-META-WATCH-002",
+          "frozen_at": "2026-11-26T14:03:52Z",
+          "freeze_deadline_at": "2026-11-27T14:20:00Z"
+        },
+        {
+          "signal_id": "2026-11-26-NVDA-WATCH-001",
+          "event": "superseded",
+          "reason": "INTENT_SUPERSEDED",
+          "superseded_by": "2026-11-26-NVDA-WATCH-002",
+          "frozen_at": "2026-11-26T14:03:52Z",
+          "freeze_deadline_at": "2026-11-27T14:20:00Z"
         }
       ],
       "pending": [],
@@ -12865,7 +12898,7 @@
     "debate_effect": {
       "pairs": 0,
       "divergent_pairs": 0,
-      "same_action_pairs": 25,
+      "same_action_pairs": 29,
       "n_eff": 0,
       "avoided_loss_pp": 0.0,
       "missed_gain_pp": 0.0,
@@ -12898,10 +12931,10 @@
     },
     "debate": {
       "status": "ok",
-      "generated_at": "2026-11-25T22:48:30Z",
+      "generated_at": "2026-11-26T14:03:52Z",
       "counts": {
-        "reports": 25,
-        "eligible": 25,
+        "reports": 29,
+        "eligible": 29,
         "late": 0,
         "invalid": 0,
         "superseded": 0,
@@ -12946,42 +12979,42 @@
       "retry_pending": [],
       "events": [
         {
-          "event_key": "debate_recommended:2026-11-26-NVDA-WATCH-001",
+          "event_key": "debate_recommended:2026-11-26-NVDA-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "NVDA",
-          "signal_id": "2026-11-26-NVDA-WATCH-001"
+          "signal_id": "2026-11-26-NVDA-WATCH-002"
         },
         {
-          "event_key": "debate_recommended:2026-11-26-ADBE-WATCH-001",
+          "event_key": "debate_recommended:2026-11-26-ADBE-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "ADBE",
-          "signal_id": "2026-11-26-ADBE-WATCH-001"
+          "signal_id": "2026-11-26-ADBE-WATCH-002"
         },
         {
-          "event_key": "debate_recommended:2026-11-26-GOOGL-WATCH-001",
+          "event_key": "debate_recommended:2026-11-26-GOOGL-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "GOOGL",
-          "signal_id": "2026-11-26-GOOGL-WATCH-001"
+          "signal_id": "2026-11-26-GOOGL-WATCH-002"
         },
         {
-          "event_key": "debate_recommended:2026-11-26-META-WATCH-001",
+          "event_key": "debate_recommended:2026-11-26-META-WATCH-002",
           "type": "debate_recommended",
           "severity": "info",
           "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
           "ticker": "META",
-          "signal_id": "2026-11-26-META-WATCH-001"
+          "signal_id": "2026-11-26-META-WATCH-002"
         }
       ]
     }
   },
   "target_session": "2026-11-27",
-  "signal_published_planned_at": "2026-11-25T22:02:11Z",
+  "signal_published_planned_at": "2026-11-26T12:52:11Z",
   "portfolio": {
     "as_of": "2026-11-26",
     "cash_pct": 1.0,
@@ -12992,10 +13025,10 @@
   },
   "debate": {
     "status": "ok",
-    "generated_at": "2026-11-25T22:48:30Z",
+    "generated_at": "2026-11-26T14:03:52Z",
     "counts": {
-      "reports": 25,
-      "eligible": 25,
+      "reports": 29,
+      "eligible": 29,
       "late": 0,
       "invalid": 0,
       "superseded": 0,
@@ -13010,9 +13043,9 @@
     "positions_open": 0,
     "tranches_pending": 0,
     "data_status": "ok",
-    "last_attempt_at": "2026-11-25T22:48:39Z",
-    "last_success_at": "2026-11-25T22:48:39Z",
-    "data_cutoff_at": "2026-11-25T22:00:00Z",
+    "last_attempt_at": "2026-11-26T14:04:00Z",
+    "last_success_at": "2026-11-26T14:04:00Z",
+    "data_cutoff_at": "2026-11-26T12:50:00Z",
     "target_session": "2026-11-27",
     "outage_id": null
   },
@@ -13020,7 +13053,7 @@
     "verdict": "보류",
     "reason_ko": "지표 2개 계산 불가(net_after_cost, tail_loss) — 판정 보류(4.7.3)",
     "n_eff": 0,
-    "n_records": 75,
+    "n_records": 79,
     "n_eligible": 0,
     "metrics": [
       {
@@ -13029,7 +13062,7 @@
         "value": 0,
         "threshold": "≥ 15",
         "pass": false,
-        "note_ko": "체결·3개월 만기 0개(발행 신호 75건 중 유효 0건)"
+        "note_ko": "체결·3개월 만기 0개(발행 신호 79건 중 유효 0건)"
       },
       {
         "key": "net_after_cost",
@@ -13058,7 +13091,7 @@
     ]
   },
   "prices_as_of": "2026-11-25",
-  "publish_lag_seconds": 9.0,
+  "publish_lag_seconds": 8.6,
   "published_after_order_cutoff": false,
   "notifications": {
     "n_new": 4,
@@ -13068,36 +13101,36 @@
     "retry_pending": [],
     "events": [
       {
-        "event_key": "debate_recommended:2026-11-26-NVDA-WATCH-001",
+        "event_key": "debate_recommended:2026-11-26-NVDA-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "NVDA 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "NVDA",
-        "signal_id": "2026-11-26-NVDA-WATCH-001"
+        "signal_id": "2026-11-26-NVDA-WATCH-002"
       },
       {
-        "event_key": "debate_recommended:2026-11-26-ADBE-WATCH-001",
+        "event_key": "debate_recommended:2026-11-26-ADBE-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "ADBE 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "ADBE",
-        "signal_id": "2026-11-26-ADBE-WATCH-001"
+        "signal_id": "2026-11-26-ADBE-WATCH-002"
       },
       {
-        "event_key": "debate_recommended:2026-11-26-GOOGL-WATCH-001",
+        "event_key": "debate_recommended:2026-11-26-GOOGL-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "GOOGL 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "GOOGL",
-        "signal_id": "2026-11-26-GOOGL-WATCH-001"
+        "signal_id": "2026-11-26-GOOGL-WATCH-002"
       },
       {
-        "event_key": "debate_recommended:2026-11-26-META-WATCH-001",
+        "event_key": "debate_recommended:2026-11-26-META-WATCH-002",
         "type": "debate_recommended",
         "severity": "info",
         "message_ko": "META 후보(WATCH) — PC/Cloud 에서 토론을 돌리면 편입 자격(발행 후·주문 마감 전) 안에 붙일 수 있습니다",
         "ticker": "META",
-        "signal_id": "2026-11-26-META-WATCH-001"
+        "signal_id": "2026-11-26-META-WATCH-002"
       }
     ]
   }
