@@ -1,10 +1,10 @@
 {
-  "as_of": "2026-11-21",
+  "as_of": "2026-11-27",
   "watermark_ko": "45일 전 분기말 기준",
   "period_end": "2026-09-30",
   "lag_days": 45,
   "stale": false,
-  "stale_days": 51,
+  "stale_days": 57,
   "note_ko": "13F 는 신호에 쓰지 않는다(레이더 전용).",
   "filers": [
     {
